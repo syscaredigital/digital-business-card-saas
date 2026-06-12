@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Sync Card</title>
+
+  <!-- Bootstrap CSS (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+
+  <style>
+    /* Inline overrides that depend on layout context */
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- Background orbs -->
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="dashboard-wrapper">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Sync Card</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+
+      <a href="dashboard.html" class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <a href="my-vcard.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        My Cards
+      </a>
+
+      <a href="#" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Contacts
+      </a>
+
+      <a href="#" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </a>
+
+      <a href="qr-code.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+          <line x1="14" y1="14" x2="14" y2="17"/><line x1="17" y1="14" x2="21" y2="14"/>
+          <line x1="21" y1="17" x2="21" y2="21"/><line x1="17" y1="21" x2="14" y2="21"/>
+        </svg>
+        QR Codes
+      </a>
+
+      <a href="nfc-request.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <circle cx="12" cy="20" r="1" fill="currentColor"/>
+        </svg>
+        NFC Cards
+      </a>
+
+      <a href="settings.html" class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </a>
+    </nav>
+
+    <!-- Upgrade Banner -->
+    <div class="sidebar-upgrade">
+      <div class="upgrade-dot"></div>
+      <div class="upgrade-title">You're on Pro Plan</div>
+      <div class="upgrade-desc">Unlock advanced features and analytics.</div>
+      <button class="btn-upgrade">Upgrade Plan</button>
+    </div>
+
+    <!-- Help -->
+    <div class="sidebar-help">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Help & Support
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <!-- Search -->
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Search contacts, cards, analytics..." />
+      </div>
+
+      <!-- Right -->
+      <div class="topbar-right">
+        <div class="notif-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="notif-badge">3</span>
+        </div>
+
+        <div class="user-profile">
+          <div class="user-avatar-placeholder">JS</div>
+          <div class="user-info">
+            <div class="user-name">John Smith</div>
+            <div class="user-plan">Pro Plan</div>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);margin-left:2px">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="page-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1>Welcome back, John! 👋</h1>
+          <p>Here's what's happening with your digital presence today.</p>
+        </div>
+        <button class="btn-customize">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+          </svg>
+          Customize Dashboard
+        </button>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="stats-row">
+
+        <!-- Total Views -->
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Total Views</span>
+            <div class="stat-icon-wrap">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value">12,458</div>
+          <div class="stat-bottom">
+            <div>
+              <div class="stat-change">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                18.6%
+              </div>
+              <div class="stat-vs">vs last 30 days</div>
+            </div>
+          </div>
+          <canvas id="spark1" class="sparkline-area" width="220" height="40"></canvas>
+        </div>
+
+        <!-- Cards Shared -->
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Cards Shared</span>
+            <div class="stat-icon-wrap">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value">2,316</div>
+          <div class="stat-bottom">
+            <div>
+              <div class="stat-change">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                24.8%
+              </div>
+              <div class="stat-vs">vs last 30 days</div>
+            </div>
+          </div>
+          <canvas id="spark2" class="sparkline-area" width="220" height="40"></canvas>
+        </div>
+
+        <!-- Contacts Saved -->
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Contacts Saved</span>
+            <div class="stat-icon-wrap">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value">1,028</div>
+          <div class="stat-bottom">
+            <div>
+              <div class="stat-change">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                16.3%
+              </div>
+              <div class="stat-vs">vs last 30 days</div>
+            </div>
+          </div>
+          <canvas id="spark3" class="sparkline-area" width="220" height="40"></canvas>
+        </div>
+
+        <!-- QR Scans -->
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">QR Scans</span>
+            <div class="stat-icon-wrap">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <line x1="14" y1="14" x2="14" y2="17"/><line x1="17" y1="14" x2="21" y2="14"/>
+                <line x1="21" y1="17" x2="21" y2="21"/><line x1="17" y1="21" x2="14" y2="21"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value">3,844</div>
+          <div class="stat-bottom">
+            <div>
+              <div class="stat-change">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                  <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                21.7%
+              </div>
+              <div class="stat-vs">vs last 30 days</div>
+            </div>
+          </div>
+          <canvas id="spark4" class="sparkline-area" width="220" height="40"></canvas>
+        </div>
+
+      </div><!-- /stats-row -->
+
+      <!-- MIDDLE ROW: Analytics | Activity | My Card -->
+      <div class="middle-row">
+
+        <!-- Analytics Chart -->
+        <div class="analytics-card">
+          <div class="card-header-row">
+            <span class="card-title">Analytics Overview</span>
+            <div class="period-selector">
+              Last 30 Days
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+          </div>
+          <div style="height:200px;position:relative;">
+            <canvas id="analyticsChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-card">
+          <div class="card-header-row">
+            <span class="card-title">Recent Activity</span>
+            <span class="card-link">View all</span>
+          </div>
+          <div class="activity-list">
+
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div class="activity-text">
+                <div class="activity-title">Your card was viewed</div>
+                <div class="activity-sub">by Sarah Johnson</div>
+              </div>
+              <div class="activity-time">2m ago</div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </div>
+              <div class="activity-text">
+                <div class="activity-title">Card shared via email</div>
+                <div class="activity-sub">to alex@email.com</div>
+              </div>
+              <div class="activity-time">15m ago</div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div class="activity-text">
+                <div class="activity-title">New contact saved</div>
+                <div class="activity-sub">Michael Brown</div>
+              </div>
+              <div class="activity-time">1h ago</div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              </div>
+              <div class="activity-text">
+                <div class="activity-title">QR code scanned</div>
+                <div class="activity-sub">San Francisco, CA</div>
+              </div>
+              <div class="activity-time">2h ago</div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div class="activity-text">
+                <div class="activity-title">Your card was viewed</div>
+                <div class="activity-sub">by David Lee</div>
+              </div>
+              <div class="activity-time">3h ago</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- My Digital Card -->
+        <div class="mycard-panel">
+          <div class="card-header-row">
+            <span class="card-title">My Digital Card</span>
+            <button class="more-btn" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;line-height:1">···</button>
+          </div>
+
+          <div class="vcard-preview">
+            <div class="vcard-profile">
+              <div class="vcard-avatar-placeholder">JS</div>
+              <div>
+                <div class="vcard-name">John Smith</div>
+                <div class="vcard-role">Marketing Manager</div>
+                <div class="vcard-company">Acme Corporation</div>
+              </div>
+            </div>
+            <div class="vcard-contact">
+              <div class="vcard-contact-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.59 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91A16 16 0 0 0 15.09 16l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                +1 (555) 123-4567
+              </div>
+              <div class="vcard-contact-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                john.smith@acme.com
+              </div>
+              <div class="vcard-contact-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                www.acme.com
+              </div>
+              <div class="vcard-contact-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                San Francisco, CA
+              </div>
+            </div>
+            <div class="vcard-socials">
+              <div class="social-btn" title="LinkedIn">in</div>
+              <div class="social-btn" title="Twitter">𝕏</div>
+              <div class="social-btn" title="Instagram">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              </div>
+              <div class="social-btn" title="Copy Link">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="mycard-actions">
+            <button class="btn-preview">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview Card
+            </button>
+            <button class="btn-share">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share Card
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /middle-row -->
+
+      <!-- BOTTOM ROW: Profile Completion | Quick Actions | Top Performing -->
+      <div class="bottom-row">
+
+        <!-- Profile Completion -->
+        <div class="completion-card">
+          <div class="card-title">Profile Completion</div>
+          <div class="completion-body">
+            <div class="completion-ring">
+              <svg viewBox="0 0 90 90">
+                <circle class="ring-bg" cx="45" cy="45" r="39"/>
+                <circle class="ring-fill" cx="45" cy="45" r="39"/>
+              </svg>
+              <div class="ring-label">85%</div>
+            </div>
+            <div class="completion-text">
+              <h4>Almost there!</h4>
+              <p>Complete your profile to unlock more features.</p>
+              <button class="btn-complete">Complete Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-card">
+          <div class="card-title">Quick Actions</div>
+          <div class="quick-actions-grid">
+
+            <button class="qa-btn">
+              <div class="qa-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+              </div>
+              Create New Card
+            </button>
+
+            <button class="qa-btn">
+              <div class="qa-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </div>
+              Share Card
+            </button>
+
+            <button class="qa-btn">
+              <div class="qa-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17"/><line x1="17" y1="14" x2="21" y2="14"/><line x1="21" y1="17" x2="21" y2="21"/><line x1="17" y1="21" x2="14" y2="21"/></svg>
+              </div>
+              Download QR
+            </button>
+
+            <button class="qa-btn">
+              <div class="qa-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              </div>
+              Add Contact
+            </button>
+
+            <button class="qa-btn">
+              <div class="qa-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+              </div>
+              NFC Card Setup
+            </button>
+
+            <button class="qa-btn">
+              <div class="qa-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </div>
+              View Analytics
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Top Performing Cards -->
+        <div class="top-cards-panel">
+          <div class="card-header-row">
+            <span class="card-title">Top Performing Cards</span>
+            <span class="card-link">View all</span>
+          </div>
+
+          <div class="top-card-item">
+            <div class="top-card-thumb">
+              <svg width="28" height="18" viewBox="0 0 28 18" fill="none">
+                <rect width="28" height="18" rx="3" fill="#1c0c0c"/>
+                <rect x="2" y="3" width="10" height="2" rx="1" fill="#e63946" opacity="0.6"/>
+                <rect x="2" y="7" width="7" height="1.5" rx="0.75" fill="#555"/>
+                <rect x="2" y="10" width="5" height="1.5" rx="0.75" fill="#555"/>
+                <circle cx="22" cy="9" r="4" fill="#e63946" opacity="0.15" stroke="#e63946" stroke-width="0.5"/>
+              </svg>
+            </div>
+            <div class="top-card-info">
+              <div class="top-card-name">Main Business Card</div>
+              <div class="top-card-updated">Updated May 1, 2025</div>
+            </div>
+            <div class="top-card-stats">
+              <div class="top-card-views-label">Views</div>
+              <div class="top-card-views-val">8,247</div>
+              <div class="top-card-growth">↗ 19.2%</div>
+            </div>
+          </div>
+
+          <div class="top-card-item">
+            <div class="top-card-thumb">
+              <svg width="28" height="18" viewBox="0 0 28 18" fill="none">
+                <rect width="28" height="18" rx="3" fill="#0c1c1c"/>
+                <rect x="2" y="3" width="10" height="2" rx="1" fill="#3a86ff" opacity="0.6"/>
+                <rect x="2" y="7" width="7" height="1.5" rx="0.75" fill="#555"/>
+                <rect x="2" y="10" width="5" height="1.5" rx="0.75" fill="#555"/>
+                <circle cx="22" cy="9" r="4" fill="#3a86ff" opacity="0.15" stroke="#3a86ff" stroke-width="0.5"/>
+              </svg>
+            </div>
+            <div class="top-card-info">
+              <div class="top-card-name">Event Card</div>
+              <div class="top-card-updated">Updated Apr 20, 2025</div>
+            </div>
+            <div class="top-card-stats">
+              <div class="top-card-views-label">Views</div>
+              <div class="top-card-views-val">2,183</div>
+              <div class="top-card-growth">↗ 14.7%</div>
+            </div>
+          </div>
+
+          <div class="top-card-item">
+            <div class="top-card-thumb">
+              <svg width="28" height="18" viewBox="0 0 28 18" fill="none">
+                <rect width="28" height="18" rx="3" fill="#1c1c0c"/>
+                <rect x="2" y="3" width="10" height="2" rx="1" fill="#f4a261" opacity="0.6"/>
+                <rect x="2" y="7" width="7" height="1.5" rx="0.75" fill="#555"/>
+                <rect x="2" y="10" width="5" height="1.5" rx="0.75" fill="#555"/>
+                <circle cx="22" cy="9" r="4" fill="#f4a261" opacity="0.15" stroke="#f4a261" stroke-width="0.5"/>
+              </svg>
+            </div>
+            <div class="top-card-info">
+              <div class="top-card-name">Sales Card</div>
+              <div class="top-card-updated">Updated Apr 10, 2025</div>
+            </div>
+            <div class="top-card-stats">
+              <div class="top-card-views-label">Views</div>
+              <div class="top-card-views-val">1,028</div>
+              <div class="top-card-growth">↗ 11.3%</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- /bottom-row -->
+
+    </main>
+  </div><!-- /main-content -->
+</div><!-- /dashboard-wrapper -->
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<!-- Dashboard JS -->
+<script src="../../public/assets/js/dashboard.js"></script>
+
+</body>
+</html>
