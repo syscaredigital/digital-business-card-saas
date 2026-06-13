@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Cards - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="my-vcard.html" class="nav-item active">My Cards</a>
+        <a href="contacts.html" class="nav-item">Contacts</a>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="qr-code.html" class="nav-item">QR Codes</a>
+        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">You're on Pro Plan</div>
+        <div class="upgrade-desc">Manage templates, campaigns, and card visibility.</div>
+        <a href="payments.html" class="btn-upgrade">Billing</a>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search cards..." /></label>
+      </header>
+      <main class="page-content">
+        <div class="page-header">
+          <div>
+            <span class="eyebrow">Card library</span>
+            <h2>Manage your business cards</h2>
+            <p>Create, update, and share each card based on your use case.</p>
+          </div>
+          <button class="btn-share" type="button" data-action="create-card">Create Card</button>
+        </div>
+
+        <div class="content-grid content-grid-two">
+          <article class="feature-panel searchable-item" data-search="main business card sales networking">
+            <div class="feature-panel-header">
+              <div><h3>Main Business Card</h3><p>Best for daily networking and client introductions.</p></div>
+              <span class="status-pill status-live">Live</span>
+            </div>
+            <div class="card-showcase card-showcase-red"></div>
+            <div class="inline-metrics">
+              <div><strong>8,247</strong><span>Views</span></div>
+              <div><strong>1,132</strong><span>Saves</span></div>
+              <div><strong>582</strong><span>Shares</span></div>
+            </div>
+            <div class="action-row">
+              <button type="button" class="btn-preview" data-action="preview-card">Preview</button>
+              <button type="button" class="btn-share" data-action="edit-card">Edit Card</button>
+            </div>
+          </article>
+
+          <article class="feature-panel searchable-item" data-search="event card expo campaign">
+            <div class="feature-panel-header">
+              <div><h3>Event Card</h3><p>Focused layout for conferences, expos, and roadshows.</p></div>
+              <span class="status-pill status-warm">Trending</span>
+            </div>
+            <div class="card-showcase card-showcase-blue"></div>
+            <div class="inline-metrics">
+              <div><strong>2,183</strong><span>Views</span></div>
+              <div><strong>414</strong><span>Saves</span></div>
+              <div><strong>201</strong><span>Shares</span></div>
+            </div>
+            <div class="action-row">
+              <button type="button" class="btn-preview" data-action="share-card">Share</button>
+              <a href="qr-code.html" class="btn-share">Get QR</a>
+            </div>
+          </article>
+
+          <article class="feature-panel searchable-item" data-search="sales card follow up">
+            <div class="feature-panel-header">
+              <div><h3>Sales Card</h3><p>Optimized for lead capture with stronger CTA placement.</p></div>
+              <span class="status-pill status-dim">Draft</span>
+            </div>
+            <div class="card-showcase card-showcase-gold"></div>
+            <div class="inline-metrics">
+              <div><strong>1,028</strong><span>Views</span></div>
+              <div><strong>179</strong><span>Saves</span></div>
+              <div><strong>83</strong><span>Shares</span></div>
+            </div>
+            <div class="action-row">
+              <button type="button" class="btn-preview" data-action="preview-card">Preview</button>
+              <button type="button" class="btn-share" data-action="complete-profile">Complete Setup</button>
+            </div>
+          </article>
+        </div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another card search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

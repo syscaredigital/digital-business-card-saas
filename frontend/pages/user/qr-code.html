@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Codes - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="my-vcard.html" class="nav-item">My Cards</a>
+        <a href="contacts.html" class="nav-item">Contacts</a>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="qr-code.html" class="nav-item active">QR Codes</a>
+        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search QR campaigns..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><span class="eyebrow">QR tools</span><h2>Share faster with QR codes</h2><p>Download, print, or embed a QR code for each of your cards.</p></div>
+          <button class="btn-share" type="button" data-action="download-qr">Download QR</button>
+        </div>
+        <div class="content-grid content-grid-two">
+          <article class="feature-panel searchable-item" data-search="main card qr code print">
+            <div class="feature-panel-header">
+              <div><h3>Main card QR</h3><p>Primary code for website, signage, and email footer.</p></div>
+              <span class="status-pill status-live">Active</span>
+            </div>
+            <div class="qr-preview"><div class="qr-grid"></div></div>
+            <div class="action-row">
+              <button type="button" class="btn-preview" data-action="copy-link">Copy Link</button>
+              <button type="button" class="btn-share" data-action="download-qr">Download PNG</button>
+            </div>
+          </article>
+          <article class="feature-panel searchable-item" data-search="campaign qr event tracking">
+            <div class="feature-panel-header">
+              <div><h3>Campaign QR sets</h3><p>Use different QR codes per campaign to track response quality.</p></div>
+              <span class="status-pill status-warm">3 Active</span>
+            </div>
+            <ul class="detail-list">
+              <li>Expo booth QR linked to Event Card</li>
+              <li>Product flyer QR linked to Main Business Card</li>
+              <li>WhatsApp bio QR linked to short profile page</li>
+            </ul>
+          </article>
+        </div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another QR search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

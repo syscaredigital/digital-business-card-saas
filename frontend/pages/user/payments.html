@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payments - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="my-vcard.html" class="nav-item">My Cards</a>
+        <a href="contacts.html" class="nav-item">Contacts</a>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="qr-code.html" class="nav-item">QR Codes</a>
+        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search billing..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><span class="eyebrow">Billing</span><h2>Manage your subscription</h2><p>Review your plan, invoices, and renewal settings.</p></div>
+          <button class="btn-share" type="button" data-action="upgrade-plan">Upgrade Plan</button>
+        </div>
+        <div class="content-grid content-grid-two">
+          <article class="feature-panel searchable-item" data-search="pro plan subscription renewal">
+            <div class="feature-panel-header">
+              <div><h3>Current plan</h3><p>Sync Card Pro with monthly billing.</p></div>
+              <span class="status-pill status-live">Active</span>
+            </div>
+            <div class="inline-metrics">
+              <div><strong>$24</strong><span>Monthly</span></div>
+              <div><strong>Jun 30</strong><span>Renews</span></div>
+              <div><strong>4</strong><span>Team seats</span></div>
+            </div>
+          </article>
+          <article class="feature-panel searchable-item" data-search="invoice payment history">
+            <div class="feature-panel-header">
+              <div><h3>Recent invoices</h3><p>Keep track of successful payments and receipts.</p></div>
+            </div>
+            <ul class="detail-list">
+              <li>June 2026 - Paid</li>
+              <li>May 2026 - Paid</li>
+              <li>April 2026 - Paid</li>
+            </ul>
+          </article>
+        </div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another billing search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

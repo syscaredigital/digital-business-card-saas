@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFC Cards - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="my-vcard.html" class="nav-item">My Cards</a>
+        <a href="contacts.html" class="nav-item">Contacts</a>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="qr-code.html" class="nav-item">QR Codes</a>
+        <a href="nfc-request.html" class="nav-item active">NFC Cards</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search NFC setup..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><span class="eyebrow">NFC setup</span><h2>Manage NFC card delivery and activation</h2><p>Track card status, assign links, and prepare new team members.</p></div>
+          <button class="btn-share" type="button" data-action="setup-nfc">Start Setup</button>
+        </div>
+        <div class="content-grid content-grid-two">
+          <article class="feature-panel searchable-item" data-search="nfc setup hardware shipping">
+            <div class="feature-panel-header">
+              <div><h3>Card status</h3><p>Your primary NFC card is ready to use.</p></div>
+              <span class="status-pill status-live">Activated</span>
+            </div>
+            <ul class="detail-list">
+              <li>Serial: NFC-2048-A1</li>
+              <li>Assigned card: Main Business Card</li>
+              <li>Last tested: June 10, 2026</li>
+            </ul>
+          </article>
+          <article class="feature-panel searchable-item" data-search="team nfc onboarding">
+            <div class="feature-panel-header">
+              <div><h3>Team rollout checklist</h3><p>Prepare new cards before shipping them to teammates.</p></div>
+            </div>
+            <ul class="detail-list">
+              <li>Assign destination profile link</li>
+              <li>Print card label and owner name</li>
+              <li>Run tap verification on mobile devices</li>
+            </ul>
+          </article>
+        </div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another NFC search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="my-vcard.html" class="nav-item">My Cards</a>
+        <a href="contacts.html" class="nav-item">Contacts</a>
+        <a href="analytics.html" class="nav-item active">Analytics</a>
+        <a href="qr-code.html" class="nav-item">QR Codes</a>
+        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search analytics..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><span class="eyebrow">Performance analytics</span><h2>See what drives engagement</h2><p>Monitor card views, scans, and conversion signals across channels.</p></div>
+          <button class="btn-customize" type="button" data-action="export-report">Export Report</button>
+        </div>
+        <div class="content-grid content-grid-two">
+          <section class="feature-panel">
+            <div class="feature-panel-header"><div><h3>Traffic trend</h3><p>Last 12 checkpoints of profile growth.</p></div></div>
+            <div class="chart-holder chart-holder-tall"><canvas id="engagementChart"></canvas></div>
+          </section>
+          <section class="feature-panel searchable-item" data-search="email direct qr nfc social teams performance summary">
+            <div class="feature-panel-header"><div><h3>Performance summary</h3><p>Channel insights for this month.</p></div></div>
+            <div class="mini-metric-list">
+              <div class="mini-metric"><strong>42%</strong><span>Email share conversion</span></div>
+              <div class="mini-metric"><strong>31%</strong><span>QR scan completion</span></div>
+              <div class="mini-metric"><strong>18%</strong><span>NFC tap follow-through</span></div>
+              <div class="mini-metric"><strong>9.4%</strong><span>Profile-to-contact save rate</span></div>
+            </div>
+          </section>
+        </div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another analytics search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

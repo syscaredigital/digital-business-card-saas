@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="my-vcard.html" class="nav-item">My Cards</a>
+        <a href="contacts.html" class="nav-item">Contacts</a>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="qr-code.html" class="nav-item">QR Codes</a>
+        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+        <a href="settings.html" class="nav-item active">Settings</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search settings..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><span class="eyebrow">Preferences</span><h2>Update your dashboard settings</h2><p>Control alerts, profile visibility, and sharing defaults.</p></div>
+          <button class="btn-share" type="button" data-action="save-settings">Save Changes</button>
+        </div>
+        <div class="settings-grid">
+          <div class="setting-card searchable-item" data-search="email alerts notifications">
+            <div class="setting-copy"><strong>Email alerts</strong><span>Receive a summary when someone saves your card.</span></div>
+            <label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label>
+          </div>
+          <div class="setting-card searchable-item" data-search="public profile link">
+            <div class="setting-copy"><strong>Public profile link</strong><span>Allow your profile to be shared without login.</span></div>
+            <label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label>
+          </div>
+          <div class="setting-card searchable-item" data-search="weekly analytics digest">
+            <div class="setting-copy"><strong>Weekly analytics digest</strong><span>Get traffic insights every Monday morning.</span></div>
+            <label class="switch"><input type="checkbox" /><span class="switch-slider"></span></label>
+          </div>
+        </div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another settings search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

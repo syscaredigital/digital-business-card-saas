@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contacts - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="my-vcard.html" class="nav-item">My Cards</a>
+        <a href="contacts.html" class="nav-item active">Contacts</a>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="qr-code.html" class="nav-item">QR Codes</a>
+        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search contacts..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><span class="eyebrow">Contact manager</span><h2>Contacts captured from your cards</h2><p>Search, organize, and follow up with the people who saved your profile.</p></div>
+          <button class="btn-share" type="button" data-action="add-contact">Add Contact</button>
+        </div>
+        <div class="table-panel">
+          <div class="table-panel-header"><strong>Recent leads</strong><span class="table-caption">1,028 contacts saved this month</span></div>
+          <div class="contact-list">
+            <article class="contact-row searchable-item" data-search="sarah johnson product lead">
+              <div><strong>Sarah Johnson</strong><span>Product Lead, Northwind Labs</span></div>
+              <div>Saved from Main Business Card</div>
+              <div>2 minutes ago</div>
+              <button type="button" class="btn-preview" data-action="contact-followup">Follow Up</button>
+            </article>
+            <article class="contact-row searchable-item" data-search="alex parker expo event">
+              <div><strong>Alex Parker</strong><span>Expo Partner, Bright Summit</span></div>
+              <div>Imported from Event Card</div>
+              <div>15 minutes ago</div>
+              <button type="button" class="btn-preview" data-action="contact-followup">Follow Up</button>
+            </article>
+            <article class="contact-row searchable-item" data-search="michael brown sales pipeline">
+              <div><strong>Michael Brown</strong><span>Sales Director, Vertex One</span></div>
+              <div>Saved from Sales Card</div>
+              <div>1 hour ago</div>
+              <button type="button" class="btn-preview" data-action="contact-followup">Follow Up</button>
+            </article>
+          </div>
+        </div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another contact search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

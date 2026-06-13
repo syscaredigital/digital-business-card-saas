@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users - Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar compact-sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span><button type="button" class="sidebar-collapse-btn">&lt;&lt;</button></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item with-icon"><span class="nav-item-icon">D</span>Dashboard</a>
+        <a href="employees.html" class="nav-item with-icon active"><span class="nav-item-icon">U</span>Users</a>
+        <a href="vcards.html" class="nav-item with-icon"><span class="nav-item-icon">C</span>Cards</a>
+        <a href="analytics.html" class="nav-item with-icon"><span class="nav-item-icon">A</span>Analytics</a>
+        <a href="qr-codes.html" class="nav-item with-icon"><span class="nav-item-icon">Q</span>QR Codes</a>
+        <a href="nfc-orders.html" class="nav-item with-icon"><span class="nav-item-icon">N</span>NFC Cards</a>
+        <a href="payments.html" class="nav-item with-icon"><span class="nav-item-icon">P</span>Payments</a>
+        <a href="settings.html" class="nav-item with-icon"><span class="nav-item-icon">S</span>Settings</a>
+      </nav>
+    </aside>
+    <div class="main-content compact-main">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search users..." /><span class="topbar-search-shortcut">/</span></label></header>
+      <main class="page-content">
+        <div class="page-header"><div><h1>Users</h1><p>Manage employees, card owners, and admin members.</p></div><a href="create-vcard.html" class="btn-share">Add User Card</a></div>
+        <article class="admin-card">
+          <div class="admin-card-header"><div><h3>User Directory</h3><p>Active employees and their card usage.</p></div></div>
+          <table class="admin-table">
+            <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Cards</th><th>Joined</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="searchable-item" data-search="john doe marketing active"><td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td><td>john.doe@example.com</td><td>Marketing</td><td>3</td><td>May 19, 2025</td><td><span class="status-badge active">Active</span></td></tr>
+              <tr class="searchable-item" data-search="jane smith sales active"><td><div class="table-user"><span class="mini-avatar">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">@janesmith</div></div></div></td><td>jane.smith@example.com</td><td>Sales</td><td>5</td><td>May 18, 2025</td><td><span class="status-badge active">Active</span></td></tr>
+              <tr class="searchable-item" data-search="robert johnson executive"><td><div class="table-user"><span class="mini-avatar">RJ</span><div><strong>Robert Johnson</strong><div class="subtle-handle">@robertjohnson</div></div></div></td><td>robert.j@example.com</td><td>Executive</td><td>2</td><td>May 17, 2025</td><td><span class="status-badge active">Active</span></td></tr>
+              <tr class="searchable-item" data-search="michael brown inactive"><td><div class="table-user"><span class="mini-avatar">MB</span><div><strong>Michael Brown</strong><div class="subtle-handle">@michaelbrown</div></div></div></td><td>michael.b@example.com</td><td>Support</td><td>1</td><td>May 16, 2025</td><td><span class="status-badge inactive">Inactive</span></td></tr>
+            </tbody>
+          </table>
+        </article>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another user search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

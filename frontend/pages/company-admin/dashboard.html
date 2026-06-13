@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar compact-sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+        <button type="button" class="sidebar-collapse-btn">&lt;&lt;</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item with-icon active"><span class="nav-item-icon">D</span>Dashboard</a>
+        <a href="employees.html" class="nav-item with-icon"><span class="nav-item-icon">U</span>Users</a>
+        <a href="vcards.html" class="nav-item with-icon"><span class="nav-item-icon">C</span>Cards</a>
+        <a href="analytics.html" class="nav-item with-icon"><span class="nav-item-icon">A</span>Analytics</a>
+        <a href="qr-codes.html" class="nav-item with-icon"><span class="nav-item-icon">Q</span>QR Codes</a>
+        <a href="nfc-orders.html" class="nav-item with-icon"><span class="nav-item-icon">N</span>NFC Cards</a>
+        <a href="payments.html" class="nav-item with-icon"><span class="nav-item-icon">P</span>Payments</a>
+        <a href="settings.html" class="nav-item with-icon"><span class="nav-item-icon">S</span>Settings</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Upgrade to Pro</div>
+        <div class="upgrade-desc">Unlock advanced features and boost your business growth.</div>
+        <a href="payments.html" class="btn-upgrade">Upgrade Now</a>
+      </div>
+
+      <div class="admin-profile-card">
+        <div class="table-user">
+          <span class="mini-avatar">AU</span>
+          <div>
+            <strong>Admin User</strong>
+            <div class="subtle-handle">admin@syncard.com</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-content compact-main">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search anything..." />
+          <span class="topbar-search-shortcut">/</span>
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">8</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AU</div>
+            <div class="user-info">
+              <div class="user-name">Admin User</div>
+              <div class="user-plan">Super Admin</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div class="stats-row">
+          <article class="stat-card searchable-item" data-search="total users">
+            <div class="stat-top">
+              <div class="stat-icon-wrap">U</div>
+              <div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">12,543</div>
+                <div class="stat-change">12.5%</div>
+                <div class="stat-vs">vs last month</div>
+              </div>
+            </div>
+            <canvas id="spark1" class="sparkline-area" width="220" height="40"></canvas>
+          </article>
+
+          <article class="stat-card searchable-item" data-search="active cards">
+            <div class="stat-top">
+              <div class="stat-icon-wrap">C</div>
+              <div>
+                <div class="stat-label">Active Cards</div>
+                <div class="stat-value">8,756</div>
+                <div class="stat-change">8.2%</div>
+                <div class="stat-vs">vs last month</div>
+              </div>
+            </div>
+            <canvas id="spark2" class="sparkline-area" width="220" height="40"></canvas>
+          </article>
+
+          <article class="stat-card searchable-item" data-search="revenue income">
+            <div class="stat-top">
+              <div class="stat-icon-wrap">$</div>
+              <div>
+                <div class="stat-label">Revenue</div>
+                <div class="stat-value">$24,780</div>
+                <div class="stat-change">15.3%</div>
+                <div class="stat-vs">vs last month</div>
+              </div>
+            </div>
+            <canvas id="spark3" class="sparkline-area" width="220" height="40"></canvas>
+          </article>
+
+          <article class="stat-card searchable-item" data-search="qr scans">
+            <div class="stat-top">
+              <div class="stat-icon-wrap">Q</div>
+              <div>
+                <div class="stat-label">QR Scans</div>
+                <div class="stat-value">45,342</div>
+                <div class="stat-change">18.7%</div>
+                <div class="stat-vs">vs last month</div>
+              </div>
+            </div>
+            <canvas id="spark4" class="sparkline-area" width="220" height="40"></canvas>
+          </article>
+        </div>
+
+        <section class="admin-dashboard-grid">
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3>User Growth</h3>
+                <p><strong>12,543</strong> <span class="muted-inline">Total Users</span></p>
+              </div>
+              <button type="button" class="period-selector" id="overviewPeriodButton"><span id="overviewPeriodLabel">Last 30 Days</span></button>
+            </div>
+            <div class="period-options" id="periodOptions" hidden>
+              <button type="button" class="period-option active" data-period="30">Last 30 Days</button>
+              <button type="button" class="period-option" data-period="90">Last 90 Days</button>
+              <button type="button" class="period-option" data-period="365">This Year</button>
+            </div>
+            <div class="chart-holder chart-holder-tall">
+              <canvas id="analyticsChart"></canvas>
+            </div>
+          </article>
+
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3>Revenue Overview</h3>
+                <p><strong>$24,780</strong> <span class="muted-inline">Total Revenue</span></p>
+              </div>
+              <select class="admin-select">
+                <option>This Year</option>
+              </select>
+            </div>
+            <div class="chart-holder chart-holder-tall">
+              <canvas id="revenueBarChart"></canvas>
+            </div>
+          </article>
+        </section>
+
+        <section class="admin-dashboard-grid">
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div><h3>Recent Activity</h3></div>
+              <a href="analytics.html" class="btn-preview">View All</a>
+            </div>
+            <table class="activity-table">
+              <thead>
+                <tr><th>User</th><th>Action</th><th>Details</th><th>Time</th></tr>
+              </thead>
+              <tbody>
+                <tr class="searchable-item" data-search="john doe created card">
+                  <td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">john@example.com</div></div></div></td>
+                  <td><span class="action-pill green">Created Card</span></td>
+                  <td>Business card created</td>
+                  <td>2m ago</td>
+                </tr>
+                <tr class="searchable-item" data-search="jane smith scanned qr">
+                  <td><div class="table-user"><span class="mini-avatar">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">jane@example.com</div></div></div></td>
+                  <td><span class="action-pill blue">Scanned QR</span></td>
+                  <td>QR code scanned</td>
+                  <td>5m ago</td>
+                </tr>
+                <tr class="searchable-item" data-search="robert johnson nfc tap">
+                  <td><div class="table-user"><span class="mini-avatar">RJ</span><div><strong>Robert Johnson</strong><div class="subtle-handle">robert@example.com</div></div></div></td>
+                  <td><span class="action-pill purple">NFC Tap</span></td>
+                  <td>NFC card tapped</td>
+                  <td>10m ago</td>
+                </tr>
+                <tr class="searchable-item" data-search="emily davis payment">
+                  <td><div class="table-user"><span class="mini-avatar">ED</span><div><strong>Emily Davis</strong><div class="subtle-handle">emily@example.com</div></div></div></td>
+                  <td><span class="action-pill orange">Payment</span></td>
+                  <td>Payment received</td>
+                  <td>15m ago</td>
+                </tr>
+                <tr class="searchable-item" data-search="michael brown updated card">
+                  <td><div class="table-user"><span class="mini-avatar">MB</span><div><strong>Michael Brown</strong><div class="subtle-handle">michael@example.com</div></div></div></td>
+                  <td><span class="action-pill indigo">Updated Card</span></td>
+                  <td>Card information updated</td>
+                  <td>20m ago</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div><h3>Top Performing Cards</h3></div>
+              <a href="vcards.html" class="btn-preview">View All</a>
+            </div>
+            <div class="card-rank-list">
+              <div class="card-rank-item searchable-item" data-search="john doe marketing manager">
+                <div class="card-thumb red"></div>
+                <div><strong>John Doe</strong><div class="subtle-handle">Marketing Manager</div></div>
+                <div class="scan-stat"><span class="scan-icon">QR</span><div><strong>2,543</strong><div class="subtle-handle">Scans</div></div></div>
+                <div class="positive-text">12.5%</div>
+              </div>
+              <div class="card-rank-item searchable-item" data-search="jane smith sales director">
+                <div class="card-thumb crimson"></div>
+                <div><strong>Jane Smith</strong><div class="subtle-handle">Sales Director</div></div>
+                <div class="scan-stat"><span class="scan-icon">QR</span><div><strong>2,341</strong><div class="subtle-handle">Scans</div></div></div>
+                <div class="positive-text">8.7%</div>
+              </div>
+              <div class="card-rank-item searchable-item" data-search="robert johnson ceo founder">
+                <div class="card-thumb red"></div>
+                <div><strong>Robert Johnson</strong><div class="subtle-handle">CEO &amp; Founder</div></div>
+                <div class="scan-stat"><span class="scan-icon">QR</span><div><strong>1,987</strong><div class="subtle-handle">Scans</div></div></div>
+                <div class="positive-text">15.3%</div>
+              </div>
+              <div class="card-rank-item searchable-item" data-search="emily davis product designer">
+                <div class="card-thumb crimson"></div>
+                <div><strong>Emily Davis</strong><div class="subtle-handle">Product Designer</div></div>
+                <div class="scan-stat"><span class="scan-icon">QR</span><div><strong>1,654</strong><div class="subtle-handle">Scans</div></div></div>
+                <div class="positive-text">10.2%</div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another dashboard search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

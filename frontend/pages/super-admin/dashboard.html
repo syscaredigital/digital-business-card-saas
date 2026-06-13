@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Admin Dashboard - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">SYNC CARD</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active">Dashboard</a>
+        <div class="sidebar-section-label">Management</div>
+        <a href="users.html" class="nav-item">Users</a>
+        <a href="cards.html" class="nav-item">Cards</a>
+        <a href="nfc-orders.html" class="nav-item">NFC Cards</a>
+        <a href="qr-codes.html" class="nav-item">QR Codes</a>
+        <a href="subscriptions.html" class="nav-item">Subscriptions</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="payouts.html" class="nav-item">Payouts</a>
+        <div class="sidebar-section-label">Analytics</div>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="reports.html" class="nav-item">Reports</a>
+        <div class="sidebar-section-label">Settings</div>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="roles-permissions.html" class="nav-item">Roles &amp; Permissions</a>
+        <a href="system-logs.html" class="nav-item">System Logs</a>
+        <a href="integrations.html" class="nav-item">Integrations</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-title">Upgrade Your Plan</div>
+        <div class="upgrade-desc">Unlock advanced features and boost your business.</div>
+        <a href="payments.html" class="btn-upgrade">Upgrade Now</a>
+      </div>
+
+      <div class="sidebar-footer-note">(c) 2025 Sync Card. All rights reserved.</div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search for users, cards, transactions..." />
+          <span class="topbar-search-shortcut">K</span>
+        </label>
+
+        <div class="topbar-right">
+          <button class="topbar-chip" type="button" data-action="quick-action">Quick Action</button>
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">SA</div>
+            <div class="user-info">
+              <div class="user-name">Super Admin</div>
+              <div class="user-plan">Administrator</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div class="page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Welcome back, Super Admin! Here's what's happening with your business today.</p>
+          </div>
+        </div>
+
+        <section class="admin-stats-row">
+          <article class="admin-card admin-stat-card searchable-item" data-search="total users growth">
+            <div class="stat-top">
+              <div>
+                <div class="admin-kicker">Total Users</div>
+                <div class="admin-big-number">12,543</div>
+                <div class="positive-text">12.5% <span class="muted-inline">vs last month</span></div>
+              </div>
+              <div class="stat-icon-wrap">U</div>
+            </div>
+          </article>
+          <article class="admin-card admin-stat-card searchable-item" data-search="active subscriptions plans">
+            <div class="stat-top">
+              <div>
+                <div class="admin-kicker">Active Subscriptions</div>
+                <div class="admin-big-number">8,456</div>
+                <div class="positive-text">8.2% <span class="muted-inline">vs last month</span></div>
+              </div>
+              <div class="stat-icon-wrap">S</div>
+            </div>
+          </article>
+          <article class="admin-card admin-stat-card searchable-item" data-search="revenue">
+            <div class="stat-top">
+              <div>
+                <div class="admin-kicker">Total Revenue</div>
+                <div class="admin-big-number">$45,678</div>
+                <div class="positive-text">15.3% <span class="muted-inline">vs last month</span></div>
+              </div>
+              <div class="stat-icon-wrap">$</div>
+            </div>
+          </article>
+          <article class="admin-card admin-stat-card searchable-item" data-search="cards created">
+            <div class="stat-top">
+              <div>
+                <div class="admin-kicker">Cards Created</div>
+                <div class="admin-big-number">23,456</div>
+                <div class="positive-text">10.7% <span class="muted-inline">vs last month</span></div>
+              </div>
+              <div class="stat-icon-wrap">C</div>
+            </div>
+          </article>
+          <article class="admin-card admin-stat-card searchable-item" data-search="qr scans">
+            <div class="stat-top">
+              <div>
+                <div class="admin-kicker">QR Scans</div>
+                <div class="admin-big-number">78,905</div>
+                <div class="positive-text">18.6% <span class="muted-inline">vs last month</span></div>
+              </div>
+              <div class="stat-icon-wrap">Q</div>
+            </div>
+          </article>
+        </section>
+
+        <section class="admin-split-grid">
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3>Revenue Overview</h3>
+                <p>$45,678.90 <span class="positive-text">15.3%</span> <span class="muted-inline">vs last month</span></p>
+              </div>
+              <button type="button" class="period-selector" id="overviewPeriodButton">
+                <span id="overviewPeriodLabel">Last 30 Days</span>
+              </button>
+            </div>
+            <div class="period-options" id="periodOptions" hidden>
+              <button type="button" class="period-option active" data-period="30">Last 30 Days</button>
+              <button type="button" class="period-option" data-period="90">Last 90 Days</button>
+              <button type="button" class="period-option" data-period="365">This Year</button>
+            </div>
+            <div class="chart-holder">
+              <canvas id="analyticsChart"></canvas>
+            </div>
+          </article>
+
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3>Revenue Breakdown</h3>
+              </div>
+            </div>
+            <div class="donut-layout">
+              <div class="donut-wrap">
+                <canvas id="revenueBreakdownChart"></canvas>
+                <div class="donut-center">
+                  <strong>$45,678</strong>
+                  <span class="muted-inline">Total</span>
+                </div>
+              </div>
+              <div class="legend-list">
+                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#ff5563"></span>Pro Plan</span><span>$18,456</span></div>
+                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#7c5cff"></span>Business Plan</span><span>$14,258</span></div>
+                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#ffbe55"></span>Enterprise Plan</span><span>$8,765</span></div>
+                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#ff7d6d"></span>Other Revenue</span><span>$4,199</span></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="admin-card overview-side-card">
+            <div class="admin-card-header">
+              <div>
+                <h3>Active Subscriptions</h3>
+              </div>
+              <a href="subscriptions.html" class="card-link">View All</a>
+            </div>
+            <div class="stack-item"><span>Pro Plan <span class="muted-inline">$9.99 / month</span></span><strong>4,567</strong></div>
+            <div class="stack-item"><span>Business Plan <span class="muted-inline">$19.99 / month</span></span><strong>2,890</strong></div>
+            <div class="stack-item"><span>Enterprise Plan <span class="muted-inline">$49.99 / month</span></span><strong>999</strong></div>
+            <div class="metric-row"><span>Total Active</span><strong>8,456</strong></div>
+          </article>
+        </section>
+
+        <section class="admin-wide-grid">
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div>
+                <h3>Recent Users</h3>
+              </div>
+              <a href="users.html" class="btn-preview">View All Users</a>
+            </div>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Plan</th>
+                  <th>Cards</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="searchable-item" data-search="john doe pro plan active">
+                  <td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td>
+                  <td>john.doe@example.com</td>
+                  <td><span class="plan-pill pro">Pro Plan</span></td>
+                  <td>3</td>
+                  <td>May 19, 2025</td>
+                  <td><span class="status-badge active">Active</span></td>
+                </tr>
+                <tr class="searchable-item" data-search="jane smith business plan active">
+                  <td><div class="table-user"><span class="mini-avatar">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">@janesmith</div></div></div></td>
+                  <td>jane.smith@example.com</td>
+                  <td><span class="plan-pill business">Business Plan</span></td>
+                  <td>5</td>
+                  <td>May 19, 2025</td>
+                  <td><span class="status-badge active">Active</span></td>
+                </tr>
+                <tr class="searchable-item" data-search="robert johnson pro plan active">
+                  <td><div class="table-user"><span class="mini-avatar">RJ</span><div><strong>Robert Johnson</strong><div class="subtle-handle">@robertjohnson</div></div></div></td>
+                  <td>robert.j@example.com</td>
+                  <td><span class="plan-pill pro">Pro Plan</span></td>
+                  <td>2</td>
+                  <td>May 18, 2025</td>
+                  <td><span class="status-badge active">Active</span></td>
+                </tr>
+                <tr class="searchable-item" data-search="michael brown business plan inactive">
+                  <td><div class="table-user"><span class="mini-avatar">MB</span><div><strong>Michael Brown</strong><div class="subtle-handle">@michaelbrown</div></div></div></td>
+                  <td>michael.b@example.com</td>
+                  <td><span class="plan-pill business">Business Plan</span></td>
+                  <td>4</td>
+                  <td>May 17, 2025</td>
+                  <td><span class="status-badge inactive">Inactive</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <div class="overview-side-card">
+            <article class="admin-card">
+              <div class="admin-card-header">
+                <div><h3>NFC Cards</h3></div>
+                <a href="nfc-orders.html" class="card-link">View All</a>
+              </div>
+              <div class="nfc-preview">NFC</div>
+              <div class="metric-list">
+                <div class="metric-row"><span>Total Cards</span><strong>4,567</strong></div>
+                <div class="metric-row"><span>Active Cards</span><strong>3,890</strong></div>
+                <div class="metric-row"><span>Inactive Cards</span><strong>677</strong></div>
+              </div>
+            </article>
+            <article class="admin-card">
+              <div class="admin-card-header">
+                <div><h3>QR Code Analytics</h3></div>
+                <a href="qr-codes.html" class="card-link">View All</a>
+              </div>
+              <div class="stack-item">
+                <div class="qr-box"></div>
+                <div class="metric-list" style="flex:1;">
+                  <div class="metric-row"><span>Total Scans</span><strong>78,905</strong></div>
+                  <div class="metric-row"><span>Unique Scans</span><strong>45,678</strong></div>
+                  <div class="metric-row"><span>Scan Rate</span><strong>2.3%</strong></div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-bottom-grid">
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div><h3>Recent Transactions</h3></div>
+              <a href="transactions.html" class="btn-preview">View All Transactions</a>
+            </div>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="searchable-item" data-search="trx12345678 john doe subscription completed">
+                  <td>#TRX12345678</td>
+                  <td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td>
+                  <td>Subscription</td>
+                  <td>$9.99</td>
+                  <td>May 19, 2025</td>
+                  <td><span class="status-badge completed">Completed</span></td>
+                </tr>
+                <tr class="searchable-item" data-search="trx12345679 company payout pending">
+                  <td>#TRX12345679</td>
+                  <td><div class="table-user"><span class="mini-avatar">AC</span><div><strong>Acme Inc.</strong><div class="subtle-handle">@acme</div></div></div></td>
+                  <td>Payout</td>
+                  <td>$580.00</td>
+                  <td>May 18, 2025</td>
+                  <td><span class="status-badge pending">Pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="admin-card">
+            <div class="admin-card-header">
+              <div><h3>System Overview</h3></div>
+              <a href="system-logs.html" class="card-link">View Logs</a>
+            </div>
+            <div class="system-list">
+              <div class="system-row"><span><strong>Server Status</strong><span class="muted-inline">All systems operational</span></span><span class="tiny-pill success">Healthy</span></div>
+              <div class="system-row"><span><strong>Storage Usage</strong><span class="muted-inline">45.2% / 100GB</span></span><div class="progress-line"><span style="width:45%"></span></div></div>
+              <div class="system-row"><span><strong>API Requests</strong><span class="muted-inline">2.4M / 10M</span></span><div class="progress-line"><span style="width:24%"></span></div></div>
+            </div>
+          </article>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another dashboard search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

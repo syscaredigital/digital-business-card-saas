@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users - Super Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <div class="sidebar-section-label">Management</div>
+        <a href="users.html" class="nav-item active">Users</a>
+        <a href="cards.html" class="nav-item">Cards</a>
+        <a href="nfc-orders.html" class="nav-item">NFC Cards</a>
+        <a href="qr-codes.html" class="nav-item">QR Codes</a>
+        <a href="subscriptions.html" class="nav-item">Subscriptions</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="payouts.html" class="nav-item">Payouts</a>
+        <div class="sidebar-section-label">Analytics</div>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="reports.html" class="nav-item">Reports</a>
+        <div class="sidebar-section-label">Settings</div>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="roles-permissions.html" class="nav-item">Roles &amp; Permissions</a>
+        <a href="system-logs.html" class="nav-item">System Logs</a>
+        <a href="integrations.html" class="nav-item">Integrations</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search users, email, or plans..." /></label>
+      </header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><h1>Users</h1><p>Manage users, their plans, and account activity across the platform.</p></div>
+          <div class="header-actions"><button class="btn-share" type="button" data-action="quick-action">Add User</button></div>
+        </div>
+        <article class="admin-card">
+          <div class="admin-card-header"><div><h3>User Directory</h3><p>Recently active user accounts and subscription status.</p></div></div>
+          <table class="admin-table">
+            <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Cards</th><th>Joined</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="searchable-item" data-search="john doe pro plan active"><td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td><td>john.doe@example.com</td><td><span class="plan-pill pro">Pro Plan</span></td><td>3</td><td>May 19, 2025</td><td><span class="status-badge active">Active</span></td></tr>
+              <tr class="searchable-item" data-search="jane smith business"><td><div class="table-user"><span class="mini-avatar">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">@janesmith</div></div></div></td><td>jane.smith@example.com</td><td><span class="plan-pill business">Business Plan</span></td><td>5</td><td>May 19, 2025</td><td><span class="status-badge active">Active</span></td></tr>
+              <tr class="searchable-item" data-search="robert johnson pro"><td><div class="table-user"><span class="mini-avatar">RJ</span><div><strong>Robert Johnson</strong><div class="subtle-handle">@robertjohnson</div></div></div></td><td>robert.j@example.com</td><td><span class="plan-pill pro">Pro Plan</span></td><td>2</td><td>May 18, 2025</td><td><span class="status-badge active">Active</span></td></tr>
+              <tr class="searchable-item" data-search="emily davis enterprise"><td><div class="table-user"><span class="mini-avatar">ED</span><div><strong>Emily Davis</strong><div class="subtle-handle">@emilydavis</div></div></div></td><td>emily.d@example.com</td><td><span class="plan-pill enterprise">Enterprise</span></td><td>10</td><td>May 18, 2025</td><td><span class="status-badge active">Active</span></td></tr>
+              <tr class="searchable-item" data-search="michael brown inactive"><td><div class="table-user"><span class="mini-avatar">MB</span><div><strong>Michael Brown</strong><div class="subtle-handle">@michaelbrown</div></div></div></td><td>michael.b@example.com</td><td><span class="plan-pill business">Business Plan</span></td><td>4</td><td>May 17, 2025</td><td><span class="status-badge inactive">Inactive</span></td></tr>
+            </tbody>
+          </table>
+        </article>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another user search term.</p></div>
+      </main>
+    </div>
+  </div>
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>
