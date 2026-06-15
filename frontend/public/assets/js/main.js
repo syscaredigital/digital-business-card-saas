@@ -1,23 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Sync Card Home Page Loaded");
-
   const header = document.querySelector(".site-header");
+  const contactForms = document.querySelectorAll(".contact-form, .newsletter-form");
 
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > 50) {
-      header.classList.add("header-scrolled");
-    } else {
-      header.classList.remove("header-scrolled");
-    }
+  const updateHeader = () => {
+    if (!header) return;
+    header.classList.toggle("header-scrolled", window.scrollY > 40);
+  };
+
+  updateHeader();
+  window.addEventListener("scroll", updateHeader);
+
+  document.querySelectorAll(".navbar-collapse .nav-link, .navbar-collapse .dropdown-item").forEach((link) => {
+    link.addEventListener("click", () => {
+      const menu = document.querySelector(".navbar-collapse.show");
+      if (!menu || typeof bootstrap === "undefined") return;
+      bootstrap.Collapse.getOrCreateInstance(menu).hide();
+    });
   });
 
-  const contactForm = document.querySelector(".contact-section form");
-
-  if (contactForm) {
-    contactForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      alert("Thank you! Your message has been submitted.");
-      contactForm.reset();
+  contactForms.forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      alert("Thank you. We will get back to you shortly.");
+      form.reset();
     });
-  }
+  });
 });

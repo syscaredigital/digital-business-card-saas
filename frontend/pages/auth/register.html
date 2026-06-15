@@ -4,107 +4,73 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Register | Sync Card</title>
-
   <link rel="stylesheet" href="../../public/assets/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../public/assets/css/auth.css" />
 </head>
 <body>
+  <main class="auth-shell register-screen">
+    <section class="auth-visual">
+      <a href="../website/home.html" class="auth-brand" aria-label="Sync Card home">
+        <span class="sync-logo">S</span>
+        <span>Sync <b>Card</b></span>
+      </a>
 
-<section class="register-page">
-
-  <div class="register-left">
-    <div class="brand">
-      <img src="../../public/assets/images/logo.png" alt="Sync Card Logo">
-      <h3>Sync <span>Card</span></h3>
-    </div>
-
-    <h1>Create Your Account</h1>
-    <p>
-      Join Sync Card and start building your professional digital identity with
-      VCards, QR codes, NFC cards, and smart contact sharing.
-    </p>
-
-    <div class="register-preview">
-      <div class="preview-card">
-        <h4>Digital VCard</h4>
-        <p>Tap • Share • Connect</p>
+      <div class="auth-copy">
+        <span class="auth-pill">Start Your Digital Identity</span>
+        <h1>Create Your <span>Account</span></h1>
+        <p>Join Sync Card and build your professional digital identity with VCards, QR codes, NFC cards, and smart contact sharing.</p>
       </div>
-    </div>
-  </div>
 
-  <div class="register-right">
-    <div class="register-form-card">
+      <div class="benefit-list">
+        <article><span>VC</span><div><h2>Digital VCards</h2><p>Launch a polished contact profile that is ready to share anywhere.</p></div></article>
+        <article><span>NFC</span><div><h2>NFC Ready</h2><p>Pair your profile with premium cards for instant tap-to-share networking.</p></div></article>
+        <article><span>TM</span><div><h2>Team Friendly</h2><p>Manage people, cards and contacts from one secure dashboard.</p></div></article>
+      </div>
+    </section>
 
-      <h2><span>Register</span> Now</h2>
-      <p>Create your account to get started</p>
+    <section class="auth-form-area">
+      <div class="auth-card register-auth-card">
+        <h2><span>Register</span> Now</h2>
+        <p>Create your account to get started</p>
 
-      <form id="registerForm">
-
-        <div class="row">
-          <div class="col-md-6">
-            <label>First Name</label>
-            <div class="input-box">
-              <span>👤</span>
-              <input type="text" placeholder="First name" required>
+        <form id="registerForm" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="firstName">First Name</label>
+              <div class="auth-input"><span class="input-icon">U</span><input type="text" id="firstName" placeholder="First name" required /></div>
+            </div>
+            <div class="col-md-6">
+              <label for="lastName">Last Name</label>
+              <div class="auth-input"><span class="input-icon">U</span><input type="text" id="lastName" placeholder="Last name" required /></div>
             </div>
           </div>
 
-          <div class="col-md-6">
-            <label>Last Name</label>
-            <div class="input-box">
-              <span>👤</span>
-              <input type="text" placeholder="Last name" required>
-            </div>
+          <label for="registerEmail">Email Address</label>
+          <div class="auth-input"><span class="input-icon">M</span><input type="email" id="registerEmail" placeholder="example@mail.com" required /></div>
+
+          <label for="phoneNumber">Phone Number</label>
+          <div class="auth-input"><span class="input-icon">P</span><input type="tel" id="phoneNumber" placeholder="+94 77 123 4567" /></div>
+
+          <label for="registerPassword">Password</label>
+          <div class="auth-input">
+            <span class="input-icon">L</span>
+            <input type="password" id="registerPassword" placeholder="Create password" required />
+            <button type="button" class="toggle-password" data-target="registerPassword" aria-label="Show password">show</button>
           </div>
-        </div>
 
-        <label>Email Address</label>
-        <div class="input-box">
-          <span>✉</span>
-          <input type="email" placeholder="example@mail.com" required>
-        </div>
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="auth-input"><span class="input-icon">L</span><input type="password" id="confirmPassword" placeholder="Confirm password" required /></div>
 
-        <label>Phone Number</label>
-        <div class="input-box">
-          <span>☎</span>
-          <input type="text" placeholder="+94 77 123 4567">
-        </div>
+          <label class="check-row terms-row"><input type="checkbox" required /> I agree to the Terms and Privacy Policy</label>
 
-        <label>Password</label>
-        <div class="input-box">
-          <span>🔒</span>
-          <input type="password" id="registerPassword" placeholder="Create password" required>
-          <button type="button" id="toggleRegisterPassword">👁</button>
-        </div>
+          <button type="submit" class="auth-submit">Create Account <span>-></span></button>
+          <p class="switch-link">Already have an account? <a href="login.html">Sign In</a></p>
+        </form>
+      </div>
+    </section>
+  </main>
 
-        <label>Confirm Password</label>
-        <div class="input-box">
-          <span>🔒</span>
-          <input type="password" id="confirmPassword" placeholder="Confirm password" required>
-        </div>
-
-        <label class="terms">
-          <input type="checkbox" required>
-          I agree to the Terms & Conditions and Privacy Policy
-        </label>
-
-        <button type="submit" class="signin-btn">
-          Create Account →
-        </button>
-
-        <p class="register-text">
-          Already have an account?
-          <a href="login.html">Sign In</a>
-        </p>
-
-      </form>
-
-    </div>
-  </div>
-
-</section>
-
-<script src="../../public/assets/js/bootstrap.bundle.min.js"></script>
-<script src="../../public/assets/js/auth.js"></script>
+  <script src="../../public/assets/js/bootstrap.bundle.min.js"></script>
+  <script src="../../public/assets/js/auth.js"></script>
 </body>
 </html>
