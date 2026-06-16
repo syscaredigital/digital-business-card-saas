@@ -1,5 +1,45 @@
 document.addEventListener("DOMContentLoaded", () => {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const loginScreen = document.querySelector(".login-screen");
+
+  const languageToggle = document.querySelector(".login-language-toggle");
+  const languageMenu = document.getElementById("loginLanguageMenu");
+  const languageOptions = document.querySelectorAll(".login-language-option");
+
+  if (languageToggle && languageMenu) {
+    languageToggle.addEventListener("click", () => {
+      const isOpen = languageToggle.getAttribute("aria-expanded") === "true";
+      languageToggle.setAttribute("aria-expanded", String(!isOpen));
+      languageMenu.hidden = isOpen;
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".login-language")) {
+        languageToggle.setAttribute("aria-expanded", "false");
+        languageMenu.hidden = true;
+      }
+    });
+  }
+
+  languageOptions.forEach((option) => {
+    option.addEventListener("click", () => {
+      languageOptions.forEach((item) => item.classList.remove("active"));
+      option.classList.add("active");
+      if (languageToggle) {
+        const label = languageToggle.querySelector("span:nth-child(2)");
+        if (label) label.textContent = option.dataset.lang || option.textContent.trim();
+        languageToggle.setAttribute("aria-expanded", "false");
+      }
+      if (languageMenu) languageMenu.hidden = true;
+    });
+  });
+
+  const themeToggle = document.querySelector(".login-theme-toggle");
+  if (themeToggle && loginScreen) {
+    themeToggle.addEventListener("click", () => {
+      loginScreen.classList.toggle("login-theme-alt");
+    });
+  }
 
   document.querySelectorAll(".toggle-password").forEach((button) => {
     button.addEventListener("click", () => {
@@ -8,7 +48,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const isPassword = input.type === "password";
       input.type = isPassword ? "text" : "password";
-      button.textContent = isPassword ? "hide" : "show";
+      const label = button.querySelector(".toggle-password-label");
+      if (label) {
+        label.textContent = isPassword ? "hide" : "show";
+      } else {
+        button.textContent = isPassword ? "hide" : "show";
+      }
       button.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
     });
   });
@@ -18,15 +63,28 @@ document.addEventListener("DOMContentLoaded", () => {
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const email = document.getElementById("loginEmail");
+      const password = document.getElementById("passwordInput");
 
       if (email && !emailPattern.test(email.value.trim())) {
         alert("Please enter a valid email address.");
         return;
       }
 
-      alert("Login submitted successfully.");
+      if (password && !password.value.trim()) {
+        alert("Please enter your password.");
+        return;
+      }
+
+      window.location.href = "../company-admin/dashboard.html";
     });
   }
+
+  document.querySelectorAll(".login-social-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      const provider = button.dataset.provider || "social";
+      alert(`${provider} sign-in is coming soon.`);
+    });
+  });
 
   const forgotPasswordForm = document.getElementById("forgotPasswordForm");
   if (forgotPasswordForm) {
