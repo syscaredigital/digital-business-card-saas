@@ -8,66 +8,241 @@
   <link rel="stylesheet" href="../../public/assets/css/auth.css" />
 </head>
 <body>
-  <main class="auth-shell register-screen">
-    <section class="auth-visual">
-      <a href="../website/home.html" class="auth-brand" aria-label="Sync Card home">
-        <span class="sync-logo">S</span>
-        <span>Sync <b>Card</b></span>
-      </a>
+  <main class="sync-register-page register-screen">
+    <div class="sync-register-shell">
+      <section class="sync-register-showcase">
+        <a href="../website/home.html" class="sync-register-brand" aria-label="Sync Card home">
+          <span class="sync-register-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path d="M41.7 12H24.4c-6.3 0-11.4 5.1-11.4 11.4v17.2c0 6.3 5.1 11.4 11.4 11.4h17.2c6.3 0 11.4-5.1 11.4-11.4V23.4c0-6.3-5.1-11.4-11.3-11.4Z" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M20 42.7 30.3 32.4H23l4.7-4.7h13l-10.3 10.3h7.4L33 42.7H20Z" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="sync-register-brand-copy">
+            <strong>Sync <span>Card</span></strong>
+            <small>Digital Business Card Platform</small>
+          </span>
+        </a>
 
-      <div class="auth-copy">
-        <span class="auth-pill">Start Your Digital Identity</span>
-        <h1>Create Your <span>Account</span></h1>
-        <p>Join Sync Card and build your professional digital identity with VCards, QR codes, NFC cards, and smart contact sharing.</p>
-      </div>
+        <div class="sync-register-copy">
+          <span class="sync-register-eyebrow">Launch Your Smart Identity</span>
+          <h1>Build a profile people can <span>tap, scan, and remember.</span></h1>
+          <p>Create a polished digital business presence with NFC-ready cards, QR sharing, lead capture, and team-friendly management from day one.</p>
+        </div>
 
-      <div class="benefit-list">
-        <article><span>VC</span><div><h2>Digital VCards</h2><p>Launch a polished contact profile that is ready to share anywhere.</p></div></article>
-        <article><span>NFC</span><div><h2>NFC Ready</h2><p>Pair your profile with premium cards for instant tap-to-share networking.</p></div></article>
-        <article><span>TM</span><div><h2>Team Friendly</h2><p>Manage people, cards and contacts from one secure dashboard.</p></div></article>
-      </div>
-    </section>
-
-    <section class="auth-form-area">
-      <div class="auth-card register-auth-card">
-        <h2><span>Register</span> Now</h2>
-        <p>Create your account to get started</p>
-
-        <form id="registerForm" novalidate>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label for="firstName">First Name</label>
-              <div class="auth-input"><span class="input-icon">U</span><input type="text" id="firstName" placeholder="First name" required /></div>
+        <div class="sync-register-pillars">
+          <article>
+            <span class="sync-register-pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M7.5 8.5a6 6 0 0 1 0 7" />
+                <path d="M11.5 5.5a10 10 0 0 1 0 13" />
+                <path d="M15.5 2.5a14 14 0 0 1 0 19" />
+              </svg>
+            </span>
+            <div>
+              <h2>NFC-first sharing</h2>
+              <p>Turn every conversation into an instant profile handoff with premium tap-ready cards.</p>
             </div>
-            <div class="col-md-6">
-              <label for="lastName">Last Name</label>
-              <div class="auth-input"><span class="input-icon">U</span><input type="text" id="lastName" placeholder="Last name" required /></div>
+          </article>
+          <article>
+            <span class="sync-register-pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="4" width="6" height="6" rx="1.2" />
+                <rect x="14" y="4" width="6" height="6" rx="1.2" />
+                <rect x="4" y="14" width="6" height="6" rx="1.2" />
+                <path d="M14 14h2v2h-2zM18 14h2v2h-2zM18 18h2v2h-2zM14 18h2v2h-2z" fill="currentColor" stroke="none" />
+              </svg>
+            </span>
+            <div>
+              <h2>Backup QR access</h2>
+              <p>Every card stays reachable with scan-based sharing for any phone or event setup.</p>
             </div>
+          </article>
+          <article>
+            <span class="sync-register-pillar-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 18.5h16" />
+                <path d="M7.5 15V7.5" />
+                <path d="M12 15V4.5" />
+                <path d="M16.5 15v-5" />
+              </svg>
+            </span>
+            <div>
+              <h2>Growth insights</h2>
+              <p>Track profile activity, optimize follow-ups, and scale your team with one dashboard.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="sync-register-stage" aria-hidden="true">
+          <div class="sync-register-stage-aura"></div>
+          <div class="sync-register-stage-card">
+            <img src="../../public/assets/images/login-card-front.png" alt="Sync Card sample front design" />
           </div>
+        </div>
+      </section>
 
-          <label for="registerEmail">Email Address</label>
-          <div class="auth-input"><span class="input-icon">M</span><input type="email" id="registerEmail" placeholder="example@mail.com" required /></div>
-
-          <label for="phoneNumber">Phone Number</label>
-          <div class="auth-input"><span class="input-icon">P</span><input type="tel" id="phoneNumber" placeholder="+94 77 123 4567" /></div>
-
-          <label for="registerPassword">Password</label>
-          <div class="auth-input">
-            <span class="input-icon">L</span>
-            <input type="password" id="registerPassword" placeholder="Create password" required />
-            <button type="button" class="toggle-password" data-target="registerPassword" aria-label="Show password">show</button>
+      <section class="sync-register-form-column">
+        <div class="sync-register-panel">
+          <div class="sync-register-panel-top">
+            <span class="sync-register-kicker">Create Account</span>
+            <span class="sync-register-status">Setup takes under 2 min</span>
           </div>
+          <h2>Register <span>Now</span></h2>
+          <p>Start with your profile details and unlock your smart card workspace.</p>
 
-          <label for="confirmPassword">Confirm Password</label>
-          <div class="auth-input"><span class="input-icon">L</span><input type="password" id="confirmPassword" placeholder="Confirm password" required /></div>
+          <form id="registerForm" novalidate>
+            <div class="sync-register-grid">
+              <div class="sync-register-field">
+                <label for="firstName">First Name</label>
+                <div class="auth-input sync-register-input">
+                  <span class="input-icon sync-register-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="8" r="3.25" />
+                      <path d="M5.5 19c1.3-3.2 4.1-4.8 6.5-4.8s5.2 1.6 6.5 4.8" />
+                    </svg>
+                  </span>
+                  <input type="text" id="firstName" class="form-control" placeholder="First name" required />
+                </div>
+              </div>
+              <div class="sync-register-field">
+                <label for="lastName">Last Name</label>
+                <div class="auth-input sync-register-input">
+                  <span class="input-icon sync-register-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="8" r="3.25" />
+                      <path d="M5.5 19c1.3-3.2 4.1-4.8 6.5-4.8s5.2 1.6 6.5 4.8" />
+                    </svg>
+                  </span>
+                  <input type="text" id="lastName" class="form-control" placeholder="Last name" required />
+                </div>
+              </div>
+            </div>
 
-          <label class="check-row terms-row"><input type="checkbox" required /> I agree to the Terms and Privacy Policy</label>
+            <div class="sync-register-field">
+              <label for="registerEmail">Email Address</label>
+              <div class="auth-input sync-register-input">
+                <span class="input-icon sync-register-input-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
+                    <path d="m5.5 8 6.5 5 6.5-5" />
+                  </svg>
+                </span>
+                <input type="email" id="registerEmail" class="form-control" placeholder="example@mail.com" autocomplete="email" required />
+              </div>
+            </div>
 
-          <button type="submit" class="auth-submit">Create Account <span>-></span></button>
-          <p class="switch-link">Already have an account? <a href="login.html">Sign In</a></p>
-        </form>
+            <div class="sync-register-grid">
+              <div class="sync-register-field">
+                <label for="phoneNumber">Phone Number</label>
+                <div class="auth-input sync-register-input">
+                  <span class="input-icon sync-register-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M6.5 4.5h3l1.2 3.4-1.8 1.9c1.2 2.3 3.1 4.2 5.4 5.4l1.9-1.8 3.4 1.2v3c0 .8-.7 1.5-1.5 1.5C10.8 20 4 13.2 4 6c0-.8.7-1.5 1.5-1.5Z" />
+                    </svg>
+                  </span>
+                  <input type="tel" id="phoneNumber" class="form-control" placeholder="+94 77 123 4567" autocomplete="tel" />
+                </div>
+              </div>
+              <div class="sync-register-field">
+                <label for="companyName">Company Name</label>
+                <div class="auth-input sync-register-input">
+                  <span class="input-icon sync-register-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M4.5 19.5h15" />
+                      <path d="M6.5 19.5V7.5h11v12" />
+                      <path d="M9 10.5h1.5M13.5 10.5H15M9 13.5h1.5M13.5 13.5H15" />
+                    </svg>
+                  </span>
+                  <input type="text" id="companyName" class="form-control" placeholder="Your company" autocomplete="organization" />
+                </div>
+              </div>
+            </div>
+
+            <div class="sync-register-grid">
+              <div class="sync-register-field">
+                <label for="registerPassword">Password</label>
+                <div class="auth-input sync-register-input">
+                  <span class="input-icon sync-register-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <rect x="5.5" y="10.5" width="13" height="9" rx="2.5" />
+                      <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+                    </svg>
+                  </span>
+                  <input type="password" id="registerPassword" class="form-control" placeholder="Create password" autocomplete="new-password" required />
+                  <button type="button" class="toggle-password sync-register-toggle-password" data-target="registerPassword" aria-label="Show password">
+                    <span class="toggle-password-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M2.75 12s3.25-5.5 9.25-5.5S21.25 12 21.25 12s-3.25 5.5-9.25 5.5S2.75 12 2.75 12Z" />
+                        <circle cx="12" cy="12" r="2.75" />
+                        <path d="m4 4 16 16" />
+                      </svg>
+                    </span>
+                    <span class="toggle-password-label visually-hidden">show</span>
+                  </button>
+                </div>
+              </div>
+              <div class="sync-register-field">
+                <label for="confirmPassword">Confirm Password</label>
+                <div class="auth-input sync-register-input">
+                  <span class="input-icon sync-register-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <rect x="5.5" y="10.5" width="13" height="9" rx="2.5" />
+                      <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+                    </svg>
+                  </span>
+                  <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm password" autocomplete="new-password" required />
+                </div>
+              </div>
+            </div>
+
+            <div class="sync-register-strength">
+              <div class="sync-register-strength-copy">
+                <strong>Strong account setup</strong>
+                <span>Use 8+ characters with a mix of letters, numbers, and symbols.</span>
+              </div>
+              <div class="sync-register-strength-bars" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+
+            <label class="sync-register-terms">
+              <input type="checkbox" required />
+              <span class="sync-register-terms-box" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="m6 12 4 4 8-8" />
+                </svg>
+              </span>
+              <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
+            </label>
+
+            <button type="submit" class="auth-submit sync-register-submit">
+              <span>Create Account</span>
+              <span class="sync-register-submit-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14" />
+                  <path d="m13 6 6 6-6 6" />
+                </svg>
+              </span>
+            </button>
+
+            <p class="sync-register-switch">Already have an account? <a href="login.html">Sign In</a></p>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <footer class="sync-register-footer">
+      <p>&copy; 2025 Sync Card. All rights reserved.</p>
+      <div class="sync-register-footer-links">
+        <a href="#">Terms of Service</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Contact Us</a>
       </div>
-    </section>
+    </footer>
   </main>
 
   <script src="../../public/assets/js/bootstrap.bundle.min.js"></script>
