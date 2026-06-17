@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template Two - Real Estate vCard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0d2c66;
+      --navy-deep: #0a1f48;
+      --gold: #c99627;
+      --gold-soft: #e4bd5d;
+      --text: #12305f;
+      --muted: #5c6c87;
+      --surface: #ffffff;
+      --surface-alt: #f5f7fb;
+      --border: rgba(13, 44, 102, 0.1);
+      --shadow: 0 22px 48px rgba(20, 43, 84, 0.12);
+      --radius-xl: 32px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(201, 150, 39, 0.18), transparent 28rem),
+        linear-gradient(180deg, #eff3fb 0%, #f7f9fd 24%, #edf2f9 100%);
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .vcard-shell {
+      width: min(100%, 860px);
+      margin: 0 auto;
+      padding: 0 20px 36px;
+    }
+
+    .hero {
+      position: relative;
+      padding-top: 22px;
+    }
+
+    .hero-banner {
+      position: relative;
+      min-height: 330px;
+      border-radius: 0 0 36px 36px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background:
+        linear-gradient(180deg, rgba(7, 23, 57, 0.24), rgba(7, 23, 57, 0.24)),
+        url("https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1600&q=80") center left / cover no-repeat;
+    }
+
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(8, 25, 61, 0.42) 0%, rgba(8, 25, 61, 0.12) 34%, rgba(8, 25, 61, 0.22) 100%),
+        url("https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1400&q=80") center right / 52% 100% no-repeat;
+      mix-blend-mode: normal;
+    }
+
+    .hero-banner::before {
+      content: "";
+      position: absolute;
+      inset: auto -12% -130px -12%;
+      height: 260px;
+      background: var(--surface);
+      clip-path: polygon(0 72%, 50% 22%, 100% 72%, 100% 100%, 0 100%);
+      z-index: 1;
+    }
+
+    .profile-card {
+      position: relative;
+      z-index: 2;
+      margin: -118px auto 0;
+      text-align: center;
+      padding: 0 10px;
+    }
+
+    .profile-avatar {
+      width: 174px;
+      height: 174px;
+      margin: 0 auto 22px;
+      padding: 7px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #d5a643, #b88316);
+      box-shadow: 0 12px 30px rgba(113, 88, 34, 0.24);
+    }
+
+    .profile-avatar span {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f5f5f5 62%, #e1e1e1 100%);
+      border: 6px solid #fff;
+      color: #b8b8b8;
+      font-size: 84px;
+      font-weight: 700;
+    }
+
+    .profile-name {
+      margin: 0;
+      font-size: clamp(2.3rem, 6vw, 3.7rem);
+      line-height: 1.02;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--navy);
+    }
+
+    .profile-role {
+      margin: 10px 0 12px;
+      color: var(--gold);
+      font-size: clamp(1.2rem, 3vw, 1.85rem);
+      font-weight: 700;
+    }
+
+    .profile-divider {
+      width: 92px;
+      height: 3px;
+      margin: 0 auto 18px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .profile-company {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    .social-list {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 24px 0 24px;
+    }
+
+    .social-link {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(13, 44, 102, 0.18);
+    }
+
+    .social-link.linkedin { background: #1178b3; }
+    .social-link.twitter { background: #2ea3f2; }
+    .social-link.facebook { background: #234f9b; }
+    .social-link.instagram { background: linear-gradient(135deg, #ff8a00, #ff2d55 55%, #7b5cff); }
+    .social-link.youtube { background: #f01414; }
+
+    .intro-copy {
+      width: min(100%, 670px);
+      margin: 0 auto 28px;
+      color: #243e6d;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .content-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      min-width: 0;
+      padding: 18px 18px;
+      border-right: 1px solid var(--border);
+    }
+
+    .contact-item:last-child {
+      border-right: 0;
+    }
+
+    .icon-badge {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #d9aa45, #bc891d);
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .contact-label {
+      margin: 0 0 4px;
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.2;
+    }
+
+    .contact-value {
+      margin: 0;
+      color: #3e5175;
+      font-size: 0.98rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .contact-copy {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .cta-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 18px 0 28px;
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: min(100%, 420px);
+      padding: 20px 26px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--navy), var(--navy-deep));
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      box-shadow: 0 14px 28px rgba(13, 44, 102, 0.22);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      margin: 30px 0 18px;
+      color: var(--navy);
+      text-align: center;
+    }
+
+    .section-title::before,
+    .section-title::after {
+      content: "";
+      width: 100px;
+      max-width: 18vw;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(201, 150, 39, 0.95), transparent);
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
+      font-weight: 800;
+    }
+
+    .services-grid,
+    .property-grid,
+    .pricing-grid,
+    .hours-grid,
+    .action-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .services-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .service-card,
+    .property-card,
+    .pricing-card,
+    .testimonial-card,
+    .message-panel {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 22px;
+      box-shadow: 0 16px 34px rgba(27, 46, 88, 0.1);
+    }
+
+    .service-card {
+      padding: 22px 18px;
+      text-align: center;
+    }
+
+    .service-icon {
+      display: grid;
+      place-items: center;
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, var(--navy), #143878);
+      color: var(--gold-soft);
+      box-shadow: inset 0 0 0 2px rgba(201, 150, 39, 0.24);
+    }
+
+    .service-card h3,
+    .property-card h3,
+    .pricing-card h3,
+    .testimonial-copy strong,
+    .brand-block h3 {
+      margin: 0 0 10px;
+      color: var(--navy);
+    }
+
+    .service-card p,
+    .property-meta,
+    .pricing-card li,
+    .message-hint {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .property-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .property-card {
+      overflow: hidden;
+    }
+
+    .property-image {
+      position: relative;
+      aspect-ratio: 1.2 / 0.82;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .property-badge {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(13, 44, 102, 0.96);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .property-body {
+      padding: 14px 14px 18px;
+      text-align: center;
+    }
+
+    .property-body h3 {
+      font-size: 1.08rem;
+    }
+
+    .property-location {
+      margin: 0 0 8px;
+      color: #5f6e88;
+      font-weight: 500;
+    }
+
+    .property-price {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.45rem;
+      font-weight: 800;
+    }
+
+    .pricing-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pricing-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing-header {
+      padding: 16px 22px;
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .pricing-card.primary .pricing-header {
+      background: linear-gradient(180deg, var(--navy), #143878);
+    }
+
+    .pricing-card.featured .pricing-header {
+      background: linear-gradient(180deg, #d5a437, #c28d1d);
+    }
+
+    .pricing-body {
+      padding: 22px 22px 24px;
+    }
+
+    .pricing-value {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      color: var(--gold);
+    }
+
+    .pricing-card.primary .pricing-value {
+      color: var(--navy);
+    }
+
+    .pricing-value strong {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .pricing-value span {
+      color: #8190a9;
+      font-weight: 700;
+    }
+
+    .pricing-list {
+      padding: 0;
+      margin: 0 0 20px;
+      list-style: none;
+    }
+
+    .pricing-list li {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 10px;
+    }
+
+    .pricing-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--gold);
+      font-weight: 800;
+    }
+
+    .plan-button {
+      display: block;
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: 2px solid rgba(13, 44, 102, 0.16);
+      color: var(--navy);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .pricing-card.featured .plan-button {
+      border-color: transparent;
+      background: linear-gradient(180deg, #d4a23b, #bc8417);
+      color: #fff;
+    }
+
+    .ribbon {
+      position: absolute;
+      top: 18px;
+      right: -38px;
+      padding: 8px 42px;
+      transform: rotate(38deg);
+      background: #2a79ff;
+      color: #fff;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .testimonial-card {
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .testimonial-viewport {
+      overflow: hidden;
+    }
+
+    .testimonial-track {
+      display: flex;
+      transition: transform 0.45s ease;
+      will-change: transform;
+    }
+
+    .testimonial-slide {
+      width: 100%;
+      flex: 0 0 100%;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding: 22px 26px;
+    }
+
+    .quote-mark {
+      color: var(--gold);
+      font-size: 4rem;
+      line-height: 0.8;
+      font-weight: 800;
+    }
+
+    .testimonial-copy {
+      flex: 1;
+    }
+
+    .testimonial-copy p {
+      margin: 0;
+      color: #33496f;
+      line-height: 1.7;
+    }
+
+    .testimonial-person {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 230px;
+    }
+
+    .testimonial-person img {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .testimonial-meta strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .testimonial-meta span {
+      display: block;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .testimonial-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 18px 18px;
+      margin-top: -4px;
+    }
+
+    .testimonial-nav {
+      display: flex;
+      gap: 10px;
+    }
+
+    .testimonial-button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(13, 44, 102, 0.14);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--navy);
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .testimonial-button:hover,
+    .testimonial-button:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(201, 150, 39, 0.6);
+      background: #fff;
+      outline: none;
+    }
+
+    .testimonial-dots {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .testimonial-dot {
+      width: 10px;
+      height: 10px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(13, 44, 102, 0.18);
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .testimonial-dot.active {
+      background: var(--gold);
+      transform: scale(1.2);
+    }
+
+    .hours-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .hours-card {
+      padding: 18px 10px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.82);
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(27, 46, 88, 0.08);
+    }
+
+    .hours-card.active {
+      background: linear-gradient(180deg, var(--navy), #153979);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .hours-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1.2rem;
+    }
+
+    .hours-card span {
+      color: inherit;
+      opacity: 0.82;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .connect-panel {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 160px;
+      gap: 0;
+      margin-top: 18px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0d2352, #112f6f 58%, #0d2352);
+      color: #fff;
+    }
+
+    .connect-block {
+      padding: 24px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .connect-block + .connect-block {
+      border-left: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .brand-logo {
+      width: 74px;
+      height: 74px;
+      flex-shrink: 0;
+    }
+
+    .brand-block p,
+    .connect-copy p {
+      margin: 8px 0 0;
+      color: rgba(255, 255, 255, 0.82);
+      line-height: 1.55;
+    }
+
+    .brand-subtitle {
+      color: var(--gold-soft) !important;
+      font-weight: 700;
+    }
+
+    .qr-box {
+      width: 118px;
+      height: 118px;
+      margin: auto;
+      border-radius: 10px;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='10' fill='white'/%3E%3Cg fill='black'%3E%3Crect x='10' y='10' width='28' height='28'/%3E%3Crect x='16' y='16' width='16' height='16' fill='white'/%3E%3Crect x='82' y='10' width='28' height='28'/%3E%3Crect x='88' y='16' width='16' height='16' fill='white'/%3E%3Crect x='10' y='82' width='28' height='28'/%3E%3Crect x='16' y='88' width='16' height='16' fill='white'/%3E%3Crect x='48' y='14' width='8' height='8'/%3E%3Crect x='60' y='14' width='8' height='8'/%3E%3Crect x='48' y='26' width='8' height='8'/%3E%3Crect x='60' y='26' width='20' height='8'/%3E%3Crect x='42' y='42' width='8' height='8'/%3E%3Crect x='54' y='42' width='8' height='8'/%3E%3Crect x='66' y='42' width='8' height='8'/%3E%3Crect x='78' y='42' width='8' height='8'/%3E%3Crect x='90' y='42' width='8' height='8'/%3E%3Crect x='42' y='54' width='20' height='8'/%3E%3Crect x='72' y='54' width='8' height='8'/%3E%3Crect x='90' y='54' width='8' height='8'/%3E%3Crect x='42' y='66' width='8' height='8'/%3E%3Crect x='60' y='66' width='8' height='8'/%3E%3Crect x='78' y='66' width='8' height='8'/%3E%3Crect x='90' y='66' width='8' height='8'/%3E%3Crect x='42' y='78' width='8' height='8'/%3E%3Crect x='54' y='78' width='8' height='8'/%3E%3Crect x='66' y='78' width='20' height='8'/%3E%3Crect x='90' y='78' width='8' height='8'/%3E%3Crect x='48' y='90' width='8' height='8'/%3E%3Crect x='60' y='90' width='8' height='8'/%3E%3Crect x='72' y='90' width='8' height='8'/%3E%3Crect x='84' y='90' width='14' height='8'/%3E%3C/g%3E%3C/svg%3E") center / cover no-repeat;
+      border: 8px solid rgba(255, 255, 255, 0.18);
+      background-color: #fff;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .message-panel {
+      margin-top: 18px;
+      padding: 22px;
+    }
+
+    .message-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field,
+    .message-area {
+      width: 100%;
+      border: 1px solid rgba(13, 44, 102, 0.12);
+      border-radius: 12px;
+      background: #fbfcfe;
+      color: var(--text);
+      font: inherit;
+      padding: 14px 16px;
+    }
+
+    .message-area {
+      min-height: 108px;
+      grid-column: 1 / -1;
+      resize: vertical;
+    }
+
+    .submit-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: min(100%, 340px);
+      margin: 16px auto 0;
+      padding: 16px 22px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(180deg, var(--navy), var(--navy-deep));
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .action-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 16px;
+    }
+
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border: 2px solid rgba(13, 44, 102, 0.14);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--navy);
+      font-weight: 800;
+      box-shadow: 0 14px 30px rgba(27, 46, 88, 0.08);
+    }
+
+    @media (max-width: 960px) {
+      .contact-grid,
+      .services-grid,
+      .property-grid,
+      .hours-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .connect-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .connect-block + .connect-block {
+        border-left: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.16);
+      }
+
+      .testimonial-slide {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .testimonial-person {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .vcard-shell {
+        padding: 0 14px 30px;
+      }
+
+      .hero-banner {
+        min-height: 250px;
+      }
+
+      .hero-banner::before {
+        inset: auto -20% -88px -20%;
+        height: 180px;
+        clip-path: polygon(0 68%, 50% 16%, 100% 68%, 100% 100%, 0 100%);
+      }
+
+      .profile-card {
+        margin-top: -88px;
+      }
+
+      .profile-avatar {
+        width: 138px;
+        height: 138px;
+      }
+
+      .profile-avatar span {
+        font-size: 68px;
+      }
+
+      .contact-grid,
+      .services-grid,
+      .property-grid,
+      .pricing-grid,
+      .message-grid,
+      .hours-grid,
+      .action-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-item {
+        align-items: center;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .contact-item:last-child {
+        border-bottom: 0;
+      }
+
+      .cta-button {
+        min-width: 100%;
+      }
+
+      .testimonial-controls {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="vcard-shell">
+    <section class="hero">
+      <div class="hero-banner"></div>
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <span aria-hidden="true">
+            <svg width="88" height="88" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="21" r="11" fill="#C8C8C8"/>
+              <path d="M16 51c2.8-8.4 9.2-13 16-13s13.2 4.6 16 13" fill="#C8C8C8"/>
+            </svg>
+          </span>
+        </div>
+        <h1 class="profile-name">Michael Carter</h1>
+        <p class="profile-role">Real Estate &amp; Property Consultant</p>
+        <div class="profile-divider"></div>
+        <p class="profile-company">Carter &amp; Morgan Realty</p>
+
+        <div class="social-list" aria-label="Social links">
+          <a class="social-link linkedin" href="#" aria-label="LinkedIn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.94 8.5H3.56V20h3.38V8.5Zm.22-3.55A1.97 1.97 0 0 0 5.2 3a1.97 1.97 0 0 0-1.97 1.95A1.97 1.97 0 0 0 5.2 6.9a1.97 1.97 0 0 0 1.96-1.95ZM20 13.03c0-3.45-1.84-5.05-4.3-5.05-1.98 0-2.87 1.08-3.37 1.84V8.5H8.95c.04.87 0 11.5 0 11.5h3.38v-6.43c0-.34.02-.68.12-.92.27-.68.89-1.38 1.93-1.38 1.36 0 1.9 1.04 1.9 2.56V20H20v-6.97Z"/></svg>
+          </a>
+          <a class="social-link twitter" href="#" aria-label="Twitter">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.54 7.19c.01.2.01.4.01.6 0 6.15-4.68 13.24-13.24 13.24A13.14 13.14 0 0 1 1.2 18.9c.36.04.71.06 1.08.06 2.18 0 4.18-.74 5.77-1.99a4.67 4.67 0 0 1-4.36-3.24c.29.04.59.07.9.07.43 0 .85-.06 1.24-.16a4.66 4.66 0 0 1-3.74-4.57v-.06c.62.35 1.33.56 2.08.58A4.65 4.65 0 0 1 2.73 5.7c0-.86.23-1.67.64-2.37A13.2 13.2 0 0 0 12.96 8.2a4.7 4.7 0 0 1-.12-1.06 4.66 4.66 0 0 1 8.07-3.19 9.15 9.15 0 0 0 2.96-1.13 4.66 4.66 0 0 1-2.05 2.57 9.37 9.37 0 0 0 2.68-.73 9.77 9.77 0 0 1-2.33 2.53Z"/></svg>
+          </a>
+          <a class="social-link facebook" href="#" aria-label="Facebook">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.76c0-.93.25-1.56 1.58-1.56H16.7V3.34c-.3-.04-1.3-.12-2.47-.12-2.44 0-4.12 1.49-4.12 4.23V9.8H7.3V13h2.8v8h3.4Z"/></svg>
+          </a>
+          <a class="social-link instagram" href="#" aria-label="Instagram">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 1.8A3.7 3.7 0 0 0 3.8 7.5v9a3.7 3.7 0 0 0 3.7 3.7h9a3.7 3.7 0 0 0 3.7-3.7v-9a3.7 3.7 0 0 0-3.7-3.7h-9Zm9.75 1.35a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1ZM12 6.6A5.4 5.4 0 1 1 6.6 12 5.41 5.41 0 0 1 12 6.6Zm0 1.8A3.6 3.6 0 1 0 15.6 12 3.6 3.6 0 0 0 12 8.4Z"/></svg>
+          </a>
+          <a class="social-link youtube" href="#" aria-label="YouTube">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.58 7.19a2.86 2.86 0 0 0-2.01-2.02C17.8 4.7 12 4.7 12 4.7s-5.8 0-7.57.47A2.86 2.86 0 0 0 2.42 7.2 29.9 29.9 0 0 0 2 12a29.9 29.9 0 0 0 .42 4.81 2.86 2.86 0 0 0 2.01 2.02c1.77.47 7.57.47 7.57.47s5.8 0 7.57-.47a2.86 2.86 0 0 0 2.01-2.02A29.9 29.9 0 0 0 22 12a29.9 29.9 0 0 0-.42-4.81ZM9.68 15.01V8.99L15.5 12l-5.82 3.01Z"/></svg>
+          </a>
+        </div>
+
+        <p class="intro-copy">
+          Helping clients buy, sell, and invest in properties with confidence. Delivering exceptional service, market expertise, and results that turn property goals into reality.
+        </p>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <div class="contact-grid">
+        <div class="contact-item">
+          <div class="icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"></path><path d="m4 7 8 6 8-6"></path></svg>
+          </div>
+          <div class="contact-copy">
+            <p class="contact-label">Email</p>
+            <p class="contact-value">michael.carter@cmrealty.com</p>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.91.34 1.8.66 2.65a2 2 0 0 1-.45 2.11L8.04 9.96a16 16 0 0 0 6 6l1.48-1.28a2 2 0 0 1 2.11-.45c.85.32 1.74.54 2.65.66A2 2 0 0 1 22 16.92Z"></path></svg>
+          </div>
+          <div class="contact-copy">
+            <p class="contact-label">Phone</p>
+            <p class="contact-value">+1 (212) 555-0187</p>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"></path></svg>
+          </div>
+          <div class="contact-copy">
+            <p class="contact-label">Website</p>
+            <p class="contact-value">www.cmrealty.com</p>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          </div>
+          <div class="contact-copy">
+            <p class="contact-label">Location</p>
+            <p class="contact-value">One World Trade Center, New York, NY</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="cta-wrap">
+      <a href="#message" class="cta-button">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M8 2v4"></path><path d="M16 2v4"></path><path d="M3 10h18"></path></svg>
+        Book a Consultation
+      </a>
+    </div>
+
+    <section>
+      <div class="section-title"><h2>MY SERVICES</h2></div>
+      <div class="services-grid">
+        <article class="service-card">
+          <div class="service-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10.5V20h14v-9.5"></path><path d="M9 20v-5h6v5"></path></svg>
+          </div>
+          <h3>Property Buying</h3>
+          <p>Expert guidance to find the perfect property that matches your needs and budget.</p>
+        </article>
+        <article class="service-card">
+          <div class="service-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20h18"></path><path d="M5 20V8l7-4 7 4v12"></path><path d="M8 11h8"></path><path d="M8 14h8"></path></svg>
+          </div>
+          <h3>Property Selling</h3>
+          <p>Strategic marketing and negotiation to sell your property for the best value.</p>
+        </article>
+        <article class="service-card">
+          <div class="service-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10"></path><path d="M10 20V4"></path><path d="M16 20v-7"></path><path d="M22 20v-12"></path><path d="m3 8 5-3 4 2 8-4"></path></svg>
+          </div>
+          <h3>Property Investment</h3>
+          <p>Identify high-potential investment opportunities for long-term wealth and growth.</p>
+        </article>
+        <article class="service-card">
+          <div class="service-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="15" r="4"></circle><path d="M12 15h7l2-2-2-2h-2"></path><path d="M10 7 6.5 3.5"></path></svg>
+          </div>
+          <h3>Leasing Solutions</h3>
+          <p>Find the right tenants or lease the ideal property with ease and confidence.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>RECENT PROPERTY HIGHLIGHTS</h2></div>
+      <div class="property-grid">
+        <article class="property-card">
+          <div class="property-image" style="background-image:url('https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80')">
+            <span class="property-badge">For Sale</span>
+          </div>
+          <div class="property-body">
+            <h3>Luxury Apartment</h3>
+            <p class="property-location">Manhattan, NY</p>
+            <p class="property-price">$2,450,000</p>
+          </div>
+        </article>
+        <article class="property-card">
+          <div class="property-image" style="background-image:url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=80')">
+            <span class="property-badge" style="background:#d19d2e;">For Sale</span>
+          </div>
+          <div class="property-body">
+            <h3>Modern Family Home</h3>
+            <p class="property-location">Greenwich, CT</p>
+            <p class="property-price">$1,850,000</p>
+          </div>
+        </article>
+        <article class="property-card">
+          <div class="property-image" style="background-image:url('https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80')">
+            <span class="property-badge">For Rent</span>
+          </div>
+          <div class="property-body">
+            <h3>Downtown Condo</h3>
+            <p class="property-location">New York, NY</p>
+            <p class="property-price">$5,200 / month</p>
+          </div>
+        </article>
+        <article class="property-card">
+          <div class="property-image" style="background-image:url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80')">
+            <span class="property-badge" style="background:#c99627;">For Lease</span>
+          </div>
+          <div class="property-body">
+            <h3>Office Space</h3>
+            <p class="property-location">Midtown, NY</p>
+            <p class="property-price">$48 / sq ft</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>ENGAGEMENT PACKAGES</h2></div>
+      <div class="pricing-grid">
+        <article class="pricing-card primary">
+          <div class="pricing-header">Buyer Representation</div>
+          <div class="pricing-body">
+            <div class="pricing-value"><strong>$3,500</strong><span>/ flat fee</span></div>
+            <ul class="pricing-list">
+              <li>Property search and shortlisting</li>
+              <li>Market analysis and advice</li>
+              <li>Scheduling and property tours</li>
+              <li>Negotiation and offer support</li>
+              <li>Closing coordination</li>
+            </ul>
+            <a href="#message" class="plan-button">Choose Plan</a>
+          </div>
+        </article>
+        <article class="pricing-card featured">
+          <span class="ribbon">POPULAR</span>
+          <div class="pricing-header">Seller Representation</div>
+          <div class="pricing-body">
+            <div class="pricing-value"><strong>$6,500</strong><span>/ flat fee</span></div>
+            <ul class="pricing-list">
+              <li>Property valuation and strategy</li>
+              <li>Professional marketing</li>
+              <li>Showings and buyer screening</li>
+              <li>Negotiation and contract management</li>
+              <li>Closing coordination</li>
+            </ul>
+            <a href="#message" class="plan-button">Choose Plan</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>WHAT CLIENTS SAY</h2></div>
+      <article class="testimonial-card">
+        <div class="testimonial-viewport">
+          <div class="testimonial-track" id="testimonialTrack">
+            <div class="testimonial-slide">
+              <div class="quote-mark">&ldquo;</div>
+              <div class="testimonial-copy">
+                <p>Michael's market knowledge, professionalism, and dedication made buying our dream home a smooth and stress-free experience. Highly recommended!</p>
+              </div>
+              <div class="testimonial-person">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80" alt="Emily Johnson" />
+                <div class="testimonial-meta">
+                  <strong>Emily Johnson</strong>
+                  <span>Homeowner</span>
+                  <span>Manhattan, NY</span>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-slide">
+              <div class="quote-mark">&ldquo;</div>
+              <div class="testimonial-copy">
+                <p>We listed a downtown condo with Michael and had multiple strong offers within days. His pricing advice and negotiation approach were excellent.</p>
+              </div>
+              <div class="testimonial-person">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="Daniel Brooks" />
+                <div class="testimonial-meta">
+                  <strong>Daniel Brooks</strong>
+                  <span>Property Seller</span>
+                  <span>Brooklyn, NY</span>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-slide">
+              <div class="quote-mark">&ldquo;</div>
+              <div class="testimonial-copy">
+                <p>As an investor, I value clear numbers and honest guidance. Michael helped us secure a high-performing rental asset with confidence.</p>
+              </div>
+              <div class="testimonial-person">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=300&q=80" alt="Sophia Martinez" />
+                <div class="testimonial-meta">
+                  <strong>Sophia Martinez</strong>
+                  <span>Real Estate Investor</span>
+                  <span>Queens, NY</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-controls">
+          <div class="testimonial-nav">
+            <button class="testimonial-button" type="button" id="testimonialPrev" aria-label="Previous testimonial">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"></path></svg>
+            </button>
+            <button class="testimonial-button" type="button" id="testimonialNext" aria-label="Next testimonial">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"></path></svg>
+            </button>
+          </div>
+          <div class="testimonial-dots" aria-label="Testimonial slides">
+            <button class="testimonial-dot active" type="button" data-slide="0" aria-label="Go to testimonial 1"></button>
+            <button class="testimonial-dot" type="button" data-slide="1" aria-label="Go to testimonial 2"></button>
+            <button class="testimonial-dot" type="button" data-slide="2" aria-label="Go to testimonial 3"></button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>BUSINESS HOURS</h2></div>
+      <div class="hours-grid">
+        <div class="hours-card active"><strong>Mon</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Tue</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Wed</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Thu</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Fri</strong><span>9:00 AM - 5:00 PM</span></div>
+        <div class="hours-card"><strong>Sat - Sun</strong><span>Closed</span></div>
+      </div>
+    </section>
+
+    <section class="content-card connect-panel">
+      <div class="connect-block brand-block">
+        <svg class="brand-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="40" cy="40" r="38" stroke="#D6A53E" stroke-width="3"/>
+          <path d="M18 55 30 42l8 9 18-24" stroke="#D6A53E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M24 58h32" stroke="#D6A53E" stroke-width="4" stroke-linecap="round"/>
+          <path d="M28 55V34m10 21V27m10 28V20" stroke="#D6A53E" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h3>Carter &amp; Morgan Realty</h3>
+          <p class="brand-subtitle">Find. Invest. Thrive.</p>
+        </div>
+      </div>
+      <div class="connect-block connect-copy">
+        <div>
+          <h3>CONNECT INSTANTLY</h3>
+          <p>Scan this QR code to save my contact details and access my latest listings in one tap.</p>
+        </div>
+      </div>
+      <div class="connect-block">
+        <div class="qr-box" aria-label="QR code"></div>
+      </div>
+    </section>
+
+    <section id="message" class="message-panel">
+      <div class="section-title"><h2>SEND A MESSAGE</h2></div>
+      <p class="message-hint">Share your goals and preferred property type, and I will get back to you shortly.</p>
+      <div class="message-grid">
+        <input class="field" type="text" placeholder="Your Name" />
+        <input class="field" type="email" placeholder="Your Email" />
+        <textarea class="message-area" placeholder="Your Message"></textarea>
+      </div>
+      <button class="submit-button" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m22 2-7 20-4.5-9L2 9l20-7Z"></path></svg>
+        Send Message
+      </button>
+    </section>
+
+    <div class="action-grid">
+      <a href="#" class="action-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        Save Contact
+      </a>
+      <a href="#" class="action-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.59 13.51 15.42 17.49"></path><path d="M15.41 6.51 8.59 10.49"></path></svg>
+        Share Profile
+      </a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const track = document.getElementById("testimonialTrack");
+      const prev = document.getElementById("testimonialPrev");
+      const next = document.getElementById("testimonialNext");
+      const dots = Array.from(document.querySelectorAll(".testimonial-dot"));
+
+      if (!track || !prev || !next || !dots.length) {
+        return;
+      }
+
+      const total = dots.length;
+      let index = 0;
+      let autoPlayId;
+
+      function renderSlide(nextIndex) {
+        index = (nextIndex + total) % total;
+        track.style.transform = "translateX(-" + (index * 100) + "%)";
+
+        dots.forEach(function (dot, dotIndex) {
+          dot.classList.toggle("active", dotIndex === index);
+        });
+      }
+
+      function startAutoPlay() {
+        stopAutoPlay();
+        autoPlayId = window.setInterval(function () {
+          renderSlide(index + 1);
+        }, 4200);
+      }
+
+      function stopAutoPlay() {
+        if (autoPlayId) {
+          window.clearInterval(autoPlayId);
+        }
+      }
+
+      prev.addEventListener("click", function () {
+        renderSlide(index - 1);
+        startAutoPlay();
+      });
+
+      next.addEventListener("click", function () {
+        renderSlide(index + 1);
+        startAutoPlay();
+      });
+
+      dots.forEach(function (dot) {
+        dot.addEventListener("click", function () {
+          renderSlide(Number(dot.getAttribute("data-slide")));
+          startAutoPlay();
+        });
+      });
+
+      track.addEventListener("mouseenter", stopAutoPlay);
+      track.addEventListener("mouseleave", startAutoPlay);
+
+      renderSlide(0);
+      startAutoPlay();
+    }());
+  </script>
+</body>
+</html>

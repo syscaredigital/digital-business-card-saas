@@ -902,6 +902,83 @@
   background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 65%);
 }
 
+.card-showcase-realtor {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  background:
+    linear-gradient(180deg, rgba(5, 20, 48, 0.06), rgba(5, 20, 48, 0.86)),
+    linear-gradient(90deg, rgba(13, 44, 102, 0.7), rgba(13, 44, 102, 0.1) 42%, rgba(13, 44, 102, 0.45)),
+    url("https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1200&q=80") center / cover no-repeat;
+}
+
+.card-showcase-retail {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  background:
+    linear-gradient(180deg, rgba(24, 20, 48, 0.06), rgba(24, 20, 48, 0.86)),
+    linear-gradient(90deg, rgba(125, 52, 216, 0.18), rgba(125, 52, 216, 0.08)),
+    linear-gradient(90deg, transparent 0 58%, rgba(33, 24, 75, 0.75) 58% 100%),
+    url("https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80") center / cover no-repeat;
+}
+
+.card-showcase-health {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  background:
+    linear-gradient(180deg, rgba(4, 31, 50, 0.06), rgba(4, 31, 50, 0.86)),
+    linear-gradient(90deg, rgba(11, 155, 153, 0.16), rgba(11, 155, 153, 0.08)),
+    linear-gradient(90deg, transparent 0 58%, rgba(7, 107, 118, 0.92) 58% 100%),
+    url("https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=80") center / cover no-repeat;
+}
+
+.card-showcase-label,
+.card-showcase-title,
+.card-showcase-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.card-showcase-label {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(201, 150, 39, 0.22);
+  color: #f6d38b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card-showcase-title {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.card-showcase-copy {
+  max-width: 270px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
 .status-pill {
   border-radius: 999px;
   padding: 7px 10px;

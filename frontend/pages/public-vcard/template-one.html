@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template One - Retail vCard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --purple: #7d34d8;
+      --purple-dark: #5f22b2;
+      --purple-soft: #f3ebff;
+      --navy: #17315e;
+      --text: #1a3562;
+      --muted: #627697;
+      --surface: rgba(255, 255, 255, 0.95);
+      --border: rgba(125, 52, 216, 0.13);
+      --shadow: 0 24px 56px rgba(28, 44, 82, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(125, 52, 216, 0.12), transparent 24rem),
+        linear-gradient(180deg, #f8fbff 0%, #f4f7fc 36%, #eff4fb 100%);
+    }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+
+    .vcard-shell {
+      width: min(100%, 860px);
+      margin: 0 auto;
+      padding: 0 18px 36px;
+    }
+
+    .hero {
+      position: relative;
+      padding-top: 22px;
+    }
+
+    .hero-banner {
+      position: relative;
+      min-height: 330px;
+      overflow: hidden;
+      border-radius: 0 0 34px 34px;
+      box-shadow: var(--shadow);
+      background:
+        linear-gradient(180deg, rgba(18, 22, 44, 0.12), rgba(18, 22, 44, 0.12)),
+        url("https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80") center left / cover no-repeat;
+    }
+
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(125, 52, 216, 0.08), rgba(125, 52, 216, 0.06)),
+        linear-gradient(90deg, transparent 0 58%, rgba(30, 33, 64, 0.42) 58% 100%);
+    }
+
+    .hero-phone {
+      position: absolute;
+      right: 18px;
+      top: 24px;
+      z-index: 2;
+      width: 188px;
+      height: 250px;
+      border-radius: 28px;
+      border: 4px solid #242634;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,246,255,0.96)),
+        url("https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80") center / cover no-repeat;
+      box-shadow: 0 20px 36px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+    }
+
+    .hero-phone::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      width: 74px;
+      height: 10px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #1f2230;
+    }
+
+    .hero-phone-ui {
+      position: absolute;
+      inset: 26px 12px 12px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(247,244,255,0.92));
+      padding: 16px 14px;
+    }
+
+    .phone-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: #697693;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .phone-card {
+      height: 48px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, rgba(125, 52, 216, 0.16), rgba(125, 52, 216, 0.06));
+    }
+
+    .phone-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .phone-chip {
+      height: 34px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #7d34d8, #9b64eb);
+      opacity: 0.95;
+    }
+
+    .shopping-bags {
+      position: absolute;
+      right: -6px;
+      bottom: 10px;
+      z-index: 2;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .bag {
+      position: relative;
+      border-radius: 10px 10px 14px 14px;
+      box-shadow: 0 12px 20px rgba(0,0,0,0.16);
+    }
+
+    .bag::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      width: 22px;
+      height: 12px;
+      transform: translateX(-50%);
+      border: 2px solid currentColor;
+      border-bottom: 0;
+      border-radius: 999px 999px 0 0;
+    }
+
+    .bag.gold { width: 48px; height: 58px; background: #d69a38; color: #9c6c16; }
+    .bag.purple { width: 58px; height: 74px; background: #8c49dd; color: #6d2cb8; }
+    .bag.blue { width: 42px; height: 54px; background: #5c9cf5; color: #3778d3; }
+
+    .hero-banner::before {
+      content: "";
+      position: absolute;
+      inset: auto -12% -130px -12%;
+      height: 260px;
+      background: #fff;
+      clip-path: polygon(0 72%, 50% 22%, 100% 72%, 100% 100%, 0 100%);
+      z-index: 1;
+      box-shadow: inset 0 4px 0 rgba(125, 52, 216, 0.24);
+    }
+
+    .profile-card {
+      position: relative;
+      z-index: 2;
+      margin: -118px auto 0;
+      text-align: center;
+      padding: 0 8px;
+    }
+
+    .profile-avatar {
+      width: 174px;
+      height: 174px;
+      margin: 0 auto 22px;
+      padding: 6px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #a56af2, #6f2fcc);
+      box-shadow: 0 14px 28px rgba(125, 52, 216, 0.18);
+    }
+
+    .profile-avatar span {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 6px solid #fff;
+      background: radial-gradient(circle at 30% 30%, #ffffff 0%, #f5f5f5 62%, #e1e1e1 100%);
+    }
+
+    .profile-name {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(2.3rem, 6vw, 3.6rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .profile-role {
+      margin: 10px 0 10px;
+      color: var(--purple-dark);
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 700;
+    }
+    .profile-divider {
+      width: 68px;
+      height: 3px;
+      margin: 0 auto 16px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, var(--purple), transparent);
+    }
+    .profile-company {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.08rem;
+      font-weight: 500;
+    }
+
+    .social-list {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 22px 0;
+    }
+    .social-link {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(23, 51, 98, 0.14);
+    }
+    .social-link.linkedin { background: #1278b5; }
+    .social-link.twitter { background: #28a4f2; }
+    .social-link.facebook { background: #244a9a; }
+    .social-link.instagram { background: linear-gradient(135deg, #ff9c00, #ff2d55 55%, #7b5cff); }
+    .social-link.youtube { background: #f01414; }
+
+    .intro-copy {
+      width: min(100%, 690px);
+      margin: 0 auto 28px;
+      color: #23436f;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      text-align: center;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.88);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      overflow: hidden;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+      padding: 18px;
+      border-right: 1px solid var(--border);
+    }
+    .contact-item:last-child { border-right: 0; }
+    .icon-badge {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #8f4be1, #6d2bc3);
+      color: #fff;
+    }
+    .contact-copy { min-width: 0; }
+    .contact-label {
+      margin: 0 0 4px;
+      color: var(--navy);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+    .contact-value {
+      margin: 0;
+      color: #486183;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .cta-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 18px 0 28px;
+    }
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: min(100%, 420px);
+      padding: 20px 24px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #6f2fcc, #8e45e0);
+      color: #fff;
+      font-size: 1.08rem;
+      font-weight: 800;
+      box-shadow: 0 14px 28px rgba(125, 52, 216, 0.22);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 30px 0 18px;
+      color: var(--purple-dark);
+      text-align: center;
+    }
+    .section-title::before,
+    .section-title::after {
+      content: "";
+      width: 96px;
+      max-width: 18vw;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(125, 52, 216, 0.78), transparent);
+    }
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(1.28rem, 3vw, 1.85rem);
+      font-weight: 800;
+    }
+
+    .services-grid,
+    .projects-grid,
+    .pricing-grid,
+    .hours-grid,
+    .action-grid,
+    .impact-grid {
+      display: grid;
+      gap: 18px;
+    }
+    .services-grid,
+    .projects-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .impact-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hours-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 16px; }
+
+    .service-card,
+    .project-card,
+    .pricing-card,
+    .testimonial-card,
+    .message-panel {
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(255,255,255,0.88);
+      border-radius: 22px;
+      box-shadow: 0 16px 34px rgba(27, 46, 88, 0.1);
+    }
+    .service-card {
+      padding: 22px 18px;
+      text-align: center;
+    }
+    .service-icon {
+      display: grid;
+      place-items: center;
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #8f4be1, #6d2bc3);
+      color: #f5eeff;
+    }
+    .service-card h3,
+    .project-card h3,
+    .pricing-card h3,
+    .testimonial-copy strong,
+    .brand-block h3 {
+      margin: 0 0 10px;
+      color: var(--navy);
+    }
+    .service-card p,
+    .project-card p,
+    .pricing-list li,
+    .message-hint {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .impact-panel { padding: 10px 12px; }
+    .impact-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 8px;
+      border-right: 1px solid var(--border);
+      color: var(--navy);
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .impact-item:last-child { border-right: 0; }
+    .impact-item svg { color: var(--purple); flex-shrink: 0; }
+
+    .project-card {
+      overflow: hidden;
+      text-align: center;
+    }
+    .project-image {
+      aspect-ratio: 1.1 / 0.72;
+      background-size: cover;
+      background-position: center;
+    }
+    .project-body { padding: 14px 14px 18px; }
+
+    .pricing-card { position: relative; overflow: hidden; }
+    .pricing-header {
+      padding: 14px 22px;
+      background: linear-gradient(90deg, #6f2fcc, #8f4be1);
+      color: #fff;
+      text-align: center;
+      font-weight: 700;
+    }
+    .pricing-body { padding: 22px 22px 24px; }
+    .pricing-value {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      color: var(--purple-dark);
+    }
+    .pricing-value strong { font-size: 3rem; line-height: 1; }
+    .pricing-value span { color: #8190a9; font-weight: 700; }
+    .pricing-list { list-style: none; padding: 0; margin: 0 0 20px; }
+    .pricing-list li {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 10px;
+    }
+    .pricing-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--purple);
+      font-weight: 800;
+    }
+    .plan-button {
+      display: block;
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: 2px solid rgba(125, 52, 216, 0.34);
+      color: var(--purple-dark);
+      text-align: center;
+      font-weight: 800;
+    }
+    .pricing-card.featured .plan-button {
+      border-color: transparent;
+      background: linear-gradient(90deg, #6f2fcc, #8f4be1);
+      color: #fff;
+    }
+    .ribbon {
+      position: absolute;
+      top: 18px;
+      right: -42px;
+      padding: 8px 44px;
+      transform: rotate(36deg);
+      background: #7d34d8;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .testimonial-card {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding: 22px 26px;
+    }
+    .quote-mark {
+      color: var(--purple);
+      font-size: 4rem;
+      line-height: 0.8;
+      font-weight: 800;
+    }
+    .testimonial-copy { flex: 1; }
+    .testimonial-copy p { margin: 0; color: #33496f; line-height: 1.7; }
+    .testimonial-person {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 240px;
+    }
+    .testimonial-person img {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .testimonial-meta strong { display: block; margin-bottom: 4px; }
+    .testimonial-meta span { display: block; color: var(--muted); line-height: 1.45; }
+
+    .hours-card {
+      padding: 18px 10px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.84);
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(27, 46, 88, 0.08);
+    }
+    .hours-card.active {
+      background: linear-gradient(90deg, #6f2fcc, #8f4be1);
+      color: #fff;
+      border-color: transparent;
+    }
+    .hours-card strong { display: block; margin-bottom: 6px; font-size: 1.2rem; }
+    .hours-card span { color: inherit; opacity: 0.84; font-size: 0.92rem; line-height: 1.4; }
+
+    .connect-panel {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 160px;
+      margin-top: 18px;
+      overflow: hidden;
+      background: linear-gradient(90deg, #23184e, #1f173f 54%, #2c1758);
+      color: #fff;
+    }
+    .connect-block {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 24px;
+    }
+    .connect-block + .connect-block { border-left: 1px solid rgba(255,255,255,0.18); }
+    .brand-logo { width: 74px; height: 74px; flex-shrink: 0; }
+    .brand-block p, .connect-copy p { margin: 8px 0 0; color: rgba(255,255,255,0.86); line-height: 1.55; }
+
+    .qr-box {
+      width: 118px;
+      height: 118px;
+      margin: auto;
+      border-radius: 10px;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='10' fill='white'/%3E%3Cg fill='black'%3E%3Crect x='10' y='10' width='28' height='28'/%3E%3Crect x='16' y='16' width='16' height='16' fill='white'/%3E%3Crect x='82' y='10' width='28' height='28'/%3E%3Crect x='88' y='16' width='16' height='16' fill='white'/%3E%3Crect x='10' y='82' width='28' height='28'/%3E%3Crect x='16' y='88' width='16' height='16' fill='white'/%3E%3Crect x='48' y='14' width='8' height='8'/%3E%3Crect x='60' y='14' width='8' height='8'/%3E%3Crect x='48' y='26' width='8' height='8'/%3E%3Crect x='60' y='26' width='20' height='8'/%3E%3Crect x='42' y='42' width='8' height='8'/%3E%3Crect x='54' y='42' width='8' height='8'/%3E%3Crect x='66' y='42' width='8' height='8'/%3E%3Crect x='78' y='42' width='8' height='8'/%3E%3Crect x='90' y='42' width='8' height='8'/%3E%3Crect x='42' y='54' width='20' height='8'/%3E%3Crect x='72' y='54' width='8' height='8'/%3E%3Crect x='90' y='54' width='8' height='8'/%3E%3Crect x='42' y='66' width='8' height='8'/%3E%3Crect x='60' y='66' width='8' height='8'/%3E%3Crect x='78' y='66' width='8' height='8'/%3E%3Crect x='90' y='66' width='8' height='8'/%3E%3Crect x='42' y='78' width='8' height='8'/%3E%3Crect x='54' y='78' width='8' height='8'/%3E%3Crect x='66' y='78' width='20' height='8'/%3E%3Crect x='90' y='78' width='8' height='8'/%3E%3Crect x='48' y='90' width='8' height='8'/%3E%3Crect x='60' y='90' width='8' height='8'/%3E%3Crect x='72' y='90' width='8' height='8'/%3E%3Crect x='84' y='90' width='14' height='8'/%3E%3C/g%3E%3C/svg%3E") center / cover no-repeat;
+      background-color: #fff;
+      border: 8px solid rgba(255,255,255,0.18);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    }
+
+    .message-panel { margin-top: 18px; padding: 22px; }
+    .message-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .field,
+    .message-area {
+      width: 100%;
+      border: 1px solid rgba(125, 52, 216, 0.14);
+      border-radius: 12px;
+      background: #fbfcfe;
+      color: var(--text);
+      font: inherit;
+      padding: 14px 16px;
+    }
+    .message-area { min-height: 108px; grid-column: 1 / -1; resize: vertical; }
+    .submit-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: min(100%, 340px);
+      margin: 16px auto 0;
+      padding: 16px 22px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #6f2fcc, #8f4be1);
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border: 2px solid rgba(125, 52, 216, 0.28);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.94);
+      color: var(--purple-dark);
+      font-weight: 800;
+      box-shadow: 0 14px 30px rgba(27, 46, 88, 0.08);
+    }
+
+    @media (max-width: 980px) {
+      .hero-phone,
+      .shopping-bags { display: none; }
+      .contact-grid,
+      .services-grid,
+      .projects-grid,
+      .hours-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .impact-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .connect-panel { grid-template-columns: 1fr; }
+      .connect-block + .connect-block { border-left: 0; border-top: 1px solid rgba(255,255,255,0.18); }
+      .testimonial-card { flex-direction: column; align-items: flex-start; }
+      .testimonial-person { min-width: 0; }
+    }
+
+    @media (max-width: 720px) {
+      .vcard-shell { padding: 0 14px 30px; }
+      .hero-banner { min-height: 260px; }
+      .hero-banner::before {
+        inset: auto -20% -88px -20%;
+        height: 180px;
+        clip-path: polygon(0 68%, 50% 16%, 100% 68%, 100% 100%, 0 100%);
+      }
+      .profile-card { margin-top: -86px; }
+      .profile-avatar { width: 140px; height: 140px; }
+      .contact-grid,
+      .services-grid,
+      .projects-grid,
+      .pricing-grid,
+      .message-grid,
+      .hours-grid,
+      .action-grid,
+      .impact-grid { grid-template-columns: 1fr; }
+      .contact-item { border-right: 0; border-bottom: 1px solid var(--border); }
+      .contact-item:last-child { border-bottom: 0; }
+      .impact-item { border-right: 0; border-bottom: 1px solid var(--border); }
+      .impact-item:last-child { border-bottom: 0; }
+      .cta-button { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="vcard-shell">
+    <section class="hero">
+      <div class="hero-banner">
+        <div class="hero-phone">
+          <div class="hero-phone-ui">
+            <div class="phone-row"><span>Shop Dashboard</span><span>9 new orders</span></div>
+            <div class="phone-card"></div>
+            <div class="phone-grid">
+              <div class="phone-chip"></div>
+              <div class="phone-chip"></div>
+              <div class="phone-chip"></div>
+              <div class="phone-chip"></div>
+            </div>
+          </div>
+        </div>
+        <div class="shopping-bags" aria-hidden="true">
+          <div class="bag blue"></div>
+          <div class="bag gold"></div>
+          <div class="bag purple"></div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <span aria-hidden="true">
+            <svg width="88" height="88" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="21" r="11" fill="#C8C8C8"/>
+              <path d="M16 51c2.8-8.4 9.2-13 16-13s13.2 4.6 16 13" fill="#C8C8C8"/>
+            </svg>
+          </span>
+        </div>
+        <h1 class="profile-name">Michael Carter</h1>
+        <p class="profile-role">Retail &amp; E-Commerce Consultant</p>
+        <div class="profile-divider"></div>
+        <p class="profile-company">Carter &amp; Morgan Retail Solutions</p>
+
+        <div class="social-list" aria-label="Social links">
+          <a class="social-link linkedin" href="#" aria-label="LinkedIn"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5H3.56V20h3.38V8.5Zm.22-3.55A1.97 1.97 0 0 0 5.2 3a1.97 1.97 0 0 0-1.97 1.95A1.97 1.97 0 0 0 5.2 6.9a1.97 1.97 0 0 0 1.96-1.95ZM20 13.03c0-3.45-1.84-5.05-4.3-5.05-1.98 0-2.87 1.08-3.37 1.84V8.5H8.95c.04.87 0 11.5 0 11.5h3.38v-6.43c0-.34.02-.68.12-.92.27-.68.89-1.38 1.93-1.38 1.36 0 1.9 1.04 1.9 2.56V20H20v-6.97Z"/></svg></a>
+          <a class="social-link twitter" href="#" aria-label="Twitter"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21.54 7.19c.01.2.01.4.01.6 0 6.15-4.68 13.24-13.24 13.24A13.14 13.14 0 0 1 1.2 18.9c.36.04.71.06 1.08.06 2.18 0 4.18-.74 5.77-1.99a4.67 4.67 0 0 1-4.36-3.24c.29.04.59.07.9.07.43 0 .85-.06 1.24-.16a4.66 4.66 0 0 1-3.74-4.57v-.06c.62.35 1.33.56 2.08.58A4.65 4.65 0 0 1 2.73 5.7c0-.86.23-1.67.64-2.37A13.2 13.2 0 0 0 12.96 8.2a4.7 4.7 0 0 1-.12-1.06 4.66 4.66 0 0 1 8.07-3.19 9.15 9.15 0 0 0 2.96-1.13 4.66 4.66 0 0 1-2.05 2.57 9.37 9.37 0 0 0 2.68-.73 9.77 9.77 0 0 1-2.33 2.53Z"/></svg></a>
+          <a class="social-link facebook" href="#" aria-label="Facebook"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.76c0-.93.25-1.56 1.58-1.56H16.7V3.34c-.3-.04-1.3-.12-2.47-.12-2.44 0-4.12 1.49-4.12 4.23V9.8H7.3V13h2.8v8h3.4Z"/></svg></a>
+          <a class="social-link instagram" href="#" aria-label="Instagram"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 1.8A3.7 3.7 0 0 0 3.8 7.5v9a3.7 3.7 0 0 0 3.7 3.7h9a3.7 3.7 0 0 0 3.7-3.7v-9a3.7 3.7 0 0 0-3.7-3.7h-9Zm9.75 1.35a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1ZM12 6.6A5.4 5.4 0 1 1 6.6 12 5.41 5.41 0 0 1 12 6.6Zm0 1.8A3.6 3.6 0 1 0 15.6 12 3.6 3.6 0 0 0 12 8.4Z"/></svg></a>
+          <a class="social-link youtube" href="#" aria-label="YouTube"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M21.58 7.19a2.86 2.86 0 0 0-2.01-2.02C17.8 4.7 12 4.7 12 4.7s-5.8 0-7.57.47A2.86 2.86 0 0 0 2.42 7.2 29.9 29.9 0 0 0 2 12a29.9 29.9 0 0 0 .42 4.81 2.86 2.86 0 0 0 2.01 2.02c1.77.47 7.57.47 7.57.47s5.8 0 7.57-.47a2.86 2.86 0 0 0 2.01-2.02A29.9 29.9 0 0 0 22 12a29.9 29.9 0 0 0-.42-4.81ZM9.68 15.01V8.99L15.5 12l-5.82 3.01Z"/></svg></a>
+        </div>
+
+        <p class="intro-copy">Helping retail brands and e-commerce businesses enhance customer experiences, optimize operations, and drive sustainable growth in a competitive marketplace.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="contact-grid">
+        <div class="contact-item"><div class="icon-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4z"></path><path d="m4 7 8 6 8-6"></path></svg></div><div class="contact-copy"><p class="contact-label">Email</p><p class="contact-value">michael.carter@cmretailsolutions.com</p></div></div>
+        <div class="contact-item"><div class="icon-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.91.34 1.8.66 2.65a2 2 0 0 1-.45 2.11L8.04 9.96a16 16 0 0 0 6 6l1.48-1.28a2 2 0 0 1 2.11-.45c.85.32 1.74.54 2.65.66A2 2 0 0 1 22 16.92Z"></path></svg></div><div class="contact-copy"><p class="contact-label">Phone</p><p class="contact-value">+1 (212) 555-0187</p></div></div>
+        <div class="contact-item"><div class="icon-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"></path></svg></div><div class="contact-copy"><p class="contact-label">Website</p><p class="contact-value">www.cmretailsolutions.com</p></div></div>
+        <div class="contact-item"><div class="icon-badge"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg></div><div class="contact-copy"><p class="contact-label">Location</p><p class="contact-value">One World Trade Center, New York, NY</p></div></div>
+      </div>
+    </section>
+
+    <div class="cta-wrap">
+      <a href="#message" class="cta-button"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M8 2v4"></path><path d="M16 2v4"></path><path d="M3 10h18"></path></svg>Book a Consultation</a>
+    </div>
+
+    <section>
+      <div class="section-title"><h2>MY EXPERTISE</h2></div>
+      <div class="services-grid">
+        <article class="service-card"><div class="service-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4a2 2 0 0 0-2 2v11.5A2.5 2.5 0 0 0 7.5 20H18a2 2 0 0 0 2-2V8l-4-4H7Z"></path><path d="M8 8h8v8H8z" fill="#fff" opacity=".18"></path><path d="M9 2v4M15 2v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div><h3>Retail Strategy</h3><p>Develop winning retail strategies that improve profitability, customer loyalty, and market share.</p></article>
+        <article class="service-card"><div class="service-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h14l-1.6 5.6A2 2 0 0 1 17.5 12H10L9.2 15H19v2H8a2 2 0 0 1-1.9-2.6L7 12H5V10h2l.6-2H4V6h4l.3-1Z"></path><circle cx="10" cy="20" r="1.6"></circle><circle cx="18" cy="20" r="1.6"></circle></svg></div><h3>E-Commerce Growth</h3><p>Build, scale, and optimize e-commerce platforms that drive traffic, increase conversions, and sales.</p></article>
+        <article class="service-card"><div class="service-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M4 20h16v2H4z"></path><path d="M6 12h2v6H6zM11 8h2v10h-2zM16 4h2v14h-2z"></path><path d="m5 10 5-4 4 2 5-4 1.2 1.6-6 4.8-4-2-4 3.2Z"></path></svg></div><h3>Merchandising &amp; Assortment</h3><p>Optimize product mix, pricing, and promotions to maximize margins and sell-through.</p></article>
+        <article class="service-card"><div class="service-icon"><svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="9" r="3.2"></circle><circle cx="16.5" cy="8.5" r="2.7"></circle><path d="M3.5 19c0-3.1 2.7-5 5.9-5s5.9 1.9 5.9 5v1H3.5v-1Z"></path><path d="M14.5 19c0-2.5 2-4.1 4.4-4.1s4.1 1.6 4.1 4.1V20h-8.5v-1Z"></path></svg></div><h3>Customer Experience</h3><p>Enhance omnichannel experiences that delight customers and build long-term loyalty.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>KEY AREAS OF IMPACT</h2></div>
+      <div class="panel impact-panel">
+        <div class="impact-grid">
+          <div class="impact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 4 7v6c0 4.97 3.05 8.96 8 10 4.95-1.04 8-5.03 8-10V7l-8-4Z"></path><path d="M8 12h8M12 8v8" stroke="#fff" stroke-width="2"/></svg><span>Omnichannel Strategy</span></div>
+          <div class="impact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14v16H5z"></path><path d="M9 2v4M15 2v4M8 10h3v3H8zM13 10h3v3h-3zM8 15h3v3H8zM13 15h3v3h-3z" fill="#fff"/></svg><span>Store Operations</span></div>
+          <div class="impact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="12" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="m8 11 2.5 2.5L16 8"></path></svg><span>Digital Marketing</span></div>
+          <div class="impact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94a7.49 7.49 0 0 0 .05-.94c0-.32-.02-.63-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.28 7.28 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.89 2h-3.78a.5.5 0 0 0-.49.42L9.26 4.96c-.58.22-1.13.53-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.72 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.03.31-.05.62-.05.94s.02.63.05.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.41 1.05.72 1.63.94l.36 2.54a.5.5 0 0 0 .49.42h3.78a.5.5 0 0 0 .49-.42l.36-2.54c.58-.22 1.13-.53 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg><span>Supply Chain Optimization</span></div>
+          <div class="impact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M4 19h16v2H4z"></path><path d="M6 10h2v7H6zM11 6h2v11h-2zM16 3h2v14h-2z"></path></svg><span>Data &amp; Analytics Insights</span></div>
+          <div class="impact-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5v1H4v-1Z"></path></svg><span>Customer Loyalty &amp; Retention</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>RECENT PROJECTS</h2></div>
+      <div class="projects-grid">
+        <article class="project-card"><div class="project-image" style="background-image:url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=80')"></div><div class="project-body"><h3>Omnichannel Transformation</h3><p>Increased revenue by 35% through seamless channel integration.</p></div></article>
+        <article class="project-card"><div class="project-image" style="background-image:url('https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80')"></div><div class="project-body"><h3>E-Commerce Optimization</h3><p>Boosted online sales by 50% with UX, SEO, and CRO improvements.</p></div></article>
+        <article class="project-card"><div class="project-image" style="background-image:url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=900&q=80')"></div><div class="project-body"><h3>Supply Chain Efficiency</h3><p>Reduced costs by 20% and improved inventory turnover by 30%.</p></div></article>
+        <article class="project-card"><div class="project-image" style="background-image:url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80')"></div><div class="project-body"><h3>Customer Loyalty Program</h3><p>Improved customer retention by 40% and increased repeat purchases.</p></div></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>ENGAGEMENT PACKAGES</h2></div>
+      <div class="pricing-grid">
+        <article class="pricing-card">
+          <div class="pricing-header">Retail Growth Partner</div>
+          <div class="pricing-body">
+            <div class="pricing-value"><strong>$3,500</strong><span>/ month</span></div>
+            <ul class="pricing-list">
+              <li>Retail strategy and planning</li>
+              <li>Monthly performance review</li>
+              <li>Marketing and promotion support</li>
+              <li>Operational improvement guidance</li>
+              <li>Email and call support</li>
+            </ul>
+            <a href="#message" class="plan-button">Choose Plan</a>
+          </div>
+        </article>
+        <article class="pricing-card featured">
+          <span class="ribbon">ACCELERATOR</span>
+          <div class="pricing-header">E-Commerce Accelerator</div>
+          <div class="pricing-body">
+            <div class="pricing-value"><strong>$6,500</strong><span>/ month</span></div>
+            <ul class="pricing-list">
+              <li>Everything in Retail Growth Partner</li>
+              <li>Weekly strategy calls</li>
+              <li>Conversion rate optimization support</li>
+              <li>Advanced analytics and reporting</li>
+              <li>Priority support</li>
+            </ul>
+            <a href="#message" class="plan-button">Choose Plan</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>WHAT CLIENTS SAY</h2></div>
+      <article class="testimonial-card">
+        <div class="quote-mark">&ldquo;</div>
+        <div class="testimonial-copy">
+          <p>Michael's expertise in retail and e-commerce transformed our business. His strategic insights and actionable recommendations delivered measurable results and sustainable growth.</p>
+        </div>
+        <div class="testimonial-person">
+          <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="David Thompson" />
+          <div class="testimonial-meta">
+            <strong>David Thompson</strong>
+            <span>CEO, UrbanStyle Retail</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section>
+      <div class="section-title"><h2>BUSINESS HOURS</h2></div>
+      <div class="hours-grid">
+        <div class="hours-card active"><strong>Mon</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Tue</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Wed</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Thu</strong><span>9:00 AM - 6:00 PM</span></div>
+        <div class="hours-card"><strong>Fri</strong><span>9:00 AM - 5:00 PM</span></div>
+        <div class="hours-card"><strong>Sat - Sun</strong><span>Closed</span></div>
+      </div>
+    </section>
+
+    <section class="panel connect-panel">
+      <div class="connect-block brand-block">
+        <svg class="brand-logo" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="38" stroke="#8f4be1" stroke-width="3"/><path d="M25 24h30l-1 6-2 22a6 6 0 0 1-6 5H34a6 6 0 0 1-6-5l-2-22-1-6Z" stroke="#8f4be1" stroke-width="3" stroke-linejoin="round"/><path d="M31 24a9 9 0 0 1 18 0" stroke="#8f4be1" stroke-width="3"/></svg>
+        <div>
+          <h3>Carter &amp; Morgan Retail Solutions</h3>
+          <p>Strategy. Experience. Growth.</p>
+        </div>
+      </div>
+      <div class="connect-block connect-copy">
+        <div>
+          <h3>CONNECT INSTANTLY</h3>
+          <p>Scan this QR code to save my contact details and connect on your next retail growth initiative.</p>
+        </div>
+      </div>
+      <div class="connect-block"><div class="qr-box" aria-label="QR code"></div></div>
+    </section>
+
+    <section id="message" class="message-panel">
+      <div class="section-title"><h2>SEND A MESSAGE</h2></div>
+      <p class="message-hint">Share your retail challenge, e-commerce goal, or growth objective.</p>
+      <div class="message-grid">
+        <input class="field" type="text" placeholder="Your Name" />
+        <input class="field" type="email" placeholder="Your Email" />
+        <textarea class="message-area" placeholder="Your Message"></textarea>
+      </div>
+      <button class="submit-button" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="m22 2-7 20-4.5-9L2 9l20-7Z"></path></svg>Send Message</button>
+    </section>
+
+    <div class="action-grid">
+      <a href="#" class="action-button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>Save Contact</a>
+      <a href="#" class="action-button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.59 13.51 15.42 17.49"></path><path d="M15.41 6.51 8.59 10.49"></path></svg>Share Profile</a>
+    </div>
+  </div>
+</body>
+</html>
