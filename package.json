@@ -8,7 +8,10 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:migrate": "node database/run-db.js migrate",
+    "db:seed": "node database/run-db.js seed",
+    "db:setup": "node database/run-db.js setup"
   },
   "repository": {
     "type": "git",

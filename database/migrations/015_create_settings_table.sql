@@ -1,0 +1,8 @@
+﻿CREATE TABLE settings (
+  id SERIAL PRIMARY KEY,
+  key VARCHAR(150) NOT NULL UNIQUE,
+  value TEXT,
+  category VARCHAR(100),
+  description TEXT,
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
