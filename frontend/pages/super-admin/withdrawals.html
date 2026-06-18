@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Withdrawals - Super Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <div class="sidebar-section-label">Management</div>
+        <a href="users.html" class="nav-item">Users</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="nfc-orders.html" class="nav-item">NFC Cards</a>
+        <a href="subscriptions.html" class="nav-item">Subscriptions</a>
+        <a href="cash-payments.html" class="nav-item">Cash Payments</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="payouts.html" class="nav-item">Payouts</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="withdrawals.html" class="nav-item active">Withdrawals</a>
+        <a href="coupon-codes.html" class="nav-item">Coupon Codes</a>
+        <div class="sidebar-section-label">Analytics</div>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="reports.html" class="nav-item">Reports</a>
+        <div class="sidebar-section-label">Settings</div>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="system-logs.html" class="nav-item">System Logs</a>
+        </nav>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <input id="dashboardSearch" type="text" placeholder="Search withdrawals..." />
+        </label>
+      </header>
+
+      <main class="page-content">
+        <div class="page-header">
+          <div>
+            <h1>Withdrawals</h1>
+            <p>Review affiliate withdrawal records and payout method details.</p>
+          </div>
+        </div>
+
+        <section class="affiliate-panel-shell searchable-item" data-search="withdrawals affiliate payouts payment type amount">
+          <div class="affiliate-toolbar">
+            <label class="nfc-search affiliate-search" for="affiliateWithdrawalsSearch">
+              <span class="nfc-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                  <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <input id="affiliateWithdrawalsSearch" type="text" placeholder="Search" />
+            </label>
+          </div>
+
+          <div class="light-admin-table-wrap">
+            <table class="admin-table light-admin-table">
+              <thead>
+                <tr>
+                  <th>USER</th>
+                  <th>AMOUNT</th>
+                  <th>PAYMENT TYPE</th>
+                  <th>DATE</th>
+                </tr>
+              </thead>
+              <tbody id="affiliateWithdrawalsTableBody">
+                <tr>
+                  <td class="light-empty-cell" colspan="4">No Data Available</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="subscriptions-footer">
+            <div class="subscriptions-footer-left">
+              <span>Show</span>
+              <select class="subscriptions-limit-select" aria-label="Withdrawals rows per page">
+                <option selected>10</option>
+                <option>25</option>
+                <option>50</option>
+              </select>
+            </div>
+            <p class="subscriptions-results" id="affiliateWithdrawalsResults">Showing 0 results</p>
+          </div>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another withdrawal search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>
+

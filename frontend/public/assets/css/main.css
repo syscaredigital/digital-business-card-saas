@@ -8,8 +8,12 @@
   --panel: rgba(255, 255, 255, 0.045);
   --panel-strong: rgba(255, 255, 255, 0.075);
   --border: rgba(255, 255, 255, 0.13);
+  --border-color: rgba(255, 255, 255, 0.14);
   --border-red: rgba(255, 52, 56, 0.58);
+  --accent-red: #ff3438;
   --text: #f8f8f8;
+  --text-primary: #f8f8f8;
+  --text-secondary: #a8a8ad;
   --muted: #a8a8ad;
   --muted-2: #707078;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);

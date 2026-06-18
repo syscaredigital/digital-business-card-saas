@@ -73,6 +73,37 @@ document.addEventListener("DOMContentLoaded", function () {
   var planModalTitle = document.getElementById("planModalTitle");
   var planSubmitButton = document.getElementById("planSubmitButton");
   var planEditRowIndexInput = document.getElementById("planEditRowIndex");
+  var affiliationsTabButtons = Array.from(document.querySelectorAll("[data-affiliations-tab-target]"));
+  var couponTabButtons = Array.from(document.querySelectorAll("[data-coupon-tab-target]"));
+  var affiliateUsersSearch = document.getElementById("affiliateUsersSearch");
+  var affiliateUsersTableBody = document.getElementById("affiliateUsersTableBody");
+  var affiliateUsersResults = document.getElementById("affiliateUsersResults");
+  var affiliateTransactionsSearch = document.getElementById("affiliateTransactionsSearch");
+  var affiliateTransactionsTableBody = document.getElementById("affiliateTransactionsTableBody");
+  var affiliateTransactionsResults = document.getElementById("affiliateTransactionsResults");
+  var affiliateWithdrawalsSearch = document.getElementById("affiliateWithdrawalsSearch");
+  var affiliateWithdrawalsTableBody = document.getElementById("affiliateWithdrawalsTableBody");
+  var affiliateWithdrawalsResults = document.getElementById("affiliateWithdrawalsResults");
+  var affiliateGuideModal = document.getElementById("affiliateGuideModal");
+  var affiliateGuideModalBackdrop = document.getElementById("affiliateGuideModalBackdrop");
+  var openAffiliateGuideModalButton = document.getElementById("openAffiliateGuideModal");
+  var closeAffiliateGuideModalButton = document.getElementById("closeAffiliateGuideModal");
+  var couponCodeSearch = document.getElementById("couponCodeSearch");
+  var couponCodesTableBody = document.getElementById("couponCodesTableBody");
+  var couponCodesResults = document.getElementById("couponCodesResults");
+  var usedCouponCodeSearch = document.getElementById("usedCouponCodeSearch");
+  var usedCouponCodesTableBody = document.getElementById("usedCouponCodesTableBody");
+  var usedCouponCodesResults = document.getElementById("usedCouponCodesResults");
+  var openCouponModalButton = document.getElementById("openCouponModal");
+  var couponModal = document.getElementById("couponModal");
+  var couponModalBackdrop = document.getElementById("couponModalBackdrop");
+  var closeCouponModalButton = document.getElementById("closeCouponModal");
+  var couponForm = document.getElementById("couponForm");
+  var resetCouponFormButton = document.getElementById("resetCouponForm");
+  var couponFormFeedback = document.getElementById("couponFormFeedback");
+  var couponModalTitle = document.getElementById("couponModalTitle");
+  var couponSubmitButton = document.getElementById("couponSubmitButton");
+  var couponEditRowIndexInput = document.getElementById("couponEditRowIndex");
 
   var state = {
     profileCompletion: 85,
@@ -660,6 +691,54 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function filterLightRows(tableBody, searchInputElement, resultsElement, rowSelector) {
+    if (!tableBody) {
+      return;
+    }
+
+    var rows = Array.from(tableBody.querySelectorAll(rowSelector));
+    var emptyRow = tableBody.querySelector(".light-empty-cell");
+    var term = searchInputElement ? searchInputElement.value.trim().toLowerCase() : "";
+    var visibleCount = 0;
+
+    rows.forEach(function (row) {
+      var haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+      var matched = !term || haystack.indexOf(term) !== -1;
+      row.classList.toggle("search-hidden", !matched);
+      if (matched) {
+        visibleCount += 1;
+      }
+    });
+
+    if (emptyRow) {
+      emptyRow.parentElement.hidden = rows.length > 0 && visibleCount > 0;
+    }
+
+    if (resultsElement) {
+      resultsElement.textContent = visibleCount ? "Showing " + visibleCount + " results" : "Showing 0 results";
+    }
+  }
+
+  function applyAffiliateUsersFilter() {
+    filterLightRows(affiliateUsersTableBody, affiliateUsersSearch, affiliateUsersResults, ".affiliate-user-row");
+  }
+
+  function applyAffiliateTransactionsFilter() {
+    filterLightRows(affiliateTransactionsTableBody, affiliateTransactionsSearch, affiliateTransactionsResults, ".affiliate-transaction-row");
+  }
+
+  function applyAffiliateWithdrawalsFilter() {
+    filterLightRows(affiliateWithdrawalsTableBody, affiliateWithdrawalsSearch, affiliateWithdrawalsResults, ".affiliate-withdrawal-row");
+  }
+
+  function applyCouponCodesFilter() {
+    filterLightRows(couponCodesTableBody, couponCodeSearch, couponCodesResults, ".coupon-code-row");
+  }
+
+  function applyUsedCouponCodesFilter() {
+    filterLightRows(usedCouponCodesTableBody, usedCouponCodeSearch, usedCouponCodesResults, ".used-coupon-code-row");
+  }
+
   function setSubscriptionFormFeedback(message, isSuccess) {
     if (!subscriptionFormFeedback) {
       return;
@@ -891,6 +970,196 @@ document.addEventListener("DOMContentLoaded", function () {
     row.setAttribute("data-plan-features", planData.features.join(","));
     row.setAttribute("data-plan-templates", planData.templates.join(","));
     row.innerHTML = createPlanRowMarkup(planData);
+  }
+
+  function closeAffiliateGuideModal() {
+    if (!affiliateGuideModal) {
+      return;
+    }
+
+    affiliateGuideModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function openAffiliateGuideModal() {
+    if (!affiliateGuideModal) {
+      return;
+    }
+
+    affiliateGuideModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function setCouponFormFeedback(message, isSuccess) {
+    if (!couponFormFeedback) {
+      return;
+    }
+
+    couponFormFeedback.hidden = false;
+    couponFormFeedback.classList.toggle("success", Boolean(isSuccess));
+    couponFormFeedback.textContent = message;
+  }
+
+  function resetCouponFormState() {
+    if (!couponForm) {
+      return;
+    }
+
+    couponForm.reset();
+
+    if (couponEditRowIndexInput) {
+      couponEditRowIndexInput.value = "-1";
+    }
+
+    if (couponModalTitle) {
+      couponModalTitle.textContent = "Add Coupon Code";
+    }
+
+    if (couponSubmitButton) {
+      couponSubmitButton.textContent = "Save";
+    }
+
+    if (couponFormFeedback) {
+      couponFormFeedback.hidden = true;
+      couponFormFeedback.textContent = "";
+      couponFormFeedback.classList.remove("success");
+    }
+  }
+
+  function closeCouponModal() {
+    if (!couponModal) {
+      return;
+    }
+
+    couponModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function openCouponModal() {
+    if (!couponModal) {
+      return;
+    }
+
+    resetCouponFormState();
+    couponModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(function () {
+      var nameInput = document.getElementById("couponName");
+      if (nameInput) {
+        nameInput.focus();
+      }
+    }, 50);
+  }
+
+  function formatCouponDate(value) {
+    if (!value) {
+      return "";
+    }
+
+    var date = new Date(value + "T00:00:00");
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).replace(",", "");
+  }
+
+  function parseCouponDate(value) {
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toISOString().slice(0, 10);
+  }
+
+  function getCouponDataFromRow(row) {
+    if (!row) {
+      return null;
+    }
+
+    var cells = row.querySelectorAll("td");
+    var typeText = cells[1] ? cells[1].textContent.trim() : "Percentage";
+    var discountText = cells[2] ? cells[2].textContent.replace(/[^0-9.]/g, "") : "0";
+    var statusInput = row.querySelector(".coupon-status-switch input");
+
+    return {
+      name: cells[0] ? cells[0].textContent.trim() : "",
+      type: typeText,
+      discount: discountText,
+      limit: cells[3] ? cells[3].textContent.trim() : "0",
+      expireAt: cells[4] ? cells[4].textContent.trim() : "",
+      active: statusInput ? statusInput.checked : false
+    };
+  }
+
+  function populateCouponForm(data, rowIndex) {
+    if (!couponForm || !data) {
+      return;
+    }
+
+    resetCouponFormState();
+
+    if (couponModalTitle) {
+      couponModalTitle.textContent = "Edit Coupon Code";
+    }
+
+    if (couponSubmitButton) {
+      couponSubmitButton.textContent = "Update";
+    }
+
+    if (couponEditRowIndexInput) {
+      couponEditRowIndexInput.value = String(rowIndex);
+    }
+
+    var couponNameInput = document.getElementById("couponName");
+    var couponTypeInput = document.getElementById("couponType");
+    var couponDiscountInput = document.getElementById("couponDiscount");
+    var couponLimitInput = document.getElementById("couponLimitLeft");
+    var couponExpireInput = document.getElementById("couponExpireAt");
+    var couponActiveInput = document.getElementById("couponActive");
+
+    if (couponNameInput) {
+      couponNameInput.value = data.name;
+    }
+    if (couponTypeInput) {
+      couponTypeInput.value = data.type;
+    }
+    if (couponDiscountInput) {
+      couponDiscountInput.value = data.discount;
+    }
+    if (couponLimitInput) {
+      couponLimitInput.value = data.limit;
+    }
+    if (couponExpireInput) {
+      couponExpireInput.value = parseCouponDate(data.expireAt);
+    }
+    if (couponActiveInput) {
+      couponActiveInput.checked = Boolean(data.active);
+    }
+  }
+
+  function createCouponRowMarkup(couponData) {
+    var discountLabel = couponData.type === "Percentage" ? couponData.discount + "%" : "$" + Number(couponData.discount || 0).toFixed(2);
+    return [
+      "<td>" + couponData.name + "</td>",
+      '<td><span class="plan-duration-pill monthly">' + couponData.type + "</span></td>",
+      "<td>" + discountLabel + "</td>",
+      "<td>" + couponData.limit + "</td>",
+      '<td><span class="expiry-pill">' + formatCouponDate(couponData.expireAt) + "</span></td>",
+      '<td><label class="switch coupon-status-switch" aria-label="Status for ' + couponData.name + ' coupon"><input type="checkbox"' + (couponData.active ? " checked" : "") + ' /><span class="switch-slider"></span></label></td>',
+      '<td><div class="subscription-action-cell"><button class="subscription-icon-btn edit" type="button" data-coupon-action="edit" data-coupon-name="' + couponData.name + '" aria-label="Edit ' + couponData.name + ' coupon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button><button class="subscription-icon-btn delete" type="button" data-coupon-action="delete" data-coupon-name="' + couponData.name + '" aria-label="Delete ' + couponData.name + ' coupon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></td>'
+    ].join("");
+  }
+
+  function applyCouponDataToRow(row, couponData) {
+    if (!row) {
+      return;
+    }
+
+    row.className = "searchable-item coupon-code-row";
+    row.setAttribute("data-search", [couponData.name, couponData.type, couponData.discount, couponData.limit, formatCouponDate(couponData.expireAt), couponData.active ? "active" : "inactive"].join(" ").toLowerCase());
+    row.innerHTML = createCouponRowMarkup(couponData);
   }
 
   function syncPlanTemplateSelection() {
@@ -1238,6 +1507,76 @@ document.addEventListener("DOMContentLoaded", function () {
     planSearch.addEventListener("input", applyPlansFilter);
   }
 
+  if (affiliateUsersSearch) {
+    affiliateUsersSearch.addEventListener("input", applyAffiliateUsersFilter);
+  }
+
+  if (affiliateTransactionsSearch) {
+    affiliateTransactionsSearch.addEventListener("input", applyAffiliateTransactionsFilter);
+  }
+
+  if (affiliateWithdrawalsSearch) {
+    affiliateWithdrawalsSearch.addEventListener("input", applyAffiliateWithdrawalsFilter);
+  }
+
+  if (couponCodeSearch) {
+    couponCodeSearch.addEventListener("input", applyCouponCodesFilter);
+  }
+
+  if (usedCouponCodeSearch) {
+    usedCouponCodeSearch.addEventListener("input", applyUsedCouponCodesFilter);
+  }
+
+  if (affiliationsTabButtons.length) {
+    affiliationsTabButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var targetId = button.getAttribute("data-affiliations-tab-target");
+        var targetPanel = document.getElementById(targetId);
+
+        affiliationsTabButtons.forEach(function (item) {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        Array.from(document.querySelectorAll("#affiliateUsersPanel, #affiliateTransactionsPanel")).forEach(function (panel) {
+          panel.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        button.setAttribute("aria-selected", "true");
+
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  }
+
+  if (couponTabButtons.length) {
+    couponTabButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var targetId = button.getAttribute("data-coupon-tab-target");
+        var targetPanel = document.getElementById(targetId);
+
+        couponTabButtons.forEach(function (item) {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        Array.from(document.querySelectorAll("#couponCodeListPanel, #usedCouponCodeListPanel")).forEach(function (panel) {
+          panel.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        button.setAttribute("aria-selected", "true");
+
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  }
+
   if (subscriptionsTabButtons.length) {
     subscriptionsTabButtons.forEach(function (button) {
       button.addEventListener("click", function () {
@@ -1336,6 +1675,42 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  if (openAffiliateGuideModalButton) {
+    openAffiliateGuideModalButton.addEventListener("click", function () {
+      openAffiliateGuideModal();
+    });
+  }
+
+  if (closeAffiliateGuideModalButton) {
+    closeAffiliateGuideModalButton.addEventListener("click", function () {
+      closeAffiliateGuideModal();
+    });
+  }
+
+  if (affiliateGuideModalBackdrop) {
+    affiliateGuideModalBackdrop.addEventListener("click", function () {
+      closeAffiliateGuideModal();
+    });
+  }
+
+  if (openCouponModalButton) {
+    openCouponModalButton.addEventListener("click", function () {
+      openCouponModal();
+    });
+  }
+
+  if (closeCouponModalButton) {
+    closeCouponModalButton.addEventListener("click", function () {
+      closeCouponModal();
+    });
+  }
+
+  if (couponModalBackdrop) {
+    couponModalBackdrop.addEventListener("click", function () {
+      closeCouponModal();
+    });
+  }
+
   if (planSelectAllTemplates && planForm) {
     planSelectAllTemplates.addEventListener("change", function () {
       Array.from(planForm.querySelectorAll('input[name="templates"]')).forEach(function (checkbox) {
@@ -1401,6 +1776,14 @@ document.addEventListener("DOMContentLoaded", function () {
     if (event.key === "Escape" && planModal && !planModal.hidden) {
       closePlanModal();
     }
+
+    if (event.key === "Escape" && affiliateGuideModal && !affiliateGuideModal.hidden) {
+      closeAffiliateGuideModal();
+    }
+
+    if (event.key === "Escape" && couponModal && !couponModal.hidden) {
+      closeCouponModal();
+    }
   });
 
   if (resetSubscriptionFormButton && subscriptionForm) {
@@ -1419,6 +1802,13 @@ document.addEventListener("DOMContentLoaded", function () {
     resetPlanFormButton.addEventListener("click", function () {
       resetPlanFormState();
       closePlanModal();
+    });
+  }
+
+  if (resetCouponFormButton && couponForm) {
+    resetCouponFormButton.addEventListener("click", function () {
+      resetCouponFormState();
+      closeCouponModal();
     });
   }
 
@@ -1485,6 +1875,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var cashActionButton = event.target.closest("[data-cash-action]");
     var subscriptionActionButton = event.target.closest("[data-subscription-action]");
     var planActionButton = event.target.closest("[data-plan-action]");
+    var couponActionButton = event.target.closest("[data-coupon-action]");
 
     if (copyButton) {
       var copyText = copyButton.getAttribute("data-copy-text");
@@ -1557,6 +1948,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (planAction === "delete") {
         showToast("Delete plan", "Connect " + planName + " to your delete confirmation flow.");
+      }
+    }
+
+    if (couponActionButton) {
+      var couponAction = couponActionButton.getAttribute("data-coupon-action");
+      var couponName = couponActionButton.getAttribute("data-coupon-name") || "This coupon";
+      var couponRow = couponActionButton.closest(".coupon-code-row");
+
+      if (couponAction === "edit") {
+        var couponRowIndex = Array.from(couponCodesTableBody ? couponCodesTableBody.querySelectorAll(".coupon-code-row") : []).indexOf(couponRow);
+        populateCouponForm(getCouponDataFromRow(couponRow), couponRowIndex);
+        if (couponModal) {
+          couponModal.hidden = false;
+          document.body.style.overflow = "hidden";
+        }
+      }
+
+      if (couponAction === "delete") {
+        showToast("Delete coupon", "Connect " + couponName + " to your delete confirmation flow.");
       }
     }
   });
@@ -1729,6 +2139,52 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  if (couponForm && couponCodesTableBody) {
+    couponForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!couponForm.checkValidity()) {
+        setCouponFormFeedback("Please complete the required coupon details before saving.", false);
+        return;
+      }
+
+      var formData = new FormData(couponForm);
+      var rowIndex = Number(couponEditRowIndexInput ? couponEditRowIndexInput.value : -1);
+      var couponData = {
+        name: (formData.get("couponName") || "").trim(),
+        type: (formData.get("couponType") || "Percentage").trim(),
+        discount: Number(formData.get("couponDiscount") || 0),
+        limit: String(formData.get("couponLimitLeft") || "0").trim(),
+        expireAt: (formData.get("couponExpireAt") || "").trim(),
+        active: formData.get("couponActive") === "on"
+      };
+
+      if (rowIndex >= 0) {
+        var existingRow = Array.from(couponCodesTableBody.querySelectorAll(".coupon-code-row"))[rowIndex];
+
+        if (!existingRow) {
+          setCouponFormFeedback("Unable to update this coupon. Please try again.", false);
+          return;
+        }
+
+        applyCouponDataToRow(existingRow, couponData);
+        setCouponFormFeedback("Coupon updated successfully.", true);
+      } else {
+        var row = document.createElement("tr");
+        applyCouponDataToRow(row, couponData);
+        couponCodesTableBody.insertBefore(row, couponCodesTableBody.firstChild);
+        setCouponFormFeedback("Coupon code saved successfully.", true);
+      }
+
+      applyCouponCodesFilter();
+
+      window.setTimeout(function () {
+        closeCouponModal();
+        resetCouponFormState();
+      }, 600);
+    });
+  }
+
   document.addEventListener("click", function (event) {
     var actionButton = event.target.closest("[data-action]");
     var periodOption = event.target.closest(".period-option");
@@ -1779,6 +2235,11 @@ document.addEventListener("DOMContentLoaded", function () {
   updateUserDirectoryCount();
   syncPlanTemplateSelection();
   applyPlansFilter();
+  applyAffiliateUsersFilter();
+  applyAffiliateTransactionsFilter();
+  applyAffiliateWithdrawalsFilter();
+  applyCouponCodesFilter();
+  applyUsedCouponCodesFilter();
   updateCompletion(state.profileCompletion);
   drawSparkline("spark1", [40, 55, 45, 70, 60, 80, 75, 95, 85, 110, 90, 120], "#ff5968");
   drawSparkline("spark2", [30, 50, 40, 60, 55, 75, 65, 90, 80, 100, 95, 115], "#ff5968");
