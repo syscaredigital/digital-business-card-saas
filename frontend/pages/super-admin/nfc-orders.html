@@ -9,5 +9,434 @@
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
 </head>
 <body>
-  <div class="dashboard-wrapper"><aside class="sidebar"><div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div><nav class="sidebar-nav"><a href="dashboard.html" class="nav-item">Dashboard</a><div class="sidebar-section-label">Management</div><a href="users.html" class="nav-item">Users</a><a href="cards.html" class="nav-item">Cards</a><a href="nfc-orders.html" class="nav-item active">NFC Cards</a><a href="qr-codes.html" class="nav-item">QR Codes</a><a href="subscriptions.html" class="nav-item">Subscriptions</a><a href="transactions.html" class="nav-item">Transactions</a><a href="payouts.html" class="nav-item">Payouts</a><div class="sidebar-section-label">Analytics</div><a href="analytics.html" class="nav-item">Analytics</a><a href="reports.html" class="nav-item">Reports</a><div class="sidebar-section-label">Settings</div><a href="settings.html" class="nav-item">Settings</a><a href="roles-permissions.html" class="nav-item">Roles &amp; Permissions</a><a href="system-logs.html" class="nav-item">System Logs</a><a href="integrations.html" class="nav-item">Integrations</a></nav></aside><div class="main-content"><header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search NFC cards..." /></label></header><main class="page-content"><div class="page-header"><div><h1>NFC Cards</h1><p>Manage issued NFC cards, activation status, and inventory health.</p></div></div><div class="content-grid content-grid-two"><article class="admin-card searchable-item" data-search="active nfc cards inventory"><div class="admin-card-header"><div><h3>NFC Inventory</h3><p>Primary stock and activation status.</p></div></div><div class="nfc-preview">NFC</div><div class="metric-list"><div class="metric-row"><span>Total Cards</span><strong>4,567</strong></div><div class="metric-row"><span>Active Cards</span><strong>3,890</strong></div><div class="metric-row"><span>Inactive Cards</span><strong>677</strong></div></div></article><article class="admin-card searchable-item" data-search="nfc orders shipping onboarding"><div class="admin-card-header"><div><h3>Fulfillment Checklist</h3><p>Prepare, assign, and verify cards before shipping.</p></div></div><ul class="detail-list"><li>Assign destination profile links</li><li>Print user card labels</li><li>Complete tap verification on mobile</li></ul></article></div><div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another NFC search term.</p></div></main></div></div><div class="toast-stack" id="toastStack"></div><script src="../../public/assets/js/dashboard.js"></script></body>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">SYNC CARD</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <div class="sidebar-section-label">Management</div>
+        <a href="users.html" class="nav-item">Users</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="nfc-orders.html" class="nav-item active">NFC Cards</a>
+        <a href="qr-codes.html" class="nav-item">QR Codes</a>
+        <a href="subscriptions.html" class="nav-item">Subscriptions</a>
+        <a href="cash-payments.html" class="nav-item">Cash Payments</a>
+        <a href="transactions.html" class="nav-item">Transactions</a>
+        <a href="payouts.html" class="nav-item">Payouts</a>
+        <div class="sidebar-section-label">Analytics</div>
+        <a href="analytics.html" class="nav-item">Analytics</a>
+        <a href="reports.html" class="nav-item">Reports</a>
+        <div class="sidebar-section-label">Settings</div>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="roles-permissions.html" class="nav-item">Roles &amp; Permissions</a>
+        <a href="system-logs.html" class="nav-item">System Logs</a>
+        <a href="integrations.html" class="nav-item">Integrations</a>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <input id="dashboardSearch" type="text" placeholder="Search NFC cards or orders..." />
+        </label>
+      </header>
+
+      <main class="page-content">
+        <div class="page-header">
+          <div>
+            <h1>NFC Cards</h1>
+            <p>Manage card products and review incoming NFC card orders from one workspace.</p>
+          </div>
+        </div>
+
+        <section class="nfc-section-shell searchable-item" data-search="nfc cards orders physical card products requests">
+          <div class="nfc-tabbar" role="tablist" aria-label="NFC management tabs">
+            <button class="nfc-tab-btn active" type="button" role="tab" aria-selected="true" data-nfc-tab-target="nfcCardsPanel">NFC Cards</button>
+            <button class="nfc-tab-btn" type="button" role="tab" aria-selected="false" data-nfc-tab-target="nfcOrdersPanel">NFC Card Orders</button>
+          </div>
+
+          <section class="tab-panel active" id="nfcCardsPanel">
+            <div class="nfc-catalog-shell searchable-item" data-search="nfc cards products rose gold custom metallic card list">
+              <div class="nfc-toolbar">
+                <label class="nfc-search" for="nfcCatalogSearch">
+                  <span class="nfc-search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                      <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                  <input id="nfcCatalogSearch" type="text" placeholder="Search" />
+                </label>
+
+                <div class="nfc-toolbar-actions">
+                  <button class="nfc-toolbar-btn nfc-help-btn" type="button" data-nfc-action="how-it-works">How It works?</button>
+                  <button class="nfc-toolbar-btn nfc-add-btn" type="button" id="openNfcModal">Add NFC Card</button>
+                </div>
+              </div>
+
+              <div class="nfc-table">
+                <div class="nfc-table-head">
+                  <div>NAME</div>
+                  <div>ORDERS COUNT</div>
+                  <div>PRICE</div>
+                  <div>ACTION</div>
+                </div>
+
+                <div id="nfcCatalogList">
+                  <article class="nfc-row searchable-item" data-search="rose gold metal exclusive card premium metallic">
+                    <div class="nfc-name-cell">
+                      <div class="nfc-product-thumb nfc-rose-thumb">
+                        <div class="nfc-chip-mark">NFC</div>
+                        <div class="nfc-thumb-brand">SYNC</div>
+                        <div class="nfc-thumb-copy">
+                          <strong>JOHN DOE</strong>
+                          <span>Marketing Executive</span>
+                          <span>Creative Lanka (Pvt) Ltd</span>
+                        </div>
+                      </div>
+                      <div class="nfc-product-meta">
+                        <h3>Rose Gold metal - exclusive</h3>
+                      </div>
+                    </div>
+
+                    <div class="nfc-orders-cell">
+                      <span class="nfc-order-badge">0</span>
+                    </div>
+
+                    <div class="nfc-price-cell">$17.00</div>
+
+                    <div class="nfc-action-cell">
+                      <button class="nfc-action-btn edit" type="button" aria-label="Edit Rose Gold metal - exclusive" data-nfc-action="edit-card" data-card-name="Rose Gold metal - exclusive">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                        </svg>
+                      </button>
+                      <button class="nfc-action-btn delete" type="button" aria-label="Delete Rose Gold metal - exclusive" data-nfc-action="delete-card" data-card-name="Rose Gold metal - exclusive">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path>
+                          <path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                          <path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </article>
+
+                  <article class="nfc-row searchable-item" data-search="gold custom exclusive premium metallic">
+                    <div class="nfc-name-cell">
+                      <div class="nfc-product-thumb nfc-gold-thumb">
+                        <div class="nfc-chip-mark">NFC</div>
+                        <div class="nfc-thumb-brand">SYNC</div>
+                        <div class="nfc-thumb-copy">
+                          <strong>JOHN DOE</strong>
+                          <span>Marketing Executive</span>
+                          <span>Creative Lanka (Pvt) Ltd</span>
+                        </div>
+                      </div>
+                      <div class="nfc-product-meta">
+                        <h3>Gold Custom - Exclusive</h3>
+                      </div>
+                    </div>
+
+                    <div class="nfc-orders-cell">
+                      <span class="nfc-order-badge">0</span>
+                    </div>
+
+                    <div class="nfc-price-cell">$17.00</div>
+
+                    <div class="nfc-action-cell">
+                      <button class="nfc-action-btn edit" type="button" aria-label="Edit Gold Custom - Exclusive" data-nfc-action="edit-card" data-card-name="Gold Custom - Exclusive">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                        </svg>
+                      </button>
+                      <button class="nfc-action-btn delete" type="button" aria-label="Delete Gold Custom - Exclusive" data-nfc-action="delete-card" data-card-name="Gold Custom - Exclusive">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path>
+                          <path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                          <path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </article>
+
+                  <article class="nfc-row searchable-item" data-search="silver classic premium brushed card">
+                    <div class="nfc-name-cell">
+                      <div class="nfc-product-thumb nfc-silver-thumb">
+                        <div class="nfc-chip-mark">NFC</div>
+                        <div class="nfc-thumb-brand">SYNC</div>
+                        <div class="nfc-thumb-copy">
+                          <strong>JOHN DOE</strong>
+                          <span>Marketing Executive</span>
+                          <span>Creative Lanka (Pvt) Ltd</span>
+                        </div>
+                      </div>
+                      <div class="nfc-product-meta">
+                        <h3>Silver Steel - Signature</h3>
+                      </div>
+                    </div>
+
+                    <div class="nfc-orders-cell">
+                      <span class="nfc-order-badge">0</span>
+                    </div>
+
+                    <div class="nfc-price-cell">$19.00</div>
+
+                    <div class="nfc-action-cell">
+                      <button class="nfc-action-btn edit" type="button" aria-label="Edit Silver Steel - Signature" data-nfc-action="edit-card" data-card-name="Silver Steel - Signature">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                        </svg>
+                      </button>
+                      <button class="nfc-action-btn delete" type="button" aria-label="Delete Silver Steel - Signature" data-nfc-action="delete-card" data-card-name="Silver Steel - Signature">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path>
+                          <path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                          <path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="nfcOrdersPanel">
+            <div class="nfc-orders-shell searchable-item" data-search="nfc order requests customer purchases shipping paid pending">
+              <div class="nfc-orders-toolbar">
+                <label class="nfc-search nfc-orders-search" for="nfcOrderSearch">
+                  <span class="nfc-search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                      <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                  <input id="nfcOrderSearch" type="text" placeholder="Search" />
+                </label>
+              </div>
+
+              <div class="nfc-orders-table-wrap">
+                <table class="admin-table nfc-orders-table">
+                  <thead>
+                    <tr>
+                      <th>USER</th>
+                      <th>NFC CARD TYPE</th>
+                      <th>VCARD NAME</th>
+                      <th>ORDER STATUS</th>
+                      <th>PAYMENT STATUS</th>
+                      <th>CREATED AT</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody id="nfcOrdersTableBody">
+                    <tr class="searchable-item nfc-order-row" data-search="syscare it solutions syscare it solutions syscare it solutions pending unpaid 08 oct 2025">
+                      <td>SysCare IT Solutions</td>
+                      <td>SysCare IT Solutions</td>
+                      <td>SysCare IT Solutions</td>
+                      <td>
+                        <select class="nfc-order-status-select" aria-label="Order status for SysCare IT Solutions">
+                          <option selected>Pending</option>
+                          <option>Processing</option>
+                          <option>Completed</option>
+                          <option>Cancelled</option>
+                        </select>
+                      </td>
+                      <td>
+                        <label class="switch nfc-payment-switch" aria-label="Payment status for SysCare IT Solutions">
+                          <input type="checkbox" />
+                          <span class="switch-slider"></span>
+                        </label>
+                      </td>
+                      <td>08 Oct 2025</td>
+                      <td>
+                        <button class="nfc-order-view-btn" type="button" data-nfc-order-action="view-order" data-order-name="SysCare IT Solutions" aria-label="View SysCare IT Solutions order">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr class="searchable-item nfc-order-row" data-search="creative lanka gold custom michael perera processing paid 12 oct 2025">
+                      <td>Creative Lanka</td>
+                      <td>Gold Custom - Exclusive</td>
+                      <td>Michael Perera</td>
+                      <td>
+                        <select class="nfc-order-status-select" aria-label="Order status for Creative Lanka">
+                          <option>Pending</option>
+                          <option selected>Processing</option>
+                          <option>Completed</option>
+                          <option>Cancelled</option>
+                        </select>
+                      </td>
+                      <td>
+                        <label class="switch nfc-payment-switch" aria-label="Payment status for Creative Lanka">
+                          <input type="checkbox" checked />
+                          <span class="switch-slider"></span>
+                        </label>
+                      </td>
+                      <td>12 Oct 2025</td>
+                      <td>
+                        <button class="nfc-order-view-btn" type="button" data-nfc-order-action="view-order" data-order-name="Creative Lanka" aria-label="View Creative Lanka order">
+                          <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="nfc-orders-footer">
+                <div class="nfc-orders-footer-left">
+                  <span>Show</span>
+                  <select class="nfc-orders-limit-select" aria-label="Rows per page">
+                    <option selected>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                  </select>
+                </div>
+                <p class="nfc-orders-results" id="nfcOrdersResults">Showing 2 results</p>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another NFC search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="user-modal nfc-modal" id="nfcCardModal" hidden>
+    <div class="user-modal-backdrop" id="nfcCardModalBackdrop"></div>
+    <div class="user-modal-dialog nfc-modal-dialog">
+      <div class="user-modal-header nfc-modal-header">
+        <h2>New NFC Card</h2>
+        <button class="nfc-modal-close" type="button" id="closeNfcModal" aria-label="Close NFC card modal">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="user-modal-body nfc-modal-body">
+        <form class="admin-form-grid admin-form-grid-modal nfc-form-grid" id="nfcCardForm">
+          <div class="form-field form-field-wide">
+            <label for="nfcCardName">Name:<span class="required-mark">*</span></label>
+            <input id="nfcCardName" name="cardName" type="text" placeholder="Name" required />
+          </div>
+
+          <div class="form-field form-field-wide">
+            <label for="nfcCardPrice">Price:<span class="required-mark">*</span></label>
+            <input id="nfcCardPrice" name="price" type="number" min="0" step="0.01" placeholder="Enter Price" required />
+          </div>
+
+          <div class="form-field form-field-wide">
+            <label for="nfcCardDescription">Description:<span class="required-mark">*</span></label>
+            <textarea id="nfcCardDescription" name="description" placeholder="Enter Short Description" required></textarea>
+          </div>
+
+          <div class="form-field">
+            <label for="nfcCardFront">Card Image : <span class="required-mark">*</span></label>
+            <div class="profile-upload-wrap nfc-upload-wrap">
+              <label class="profile-upload-card nfc-upload-card" for="nfcCardFront">
+                <span class="profile-upload-preview" id="nfcFrontPreview">
+                  <span class="nfc-upload-placeholder">
+                    <span class="nfc-upload-bar"></span>
+                    <span class="nfc-upload-bar short"></span>
+                  </span>
+                </span>
+                <span class="profile-upload-edit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.4 18.5 6.6L17.4 5.5C16.6 4.7 15.3 4.7 14.5 5.5L4 16V20Z" fill="currentColor"></path>
+                  </svg>
+                </span>
+              </label>
+              <input id="nfcCardFront" name="cardFront" type="file" accept=".png,.jpg,.jpeg" hidden required />
+              <p class="profile-upload-note">Allowed file types: png, jpg, jpeg.</p>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="nfcCardBack">Card Back Image : <span class="required-mark">*</span></label>
+            <div class="profile-upload-wrap nfc-upload-wrap">
+              <label class="profile-upload-card nfc-upload-card" for="nfcCardBack">
+                <span class="profile-upload-preview" id="nfcBackPreview">
+                  <span class="nfc-upload-placeholder">
+                    <span class="nfc-upload-bar"></span>
+                    <span class="nfc-upload-bar short"></span>
+                  </span>
+                </span>
+                <span class="profile-upload-edit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.4 18.5 6.6L17.4 5.5C16.6 4.7 15.3 4.7 14.5 5.5L4 16V20Z" fill="currentColor"></path>
+                  </svg>
+                </span>
+              </label>
+              <input id="nfcCardBack" name="cardBack" type="file" accept=".png,.jpg,.jpeg" hidden required />
+              <p class="profile-upload-note">Allowed file types: png, jpg, jpeg.</p>
+            </div>
+          </div>
+
+          <div class="form-field form-field-wide">
+            <p class="form-feedback" id="nfcCardFormFeedback" hidden></p>
+          </div>
+
+          <div class="form-actions form-field-wide nfc-form-actions">
+            <button class="btn-share" type="submit">Save</button>
+            <button class="btn-preview" type="button" id="resetNfcCardForm">Discard</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="user-modal nfc-modal" id="nfcGuideModal" hidden>
+    <div class="user-modal-backdrop" id="nfcGuideModalBackdrop"></div>
+    <div class="user-modal-dialog nfc-modal-dialog nfc-guide-dialog">
+      <div class="user-modal-header nfc-modal-header">
+        <h2>Admin Guide : Selling NFC Cards</h2>
+        <button class="nfc-modal-close" type="button" id="closeNfcGuideModal" aria-label="Close NFC guide modal">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="user-modal-body nfc-modal-body">
+        <div class="nfc-guide-content">
+          <ol class="nfc-guide-list">
+            <li>Log in to the Admin Dashboard.</li>
+            <li>Add NFC card photos and set prices.</li>
+            <li>Review user orders</li>
+            <li>Write the user-provided URL to NFC cards.</li>
+            <li>Dispatch the NFC cards to users.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
 </html>

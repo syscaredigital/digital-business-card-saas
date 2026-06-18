@@ -12,6 +12,67 @@ document.addEventListener("DOMContentLoaded", function () {
   var completionValue = document.getElementById("completionValue");
   var completionTitle = document.getElementById("completionTitle");
   var ringFill = document.querySelector(".ring-fill");
+  var addUserForm = document.getElementById("addUserForm");
+  var userModal = document.getElementById("userModal");
+  var userModalBackdrop = document.getElementById("userModalBackdrop");
+  var toggleUserForm = document.getElementById("toggleUserForm");
+  var closeUserForm = document.getElementById("closeUserForm");
+  var resetUserForm = document.getElementById("resetUserForm");
+  var userFormFeedback = document.getElementById("userFormFeedback");
+  var userDirectoryBody = document.getElementById("userDirectoryBody");
+  var userDirectoryCount = document.getElementById("userDirectoryCount");
+  var userProfileInput = document.getElementById("userProfile");
+  var userProfilePreview = document.getElementById("userProfilePreview");
+  var nfcCatalogSearch = document.getElementById("nfcCatalogSearch");
+  var vcardTabButtons = Array.from(document.querySelectorAll("[data-vcard-tab-target]"));
+  var nfcTabButtons = Array.from(document.querySelectorAll("[data-nfc-tab-target]"));
+  var openNfcModalButton = document.getElementById("openNfcModal");
+  var nfcCardModal = document.getElementById("nfcCardModal");
+  var closeNfcModalButton = document.getElementById("closeNfcModal");
+  var nfcCardModalBackdrop = document.getElementById("nfcCardModalBackdrop");
+  var nfcCardForm = document.getElementById("nfcCardForm");
+  var resetNfcCardFormButton = document.getElementById("resetNfcCardForm");
+  var nfcCardFormFeedback = document.getElementById("nfcCardFormFeedback");
+  var nfcCardFrontInput = document.getElementById("nfcCardFront");
+  var nfcCardBackInput = document.getElementById("nfcCardBack");
+  var nfcFrontPreview = document.getElementById("nfcFrontPreview");
+  var nfcBackPreview = document.getElementById("nfcBackPreview");
+  var nfcCatalogList = document.getElementById("nfcCatalogList");
+  var nfcGuideModal = document.getElementById("nfcGuideModal");
+  var nfcGuideModalBackdrop = document.getElementById("nfcGuideModalBackdrop");
+  var closeNfcGuideModalButton = document.getElementById("closeNfcGuideModal");
+  var nfcOrderSearch = document.getElementById("nfcOrderSearch");
+  var nfcOrdersTableBody = document.getElementById("nfcOrdersTableBody");
+  var nfcOrdersResults = document.getElementById("nfcOrdersResults");
+  var cashPaymentSearch = document.getElementById("cashPaymentSearch");
+  var cashPaymentsTableBody = document.getElementById("cashPaymentsTableBody");
+  var cashPaymentsResults = document.getElementById("cashPaymentsResults");
+  var subscriptionSearch = document.getElementById("subscriptionSearch");
+  var subscriptionsTabButtons = Array.from(document.querySelectorAll("[data-subscriptions-tab-target]"));
+  var subscriptionsTableBody = document.getElementById("subscriptionsTableBody");
+  var subscriptionsResults = document.getElementById("subscriptionsResults");
+  var subscriptionModal = document.getElementById("subscriptionModal");
+  var subscriptionModalBackdrop = document.getElementById("subscriptionModalBackdrop");
+  var closeSubscriptionModalButton = document.getElementById("closeSubscriptionModal");
+  var subscriptionForm = document.getElementById("subscriptionForm");
+  var resetSubscriptionFormButton = document.getElementById("resetSubscriptionForm");
+  var subscriptionFormFeedback = document.getElementById("subscriptionFormFeedback");
+  var subscriptionEndDateInput = document.getElementById("subscriptionEndDate");
+  var subscriptionEditRowIndexInput = document.getElementById("subscriptionEditRowIndex");
+  var planSearch = document.getElementById("planSearch");
+  var plansTableBody = document.getElementById("plansTableBody");
+  var openPlanModalButton = document.getElementById("openPlanModal");
+  var planModal = document.getElementById("planModal");
+  var planModalBackdrop = document.getElementById("planModalBackdrop");
+  var closePlanModalButton = document.getElementById("closePlanModal");
+  var planForm = document.getElementById("planForm");
+  var resetPlanFormButton = document.getElementById("resetPlanForm");
+  var planFormFeedback = document.getElementById("planFormFeedback");
+  var planSelectAllTemplates = document.getElementById("planSelectAllTemplates");
+  var plansResults = document.getElementById("plansResults");
+  var planModalTitle = document.getElementById("planModalTitle");
+  var planSubmitButton = document.getElementById("planSubmitButton");
+  var planEditRowIndexInput = document.getElementById("planEditRowIndex");
 
   var state = {
     profileCompletion: 85,
@@ -492,8 +553,1180 @@ document.addEventListener("DOMContentLoaded", function () {
     showToast(content[0], content[1]);
   }
 
+  function applyNfcCatalogFilter() {
+    if (!nfcCatalogSearch) {
+      return;
+    }
+
+    var term = nfcCatalogSearch.value.trim().toLowerCase();
+    var nfcRows = Array.from(document.querySelectorAll(".nfc-row"));
+
+    nfcRows.forEach(function (row) {
+      var haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+      var matched = !term || haystack.indexOf(term) !== -1;
+      row.classList.toggle("search-hidden", !matched);
+    });
+  }
+
+  function applyNfcOrdersFilter() {
+    if (!nfcOrdersTableBody) {
+      return;
+    }
+
+    var rows = Array.from(nfcOrdersTableBody.querySelectorAll(".nfc-order-row"));
+    var term = nfcOrderSearch ? nfcOrderSearch.value.trim().toLowerCase() : "";
+    var visibleCount = 0;
+
+    rows.forEach(function (row) {
+      var haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+      var matched = !term || haystack.indexOf(term) !== -1;
+      row.classList.toggle("search-hidden", !matched);
+      if (matched) {
+        visibleCount += 1;
+      }
+    });
+
+    if (nfcOrdersResults) {
+      nfcOrdersResults.textContent = "Showing " + visibleCount + " results";
+    }
+  }
+
+  function applyCashPaymentsFilter() {
+    if (!cashPaymentsTableBody) {
+      return;
+    }
+
+    var rows = Array.from(cashPaymentsTableBody.querySelectorAll(".cash-payment-row"));
+    var term = cashPaymentSearch ? cashPaymentSearch.value.trim().toLowerCase() : "";
+    var visibleCount = 0;
+
+    rows.forEach(function (row) {
+      var haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+      var matched = !term || haystack.indexOf(term) !== -1;
+      row.classList.toggle("search-hidden", !matched);
+      if (matched) {
+        visibleCount += 1;
+      }
+    });
+
+    if (cashPaymentsResults) {
+      cashPaymentsResults.textContent = "Showing " + visibleCount + " results";
+    }
+  }
+
+  function applySubscriptionsFilter() {
+    if (!subscriptionsTableBody) {
+      return;
+    }
+
+    var rows = Array.from(subscriptionsTableBody.querySelectorAll(".subscription-row"));
+    var term = subscriptionSearch ? subscriptionSearch.value.trim().toLowerCase() : "";
+    var visibleCount = 0;
+
+    rows.forEach(function (row) {
+      var haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+      var matched = !term || haystack.indexOf(term) !== -1;
+      row.classList.toggle("search-hidden", !matched);
+      if (matched) {
+        visibleCount += 1;
+      }
+    });
+
+    if (subscriptionsResults) {
+      subscriptionsResults.textContent = visibleCount ? "Showing 1 to " + visibleCount + " of 8652 results" : "Showing 0 results";
+    }
+  }
+
+  function applyPlansFilter() {
+    if (!plansTableBody) {
+      return;
+    }
+
+    var rows = Array.from(plansTableBody.querySelectorAll(".plan-row"));
+    var term = planSearch ? planSearch.value.trim().toLowerCase() : "";
+    var visibleCount = 0;
+
+    rows.forEach(function (row) {
+      var haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+      var matched = !term || haystack.indexOf(term) !== -1;
+      row.classList.toggle("search-hidden", !matched);
+      if (matched) {
+        visibleCount += 1;
+      }
+    });
+
+    if (plansResults) {
+      plansResults.textContent = visibleCount ? "Showing 1 to " + visibleCount + " of " + rows.length + " results" : "Showing 0 results";
+    }
+  }
+
+  function setSubscriptionFormFeedback(message, isSuccess) {
+    if (!subscriptionFormFeedback) {
+      return;
+    }
+
+    subscriptionFormFeedback.hidden = false;
+    subscriptionFormFeedback.classList.toggle("success", Boolean(isSuccess));
+    subscriptionFormFeedback.textContent = message;
+  }
+
+  function closeSubscriptionModal() {
+    if (!subscriptionModal) {
+      return;
+    }
+
+    subscriptionModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function openSubscriptionModal(row, endDateText) {
+    if (!subscriptionModal || !row) {
+      return;
+    }
+
+    var rows = Array.from(document.querySelectorAll(".subscription-row"));
+    var rowIndex = rows.indexOf(row);
+
+    if (subscriptionFormFeedback) {
+      subscriptionFormFeedback.hidden = true;
+      subscriptionFormFeedback.textContent = "";
+      subscriptionFormFeedback.classList.remove("success");
+    }
+
+    if (subscriptionEndDateInput) {
+      subscriptionEndDateInput.value = endDateText || "";
+    }
+
+    if (subscriptionEditRowIndexInput) {
+      subscriptionEditRowIndexInput.value = String(rowIndex);
+    }
+
+    subscriptionModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(function () {
+      if (subscriptionEndDateInput) {
+        subscriptionEndDateInput.focus();
+      }
+    }, 50);
+  }
+
+  function setPlanFormFeedback(message, isSuccess) {
+    if (!planFormFeedback) {
+      return;
+    }
+
+    planFormFeedback.hidden = false;
+    planFormFeedback.classList.toggle("success", Boolean(isSuccess));
+    planFormFeedback.textContent = message;
+  }
+
+  function resetPlanFormState() {
+    if (!planForm) {
+      return;
+    }
+
+    planForm.reset();
+
+    if (planEditRowIndexInput) {
+      planEditRowIndexInput.value = "-1";
+    }
+
+    if (planModalTitle) {
+      planModalTitle.textContent = "New Plan";
+    }
+
+    if (planSubmitButton) {
+      planSubmitButton.textContent = "Save";
+    }
+
+    syncPlanTemplateSelection();
+
+    if (planFormFeedback) {
+      planFormFeedback.hidden = true;
+      planFormFeedback.textContent = "";
+      planFormFeedback.classList.remove("success");
+    }
+  }
+
+  function closePlanModal() {
+    if (!planModal) {
+      return;
+    }
+
+    planModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function openPlanModal() {
+    if (!planModal) {
+      return;
+    }
+
+    resetPlanFormState();
+
+    planModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(function () {
+      var firstInput = planModal.querySelector("input, select");
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }, 50);
+  }
+
+  function getPlanDataFromRow(row) {
+    if (!row) {
+      return null;
+    }
+
+    var cells = row.querySelectorAll("td");
+    var name = cells[0] ? cells[0].textContent.trim() : "";
+    var priceText = cells[1] ? cells[1].textContent.replace(/[^0-9.]/g, "") : "0";
+    var durationText = row.querySelector(".plan-duration-pill") ? row.querySelector(".plan-duration-pill").textContent.trim() : "Monthly";
+
+    return {
+      name: name,
+      price: priceText,
+      frequency: durationText === "Yearly" ? "Year" : (durationText === "Unlimited" ? "Unlimited" : "Month"),
+      currency: row.getAttribute("data-plan-currency") || "USD",
+      vcards: row.getAttribute("data-plan-vcards") || "0",
+      trialDays: row.getAttribute("data-plan-trial-days") || "0",
+      storageLimit: row.getAttribute("data-plan-storage-limit") || "200",
+      customSelect: row.getAttribute("data-plan-custom-select") === "true",
+      features: (row.getAttribute("data-plan-features") || "").split(",").map(function (item) { return item.trim(); }).filter(Boolean),
+      templates: (row.getAttribute("data-plan-templates") || "").split(",").map(function (item) { return item.trim(); }).filter(Boolean)
+    };
+  }
+
+  function populatePlanForm(data, rowIndex) {
+    if (!planForm || !data) {
+      return;
+    }
+
+    resetPlanFormState();
+
+    if (planModalTitle) {
+      planModalTitle.textContent = "Edit Plan";
+    }
+
+    if (planSubmitButton) {
+      planSubmitButton.textContent = "Update Plan";
+    }
+
+    if (planEditRowIndexInput) {
+      planEditRowIndexInput.value = String(rowIndex);
+    }
+
+    var planNameInput = document.getElementById("planName");
+    var planFrequencyInput = document.getElementById("planFrequency");
+    var planCurrencyInput = document.getElementById("planCurrency");
+    var planPriceInput = document.getElementById("planPrice");
+    var planVcardsInput = document.getElementById("planVcards");
+    var planTrialDaysInput = document.getElementById("planTrialDays");
+    var planStorageLimitInput = document.getElementById("planStorageLimit");
+    var planCustomSelectInput = document.getElementById("planCustomSelect");
+
+    if (planNameInput) {
+      planNameInput.value = data.name;
+    }
+    if (planFrequencyInput) {
+      planFrequencyInput.value = data.frequency;
+    }
+    if (planCurrencyInput) {
+      planCurrencyInput.value = data.currency;
+    }
+    if (planPriceInput) {
+      planPriceInput.value = data.price;
+    }
+    if (planVcardsInput) {
+      planVcardsInput.value = data.vcards;
+    }
+    if (planTrialDaysInput) {
+      planTrialDaysInput.value = data.trialDays;
+    }
+    if (planStorageLimitInput) {
+      planStorageLimitInput.value = data.storageLimit;
+    }
+    if (planCustomSelectInput) {
+      planCustomSelectInput.checked = Boolean(data.customSelect);
+    }
+
+    Array.from(planForm.querySelectorAll('input[name="features"]')).forEach(function (checkbox) {
+      checkbox.checked = data.features.indexOf(checkbox.value) !== -1;
+    });
+
+    Array.from(planForm.querySelectorAll('input[name="templates"]')).forEach(function (checkbox) {
+      checkbox.checked = data.templates.indexOf(checkbox.value) !== -1;
+    });
+
+    syncPlanTemplateSelection();
+  }
+
+  function createPlanRowMarkup(planData) {
+    var durationClass = planData.frequency.toLowerCase() === "year" ? "yearly" : (planData.frequency.toLowerCase() === "unlimited" ? "unlimited" : "monthly");
+    var durationLabel = planData.frequency === "Month" ? "Monthly" : (planData.frequency === "Year" ? "Yearly" : "Unlimited");
+
+    return [
+      "<td>" + planData.name + "</td>",
+      "<td>$" + Number(planData.price || 0).toFixed(2) + "</td>",
+      '<td><label class="switch plan-status-switch" aria-label="Status for ' + planData.name + ' plan"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>',
+      '<td><span class="plan-duration-pill ' + durationClass + '">' + durationLabel + "</span></td>",
+      '<td><label class="switch plan-default-switch" aria-label="Default for ' + planData.name + ' plan"><input type="checkbox" /><span class="switch-slider"></span></label></td>',
+      '<td><div class="subscription-action-cell"><button class="subscription-icon-btn edit" type="button" data-plan-action="edit" data-plan-name="' + planData.name + '" aria-label="Edit ' + planData.name + ' plan"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button><button class="subscription-icon-btn delete" type="button" data-plan-action="delete" data-plan-name="' + planData.name + '" aria-label="Delete ' + planData.name + ' plan"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></td>'
+    ].join("");
+  }
+
+  function applyPlanDataToRow(row, planData) {
+    if (!row) {
+      return;
+    }
+
+    row.className = "searchable-item plan-row";
+    row.setAttribute("data-search", [planData.name, Number(planData.price || 0).toFixed(2), planData.frequency, "active"].join(" ").toLowerCase());
+    row.setAttribute("data-plan-currency", planData.currency);
+    row.setAttribute("data-plan-vcards", planData.vcards);
+    row.setAttribute("data-plan-trial-days", planData.trialDays);
+    row.setAttribute("data-plan-storage-limit", planData.storageLimit);
+    row.setAttribute("data-plan-custom-select", planData.customSelect ? "true" : "false");
+    row.setAttribute("data-plan-features", planData.features.join(","));
+    row.setAttribute("data-plan-templates", planData.templates.join(","));
+    row.innerHTML = createPlanRowMarkup(planData);
+  }
+
+  function syncPlanTemplateSelection() {
+    if (!planForm) {
+      return;
+    }
+
+    var templateCheckboxes = Array.from(planForm.querySelectorAll('input[name="templates"]'));
+    var checkedCount = 0;
+
+    templateCheckboxes.forEach(function (checkbox) {
+      var card = checkbox.closest(".plan-template-card");
+      if (card) {
+        card.classList.toggle("selected", checkbox.checked);
+      }
+      if (checkbox.checked) {
+        checkedCount += 1;
+      }
+    });
+
+    if (planSelectAllTemplates) {
+      planSelectAllTemplates.checked = templateCheckboxes.length > 0 && checkedCount === templateCheckboxes.length;
+      planSelectAllTemplates.indeterminate = checkedCount > 0 && checkedCount < templateCheckboxes.length;
+    }
+  }
+
+  function defaultNfcPreviewMarkup() {
+    return '<span class="nfc-upload-placeholder"><span class="nfc-upload-bar"></span><span class="nfc-upload-bar short"></span></span>';
+  }
+
+  function resetNfcPreview(target) {
+    if (!target) {
+      return;
+    }
+
+    target.innerHTML = defaultNfcPreviewMarkup();
+  }
+
+  function setNfcFormFeedback(message, isSuccess) {
+    if (!nfcCardFormFeedback) {
+      return;
+    }
+
+    nfcCardFormFeedback.hidden = false;
+    nfcCardFormFeedback.classList.toggle("success", Boolean(isSuccess));
+    nfcCardFormFeedback.textContent = message;
+  }
+
+  function closeNfcModal() {
+    if (!nfcCardModal) {
+      return;
+    }
+
+    nfcCardModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function closeNfcGuideModal() {
+    if (!nfcGuideModal) {
+      return;
+    }
+
+    nfcGuideModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function openNfcModal() {
+    if (!nfcCardModal) {
+      return;
+    }
+
+    if (nfcCardFormFeedback) {
+      nfcCardFormFeedback.hidden = true;
+      nfcCardFormFeedback.textContent = "";
+      nfcCardFormFeedback.classList.remove("success");
+    }
+
+    nfcCardModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(function () {
+      var firstInput = nfcCardModal.querySelector("input, textarea");
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }, 50);
+  }
+
+  function openNfcGuideModal() {
+    if (!nfcGuideModal) {
+      return;
+    }
+
+    nfcGuideModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function readPreviewImage(input, target) {
+    if (!input || !target) {
+      return;
+    }
+
+    var file = input.files && input.files[0];
+    if (!file) {
+      resetNfcPreview(target);
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function (loadEvent) {
+      target.innerHTML = '<img src="' + loadEvent.target.result + '" alt="NFC card preview" />';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function buildNfcThumbClass(name) {
+    var value = name.toLowerCase();
+    if (value.indexOf("gold") !== -1) {
+      return "nfc-gold-thumb";
+    }
+
+    if (value.indexOf("silver") !== -1 || value.indexOf("steel") !== -1) {
+      return "nfc-silver-thumb";
+    }
+
+    return "nfc-rose-thumb";
+  }
+
+  function buildNfcCardRow(formData) {
+    var cardName = formData.get("cardName").trim();
+    var price = Number(formData.get("price") || 0).toFixed(2);
+    var description = formData.get("description").trim();
+    var cardToneClass = buildNfcThumbClass(cardName);
+    var article = document.createElement("article");
+
+    article.className = "nfc-row searchable-item";
+    article.setAttribute("data-search", [cardName, description, price, "nfc card"].join(" ").toLowerCase());
+    article.innerHTML = [
+      '<div class="nfc-name-cell">',
+      '  <div class="nfc-product-thumb ' + cardToneClass + '">',
+      '    <div class="nfc-chip-mark">NFC</div>',
+      '    <div class="nfc-thumb-brand">SYNC</div>',
+      '    <div class="nfc-thumb-copy">',
+      '      <strong>NEW CARD</strong>',
+      '      <span>Digital Business</span>',
+      '      <span>Custom NFC Collection</span>',
+      "    </div>",
+      "  </div>",
+      '  <div class="nfc-product-meta">',
+      '    <h3>' + cardName + "</h3>",
+      "  </div>",
+      "</div>",
+      '<div class="nfc-orders-cell"><span class="nfc-order-badge">0</span></div>',
+      '<div class="nfc-price-cell">$' + price + "</div>",
+      '<div class="nfc-action-cell">',
+      '  <button class="nfc-action-btn edit" type="button" aria-label="Edit ' + cardName + '" data-nfc-action="edit-card" data-card-name="' + cardName + '">',
+      '    <svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg>',
+      "  </button>",
+      '  <button class="nfc-action-btn delete" type="button" aria-label="Delete ' + cardName + '" data-nfc-action="delete-card" data-card-name="' + cardName + '">',
+      '    <svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>',
+      "  </button>",
+      "</div>"
+    ].join("");
+
+    return article;
+  }
+
+  function updateUserDirectoryCount() {
+    if (!userDirectoryBody || !userDirectoryCount) {
+      return;
+    }
+
+    userDirectoryCount.textContent = userDirectoryBody.children.length + " users";
+  }
+
+  function avatarInitials(name) {
+    return name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (part) {
+      return part.charAt(0).toUpperCase();
+    }).join("");
+  }
+
+  function planClass(plan) {
+    if (plan === "Business Plan") {
+      return "business";
+    }
+
+    if (plan === "Enterprise") {
+      return "enterprise";
+    }
+
+    return "pro";
+  }
+
+  function statusClass(status) {
+    if (status === "Inactive") {
+      return "inactive";
+    }
+
+    if (status === "Pending") {
+      return "pending";
+    }
+
+    return "active";
+  }
+
+  function formatDate(date) {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+  }
+
+  function setUserFormFeedback(message, isSuccess) {
+    if (!userFormFeedback) {
+      return;
+    }
+
+    userFormFeedback.hidden = false;
+    userFormFeedback.classList.toggle("success", Boolean(isSuccess));
+    userFormFeedback.textContent = message;
+  }
+
+  function buildUserRow(formData) {
+    var firstName = formData.get("firstName").trim();
+    var lastName = formData.get("lastName").trim();
+    var fullName = (firstName + " " + lastName).trim();
+    var email = formData.get("email").trim();
+    var username = (firstName + lastName).toLowerCase().replace(/[^a-z0-9]/g, "");
+    var plan = "Pending Purchase";
+    var cards = "1";
+    var status = formData.get("status");
+    var row = document.createElement("tr");
+    var searchTerms = [
+      fullName,
+      username,
+      email,
+      plan,
+      status,
+      formData.get("phone") || ""
+    ].join(" ").toLowerCase();
+
+    row.className = "searchable-item";
+    row.setAttribute("data-search", searchTerms);
+    row.innerHTML = [
+      '<td><div class="table-user"><span class="mini-avatar">' + avatarInitials(fullName) + '</span><div><strong>' + fullName + '</strong><div class="subtle-handle">@' + username + '</div></div></div></td>',
+      "<td>" + email + "</td>",
+      '<td><span class="plan-pill ' + planClass(plan) + '">' + plan + "</span></td>",
+      "<td>" + cards + "</td>",
+      "<td>" + formatDate(new Date()) + "</td>",
+      '<td><span class="status-badge ' + statusClass(status) + '">' + status + "</span></td>"
+    ].join("");
+
+    return row;
+  }
+
+  function closeUserModal() {
+    if (!userModal) {
+      return;
+    }
+
+    userModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function openUserModal() {
+    if (!userModal) {
+      return;
+    }
+
+    if (userFormFeedback) {
+      userFormFeedback.hidden = true;
+      userFormFeedback.textContent = "";
+      userFormFeedback.classList.remove("success");
+    }
+
+    userModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    window.setTimeout(function () {
+      var firstInput = userModal.querySelector("input, select, textarea");
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }, 50);
+  }
+
+  function resetProfilePreview() {
+    if (!userProfilePreview) {
+      return;
+    }
+
+    userProfilePreview.innerHTML = [
+      '<svg width="72" height="72" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">',
+      '<circle cx="32" cy="21" r="11" fill="#A9A9A9"/>',
+      '<path d="M16 52c2.8-8.4 9.2-13 16-13s13.2 4.6 16 13" fill="#A9A9A9"/>',
+      "</svg>"
+    ].join("");
+  }
+
   if (searchInput) {
     searchInput.addEventListener("input", applySearchFilter);
+  }
+
+  if (nfcCatalogSearch) {
+    nfcCatalogSearch.addEventListener("input", applyNfcCatalogFilter);
+  }
+
+  if (vcardTabButtons.length) {
+    vcardTabButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var targetId = button.getAttribute("data-vcard-tab-target");
+        var targetPanel = document.getElementById(targetId);
+
+        vcardTabButtons.forEach(function (item) {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        Array.from(document.querySelectorAll("#vcardListPanel, #vcardTemplatesPanel")).forEach(function (panel) {
+          panel.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        button.setAttribute("aria-selected", "true");
+
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  }
+
+  if (nfcOrderSearch) {
+    nfcOrderSearch.addEventListener("input", applyNfcOrdersFilter);
+  }
+
+  if (cashPaymentSearch) {
+    cashPaymentSearch.addEventListener("input", applyCashPaymentsFilter);
+  }
+
+  if (subscriptionSearch) {
+    subscriptionSearch.addEventListener("input", applySubscriptionsFilter);
+  }
+
+  if (planSearch) {
+    planSearch.addEventListener("input", applyPlansFilter);
+  }
+
+  if (subscriptionsTabButtons.length) {
+    subscriptionsTabButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var targetId = button.getAttribute("data-subscriptions-tab-target");
+        var targetPanel = document.getElementById(targetId);
+
+        subscriptionsTabButtons.forEach(function (item) {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        Array.from(document.querySelectorAll("#subscribedPlansPanel, #plansPanel")).forEach(function (panel) {
+          panel.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        button.setAttribute("aria-selected", "true");
+
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  }
+
+  if (nfcTabButtons.length) {
+    nfcTabButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var targetId = button.getAttribute("data-nfc-tab-target");
+        var targetPanel = document.getElementById(targetId);
+
+        nfcTabButtons.forEach(function (item) {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        Array.from(document.querySelectorAll("#nfcCardsPanel, #nfcOrdersPanel")).forEach(function (panel) {
+          panel.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        button.setAttribute("aria-selected", "true");
+
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  }
+
+  if (openNfcModalButton) {
+    openNfcModalButton.addEventListener("click", function () {
+      openNfcModal();
+    });
+  }
+
+  if (closeNfcModalButton) {
+    closeNfcModalButton.addEventListener("click", function () {
+      closeNfcModal();
+    });
+  }
+
+  if (nfcCardModalBackdrop) {
+    nfcCardModalBackdrop.addEventListener("click", function () {
+      closeNfcModal();
+    });
+  }
+
+  if (closeSubscriptionModalButton) {
+    closeSubscriptionModalButton.addEventListener("click", function () {
+      closeSubscriptionModal();
+    });
+  }
+
+  if (subscriptionModalBackdrop) {
+    subscriptionModalBackdrop.addEventListener("click", function () {
+      closeSubscriptionModal();
+    });
+  }
+
+  if (openPlanModalButton) {
+    openPlanModalButton.addEventListener("click", function () {
+      openPlanModal();
+    });
+  }
+
+  if (closePlanModalButton) {
+    closePlanModalButton.addEventListener("click", function () {
+      closePlanModal();
+    });
+  }
+
+  if (planModalBackdrop) {
+    planModalBackdrop.addEventListener("click", function () {
+      closePlanModal();
+    });
+  }
+
+  if (planSelectAllTemplates && planForm) {
+    planSelectAllTemplates.addEventListener("change", function () {
+      Array.from(planForm.querySelectorAll('input[name="templates"]')).forEach(function (checkbox) {
+        checkbox.checked = planSelectAllTemplates.checked;
+      });
+      syncPlanTemplateSelection();
+    });
+  }
+
+  if (planForm) {
+    Array.from(planForm.querySelectorAll('input[name="templates"]')).forEach(function (checkbox) {
+      checkbox.addEventListener("change", syncPlanTemplateSelection);
+    });
+  }
+
+  if (closeNfcGuideModalButton) {
+    closeNfcGuideModalButton.addEventListener("click", function () {
+      closeNfcGuideModal();
+    });
+  }
+
+  if (nfcGuideModalBackdrop) {
+    nfcGuideModalBackdrop.addEventListener("click", function () {
+      closeNfcGuideModal();
+    });
+  }
+
+  if (toggleUserForm) {
+    toggleUserForm.addEventListener("click", function () {
+      openUserModal();
+    });
+  }
+
+  if (closeUserForm) {
+    closeUserForm.addEventListener("click", function () {
+      closeUserModal();
+    });
+  }
+
+  if (userModalBackdrop) {
+    userModalBackdrop.addEventListener("click", function () {
+      closeUserModal();
+    });
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && userModal && !userModal.hidden) {
+      closeUserModal();
+    }
+
+    if (event.key === "Escape" && nfcCardModal && !nfcCardModal.hidden) {
+      closeNfcModal();
+    }
+
+    if (event.key === "Escape" && nfcGuideModal && !nfcGuideModal.hidden) {
+      closeNfcGuideModal();
+    }
+
+    if (event.key === "Escape" && subscriptionModal && !subscriptionModal.hidden) {
+      closeSubscriptionModal();
+    }
+
+    if (event.key === "Escape" && planModal && !planModal.hidden) {
+      closePlanModal();
+    }
+  });
+
+  if (resetSubscriptionFormButton && subscriptionForm) {
+    resetSubscriptionFormButton.addEventListener("click", function () {
+      subscriptionForm.reset();
+      if (subscriptionFormFeedback) {
+        subscriptionFormFeedback.hidden = true;
+        subscriptionFormFeedback.textContent = "";
+        subscriptionFormFeedback.classList.remove("success");
+      }
+      closeSubscriptionModal();
+    });
+  }
+
+  if (resetPlanFormButton && planForm) {
+    resetPlanFormButton.addEventListener("click", function () {
+      resetPlanFormState();
+      closePlanModal();
+    });
+  }
+
+  if (resetNfcCardFormButton && nfcCardForm) {
+    resetNfcCardFormButton.addEventListener("click", function () {
+      nfcCardForm.reset();
+      resetNfcPreview(nfcFrontPreview);
+      resetNfcPreview(nfcBackPreview);
+      if (nfcCardFormFeedback) {
+        nfcCardFormFeedback.hidden = true;
+        nfcCardFormFeedback.textContent = "";
+        nfcCardFormFeedback.classList.remove("success");
+      }
+      closeNfcModal();
+    });
+  }
+
+  if (resetUserForm && addUserForm) {
+    resetUserForm.addEventListener("click", function () {
+      addUserForm.reset();
+      resetProfilePreview();
+      if (userFormFeedback) {
+        userFormFeedback.hidden = true;
+        userFormFeedback.textContent = "";
+        userFormFeedback.classList.remove("success");
+      }
+      closeUserModal();
+    });
+  }
+
+  if (userProfileInput && userProfilePreview) {
+    userProfileInput.addEventListener("change", function () {
+      var file = userProfileInput.files && userProfileInput.files[0];
+      if (!file) {
+        resetProfilePreview();
+        return;
+      }
+
+      var reader = new FileReader();
+      reader.onload = function (loadEvent) {
+        userProfilePreview.innerHTML = '<img src="' + loadEvent.target.result + '" alt="Profile preview" />';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (nfcCardFrontInput && nfcFrontPreview) {
+    nfcCardFrontInput.addEventListener("change", function () {
+      readPreviewImage(nfcCardFrontInput, nfcFrontPreview);
+    });
+  }
+
+  if (nfcCardBackInput && nfcBackPreview) {
+    nfcCardBackInput.addEventListener("change", function () {
+      readPreviewImage(nfcCardBackInput, nfcBackPreview);
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    var copyButton = event.target.closest("[data-copy-text]");
+    var cloneButton = event.target.closest("[data-clone-name]");
+    var nfcActionButton = event.target.closest("[data-nfc-action]");
+    var nfcOrderViewButton = event.target.closest("[data-nfc-order-action]");
+    var cashActionButton = event.target.closest("[data-cash-action]");
+    var subscriptionActionButton = event.target.closest("[data-subscription-action]");
+    var planActionButton = event.target.closest("[data-plan-action]");
+
+    if (copyButton) {
+      var copyText = copyButton.getAttribute("data-copy-text");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(copyText);
+      }
+      showToast("Link copied", copyText);
+    }
+
+    if (cloneButton) {
+      showToast("Clone queued", cloneButton.getAttribute("data-clone-name") + " is ready to clone to another user.");
+    }
+
+    if (nfcActionButton) {
+      var nfcAction = nfcActionButton.getAttribute("data-nfc-action");
+      var nfcCardName = nfcActionButton.getAttribute("data-card-name") || "This NFC card";
+
+      if (nfcAction === "how-it-works") {
+        openNfcGuideModal();
+      }
+
+      if (nfcAction === "add-card") {
+        showToast("Add NFC card", "Open your NFC card creation form from this action.");
+      }
+
+      if (nfcAction === "edit-card") {
+        showToast("Edit NFC card", nfcCardName + " is ready for updates.");
+      }
+
+      if (nfcAction === "delete-card") {
+        showToast("Delete NFC card", "Connect " + nfcCardName + " to your delete confirmation flow.");
+      }
+    }
+
+    if (nfcOrderViewButton) {
+      showToast("Order preview", nfcOrderViewButton.getAttribute("data-order-name") + " order details are ready to open.");
+    }
+
+    if (cashActionButton) {
+      showToast("Attachment download", cashActionButton.getAttribute("data-payment-name") + " receipt is ready to download.");
+    }
+
+    if (subscriptionActionButton) {
+      var subscriptionAction = subscriptionActionButton.getAttribute("data-subscription-action");
+      var subscriptionName = subscriptionActionButton.getAttribute("data-subscription-name") || "This subscription";
+      var subscriptionRow = subscriptionActionButton.closest(".subscription-row");
+
+      if (subscriptionAction === "view") {
+        showToast("Subscription preview", subscriptionName + " subscription details are ready to open.");
+      }
+
+      if (subscriptionAction === "edit") {
+        openSubscriptionModal(subscriptionRow, subscriptionActionButton.getAttribute("data-end-date") || "");
+      }
+    }
+
+    if (planActionButton) {
+      var planAction = planActionButton.getAttribute("data-plan-action");
+      var planName = planActionButton.getAttribute("data-plan-name") || "This plan";
+      var planRow = planActionButton.closest(".plan-row");
+
+      if (planAction === "edit") {
+        var rowIndex = Array.from(plansTableBody ? plansTableBody.querySelectorAll(".plan-row") : []).indexOf(planRow);
+        populatePlanForm(getPlanDataFromRow(planRow), rowIndex);
+        if (planModal) {
+          planModal.hidden = false;
+          document.body.style.overflow = "hidden";
+        }
+      }
+
+      if (planAction === "delete") {
+        showToast("Delete plan", "Connect " + planName + " to your delete confirmation flow.");
+      }
+    }
+  });
+
+  document.addEventListener("click", function (event) {
+    var passwordToggle = event.target.closest(".password-toggle");
+    if (passwordToggle) {
+      var targetId = passwordToggle.getAttribute("data-password-target");
+      var passwordInput = document.getElementById(targetId);
+      if (passwordInput) {
+        passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+        passwordToggle.textContent = passwordInput.type === "password" ? "Show" : "Hide";
+      }
+    }
+  });
+
+  if (addUserForm && userDirectoryBody) {
+    addUserForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!addUserForm.checkValidity()) {
+        setUserFormFeedback("Please complete the required user fields before creating the account.", false);
+        return;
+      }
+
+      var passwordField = document.getElementById("userPassword");
+      var confirmPasswordField = document.getElementById("userConfirmPassword");
+
+      if (passwordField && confirmPasswordField && passwordField.value !== confirmPasswordField.value) {
+        setUserFormFeedback("Password and confirm password must match before saving the user.", false);
+        return;
+      }
+
+      var formData = new FormData(addUserForm);
+      var fullName = (formData.get("firstName").trim() + " " + formData.get("lastName").trim()).trim();
+      var row = buildUserRow(formData);
+      userDirectoryBody.insertBefore(row, userDirectoryBody.firstChild);
+      updateUserDirectoryCount();
+      applySearchFilter();
+
+      setUserFormFeedback("User created successfully. The account has been added to the directory" + (formData.get("sendInvite") ? " and the invite is marked for sending." : "."), true);
+      showToast("User created", fullName + " has been added to the directory.");
+      addUserForm.reset();
+      resetProfilePreview();
+      closeUserModal();
+    });
+  }
+
+  if (nfcCardForm && nfcCatalogList) {
+    nfcCardForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!nfcCardForm.checkValidity()) {
+        setNfcFormFeedback("Please complete the required NFC card details before saving.", false);
+        return;
+      }
+
+      var formData = new FormData(nfcCardForm);
+      var newRow = buildNfcCardRow(formData);
+      nfcCatalogList.insertBefore(newRow, nfcCatalogList.firstChild);
+      nfcCardForm.reset();
+      resetNfcPreview(nfcFrontPreview);
+      resetNfcPreview(nfcBackPreview);
+      setNfcFormFeedback("NFC card saved to the catalog layout.", true);
+      applyNfcCatalogFilter();
+
+      window.setTimeout(function () {
+        closeNfcModal();
+      }, 600);
+    });
+  }
+
+  if (subscriptionForm && subscriptionsTableBody) {
+    subscriptionForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!subscriptionForm.checkValidity()) {
+        setSubscriptionFormFeedback("Please provide the updated subscription end date before saving.", false);
+        return;
+      }
+
+      var rowIndex = Number(subscriptionEditRowIndexInput ? subscriptionEditRowIndexInput.value : -1);
+      var rows = Array.from(subscriptionsTableBody.querySelectorAll(".subscription-row"));
+      var targetRow = rows[rowIndex];
+      var newDate = subscriptionEndDateInput ? subscriptionEndDateInput.value.trim() : "";
+
+      if (!targetRow || !newDate) {
+        setSubscriptionFormFeedback("Unable to update this subscription row. Please try again.", false);
+        return;
+      }
+
+      var dateCell = targetRow.querySelector(".subscription-end-date");
+      var editButton = targetRow.querySelector('[data-subscription-action="edit"]');
+
+      if (dateCell) {
+        dateCell.textContent = newDate.replace(",", "");
+      }
+
+      if (editButton) {
+        editButton.setAttribute("data-end-date", newDate);
+      }
+
+      setSubscriptionFormFeedback("Subscription end date updated successfully.", true);
+
+      window.setTimeout(function () {
+        closeSubscriptionModal();
+      }, 600);
+    });
+  }
+
+  if (planForm && plansTableBody) {
+    planForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!planForm.checkValidity()) {
+        setPlanFormFeedback("Please complete the required plan details before saving.", false);
+        return;
+      }
+
+      var formData = new FormData(planForm);
+      var rowIndex = Number(planEditRowIndexInput ? planEditRowIndexInput.value : -1);
+      var planName = (formData.get("planName") || "").trim();
+      var selectedTemplates = formData.getAll("templates");
+      var selectedFeatures = formData.getAll("features");
+      var planData = {
+        name: planName,
+        frequency: (formData.get("frequency") || "Month").trim(),
+        currency: (formData.get("currency") || "").trim(),
+        price: Number(formData.get("price") || 0),
+        vcards: String(formData.get("vcards") || "0").trim(),
+        trialDays: String(formData.get("trialDays") || "0").trim(),
+        storageLimit: String(formData.get("storageLimit") || "0").trim(),
+        customSelect: formData.get("customSelect") === "on",
+        features: selectedFeatures,
+        templates: selectedTemplates
+      };
+
+      if (!selectedTemplates.length) {
+        setPlanFormFeedback("Please select at least one template for this plan.", false);
+        return;
+      }
+
+      if (!selectedFeatures.length) {
+        setPlanFormFeedback("Please select at least one feature for this plan.", false);
+        return;
+      }
+
+      if (rowIndex >= 0) {
+        var existingRow = Array.from(plansTableBody.querySelectorAll(".plan-row"))[rowIndex];
+        if (!existingRow) {
+          setPlanFormFeedback("Unable to update this plan. Please try again.", false);
+          return;
+        }
+        applyPlanDataToRow(existingRow, planData);
+        setPlanFormFeedback("Plan updated successfully.", true);
+      } else {
+        var row = document.createElement("tr");
+
+        applyPlanDataToRow(row, planData);
+        plansTableBody.insertBefore(row, plansTableBody.firstChild);
+        setPlanFormFeedback("Plan saved to the plans list successfully.", true);
+      }
+
+      applyPlansFilter();
+
+      window.setTimeout(function () {
+        closePlanModal();
+        resetPlanFormState();
+      }, 600);
+    });
   }
 
   document.addEventListener("click", function (event) {
@@ -542,6 +1775,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   renderActivity();
   renderNotifications();
+  resetProfilePreview();
+  updateUserDirectoryCount();
+  syncPlanTemplateSelection();
+  applyPlansFilter();
   updateCompletion(state.profileCompletion);
   drawSparkline("spark1", [40, 55, 45, 70, 60, 80, 75, 95, 85, 110, 90, 120], "#ff5968");
   drawSparkline("spark2", [30, 50, 40, 60, 55, 75, 65, 90, 80, 100, 95, 115], "#ff5968");

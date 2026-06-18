@@ -16,10 +16,11 @@
         <a href="dashboard.html" class="nav-item">Dashboard</a>
         <div class="sidebar-section-label">Management</div>
         <a href="users.html" class="nav-item">Users</a>
-        <a href="cards.html" class="nav-item">Cards</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
         <a href="nfc-orders.html" class="nav-item">NFC Cards</a>
         <a href="qr-codes.html" class="nav-item">QR Codes</a>
         <a href="subscriptions.html" class="nav-item active">Subscriptions</a>
+        <a href="cash-payments.html" class="nav-item">Cash Payments</a>
         <a href="transactions.html" class="nav-item">Transactions</a>
         <a href="payouts.html" class="nav-item">Payouts</a>
         <div class="sidebar-section-label">Analytics</div>
@@ -35,34 +36,410 @@
     <div class="main-content">
       <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search subscriptions..." /></label></header>
       <main class="page-content">
-        <div class="page-header"><div><h1>Subscriptions</h1><p>Monitor plan performance, active counts, and renewals.</p></div></div>
-        <div class="content-grid content-grid-two">
-          <article class="admin-card searchable-item" data-search="pro plan subscriptions revenue">
-            <div class="admin-card-header"><div><h3>Pro Plan</h3><p>$9.99 / month</p></div><span class="plan-pill pro">4,567 Active</span></div>
-            <div class="mini-metric-list">
-              <div class="mini-metric"><strong>$18,456</strong><span>Monthly revenue</span></div>
-              <div class="mini-metric"><strong>12.3%</strong><span>Growth rate</span></div>
+        <div class="page-header"><div><h1>Subscriptions</h1><p>Review all subscribed plans, renewal dates, active status, and quick subscription actions.</p></div></div>
+
+        <section class="subscriptions-section-shell searchable-item" data-search="subscriptions subscribed plans free active end date renewal users plan manager pricing">
+          <div class="subscriptions-tabbar" role="tablist" aria-label="Subscription tabs">
+            <button class="subscriptions-tab-btn active" type="button" role="tab" aria-selected="true" data-subscriptions-tab-target="subscribedPlansPanel">Subscribed Plans</button>
+            <button class="subscriptions-tab-btn" type="button" role="tab" aria-selected="false" data-subscriptions-tab-target="plansPanel">Plans</button>
+          </div>
+
+          <section class="tab-panel active" id="subscribedPlansPanel">
+            <div class="subscriptions-shell searchable-item" data-search="subscriptions subscribed plans free active end date renewal users">
+              <div class="subscriptions-toolbar">
+                <label class="nfc-search subscriptions-search" for="subscriptionSearch">
+                  <span class="nfc-search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                      <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                  <input id="subscriptionSearch" type="text" placeholder="Search" />
+                </label>
+              </div>
+
+              <div class="subscriptions-table-wrap">
+                <table class="admin-table subscriptions-table">
+                  <thead>
+                    <tr>
+                      <th>USER NAME</th>
+                      <th>PLAN NAME</th>
+                      <th>START DATE</th>
+                      <th>END DATE</th>
+                      <th>STATUS</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody id="subscriptionsTableBody">
+                <tr class="searchable-item subscription-row" data-search="reinaldo herring free 18 jun 2026 22 apr 2033 active">
+                  <td>Reinaldo Herring</td>
+                  <td>Free</td>
+                  <td>18 Jun 2026</td>
+                  <td class="subscription-end-date">22 Apr 2033</td>
+                  <td>
+                    <label class="switch subscription-status-switch" aria-label="Status for Reinaldo Herring">
+                      <input type="checkbox" checked />
+                      <span class="switch-slider"></span>
+                    </label>
+                  </td>
+                  <td>
+                    <div class="subscription-action-cell">
+                      <button class="subscription-icon-btn view" type="button" data-subscription-action="view" data-subscription-name="Reinaldo Herring" aria-label="View Reinaldo Herring subscription">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path>
+                          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle>
+                        </svg>
+                      </button>
+                      <button class="subscription-icon-btn edit" type="button" data-subscription-action="edit" data-subscription-name="Reinaldo Herring" data-end-date="22 Apr, 2033" aria-label="Edit Reinaldo Herring subscription">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                          <path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="searchable-item subscription-row" data-search="stephan donley free 18 jun 2026 22 apr 2033 active">
+                  <td>Stephan Donley</td>
+                  <td>Free</td>
+                  <td>18 Jun 2026</td>
+                  <td class="subscription-end-date">22 Apr 2033</td>
+                  <td><label class="switch subscription-status-switch" aria-label="Status for Stephan Donley"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                  <td><div class="subscription-action-cell"><button class="subscription-icon-btn view" type="button" data-subscription-action="view" data-subscription-name="Stephan Donley" aria-label="View Stephan Donley subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle></svg></button><button class="subscription-icon-btn edit" type="button" data-subscription-action="edit" data-subscription-name="Stephan Donley" data-end-date="22 Apr, 2033" aria-label="Edit Stephan Donley subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button></div></td>
+                </tr>
+                <tr class="searchable-item subscription-row" data-search="krystyna granville free 17 jun 2026 21 apr 2033 active">
+                  <td>Krystyna Granville</td>
+                  <td>Free</td>
+                  <td>17 Jun 2026</td>
+                  <td class="subscription-end-date">21 Apr 2033</td>
+                  <td><label class="switch subscription-status-switch" aria-label="Status for Krystyna Granville"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                  <td><div class="subscription-action-cell"><button class="subscription-icon-btn view" type="button" data-subscription-action="view" data-subscription-name="Krystyna Granville" aria-label="View Krystyna Granville subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle></svg></button><button class="subscription-icon-btn edit" type="button" data-subscription-action="edit" data-subscription-name="Krystyna Granville" data-end-date="21 Apr, 2033" aria-label="Edit Krystyna Granville subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button></div></td>
+                </tr>
+                <tr class="searchable-item subscription-row" data-search="alannah munz free 17 jun 2026 21 apr 2033 active">
+                  <td>Alannah Munz</td>
+                  <td>Free</td>
+                  <td>17 Jun 2026</td>
+                  <td class="subscription-end-date">21 Apr 2033</td>
+                  <td><label class="switch subscription-status-switch" aria-label="Status for Alannah Munz"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                  <td><div class="subscription-action-cell"><button class="subscription-icon-btn view" type="button" data-subscription-action="view" data-subscription-name="Alannah Munz" aria-label="View Alannah Munz subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle></svg></button><button class="subscription-icon-btn edit" type="button" data-subscription-action="edit" data-subscription-name="Alannah Munz" data-end-date="21 Apr, 2033" aria-label="Edit Alannah Munz subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button></div></td>
+                </tr>
+                <tr class="searchable-item subscription-row" data-search="arnette mackintosh free 17 jun 2026 21 apr 2033 active">
+                  <td>Arnette Mackintosh</td>
+                  <td>Free</td>
+                  <td>17 Jun 2026</td>
+                  <td class="subscription-end-date">21 Apr 2033</td>
+                  <td><label class="switch subscription-status-switch" aria-label="Status for Arnette Mackintosh"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                  <td><div class="subscription-action-cell"><button class="subscription-icon-btn view" type="button" data-subscription-action="view" data-subscription-name="Arnette Mackintosh" aria-label="View Arnette Mackintosh subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle></svg></button><button class="subscription-icon-btn edit" type="button" data-subscription-action="edit" data-subscription-name="Arnette Mackintosh" data-end-date="21 Apr, 2033" aria-label="Edit Arnette Mackintosh subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button></div></td>
+                </tr>
+                <tr class="searchable-item subscription-row" data-search="ronda strutt free 17 jun 2026 21 apr 2033 active">
+                  <td>Ronda Strutt</td>
+                  <td>Free</td>
+                  <td>17 Jun 2026</td>
+                  <td class="subscription-end-date">21 Apr 2033</td>
+                  <td><label class="switch subscription-status-switch" aria-label="Status for Ronda Strutt"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                  <td><div class="subscription-action-cell"><button class="subscription-icon-btn view" type="button" data-subscription-action="view" data-subscription-name="Ronda Strutt" aria-label="View Ronda Strutt subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2"></path><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"></circle></svg></button><button class="subscription-icon-btn edit" type="button" data-subscription-action="edit" data-subscription-name="Ronda Strutt" data-end-date="21 Apr, 2033" aria-label="Edit Ronda Strutt subscription"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button></div></td>
+                </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="subscriptions-footer">
+                <div class="subscriptions-footer-left">
+                  <span>Show</span>
+                  <select class="subscriptions-limit-select" aria-label="Subscription rows per page">
+                    <option selected>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                  </select>
+                </div>
+                <p class="subscriptions-results" id="subscriptionsResults">Showing 1 to 10 of 8652 results</p>
+              </div>
             </div>
-          </article>
-          <article class="admin-card searchable-item" data-search="business plan subscriptions revenue">
-            <div class="admin-card-header"><div><h3>Business Plan</h3><p>$19.99 / month</p></div><span class="plan-pill business">2,890 Active</span></div>
-            <div class="mini-metric-list">
-              <div class="mini-metric"><strong>$14,258</strong><span>Monthly revenue</span></div>
-              <div class="mini-metric"><strong>8.7%</strong><span>Growth rate</span></div>
+          </section>
+
+          <section class="tab-panel" id="plansPanel">
+            <div class="plans-shell searchable-item" data-search="plans pro plus starter basic monthly yearly unlimited default active pricing">
+              <div class="plans-toolbar">
+                <label class="nfc-search plans-search" for="planSearch">
+                  <span class="nfc-search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                      <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                  <input id="planSearch" type="text" placeholder="Search" />
+                </label>
+                <button class="btn-share plans-new-btn" type="button" id="openPlanModal">New Plan</button>
+              </div>
+
+              <div class="plans-table-wrap">
+                <table class="admin-table plans-table">
+                  <thead>
+                    <tr>
+                      <th>NAME</th>
+                      <th>PRICE</th>
+                      <th>STATUS</th>
+                      <th>DURATION</th>
+                      <th>MAKE DEFAULT</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody id="plansTableBody">
+                    <tr class="searchable-item plan-row" data-search="pro 9.92 monthly active" data-plan-currency="USD" data-plan-vcards="10" data-plan-trial-days="14" data-plan-storage-limit="200" data-plan-custom-select="false" data-plan-features="Services,Testimonials,Analytics,Custom Links" data-plan-templates="Luxury Realtor,Retail Growth Advisor">
+                      <td>Pro</td>
+                      <td>$9.92</td>
+                      <td><label class="switch plan-status-switch" aria-label="Status for Pro plan"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                      <td><span class="plan-duration-pill monthly">Monthly</span></td>
+                      <td><label class="switch plan-default-switch" aria-label="Default for Pro plan"><input type="checkbox" /><span class="switch-slider"></span></label></td>
+                      <td><div class="subscription-action-cell"><button class="subscription-icon-btn edit" type="button" data-plan-action="edit" data-plan-name="Pro" aria-label="Edit Pro plan"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button><button class="subscription-icon-btn delete" type="button" data-plan-action="delete" data-plan-name="Pro" aria-label="Delete Pro plan"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></td>
+                    </tr>
+                    <tr class="searchable-item plan-row" data-search="plus 6.95 monthly active" data-plan-currency="USD" data-plan-vcards="7" data-plan-trial-days="10" data-plan-storage-limit="160" data-plan-custom-select="false" data-plan-features="Services,Enquiry Form,Gallery,Appointments" data-plan-templates="Healthcare Advisor,Pet Clinic">
+                      <td>Plus</td>
+                      <td>$6.95</td>
+                      <td><label class="switch plan-status-switch" aria-label="Status for Plus plan"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                      <td><span class="plan-duration-pill monthly">Monthly</span></td>
+                      <td><label class="switch plan-default-switch" aria-label="Default for Plus plan"><input type="checkbox" /><span class="switch-slider"></span></label></td>
+                      <td><div class="subscription-action-cell"><button class="subscription-icon-btn edit" type="button" data-plan-action="edit" data-plan-name="Plus" aria-label="Edit Plus plan"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button><button class="subscription-icon-btn delete" type="button" data-plan-action="delete" data-plan-name="Plus" aria-label="Delete Plus plan"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></td>
+                    </tr>
+                    <tr class="searchable-item plan-row" data-search="starter 1.99 monthly active" data-plan-currency="USD" data-plan-vcards="3" data-plan-trial-days="7" data-plan-storage-limit="120" data-plan-custom-select="false" data-plan-features="Services,Social links - Website" data-plan-templates="Social Services">
+                      <td>Starter</td>
+                      <td>$1.99</td>
+                      <td><label class="switch plan-status-switch" aria-label="Status for Starter plan"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                      <td><span class="plan-duration-pill monthly">Monthly</span></td>
+                      <td><label class="switch plan-default-switch" aria-label="Default for Starter plan"><input type="checkbox" /><span class="switch-slider"></span></label></td>
+                      <td><div class="subscription-action-cell"><button class="subscription-icon-btn edit" type="button" data-plan-action="edit" data-plan-name="Starter" aria-label="Edit Starter plan"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button><button class="subscription-icon-btn delete" type="button" data-plan-action="delete" data-plan-name="Starter" aria-label="Delete Starter plan"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></td>
+                    </tr>
+                    <tr class="searchable-item plan-row" data-search="basic 0 yearly active" data-plan-currency="USD" data-plan-vcards="1" data-plan-trial-days="0" data-plan-storage-limit="80" data-plan-custom-select="false" data-plan-features="Services" data-plan-templates="Principal">
+                      <td>Basic</td>
+                      <td>$0.00</td>
+                      <td><label class="switch plan-status-switch" aria-label="Status for Basic plan"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                      <td><span class="plan-duration-pill yearly">Yearly</span></td>
+                      <td><label class="switch plan-default-switch" aria-label="Default for Basic plan"><input type="checkbox" /><span class="switch-slider"></span></label></td>
+                      <td><div class="subscription-action-cell"><button class="subscription-icon-btn edit" type="button" data-plan-action="edit" data-plan-name="Basic" aria-label="Edit Basic plan"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button><button class="subscription-icon-btn delete" type="button" data-plan-action="delete" data-plan-name="Basic" aria-label="Delete Basic plan"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></td>
+                    </tr>
+                    <tr class="searchable-item plan-row" data-search="syscare 300 unlimited active" data-plan-currency="USD" data-plan-vcards="999" data-plan-trial-days="30" data-plan-storage-limit="2000" data-plan-custom-select="true" data-plan-features="Services,Testimonials,Hide Branding,Enquiry Form,Custom Links,Password Protection,Custom CSS,Custom JS,Products,Gallery,Analytics,Blogs,Allow Custom Domain" data-plan-templates="Luxury Realtor,Retail Growth Advisor,Healthcare Advisor,Pet Clinic,Social Services,Principal,Business Consultant,UI UX Designer,Lawyer">
+                      <td>Syscare</td>
+                      <td>$300.00</td>
+                      <td><label class="switch plan-status-switch" aria-label="Status for Syscare plan"><input type="checkbox" checked /><span class="switch-slider"></span></label></td>
+                      <td><span class="plan-duration-pill unlimited">Unlimited</span></td>
+                      <td><label class="switch plan-default-switch" aria-label="Default for Syscare plan"><input type="checkbox" /><span class="switch-slider"></span></label></td>
+                      <td><div class="subscription-action-cell"><button class="subscription-icon-btn edit" type="button" data-plan-action="edit" data-plan-name="Syscare" aria-label="Edit Syscare plan"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path></svg></button><button class="subscription-icon-btn delete" type="button" data-plan-action="delete" data-plan-name="Syscare" aria-label="Delete Syscare plan"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path><path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path><path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="subscriptions-footer">
+                <div class="subscriptions-footer-left">
+                  <span>Show</span>
+                  <select class="subscriptions-limit-select" aria-label="Plan rows per page">
+                    <option selected>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                  </select>
+                </div>
+                <p class="subscriptions-results" id="plansResults">Showing 1 to 5 of 5 results</p>
+              </div>
             </div>
-          </article>
-          <article class="admin-card searchable-item" data-search="enterprise plan subscriptions revenue">
-            <div class="admin-card-header"><div><h3>Enterprise Plan</h3><p>$49.99 / month</p></div><span class="plan-pill enterprise">999 Active</span></div>
-            <div class="mini-metric-list">
-              <div class="mini-metric"><strong>$8,765</strong><span>Monthly revenue</span></div>
-              <div class="mini-metric"><strong>5.2%</strong><span>Growth rate</span></div>
-            </div>
-          </article>
-        </div>
+          </section>
+        </section>
+
         <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another subscription search term.</p></div>
       </main>
     </div>
   </div>
+
+  <div class="user-modal subscription-modal" id="subscriptionModal" hidden>
+    <div class="user-modal-backdrop" id="subscriptionModalBackdrop"></div>
+    <div class="user-modal-dialog subscription-modal-dialog">
+      <div class="user-modal-header subscription-modal-header">
+        <h2>Edit Subscription Plan</h2>
+        <button class="nfc-modal-close" type="button" id="closeSubscriptionModal" aria-label="Close subscription modal">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="user-modal-body subscription-modal-body">
+        <form class="admin-form-grid subscription-form-grid" id="subscriptionForm">
+          <input id="subscriptionEditRowIndex" name="rowIndex" type="hidden" />
+          <div class="form-field form-field-wide">
+            <label for="subscriptionEndDate">End Date:<span class="required-mark">*</span></label>
+            <input id="subscriptionEndDate" name="endDate" type="text" placeholder="22 Apr, 2033" required />
+          </div>
+          <div class="form-field form-field-wide">
+            <p class="form-feedback" id="subscriptionFormFeedback" hidden></p>
+          </div>
+          <div class="form-actions form-field-wide subscription-form-actions">
+            <button class="btn-share" type="submit">Save</button>
+            <button class="btn-preview" type="button" id="resetSubscriptionForm">Discard</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="user-modal plan-modal" id="planModal" hidden>
+    <div class="user-modal-backdrop" id="planModalBackdrop"></div>
+    <div class="user-modal-dialog plan-modal-dialog">
+      <div class="user-modal-header plan-modal-header">
+        <h2 id="planModalTitle">New Plan</h2>
+        <button class="nfc-modal-close" type="button" id="closePlanModal" aria-label="Close plan modal">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="user-modal-body plan-modal-body">
+        <form class="plan-builder-grid" id="planForm">
+          <section class="plan-builder-form">
+            <input id="planEditRowIndex" name="rowIndex" type="hidden" value="-1" />
+            <div class="form-field">
+              <label for="planName">Name:<span class="required-mark">*</span></label>
+              <input id="planName" name="planName" type="text" placeholder="Enter Plan Name" required />
+            </div>
+            <div class="form-field">
+              <label for="planFrequency">Frequency:<span class="required-mark">*</span></label>
+              <select id="planFrequency" name="frequency" required>
+                <option selected>Month</option>
+                <option>Year</option>
+                <option>Unlimited</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="planCurrency">Currency:<span class="required-mark">*</span></label>
+              <select id="planCurrency" name="currency" required>
+                <option value="" selected>Select Currency</option>
+                <option>USD</option>
+                <option>EUR</option>
+                <option>LKR</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="planPrice">Price:<span class="required-mark">*</span></label>
+              <input id="planPrice" name="price" type="number" min="0" step="0.01" value="0" required />
+            </div>
+            <div class="form-field">
+              <label for="planVcards">No of VCards:<span class="required-mark">*</span></label>
+              <input id="planVcards" name="vcards" type="number" min="0" value="0" required />
+            </div>
+            <div class="form-field">
+              <label for="planTrialDays">Trial Days:<span class="required-mark">*</span></label>
+              <input id="planTrialDays" name="trialDays" type="number" min="0" placeholder="Enter Trial Days" required />
+            </div>
+            <div class="form-field">
+              <label for="planStorageLimit">Storage Limit:<span class="required-mark">*</span></label>
+              <input id="planStorageLimit" name="storageLimit" type="number" min="0" value="200" required />
+            </div>
+
+            <label class="checkbox-row plan-inline-check">
+              <input id="planCustomSelect" name="customSelect" type="checkbox" />
+              <span>Custom Select</span>
+            </label>
+
+            <div class="plan-features-wrap">
+              <div class="form-field form-field-wide">
+                <label>Features:<span class="required-mark">*</span></label>
+              </div>
+              <div class="plan-features-grid">
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Services" /><span>Services</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Testimonials" /><span>Testimonials</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Hide Branding" /><span>Hide Branding</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Enquiry Form" /><span>Enquiry Form</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Social links - Website" /><span>Social links - Website</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Custom Links" /><span>Custom Links</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Password Protection" /><span>Password Protection</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Custom CSS" /><span>Custom CSS</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Custom JS" /><span>Custom JS</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Custom Fonts" /><span>Custom Fonts</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Products" /><span>Products</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Appointments" /><span>Appointments</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Gallery" /><span>Gallery</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Analytics" /><span>Analytics</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="SEO" /><span>SEO</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Blogs" /><span>Blogs</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Affiliations" /><span>Affiliations</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Custom QR-Code" /><span>Custom QR-Code</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Instagram Feed" /><span>Instagram Feed</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Iframes" /><span>Iframes</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Dynamic vCard" /><span>Dynamic vCard</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="features" value="Allow Custom Domain" /><span>Allow Custom Domain</span></label>
+              </div>
+            </div>
+
+            <div class="form-field form-field-wide">
+              <p class="form-feedback" id="planFormFeedback" hidden></p>
+            </div>
+
+            <div class="form-actions plan-form-actions">
+              <button class="btn-share" type="submit" id="planSubmitButton">Save</button>
+              <button class="btn-preview" type="button" id="resetPlanForm">Discard</button>
+            </div>
+          </section>
+
+          <section class="plan-builder-templates">
+            <div class="plan-templates-header">
+              <div>
+                <h3>Multi Templates:<span class="required-mark">*</span></h3>
+              </div>
+              <label class="checkbox-row">
+                <input id="planSelectAllTemplates" type="checkbox" />
+                <span>Select All Templates</span>
+              </label>
+            </div>
+
+            <div class="plan-template-grid">
+              <label class="plan-template-card card-showcase card-showcase-realtor">
+                <input type="checkbox" name="templates" value="Luxury Realtor" />
+                <span class="plan-template-check">Template 02</span>
+                <span class="card-showcase-title">Luxury Realtor</span>
+                <span class="card-showcase-copy">Real-estate focused consultant layout.</span>
+              </label>
+              <label class="plan-template-card card-showcase card-showcase-retail">
+                <input type="checkbox" name="templates" value="Retail Growth Advisor" />
+                <span class="plan-template-check">Template 01</span>
+                <span class="card-showcase-title">Retail Growth Advisor</span>
+                <span class="card-showcase-copy">Commerce and retail strategy layout.</span>
+              </label>
+              <label class="plan-template-card card-showcase card-showcase-health">
+                <input type="checkbox" name="templates" value="Healthcare Advisor" />
+                <span class="plan-template-check">Template 03</span>
+                <span class="card-showcase-title">Healthcare Advisor</span>
+                <span class="card-showcase-copy">Clean wellness and care profile template.</span>
+              </label>
+              <label class="plan-template-card plan-template-photo plan-template-photo-a">
+                <input type="checkbox" name="templates" value="Pet Clinic" />
+                <span class="plan-template-check">Pet Clinic</span>
+              </label>
+              <label class="plan-template-card plan-template-photo plan-template-photo-b">
+                <input type="checkbox" name="templates" value="Social Services" />
+                <span class="plan-template-check">Social Services</span>
+              </label>
+              <label class="plan-template-card plan-template-photo plan-template-photo-c">
+                <input type="checkbox" name="templates" value="Principal" />
+                <span class="plan-template-check">Principal</span>
+              </label>
+              <label class="plan-template-card plan-template-photo plan-template-photo-d">
+                <input type="checkbox" name="templates" value="Business Consultant" />
+                <span class="plan-template-check">Consultant</span>
+              </label>
+              <label class="plan-template-card plan-template-photo plan-template-photo-e">
+                <input type="checkbox" name="templates" value="UI UX Designer" />
+                <span class="plan-template-check">UI/UX</span>
+              </label>
+              <label class="plan-template-card plan-template-photo plan-template-photo-f">
+                <input type="checkbox" name="templates" value="Lawyer" />
+                <span class="plan-template-check">Lawyer</span>
+              </label>
+            </div>
+          </section>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
 </body>
