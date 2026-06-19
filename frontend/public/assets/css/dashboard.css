@@ -233,6 +233,11 @@
   font-size: 0.95rem;
 }
 
+.topbar .search-bar input,
+.topbar .search-bar input::placeholder {
+  color: var(--text-primary);
+}
+
 .search-bar input::placeholder {
   color: rgba(248, 248, 248, 0.72);
 }
@@ -1898,6 +1903,12 @@
   cursor: pointer;
 }
 
+.subscriptions-tabbar,
+.subscriptions-tabbar .subscriptions-tab-btn,
+.subscriptions-tabbar .subscriptions-tab-btn.active {
+  color: #f8f8f8;
+}
+
 .subscriptions-tab-btn:hover,
 .subscriptions-tab-btn:focus-visible {
   color: #ffffff;
@@ -1949,6 +1960,10 @@
   border-top-color: #edf1f6;
   color: #324a70;
   padding: 18px 16px;
+}
+
+.light-admin-table th {
+  color: #2a3b57;
 }
 
 .subscriptions-toolbar {
@@ -2146,7 +2161,7 @@
   background: #ffffff;
   border-top: 0;
   border-bottom: 1px solid #e8edf4;
-  color: #455b7a;
+  color: #2a3b57 !important;
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -2243,6 +2258,13 @@
   background: #ffffff;
   border-bottom-color: #e2e8f2;
   justify-content: flex-start;
+  color: #1f2e4d;
+}
+
+.coupon-page-topbar,
+.coupon-page-topbar .coupon-subtabbar,
+.coupon-page-topbar .coupon-subtab-btn,
+.coupon-page-topbar .coupon-subtab-btn.active {
   color: #1f2e4d;
 }
 
