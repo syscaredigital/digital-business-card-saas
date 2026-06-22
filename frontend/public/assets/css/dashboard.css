@@ -261,26 +261,48 @@
 }
 
 .notif-btn,
-.user-profile,
-.btn-customize,
-.btn-preview,
-.period-selector,
-.social-btn,
-.qa-btn,
-.card-link,
-.notification-clear-btn {
-  transition: 0.2s ease;
-}
+  .logout-btn,
+  .user-profile,
+  .btn-customize,
+  .btn-preview,
+  .period-selector,
+  .social-btn,
+  .qa-btn,
+  .card-link,
+  .notification-clear-btn {
+    transition: 0.2s ease;
+  }
 
-.notif-btn {
-  position: relative;
-  width: 42px;
-  height: 42px;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-secondary);
-}
+  .notif-btn {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+  }
+
+  .logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff5261, #e02a3f);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-shadow: 0 12px 30px rgba(255, 82, 97, 0.18);
+    cursor: pointer;
+  }
+
+  .logout-btn:hover,
+  .logout-btn:focus-visible {
+    transform: translateY(-1px);
+    outline: none;
+    box-shadow: 0 16px 32px rgba(255, 82, 97, 0.24);
 
 .notif-btn:hover,
 .notif-btn:focus-visible,

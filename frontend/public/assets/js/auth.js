@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const loginForm = document.getElementById("loginForm");
   if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
+    loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const email = document.getElementById("loginEmail");
       const password = document.getElementById("passwordInput");
@@ -75,7 +75,35 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      window.location.href = "../company-admin/dashboard.html";
+      try {
+        const apiBase = `${window.location.protocol}//${window.location.hostname}:5000`;
+        const res = await fetch(`${apiBase}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.value.trim(), password: password.value }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.message || "Login failed");
+          return;
+        }
+
+        const data = await res.json();
+        if (data.token) localStorage.setItem("token", data.token);
+        if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+
+        const role = (data.user && data.user.role) || "user";
+        let dest = "../user/dashboard.html";
+        const r = String(role).toLowerCase();
+        if (r.includes("company") || r.includes("admin") && r.includes("company")) dest = "../company-admin/dashboard.html";
+        if (r === "super_admin" || r === "super-admin" || r === "superadmin" || r === "super" || r === "admin" ) dest = "../super-admin/dashboard.html";
+
+        window.location.href = dest;
+      } catch (err) {
+        console.error(err);
+        alert("Unable to contact server. Please try again later.");
+      }
     });
   }
 
@@ -158,18 +186,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const registerForm = document.getElementById("registerForm");
   if (registerForm) {
-    registerForm.addEventListener("submit", (event) => {
+    registerForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
+      const firstName = document.getElementById("firstName");
+      const lastName = document.getElementById("lastName");
+      const email = document.getElementById("registerEmail");
       const password = document.getElementById("registerPassword");
       const passwordConfirm = document.getElementById("confirmPassword");
+      const phoneNumber = document.getElementById("phoneNumber");
+      const companyName = document.getElementById("companyName");
+
+      if (!firstName || !lastName || !email || !password) {
+        alert("Please fill required fields.");
+        return;
+      }
 
       if (password && passwordConfirm && password.value !== passwordConfirm.value) {
         alert("Passwords do not match.");
         return;
       }
 
-      alert("Account created successfully.");
+      const payload = {
+        firstName: firstName.value.trim(),
+        lastName: lastName.value.trim(),
+        email: email.value.trim(),
+        password: password.value,
+        phoneNumber: phoneNumber ? phoneNumber.value.trim() : undefined,
+        companyName: companyName ? companyName.value.trim() : undefined,
+      };
+
+      try {
+        const apiBase = `${window.location.protocol}//${window.location.hostname}:5000`;
+        const res = await fetch(`${apiBase}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.token) localStorage.setItem("token", data.token);
+          window.location.href = "../user/dashboard.html";
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(err.message || "Registration failed. Please try again.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Unable to contact server. Please try again later.");
+      }
     });
   }
 });

@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var notificationPanel = document.getElementById("notificationPanel");
   var notificationList = document.getElementById("notificationList");
   var notificationCount = document.getElementById("notificationCount");
+  var logoutButton = document.getElementById("logoutButton");
   var periodButton = document.getElementById("overviewPeriodButton");
   var periodLabel = document.getElementById("overviewPeriodLabel");
   var periodOptions = document.getElementById("periodOptions");
@@ -2269,6 +2270,14 @@ document.addEventListener("DOMContentLoaded", function () {
       var isHidden = notificationPanel.hidden;
       notificationPanel.hidden = !isHidden;
       notificationToggle.setAttribute("aria-expanded", String(isHidden));
+    });
+  }
+
+  if (logoutButton) {
+    logoutButton.addEventListener("click", function () {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "../auth/login.html";
     });
   }
 

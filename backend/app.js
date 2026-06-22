@@ -15,9 +15,9 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
 
-// TODO: Register your routes here
-// app.use("/api/auth", require("./routes/auth.routes"));
-// app.use("/api/users", require("./routes/user.routes"));
+// Register routes
+app.use("/api/auth", require("./routes/auth.routes"));
+
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not Found" });
