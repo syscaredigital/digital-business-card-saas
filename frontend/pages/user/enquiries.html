@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enquiries - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="enquiries.html" class="nav-item active">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">12 of 25 vCards are in use. Upgrade anytime when your team grows.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search dashboard..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content client-enquiries-page">
+        <section class="client-enquiries-shell searchable-item" data-search="enquiries vcard name email phone attachment created action">
+          <div class="client-enquiries-toolbar">
+            <label class="search-bar client-enquiries-search" for="enquiriesSearch">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input id="enquiriesSearch" type="search" placeholder="Search" />
+            </label>
+          </div>
+
+          <div class="client-enquiries-table-wrap">
+            <table class="client-enquiries-table" aria-label="VCard enquiries">
+              <thead>
+                <tr>
+                  <th scope="col">VCard Name &#8597;</th>
+                  <th scope="col">Name &#8597;</th>
+                  <th scope="col">Email &#8597;</th>
+                  <th scope="col">Phone</th>
+                  <th scope="col">Attachment</th>
+                  <th scope="col">Created On &#8597;</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody id="enquiriesTableBody">
+                <tr class="enquiry-row" data-search="syscare it solutions sri lanka roshan tharindur@syscare.lk 769956938 n/a 06 jun 2025">
+                  <td data-label="VCard Name">SysCare IT Solutions Sri Lanka</td>
+                  <td data-label="Name">Roshan</td>
+                  <td data-label="Email"><a href="mailto:tharindur@syscare.lk">tharindur@syscare.lk</a></td>
+                  <td data-label="Phone">769956938</td>
+                  <td data-label="Attachment">N/A</td>
+                  <td data-label="Created On">06 Jun 2025</td>
+                  <td data-label="Action">
+                    <div class="client-enquiry-actions">
+                      <button class="client-enquiry-action" type="button" data-action="preview-card" aria-label="View Roshan enquiry">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12 18.7 18.5 12 18.5 1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3" fill="currentColor"></circle></svg>
+                      </button>
+                      <button class="client-enquiry-action delete" type="button" data-action="delete-enquiry" aria-label="Delete Roshan enquiry">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 10v7M14 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="enquiry-row" data-search="syscare it solutions computer accessories tharinduroshan791@gmail.com 24555 n/a 22 may 2025">
+                  <td data-label="VCard Name">SysCare IT Solutions</td>
+                  <td data-label="Name">Computer Accessories</td>
+                  <td data-label="Email"><a href="mailto:tharinduroshan791@gmail.com">tharinduroshan791@gmail.com</a></td>
+                  <td data-label="Phone">24555</td>
+                  <td data-label="Attachment">N/A</td>
+                  <td data-label="Created On">22 May 2025</td>
+                  <td data-label="Action">
+                    <div class="client-enquiry-actions">
+                      <button class="client-enquiry-action" type="button" data-action="preview-card" aria-label="View Computer Accessories enquiry">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12 18.7 18.5 12 18.5 1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3" fill="currentColor"></circle></svg>
+                      </button>
+                      <button class="client-enquiry-action delete" type="button" data-action="delete-enquiry" aria-label="Delete Computer Accessories enquiry">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 10v7M14 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr hidden>
+                  <td class="light-empty-cell" colspan="7">No enquiries found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="client-enquiries-footer">
+            <span>Show</span>
+            <select class="client-enquiries-limit" aria-label="Rows per page">
+              <option selected>10</option>
+              <option>25</option>
+              <option>50</option>
+            </select>
+            <p class="client-enquiries-results" id="enquiriesResults">Showing 2 results</p>
+          </div>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another enquiry search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

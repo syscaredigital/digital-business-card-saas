@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VCards - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="vcards.html" class="nav-item active">VCards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">12 of 25 vCards are in use. Upgrade anytime when your team grows.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search vCards by name, URL, contact, or status..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content client-vcards-page">
+        <div class="page-header">
+          <div>
+            <span class="eyebrow">VCards</span>
+            <h1>Manage client vCards</h1>
+            <p>Create one vCard for a single-user plan or multiple user cards for team plans.</p>
+          </div>
+          <div class="client-vcard-header-actions">
+            <div class="client-view-toggle" aria-label="View options">
+              <button class="active" type="button" aria-label="Table view">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16M4 12h16M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M7 5v14" stroke="currentColor" stroke-width="2"></path></svg>
+              </button>
+              <button type="button" aria-label="Gallery view">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="m4 16 5-5 4 4 2-2 5 5" stroke="currentColor" stroke-width="2"></path></svg>
+              </button>
+            </div>
+            <button class="btn-share" type="button" data-vcard-tab-target="newVcardPanel">New VCard</button>
+          </div>
+        </div>
+
+        <section class="vcard-section-shell searchable-item" data-search="vcards user cards preview url stats subscribers contact status created action new form">
+          <div class="vcard-tabbar client-vcard-tabbar" role="tablist" aria-label="VCard tabs">
+            <button class="vcard-tab-btn active" type="button" role="tab" aria-selected="true" data-vcard-tab-target="vcardListPanel">All VCards</button>
+            <button class="vcard-tab-btn" type="button" role="tab" aria-selected="false" data-vcard-tab-target="newVcardPanel">Add New VCard</button>
+          </div>
+
+          <section class="tab-panel active" id="vcardListPanel">
+            <article class="client-vcard-table-shell">
+              <div class="client-vcard-table-head">
+                <label class="client-check"><input type="checkbox" aria-label="Select all vCards" /><span></span></label>
+                <div>VCARD NAME</div>
+                <div>PREVIEW URL</div>
+                <div>STATS</div>
+                <div>SUBSCRIBERS</div>
+                <div>CONTACT</div>
+                <div>STATUS</div>
+                <div>CREATED AT</div>
+                <div>ACTION</div>
+              </div>
+
+              <div class="client-vcard-row searchable-item" data-search="ishan rathnayaka general manager sc staff 02 active 30 jan 2026">
+                <label class="client-check"><input type="checkbox" aria-label="Select Ishan Rathnayaka" /><span></span></label>
+                <div class="client-vcard-name-cell">
+                  <div class="client-vcard-thumb"></div>
+                  <div><a href="../public-vcard/template-one.html" target="_blank" rel="noopener noreferrer">Ishan Rathnayaka</a><span>General Manager</span></div>
+                </div>
+                <div class="client-vcard-url-cell"><a href="../public-vcard/template-one.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/sc-staff-02</a><button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/sc-staff-02" aria-label="Copy preview URL"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"></path></svg></button></div>
+                <button class="client-icon-btn" type="button" data-action="export-report" aria-label="Open stats"><svg viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <button class="client-icon-btn" type="button" data-action="export-report" aria-label="View subscribers"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button>
+                <button class="client-icon-btn" type="button" data-action="contact-followup" aria-label="Contact"><svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.91.33 1.79.62 2.64a2 2 0 0 1-.45 2.11L8 9.7a16 16 0 0 0 6.3 6.3l1.23-1.23a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.64.62A2 2 0 0 1 22 16.92Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label>
+                <span class="date-pill">30 Jan 2026</span>
+                <div class="client-action-cell"><button type="button" data-action="edit-card" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><button type="button" aria-label="More actions">⋮</button></div>
+              </div>
+
+              <div class="client-vcard-row searchable-item" data-search="sc staff 50 active 20 jan 2026">
+                <label class="client-check"><input type="checkbox" aria-label="Select SC staff 50" /><span></span></label>
+                <div class="client-vcard-name-cell"><div class="client-vcard-thumb"></div><div><a href="../public-vcard/template-two.html" target="_blank" rel="noopener noreferrer">SC-staff-50</a><span>Sales Representative</span></div></div>
+                <div class="client-vcard-url-cell"><a href="../public-vcard/template-two.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/sc-staff-50</a><button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/sc-staff-50" aria-label="Copy preview URL"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"></path></svg></button></div>
+                <button class="client-icon-btn" type="button" data-action="export-report" aria-label="Open stats"><svg viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <button class="client-icon-btn" type="button" data-action="export-report" aria-label="View subscribers"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button>
+                <button class="client-icon-btn" type="button" data-action="contact-followup" aria-label="Contact"><svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.91.33 1.79.62 2.64a2 2 0 0 1-.45 2.11L8 9.7a16 16 0 0 0 6.3 6.3l1.23-1.23a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.64.62A2 2 0 0 1 22 16.92Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label>
+                <span class="date-pill">20 Jan 2026</span>
+                <div class="client-action-cell"><button type="button" data-action="edit-card" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><button type="button" aria-label="More actions">⋮</button></div>
+              </div>
+
+              <div class="client-vcard-row searchable-item" data-search="sc staff 49 inactive 20 jan 2026">
+                <label class="client-check"><input type="checkbox" aria-label="Select SC staff 49" /><span></span></label>
+                <div class="client-vcard-name-cell"><div class="client-vcard-thumb"></div><div><a href="../public-vcard/template-three.html" target="_blank" rel="noopener noreferrer">SC-staff-49</a><span>Customer Support</span></div></div>
+                <div class="client-vcard-url-cell"><a href="../public-vcard/template-three.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/sc-staff-49</a><button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/sc-staff-49" aria-label="Copy preview URL"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"></path></svg></button></div>
+                <button class="client-icon-btn" type="button" data-action="export-report" aria-label="Open stats"><svg viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18M7 14l4-4 3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <button class="client-icon-btn" type="button" data-action="export-report" aria-label="View subscribers"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button>
+                <button class="client-icon-btn" type="button" data-action="contact-followup" aria-label="Contact"><svg viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.91.33 1.79.62 2.64a2 2 0 0 1-.45 2.11L8 9.7a16 16 0 0 0 6.3 6.3l1.23-1.23a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.64.62A2 2 0 0 1 22 16.92Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label>
+                <span class="date-pill">20 Jan 2026</span>
+                <div class="client-action-cell"><button type="button" data-action="edit-card" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><button type="button" aria-label="More actions">⋮</button></div>
+              </div>
+            </article>
+          </section>
+
+          <section class="tab-panel" id="newVcardPanel">
+            <article class="client-vcard-form-card searchable-item" data-search="new vcard form url alias name occupation description profile image cover profile save discard">
+              <div class="admin-card-header">
+                <div>
+                  <h3>Add New VCard</h3>
+                  <p>Use this form when the selected subscription plan still has available vCard slots.</p>
+                </div>
+                <span class="status-badge active">13 slots left</span>
+              </div>
+
+              <form class="client-vcard-form">
+                <div class="form-field form-field-wide">
+                  <label for="urlAlias">URL Alias:<span class="required-mark">*</span> <span class="field-help">?</span></label>
+                  <div class="alias-input-group">
+                    <input id="urlAlias" type="text" placeholder="my-vcard-page-url" required />
+                    <button type="button" aria-label="Generate URL alias">↻</button>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="vcardName">VCard Name:<span class="required-mark">*</span></label>
+                  <input id="vcardName" type="text" placeholder="Enter VCard Name" required />
+                </div>
+
+                <div class="form-field">
+                  <label for="occupation">Occupation:</label>
+                  <input id="occupation" type="text" placeholder="Enter Occupation" />
+                </div>
+
+                <div class="form-field client-description-field">
+                  <label for="vcardDescription">Description:</label>
+                  <div class="client-editor-toolbar" aria-hidden="true"><strong>B</strong><em>I</em><u>U</u><span>S</span><span>”</span><span>&lt;/&gt;</span><span>Normal</span><span>A</span></div>
+                  <textarea id="vcardDescription" placeholder="Enter Description of Your VCard"></textarea>
+                </div>
+
+                <div class="form-field client-upload-field">
+                  <label>Profile Image:</label>
+                  <label class="client-image-upload">
+                    <input type="file" accept="image/png,image/jpeg" />
+                    <span class="profile-placeholder"></span>
+                    <small>✎</small>
+                  </label>
+                  <p>Allowed file types: png, jpg, jpeg.</p>
+                </div>
+
+                <div class="form-field client-upload-field">
+                  <label>Cover Profile:</label>
+                  <label class="client-cover-upload">
+                    <input type="file" accept="image/png,image/jpeg,video/mp4" />
+                    <span></span>
+                    <small>✎</small>
+                  </label>
+                  <p>Allowed file types: png, jpg, jpeg, mp4.</p>
+                </div>
+
+                <div class="form-actions form-field-wide">
+                  <button class="btn-share" type="button" data-action="create-card">Save</button>
+                  <button class="btn-preview" type="reset">Discard</button>
+                </div>
+              </form>
+            </article>
+          </section>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another vCard search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

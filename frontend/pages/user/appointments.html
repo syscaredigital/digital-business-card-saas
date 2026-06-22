@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appointments - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item active">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">12 of 25 vCards are in use. Upgrade anytime when your team grows.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search dashboard..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content client-appointments-page">
+        <section class="client-appointments-shell searchable-item" data-search="appointments vcard name email phone appointment time status type action">
+          <div class="client-appointments-toolbar">
+            <label class="search-bar client-appointments-search" for="appointmentsSearch">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input id="appointmentsSearch" type="search" placeholder="Search" />
+            </label>
+
+            <div class="client-appointments-toolbar-actions">
+              <button class="client-appointment-tool-btn" type="button" data-action="export-report" aria-label="Filter appointments">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Z" fill="currentColor"></path></svg>
+              </button>
+              <button class="client-appointment-tool-btn" type="button" data-action="export-report" aria-label="Open calendar">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M7 2v4M17 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 13h2v2H8zM14 13h2v2h-2zM8 17h2v2H8zM14 17h2v2h-2z" fill="currentColor"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="client-appointments-table-wrap">
+            <table class="client-appointments-table" aria-label="Appointments">
+              <thead>
+                <tr>
+                  <th scope="col">VCard Name &#8597;</th>
+                  <th scope="col">Name &#8597;</th>
+                  <th scope="col">Email &#8597;</th>
+                  <th scope="col">Phone &#8597;</th>
+                  <th scope="col">Appointment Time &#8597;</th>
+                  <th scope="col">Status &#8597;</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody id="appointmentsTableBody">
+                <tr class="appointment-row" data-search="ishan rathnayaka roshan tharindur@syscare.lk 0769956938 10:00 am 03:00 pm 09 jun 2025 pending free">
+                  <td data-label="VCard Name">Ishan Rathnayaka</td>
+                  <td data-label="Name">Roshan</td>
+                  <td data-label="Email">tharindur@syscare.lk</td>
+                  <td data-label="Phone">0769956938</td>
+                  <td data-label="Appointment Time"><span class="appointment-time-pill">10:00 AM - 03:00 PM<br />09 Jun 2025</span></td>
+                  <td data-label="Status"><span class="appointment-status-pill">Pending <span aria-hidden="true">&#10003;</span></span></td>
+                  <td data-label="Type"><span class="appointment-type-pill">Free</span></td>
+                  <td data-label="Action">
+                    <button class="client-appointment-delete" type="button" data-action="delete-appointment" aria-label="Delete appointment">
+                      <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 10v7M14 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                    </button>
+                  </td>
+                </tr>
+                <tr hidden>
+                  <td class="light-empty-cell" colspan="8">No appointments found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="client-appointments-footer">
+            <span>Show</span>
+            <select class="client-appointments-limit" aria-label="Rows per page">
+              <option selected>10</option>
+              <option>25</option>
+              <option>50</option>
+            </select>
+            <p class="client-appointments-results" id="appointmentsResults">Showing 1 results</p>
+          </div>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another appointment search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

@@ -94,6 +94,15 @@ document.addEventListener("DOMContentLoaded", function () {
   var usedCouponCodeSearch = document.getElementById("usedCouponCodeSearch");
   var usedCouponCodesTableBody = document.getElementById("usedCouponCodesTableBody");
   var usedCouponCodesResults = document.getElementById("usedCouponCodesResults");
+  var enquiriesSearch = document.getElementById("enquiriesSearch");
+  var enquiriesTableBody = document.getElementById("enquiriesTableBody");
+  var enquiriesResults = document.getElementById("enquiriesResults");
+  var appointmentsSearch = document.getElementById("appointmentsSearch");
+  var appointmentsTableBody = document.getElementById("appointmentsTableBody");
+  var appointmentsResults = document.getElementById("appointmentsResults");
+  var productOrdersSearch = document.getElementById("productOrdersSearch");
+  var productOrdersTableBody = document.getElementById("productOrdersTableBody");
+  var productOrdersResults = document.getElementById("productOrdersResults");
   var openCouponModalButton = document.getElementById("openCouponModal");
   var couponModal = document.getElementById("couponModal");
   var couponModalBackdrop = document.getElementById("couponModalBackdrop");
@@ -737,6 +746,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function applyUsedCouponCodesFilter() {
     filterLightRows(usedCouponCodesTableBody, usedCouponCodeSearch, usedCouponCodesResults, ".used-coupon-code-row");
+  }
+
+  function applyEnquiriesFilter() {
+    filterLightRows(enquiriesTableBody, enquiriesSearch, enquiriesResults, ".enquiry-row");
+  }
+
+  function applyAppointmentsFilter() {
+    filterLightRows(appointmentsTableBody, appointmentsSearch, appointmentsResults, ".appointment-row");
+  }
+
+  function applyProductOrdersFilter() {
+    filterLightRows(productOrdersTableBody, productOrdersSearch, productOrdersResults, ".product-order-row");
   }
 
   function setSubscriptionFormFeedback(message, isSuccess) {
@@ -1477,12 +1498,28 @@ document.addEventListener("DOMContentLoaded", function () {
           item.setAttribute("aria-selected", "false");
         });
 
+        Array.from(document.querySelectorAll("[data-vcard-tab-target]")).forEach(function (tabButton) {
+          var panelId = tabButton.getAttribute("data-vcard-tab-target");
+          var panel = panelId ? document.getElementById(panelId) : null;
+
+          if (panel) {
+            panel.classList.remove("active");
+          }
+        });
+
         Array.from(document.querySelectorAll("#vcardListPanel, #vcardTemplatesPanel")).forEach(function (panel) {
           panel.classList.remove("active");
         });
 
-        button.classList.add("active");
-        button.setAttribute("aria-selected", "true");
+        if (button.classList.contains("vcard-tab-btn")) {
+          button.classList.add("active");
+          button.setAttribute("aria-selected", "true");
+        } else {
+          Array.from(document.querySelectorAll('.vcard-tab-btn[data-vcard-tab-target="' + targetId + '"]')).forEach(function (matchingButton) {
+            matchingButton.classList.add("active");
+            matchingButton.setAttribute("aria-selected", "true");
+          });
+        }
 
         if (targetPanel) {
           targetPanel.classList.add("active");
@@ -1525,6 +1562,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (usedCouponCodeSearch) {
     usedCouponCodeSearch.addEventListener("input", applyUsedCouponCodesFilter);
+  }
+
+  if (enquiriesSearch) {
+    enquiriesSearch.addEventListener("input", applyEnquiriesFilter);
+  }
+
+  if (appointmentsSearch) {
+    appointmentsSearch.addEventListener("input", applyAppointmentsFilter);
+  }
+
+  if (productOrdersSearch) {
+    productOrdersSearch.addEventListener("input", applyProductOrdersFilter);
   }
 
   if (affiliationsTabButtons.length) {
@@ -2240,6 +2289,9 @@ document.addEventListener("DOMContentLoaded", function () {
   applyAffiliateWithdrawalsFilter();
   applyCouponCodesFilter();
   applyUsedCouponCodesFilter();
+  applyEnquiriesFilter();
+  applyAppointmentsFilter();
+  applyProductOrdersFilter();
   updateCompletion(state.profileCompletion);
   drawSparkline("spark1", [40, 55, 45, 70, 60, 80, 75, 95, 85, 110, 90, 120], "#ff5968");
   drawSparkline("spark2", [30, 50, 40, 60, 55, 75, 65, 90, 80, 100, 95, 115], "#ff5968");
