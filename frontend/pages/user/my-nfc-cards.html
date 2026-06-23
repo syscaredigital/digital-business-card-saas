@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My NFC Cards - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item active">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">12 of 25 vCards are in use. Upgrade anytime when your team grows.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
+
+      <button class="sidebar-help" type="button" data-action="help-support">
+        <span class="sidebar-help-main">Help &amp; Support</span>
+        <span>&gt;</span>
+      </button>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="nfcCardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="nfcCardSearch" type="text" placeholder="Search NFC cards..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <button class="logout-btn" type="button" id="logoutButton">Logout</button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content client-nfc-cards-page">
+        <div class="page-header">
+          <div>
+            <span class="eyebrow">NFC inventory</span>
+            <h1>My NFC Cards</h1>
+            <p>Manage your physical NFC card orders and track their delivery status.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-nfc-filter" type="button" id="nfcFilterToggle" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+            </button>
+            <button class="btn-nfc-howit" type="button" id="openNfcHowItWorksModal">How it works?</button>
+            <button class="btn-nfc-order" type="button" id="openNfcOrderModal">Order NFC</button>
+          </div>
+        </div>
+
+        <section class="client-nfc-cards-shell searchable-item" data-search="nfc cards orders card type name designation phone status">
+          <div class="nfc-cards-toolbar">
+            <label class="nfc-search" for="nfcTableSearch">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input id="nfcTableSearch" type="text" placeholder="Search" />
+            </label>
+            <div class="nfc-toolbar-actions">
+              <button class="nfc-toolbar-btn nfc-help-btn" type="button" id="openNfcGuideModal">How It works?</button>
+              <button class="nfc-toolbar-btn nfc-order-btn" type="button" id="orderNfcButton">Order NFC</button>
+            </div>
+          </div>
+
+          <div class="nfc-cards-table-wrap">
+            <table class="nfc-cards-table" aria-label="NFC cards inventory">
+              <thead>
+                <tr>
+                  <th scope="col">Card Type ↕</th>
+                  <th scope="col">Name ↕</th>
+                  <th scope="col">Designation ↕</th>
+                  <th scope="col">Phone</th>
+                  <th scope="col">Ordered At ↕</th>
+                  <th scope="col">Order Status</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody id="nfcCardsTableBody">
+                <tr class="nfc-card-row" data-search="black metal card syscare it solutions sdfghj +94 760454562 08 oct 2025 pending">
+                  <td data-label="Card Type">
+                    <div class="nfc-card-preview">
+                      <img src="../../public/assets/images/nfc-card-placeholder.svg" alt="Black Metal Card" />
+                    </div>
+                  </td>
+                  <td data-label="Name">SysCare IT Solutions</td>
+                  <td data-label="Designation">sdfghj</td>
+                  <td data-label="Phone">+94 760454562</td>
+                  <td data-label="Ordered At">08 Oct 2025</td>
+                  <td data-label="Order Status">
+                    <span class="status-badge pending">Pending</span>
+                  </td>
+                  <td data-label="Action">
+                    <button class="nfc-card-action view" type="button" aria-label="View card details">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s3-8 11-8 11 8 11 8-3 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="nfc-cards-footer">
+            <div class="nfc-cards-footer-left">
+              <span>Show</span>
+              <select class="nfc-cards-limit-select" aria-label="NFC cards rows per page">
+                <option selected>10</option>
+                <option>25</option>
+                <option>50</option>
+              </select>
+            </div>
+            <p class="nfc-cards-results" id="nfcCardsResults">Showing 1 results</p>
+          </div>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another search term or order new NFC cards.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- How It Works Modal -->
+  <div class="user-modal nfc-modal" id="nfcHowItWorksModal" hidden>
+    <div class="user-modal-backdrop" id="nfcHowItWorksModalBackdrop"></div>
+    <div class="user-modal-dialog nfc-modal-dialog nfc-guide-dialog">
+      <div class="user-modal-header nfc-modal-header">
+        <h2>How NFC Cards Work</h2>
+        <button class="nfc-modal-close" type="button" id="closeNfcHowItWorksModal" aria-label="Close how it works modal">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="user-modal-body nfc-modal-body">
+        <div class="nfc-guide-content">
+          <ol class="nfc-guide-list">
+            <li>Order physical NFC cards with your chosen design and information.</li>
+            <li>Link each card to a specific vCard profile or team member.</li>
+            <li>When someone taps the NFC card with their phone, they receive your digital vCard.</li>
+            <li>Track interactions and manage your NFC card inventory from this dashboard.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order NFC Modal -->
+  <div class="user-modal nfc-modal" id="nfcOrderModal" hidden>
+    <div class="user-modal-backdrop" id="nfcOrderModalBackdrop"></div>
+    <div class="user-modal-dialog nfc-modal-dialog nfc-order-dialog">
+      <div class="user-modal-header nfc-modal-header">
+        <h2>Order NFC Cards</h2>
+        <button class="nfc-modal-close" type="button" id="closeNfcOrderModal" aria-label="Close order modal">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="user-modal-body nfc-modal-body">
+        <form class="nfc-order-form" id="nfcOrderForm">
+          <div class="form-group">
+            <label for="nfcCardType">Card Type</label>
+            <select id="nfcCardType" required>
+              <option value="">Select card type</option>
+              <option value="black-metal">Black Metal Card</option>
+              <option value="white-plastic">White Plastic Card</option>
+              <option value="wood-eco">Wood Eco Card</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="nfcQuantity">Quantity</label>
+            <input type="number" id="nfcQuantity" min="10" step="10" value="10" required />
+          </div>
+
+          <div class="form-group">
+            <label for="nfcVCard">Link to VCard</label>
+            <select id="nfcVCard" required>
+              <option value="">Select a vCard</option>
+              <option value="card1">John Smith - Sales</option>
+              <option value="card2">Acme Support - Customer Service</option>
+              <option value="card3">Event Team - Expo</option>
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Place Order</button>
+            <button type="button" class="btn-secondary" id="cancelNfcOrder">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

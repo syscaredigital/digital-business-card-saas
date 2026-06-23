@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var planEditRowIndexInput = document.getElementById("planEditRowIndex");
   var affiliationsTabButtons = Array.from(document.querySelectorAll("[data-affiliations-tab-target]"));
   var couponTabButtons = Array.from(document.querySelectorAll("[data-coupon-tab-target]"));
+  var settingsTabButtons = Array.from(document.querySelectorAll("[data-settings-tab-target]"));
   var affiliateUsersSearch = document.getElementById("affiliateUsersSearch");
   var affiliateUsersTableBody = document.getElementById("affiliateUsersTableBody");
   var affiliateUsersResults = document.getElementById("affiliateUsersResults");
@@ -98,6 +99,23 @@ document.addEventListener("DOMContentLoaded", function () {
   var enquiriesSearch = document.getElementById("enquiriesSearch");
   var enquiriesTableBody = document.getElementById("enquiriesTableBody");
   var enquiriesResults = document.getElementById("enquiriesResults");
+  var nfcCardSearch = document.getElementById("nfcCardSearch");
+  var nfcTableSearch = document.getElementById("nfcTableSearch");
+  var nfcCardsTableBody = document.getElementById("nfcCardsTableBody");
+  var nfcCardsResults = document.getElementById("nfcCardsResults");
+  var nfcFilterToggle = document.getElementById("nfcFilterToggle");
+  var openNfcHowItWorksModal = document.getElementById("openNfcHowItWorksModal");
+  var openNfcOrderModal = document.getElementById("openNfcOrderModal");
+  var openNfcGuideModal = document.getElementById("openNfcGuideModal");
+  var orderNfcButton = document.getElementById("orderNfcButton");
+  var nfcHowItWorksModal = document.getElementById("nfcHowItWorksModal");
+  var nfcHowItWorksModalBackdrop = document.getElementById("nfcHowItWorksModalBackdrop");
+  var closeNfcHowItWorksModal = document.getElementById("closeNfcHowItWorksModal");
+  var nfcOrderModal = document.getElementById("nfcOrderModal");
+  var nfcOrderModalBackdrop = document.getElementById("nfcOrderModalBackdrop");
+  var closeNfcOrderModal = document.getElementById("closeNfcOrderModal");
+  var nfcOrderForm = document.getElementById("nfcOrderForm");
+  var cancelNfcOrder = document.getElementById("cancelNfcOrder");
   var appointmentsSearch = document.getElementById("appointmentsSearch");
   var appointmentsTableBody = document.getElementById("appointmentsTableBody");
   var appointmentsResults = document.getElementById("appointmentsResults");
@@ -570,6 +588,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "add-contact": ["Contact form", "Open a contact creation form or CRM sync flow here."],
       "setup-nfc": ["NFC setup", "Move the user into your NFC assignment workflow."],
       "create-card": ["Card creation", "Start a new business card template from here."],
+      "download-background": ["Virtual background ready", "Generate and download the selected background asset from here."],
       "quick-action": ["Quick actions", "Connect this button to your admin shortcuts modal."],
       "contact-followup": ["Follow-up created", "This contact is ready for your outreach sequence."],
       "copy-link": ["Link copied", "Replace this toast with navigator.clipboard in production."],
@@ -1577,6 +1596,31 @@ document.addEventListener("DOMContentLoaded", function () {
     productOrdersSearch.addEventListener("input", applyProductOrdersFilter);
   }
 
+  if (settingsTabButtons.length) {
+    settingsTabButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var targetId = button.getAttribute("data-settings-tab-target");
+        var targetPanel = document.getElementById(targetId);
+
+        settingsTabButtons.forEach(function (item) {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+
+        Array.from(document.querySelectorAll(".client-settings-panel")).forEach(function (panel) {
+          panel.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        button.setAttribute("aria-selected", "true");
+
+        if (targetPanel) {
+          targetPanel.classList.add("active");
+        }
+      });
+    });
+  }
+
   if (affiliationsTabButtons.length) {
     affiliationsTabButtons.forEach(function (button) {
       button.addEventListener("click", function () {
@@ -1785,6 +1829,124 @@ document.addEventListener("DOMContentLoaded", function () {
   if (nfcGuideModalBackdrop) {
     nfcGuideModalBackdrop.addEventListener("click", function () {
       closeNfcGuideModal();
+    });
+  }
+
+  // NFC Cards Page Handlers
+  if (openNfcHowItWorksModal) {
+    openNfcHowItWorksModal.addEventListener("click", function () {
+      if (nfcHowItWorksModal) {
+        nfcHowItWorksModal.hidden = false;
+        document.body.style.overflow = "hidden";
+      }
+    });
+  }
+
+  if (closeNfcHowItWorksModal) {
+    closeNfcHowItWorksModal.addEventListener("click", function () {
+      if (nfcHowItWorksModal) {
+        nfcHowItWorksModal.hidden = true;
+        document.body.style.overflow = "";
+      }
+    });
+  }
+
+  if (nfcHowItWorksModalBackdrop) {
+    nfcHowItWorksModalBackdrop.addEventListener("click", function () {
+      if (nfcHowItWorksModal) {
+        nfcHowItWorksModal.hidden = true;
+        document.body.style.overflow = "";
+      }
+    });
+  }
+
+  if (openNfcGuideModal) {
+    openNfcGuideModal.addEventListener("click", function () {
+      if (nfcHowItWorksModal) {
+        nfcHowItWorksModal.hidden = false;
+        document.body.style.overflow = "hidden";
+      }
+    });
+  }
+
+  if (openNfcOrderModal) {
+    openNfcOrderModal.addEventListener("click", function () {
+      if (nfcOrderModal) {
+        nfcOrderModal.hidden = false;
+        document.body.style.overflow = "hidden";
+      }
+    });
+  }
+
+  if (orderNfcButton) {
+    orderNfcButton.addEventListener("click", function () {
+      if (nfcOrderModal) {
+        nfcOrderModal.hidden = false;
+        document.body.style.overflow = "hidden";
+      }
+    });
+  }
+
+  if (closeNfcOrderModal) {
+    closeNfcOrderModal.addEventListener("click", function () {
+      if (nfcOrderModal) {
+        nfcOrderModal.hidden = true;
+        document.body.style.overflow = "";
+      }
+    });
+  }
+
+  if (nfcOrderModalBackdrop) {
+    nfcOrderModalBackdrop.addEventListener("click", function () {
+      if (nfcOrderModal) {
+        nfcOrderModal.hidden = true;
+        document.body.style.overflow = "";
+      }
+    });
+  }
+
+  if (cancelNfcOrder) {
+    cancelNfcOrder.addEventListener("click", function () {
+      if (nfcOrderModal) {
+        nfcOrderModal.hidden = true;
+        document.body.style.overflow = "";
+      }
+      if (nfcOrderForm) {
+        nfcOrderForm.reset();
+      }
+    });
+  }
+
+  if (nfcOrderForm) {
+    nfcOrderForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      showToast("NFC Order Placed", "Your NFC card order has been successfully submitted. You'll receive a confirmation email shortly.");
+      if (nfcOrderModal) {
+        nfcOrderModal.hidden = true;
+        document.body.style.overflow = "";
+      }
+      nfcOrderForm.reset();
+    });
+  }
+
+  if (nfcTableSearch) {
+    nfcTableSearch.addEventListener("input", function () {
+      var term = nfcTableSearch.value.trim().toLowerCase();
+      var rows = Array.from(document.querySelectorAll(".nfc-card-row"));
+      var visibleCount = 0;
+
+      rows.forEach(function (row) {
+        var haystack = (row.getAttribute("data-search") || row.textContent || "").toLowerCase();
+        var matched = !term || haystack.indexOf(term) !== -1;
+        row.classList.toggle("search-hidden", !matched);
+        if (matched) {
+          visibleCount += 1;
+        }
+      });
+
+      if (nfcCardsResults) {
+        nfcCardsResults.textContent = "Showing " + visibleCount + " results";
+      }
     });
   }
 

@@ -9,45 +9,185 @@
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
 </head>
 <body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
   <div class="dashboard-wrapper">
     <aside class="sidebar">
-      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
-      <nav class="sidebar-nav">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
         <a href="dashboard.html" class="nav-item">Dashboard</a>
-        <a href="my-vcard.html" class="nav-item">My Cards</a>
-        <a href="contacts.html" class="nav-item">Contacts</a>
-        <a href="analytics.html" class="nav-item">Analytics</a>
-        <a href="qr-code.html" class="nav-item">QR Codes</a>
-        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
         <a href="settings.html" class="nav-item active">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
       </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">12 of 25 vCards are in use. Upgrade anytime when your team grows.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
     </aside>
+
     <div class="main-content">
-      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search settings..." /></label></header>
-      <main class="page-content">
-        <div class="page-header">
-          <div><span class="eyebrow">Preferences</span><h2>Update your dashboard settings</h2><p>Control alerts, profile visibility, and sharing defaults.</p></div>
-          <button class="btn-share" type="button" data-action="save-settings">Save Changes</button>
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search settings..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
         </div>
-        <div class="settings-grid">
-          <div class="setting-card searchable-item" data-search="email alerts notifications">
-            <div class="setting-copy"><strong>Email alerts</strong><span>Receive a summary when someone saves your card.</span></div>
-            <label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
           </div>
-          <div class="setting-card searchable-item" data-search="public profile link">
-            <div class="setting-copy"><strong>Public profile link</strong><span>Allow your profile to be shared without login.</span></div>
-            <label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label>
-          </div>
-          <div class="setting-card searchable-item" data-search="weekly analytics digest">
-            <div class="setting-copy"><strong>Weekly analytics digest</strong><span>Get traffic insights every Monday morning.</span></div>
-            <label class="switch"><input type="checkbox" /><span class="switch-slider"></span></label>
-          </div>
+          <div class="notification-list" id="notificationList"></div>
         </div>
-        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another settings search term.</p></div>
+      </header>
+
+      <main class="page-content client-settings-page">
+        <section class="client-settings-shell searchable-item" data-search="settings general payment configuration custom domain paypal payout currency time format pwa attachment inquiry contact">
+          <aside class="client-settings-tabs" role="tablist" aria-label="Settings tabs">
+            <button class="client-settings-tab active" type="button" role="tab" aria-selected="true" data-settings-tab-target="settingsGeneralPanel"><span class="settings-tab-icon gear"></span>General</button>
+            <button class="client-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab-target="settingsPaymentPanel"><span class="settings-tab-icon money"></span>Payment Configuration</button>
+            <button class="client-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab-target="settingsDomainPanel"><span class="settings-tab-icon globe"></span>Custom Domain</button>
+          </aside>
+
+          <div class="client-settings-content">
+            <section class="client-settings-panel active" id="settingsGeneralPanel">
+              <form class="settings-general-form">
+                <div class="settings-field">
+                  <label for="paypalPayoutEmail">Paypal Payout Email:</label>
+                  <input id="paypalPayoutEmail" type="email" placeholder="Paypal Payout Email" />
+                </div>
+
+                <div class="settings-field">
+                  <label for="settingsCurrency">Currency:<span class="required-mark">*</span></label>
+                  <select id="settingsCurrency" required>
+                    <option>$ - USD US Dollar</option>
+                    <option>EUR - Euro</option>
+                    <option>LKR - Sri Lankan Rupee</option>
+                  </select>
+                </div>
+
+                <div class="settings-field">
+                  <label for="newsletterDelay">Newsletter Modal will open in X seconds after page load:</label>
+                  <input id="newsletterDelay" type="number" min="0" value="5" />
+                </div>
+
+                <div class="settings-field">
+                  <label>Time Format :<span class="required-mark">*</span></label>
+                  <div class="settings-segmented-control" role="group" aria-label="Time format">
+                    <label><input type="radio" name="timeFormat" checked /><span>12 Hour</span></label>
+                    <label><input type="radio" name="timeFormat" /><span>24 Hour</span></label>
+                  </div>
+                </div>
+
+                <div class="settings-toggle-group">
+                  <div>
+                    <strong>Enable PWA:</strong>
+                    <label class="settings-toggle"><input type="checkbox" /><span></span><em>Enable PWA</em></label>
+                  </div>
+
+                  <div>
+                    <strong>Enable Attachment for Inquiry:</strong>
+                    <label class="settings-toggle"><input type="checkbox" /><span></span><em>Enable Attachment for Inquiry</em></label>
+                  </div>
+
+                  <div>
+                    <strong>Ask Details before downloading Contact:</strong>
+                    <label class="settings-toggle"><input type="checkbox" checked /><span></span><em>Ask Details before downloading Contact</em></label>
+                  </div>
+                </div>
+
+                <button class="btn-share settings-save-btn" type="button" data-action="save-settings">Save</button>
+              </form>
+            </section>
+
+            <section class="client-settings-panel" id="settingsPaymentPanel">
+              <h1>Payment Method</h1>
+              <div class="client-settings-divider"></div>
+              <form class="settings-payment-form">
+                <label class="settings-payment-toggle"><strong>Stripe</strong><input type="checkbox" /><span></span></label>
+                <label class="settings-payment-toggle"><strong>Paystack</strong><input type="checkbox" /><span></span></label>
+                <label class="settings-payment-toggle"><strong>Flutterwave</strong><input type="checkbox" /><span></span></label>
+                <label class="settings-payment-toggle"><strong>Razorpay</strong><input type="checkbox" /><span></span></label>
+                <label class="settings-payment-toggle"><strong>PhonePe</strong><input type="checkbox" /><span></span></label>
+                <label class="settings-payment-toggle"><strong>Paypal</strong><input type="checkbox" /><span></span></label>
+                <label class="settings-payment-toggle"><strong>Manually</strong><input type="checkbox" /><span></span></label>
+                <button class="btn-share settings-save-btn" type="button" data-action="save-settings">Save</button>
+              </form>
+            </section>
+
+            <section class="client-settings-panel" id="settingsDomainPanel">
+              <div class="settings-domain-toplink">
+                <a href="#" aria-label="Add DNS record instructions">Add your DNS record for custom domain</a>
+                <span>(Required Steps)</span>
+              </div>
+
+              <form class="settings-domain-form">
+                <div class="settings-field settings-domain-field">
+                  <label for="customDomain">Custom Domain:<span class="required-mark">*</span></label>
+                  <input id="customDomain" type="text" value="syscare.lk" required />
+                  <p>You are eligible to use custom domain now !!!</p>
+                </div>
+
+                <label class="settings-check">
+                  <input type="checkbox" />
+                  <span></span>
+                  <strong>Use Custom Domain URL Every where for my vCards</strong>
+                </label>
+              </form>
+
+              <div class="settings-how-card">
+                <h2>How it Works?</h2>
+                <div class="settings-how-list">
+                  <p><span></span>Once your custom domain is approved, you can use your own URL for your vCards.</p>
+                  <p><span></span>URL before custom domain: <a href="#">https://appurl.com/{alias}</a></p>
+                  <p><span></span>URL after custom domain: <a href="#">https://custom-domain/{alias}</a></p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another settings search term.</p>
+        </div>
       </main>
     </div>
   </div>
-  <div class="toast-stack" id="toastStack"></div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
 </body>
 </html>

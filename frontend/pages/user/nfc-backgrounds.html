@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Backgrounds - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item active">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">12 of 25 vCards are in use. Upgrade anytime when your team grows.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search virtual backgrounds..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content virtual-backgrounds-page">
+        <section class="virtual-background-shell searchable-item" data-search="virtual backgrounds nfc card custom horizontal vertical download profile cover image">
+          <div class="vcard-tabbar virtual-background-tabbar" role="tablist" aria-label="Virtual background tabs">
+            <button class="vcard-tab-btn active" type="button" role="tab" aria-selected="true" data-vcard-tab-target="virtualBackgroundListPanel">Virtual Backgrounds</button>
+            <button class="vcard-tab-btn" type="button" role="tab" aria-selected="false" data-vcard-tab-target="virtualBackgroundFormPanel">Add Custom</button>
+          </div>
+
+          <section class="tab-panel active" id="virtualBackgroundListPanel">
+            <div class="virtual-background-list-head">
+              <p class="virtual-background-note"><strong>Note :</strong> Virtual Backgrounds will give you the business card images in which your logo, name, address, and phone will be written. We are exporting standard sizes of horizontal and vertical virtual backgrounds, which will be useful when you want to design your NFC card, you can directly give these images to NFC printing handlers. Also, you can share this with your friends too directly or set it as a profile/cover image.</p>
+              <button class="btn-share virtual-add-btn" type="button" data-vcard-tab-target="virtualBackgroundFormPanel">Add Custom +</button>
+            </div>
+
+            <div class="virtual-background-grid">
+              <article class="virtual-template-card virtual-template-blue searchable-item" data-search="blue geometric logo horizontal nfc background">
+                <div class="virtual-logo-mark">A</div>
+                <div class="virtual-signal-mark" aria-hidden="true"></div>
+              </article>
+
+              <article class="virtual-template-card virtual-template-teal searchable-item" data-search="john powell qr teal horizontal card background">
+                <div class="virtual-card-qr" aria-hidden="true"></div>
+                <span class="virtual-card-divider"></span>
+                <div class="virtual-card-copy">
+                  <strong>John Powell</strong>
+                  <span>UI/UX Designer</span>
+                  <span>(270) 603-5964</span>
+                </div>
+                <div class="virtual-card-lines" aria-hidden="true"></div>
+              </article>
+
+              <article class="virtual-template-card virtual-template-dark searchable-item" data-search="black polygon logo horizontal nfc background">
+                <div class="virtual-logo-mark">A</div>
+                <div class="virtual-signal-mark" aria-hidden="true"></div>
+              </article>
+
+              <article class="virtual-template-card virtual-template-white searchable-item" data-search="john powell white qr blue vertical card background">
+                <div class="virtual-white-copy">
+                  <strong>John Powell</strong>
+                  <span>UI/UX Designer</span>
+                  <small>534, Berlin Street, 362050.</small>
+                </div>
+                <div class="virtual-white-swoop" aria-hidden="true"></div>
+                <div class="virtual-mini-qr" aria-hidden="true"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="virtualBackgroundFormPanel">
+            <div class="virtual-form-header">
+              <h1>Add Virtual Background</h1>
+              <button class="btn-preview virtual-back-btn" type="button" data-vcard-tab-target="virtualBackgroundListPanel">Back</button>
+            </div>
+
+            <div class="virtual-preview-row">
+              <div class="virtual-blank-preview" aria-label="Front virtual background preview"></div>
+              <div class="virtual-blank-preview" aria-label="Back virtual background preview"></div>
+            </div>
+
+            <form class="virtual-background-form">
+              <div class="form-field form-field-wide virtual-size-field">
+                <label for="virtualSize">Select Size<span class="required-mark">*</span></label>
+                <select id="virtualSize" required>
+                  <option>Horizontal</option>
+                  <option>Vertical</option>
+                </select>
+              </div>
+
+              <div class="virtual-upload-group" aria-label="Virtual background images">
+                <label class="virtual-upload-field">
+                  <span>Add E-card:<span class="required-mark">*</span></span>
+                  <input type="file" accept="image/png,image/jpeg" required />
+                  <i></i>
+                </label>
+                <label class="virtual-upload-field">
+                  <span>Front Image:<span class="required-mark">*</span></span>
+                  <input type="file" accept="image/png,image/jpeg" required />
+                  <i></i>
+                </label>
+                <label class="virtual-upload-field">
+                  <span>Back Image:<span class="required-mark">*</span></span>
+                  <input type="file" accept="image/png,image/jpeg" required />
+                  <i></i>
+                </label>
+              </div>
+
+              <div class="form-field form-field-wide">
+                <label for="virtualVcard">VCard Name<span class="required-mark">*</span></label>
+                <select id="virtualVcard" required>
+                  <option value="">Select Vcard</option>
+                  <option value="john-powell">John Powell</option>
+                  <option value="syscare-it">SysCare IT Solutions</option>
+                  <option value="sc-staff-50">SC-staff-50</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label for="virtualFirstName">First Name<span class="required-mark">*</span></label>
+                <input id="virtualFirstName" type="text" placeholder="Enter First Name" required />
+              </div>
+
+              <div class="form-field">
+                <label for="virtualLastName">Last Name<span class="required-mark">*</span></label>
+                <input id="virtualLastName" type="text" placeholder="Enter Last Name" required />
+              </div>
+
+              <div class="form-field">
+                <label for="virtualEmail">Email<span class="required-mark">*</span></label>
+                <input id="virtualEmail" type="email" placeholder="Enter Email" required />
+              </div>
+
+              <div class="form-field">
+                <label for="virtualOccupation">Enter Occupation<span class="required-mark">*</span></label>
+                <input id="virtualOccupation" type="text" placeholder="Enter Occupation" required />
+              </div>
+
+              <div class="form-field">
+                <label for="virtualLocation">Location<span class="required-mark">*</span></label>
+                <input id="virtualLocation" type="text" placeholder="Enter Your Location" required />
+              </div>
+
+              <div class="form-field">
+                <label for="virtualPhone">Phone<span class="required-mark">*</span></label>
+                <div class="virtual-phone-field">
+                  <span>LK +61</span>
+                  <input id="virtualPhone" type="tel" placeholder="Enter Phone Number" required />
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="virtualWebsite">Website<span class="required-mark">*</span></label>
+                <input id="virtualWebsite" type="url" placeholder="Website URL" required />
+              </div>
+
+              <div class="form-actions form-field-wide">
+                <button class="btn-share" type="button" data-action="download-background">Download</button>
+                <button class="btn-preview" type="reset">Discard</button>
+              </div>
+            </form>
+          </section>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another virtual background search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

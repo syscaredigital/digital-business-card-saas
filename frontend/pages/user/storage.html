@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storage - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item active">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">12 of 25 vCards are in use. Upgrade anytime when your team grows.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search storage usage..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content client-storage-page">
+        <section class="client-storage-grid searchable-item" data-search="storage overview used unused vcards products services testimonials social icon blogs gallery profile cover setting pwa avatar">
+          <article class="client-storage-card">
+            <h1>Storage Overview</h1>
+            <div class="client-storage-divider"></div>
+
+            <div class="storage-chart-wrap">
+              <div class="storage-pie" aria-label="36 MB used out of 10000 MB">
+                <span class="storage-tooltip"><i></i>Unused Storage : 100%</span>
+              </div>
+            </div>
+
+            <div class="storage-legend" aria-label="Storage legend">
+              <div><span class="storage-swatch used"></span><strong>Used Storage</strong></div>
+              <div><span class="storage-swatch unused"></span><strong>Unused Storage</strong></div>
+            </div>
+
+            <div class="storage-total">36 MB / 10000 MB</div>
+            <div class="storage-progress" aria-hidden="true"><span style="width: 0.36%"></span></div>
+          </article>
+
+          <article class="client-storage-card client-storage-used-card">
+            <h2>Storage Used</h2>
+            <div class="client-storage-divider"></div>
+
+            <div class="storage-used-section">
+              <h3>VCards</h3>
+              <div class="storage-used-row"><span>Products</span><span>0.00 MB</span><span>0.00%</span></div>
+              <div class="storage-used-row"><span>Services</span><span>10.39 MB</span><span>0.10%</span></div>
+              <div class="storage-used-row"><span>Testimonials</span><span>0.18 MB</span><span>0.00%</span></div>
+              <div class="storage-used-row"><span>Social Icon</span><span>0.00 MB</span><span>0.00%</span></div>
+              <div class="storage-used-row"><span>Blogs</span><span>0.00 MB</span><span>0.00%</span></div>
+              <div class="storage-used-row"><span>Gallery</span><span>5.36 MB</span><span>0.05%</span></div>
+              <div class="storage-used-row"><span>Profile And Cover</span><span>20.63 MB</span><span>0.21%</span></div>
+            </div>
+
+            <div class="storage-used-section storage-setting-section">
+              <h3>Setting</h3>
+              <div class="storage-used-row"><span>PWA</span><span>0.00 MB</span><span>0.00%</span></div>
+              <div class="storage-used-row"><span>Avatar</span><span>0.01 MB</span><span>0.00%</span></div>
+            </div>
+          </article>
+        </section>
+
+        <footer class="client-storage-footer">All Rights Reserved 2026 Sync E-Card | E Business Card</footer>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another storage search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const apiBase = `${window.location.protocol}//${window.location.hostname}:5000`;
+        const apiBase = "http://127.0.0.1:5000";
         const res = await fetch(`${apiBase}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -96,13 +96,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const role = (data.user && data.user.role) || "user";
         let dest = "../user/dashboard.html";
         const r = String(role).toLowerCase();
-        if (r.includes("company") || r.includes("admin") && r.includes("company")) dest = "../company-admin/dashboard.html";
-        if (r === "super_admin" || r === "super-admin" || r === "superadmin" || r === "super" || r === "admin" ) dest = "../super-admin/dashboard.html";
+        if (r.includes("company") || (r.includes("admin") && r.includes("company"))) dest = "../company-admin/dashboard.html";
+        if (r === "super_admin" || r === "super-admin" || r === "superadmin" || r === "super" || r === "admin") dest = "../super-admin/dashboard.html";
 
         window.location.href = dest;
       } catch (err) {
         console.error(err);
-        alert("Unable to contact server. Please try again later.");
+        alert("Unable to contact server on http://127.0.0.1:5000. Please ensure the backend is running.");
       }
     });
   }

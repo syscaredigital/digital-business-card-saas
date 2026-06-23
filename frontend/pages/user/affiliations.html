@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Affiliations - Sync Card</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/main.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="dashboard-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Sync Card</span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
+        <a href="dashboard.html" class="nav-item">Dashboard</a>
+        <a href="vcards.html" class="nav-item">VCards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="affiliations.html" class="nav-item active">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+      </nav>
+
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title">Business Plan Active</div>
+        <div class="upgrade-desc">You currently earn referral rewards and can track affiliate performance here.</div>
+        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+      </div>
+
+      <button class="sidebar-help" type="button" data-action="help-support">
+        <span class="sidebar-help-main">Help &amp; Support</span>
+        <span>&gt;</span>
+      </button>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="dashboardSearch" type="text" placeholder="Search affiliate users or transactions..." />
+        </label>
+
+        <div class="topbar-right">
+          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+            <span class="notif-badge" id="notificationCount">3</span>
+          </button>
+          <button class="logout-btn" type="button" id="logoutButton">Logout</button>
+          <div class="user-profile">
+            <div class="user-avatar-placeholder">AC</div>
+            <div class="user-info">
+              <div class="user-name">Acme Client</div>
+              <div class="user-plan">Business Plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification-panel" id="notificationPanel" hidden>
+          <div class="notification-panel-header">
+            <strong>Notifications</strong>
+            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
+          </div>
+          <div class="notification-list" id="notificationList"></div>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div class="page-header">
+          <div>
+            <span class="eyebrow">Affiliate dashboard</span>
+            <h1>Affiliations</h1>
+            <p>Track referral earnings, manage your affiliate users, and review commission history in one place.</p>
+          </div>
+          <a class="btn-customize" href="manage-subscription.html">Subscription</a>
+        </div>
+
+        <section class="client-dashboard-grid">
+          <article class="admin-card searchable-item" data-search="referral link commission earned pending payouts">
+            <div class="admin-card-header">
+              <div>
+                <h3>Your referral link</h3>
+                <p>Share this link to start earning commissions from new signups.</p>
+              </div>
+            </div>
+            <div class="affiliate-link-card">
+              <div class="affiliate-link">
+                <input type="text" readonly value="https://sync-card.app/ref/ACME123" />
+                <button class="btn-share" type="button" data-action="copy-link">Copy</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="admin-card searchable-item" data-search="total commissions active referrals earned">
+            <div class="admin-card-header">
+              <div>
+                <h3>Total commission</h3>
+                <p>Lifetime rewards from affiliate referrals.</p>
+              </div>
+            </div>
+            <div class="client-affiliate-summary">
+              <strong>$420.00</strong>
+              <span>Earned so far</span>
+              <small>7 active referrals</small>
+            </div>
+          </article>
+
+          <article class="admin-card searchable-item" data-search="pending payout approved payout status">
+            <div class="admin-card-header">
+              <div>
+                <h3>Pending payout</h3>
+                <p>Ready for withdrawal once the referral is approved.</p>
+              </div>
+            </div>
+            <div class="client-affiliate-summary">
+              <strong>$120.00</strong>
+              <span>Pending approval</span>
+              <small>3 referrals under review</small>
+            </div>
+          </article>
+        </section>
+
+        <section class="affiliations-section-shell searchable-item" data-search="affiliations affiliate users transactions referrals">
+          <div class="subscriptions-tabbar" role="tablist" aria-label="Affiliations tabs">
+            <button class="subscriptions-tab-btn active" type="button" role="tab" aria-selected="true" data-affiliations-tab-target="affiliateUsersPanel">Affiliate Users</button>
+            <button class="subscriptions-tab-btn" type="button" role="tab" aria-selected="false" data-affiliations-tab-target="affiliateTransactionsPanel">Affiliation Transactions</button>
+          </div>
+
+          <section class="tab-panel active" id="affiliateUsersPanel">
+            <div class="affiliate-panel-shell searchable-item" data-search="affiliate users referred by commission status">
+              <div class="affiliate-toolbar">
+                <label class="nfc-search affiliate-search" for="affiliateUsersSearch">
+                  <span class="nfc-search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                      <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                  <input id="affiliateUsersSearch" type="text" placeholder="Search affiliate users" />
+                </label>
+                <button class="nfc-toolbar-btn nfc-help-btn" type="button" id="openAffiliateGuideModal">How It works?</button>
+              </div>
+
+              <div class="light-admin-table-wrap">
+                <table class="admin-table light-admin-table">
+                  <thead>
+                    <tr>
+                      <th>AFFILIATED BY</th>
+                      <th>USER</th>
+                      <th>COMMISSION</th>
+                      <th>DATE</th>
+                    </tr>
+                  </thead>
+                  <tbody id="affiliateUsersTableBody">
+                    <tr class="searchable-item affiliate-user-row" data-search="acme solutions acme user john@acme.com $10.00 23 feb 2026">
+                      <td>
+                        <div class="affiliate-brand-cell">
+                          <div class="affiliate-logo-chip">AC</div>
+                          <div>
+                            <strong>Acme Solutions</strong>
+                            <span>john@acme.com</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="affiliate-user-cell">
+                          <div class="affiliate-avatar"></div>
+                          <div>
+                            <strong>Jane Doe</strong>
+                            <span>jane.doe@acme.com</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="affiliate-amount-pill">$10.00</span></td>
+                      <td><span class="date-pill">23 Feb 2026</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="subscriptions-footer">
+                <div class="subscriptions-footer-left">
+                  <span>Show</span>
+                  <select class="subscriptions-limit-select" aria-label="Affiliate rows per page">
+                    <option selected>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                  </select>
+                </div>
+                <p class="subscriptions-results" id="affiliateUsersResults">Showing 1 results</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="affiliateTransactionsPanel">
+            <div class="affiliate-panel-shell searchable-item" data-search="affiliate transactions approvals amounts referrals">
+              <div class="affiliate-toolbar">
+                <label class="nfc-search affiliate-search" for="affiliateTransactionsSearch">
+                  <span class="nfc-search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                      <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                  <input id="affiliateTransactionsSearch" type="text" placeholder="Search transactions" />
+                </label>
+              </div>
+
+              <div class="light-admin-table-wrap">
+                <table class="admin-table light-admin-table">
+                  <thead>
+                    <tr>
+                      <th>USER</th>
+                      <th>AMOUNT</th>
+                      <th>STATUS</th>
+                      <th>DATE</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody id="affiliateTransactionsTableBody">
+                    <tr>
+                      <td class="light-empty-cell" colspan="5">No Data Available</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="subscriptions-footer">
+                <div class="subscriptions-footer-left">
+                  <span>Show</span>
+                  <select class="subscriptions-limit-select" aria-label="Affiliation transactions rows per page">
+                    <option selected>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                  </select>
+                </div>
+                <p class="subscriptions-results" id="affiliateTransactionsResults">Showing 0 results</p>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden>
+          <h3>No matches found</h3>
+          <p>Try another affiliations search term.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="user-modal nfc-modal" id="affiliateGuideModal" hidden>
+    <div class="user-modal-backdrop" id="affiliateGuideModalBackdrop"></div>
+    <div class="user-modal-dialog nfc-modal-dialog nfc-guide-dialog">
+      <div class="user-modal-header nfc-modal-header">
+        <h2>Affiliate Program Guide</h2>
+        <button class="nfc-modal-close" type="button" id="closeAffiliateGuideModal" aria-label="Close affiliate guide modal">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="user-modal-body nfc-modal-body">
+        <div class="nfc-guide-content">
+          <ol class="nfc-guide-list">
+            <li>Share your referral link with potential new users.</li>
+            <li>Once someone signs up through your link, they become your affiliate user.</li>
+            <li>Track commission amounts from their purchases or subscriptions.</li>
+            <li>Request withdrawals after referrals are approved.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>
