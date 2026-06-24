@@ -20,5 +20,16 @@
     "companyName": null,
     "role": "super_admin",
     "createdAt": "2026-06-22T00:00:00.000Z"
+  },
+  {
+    "id": 1782216328074,
+    "firstName": "isham",
+    "lastName": "jiffry",
+    "email": "nabeela@gmail.com",
+    "password": "$2b$10$VSjP7StZFN9hNYPdPqpjLusFIckdHpJ1gb9ERu6GnB7ym4QDe9IPS",
+    "phoneNumber": "+94 757596876",
+    "companyName": "NR Solutions",
+    "role": "user",
+    "createdAt": "2026-06-23T12:05:28.088Z"
   }
 ]
