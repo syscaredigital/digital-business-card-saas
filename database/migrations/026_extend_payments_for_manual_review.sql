@@ -1,0 +1,8 @@
+ALTER TABLE payments
+  ADD COLUMN IF NOT EXISTS proof_url TEXT,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP WITH TIME ZONE;
+
+CREATE INDEX IF NOT EXISTS idx_payments_method_status
+  ON payments(method, status);

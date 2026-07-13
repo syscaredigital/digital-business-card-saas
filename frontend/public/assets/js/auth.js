@@ -185,6 +185,33 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const registerForm = document.getElementById("registerForm");
+  const registerPasswordInput = document.getElementById("registerPassword");
+  const registerStrength = document.querySelector(".register-v2-strength");
+  const registerStrengthText = document.getElementById("registerStrengthText");
+
+  const updateRegisterStrength = () => {
+    if (!registerPasswordInput || !registerStrength || !registerStrengthText) return;
+
+    const value = registerPasswordInput.value;
+    let score = 0;
+    if (value.length >= 8) score += 1;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 1;
+    if (/\d/.test(value)) score += 1;
+    if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+    registerStrength.dataset.score = String(score);
+    if (!value) registerStrengthText.textContent = "Use 8+ characters, a number, and a symbol";
+    else if (score <= 1) registerStrengthText.textContent = "Weak — add more character variety";
+    else if (score === 2) registerStrengthText.textContent = "Fair — add a number or symbol";
+    else if (score === 3) registerStrengthText.textContent = "Strong password";
+    else registerStrengthText.textContent = "Excellent password";
+  };
+
+  if (registerPasswordInput) {
+    registerPasswordInput.addEventListener("input", updateRegisterStrength);
+    updateRegisterStrength();
+  }
+
   if (registerForm) {
     registerForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -196,14 +223,30 @@ document.addEventListener("DOMContentLoaded", () => {
       const passwordConfirm = document.getElementById("confirmPassword");
       const phoneNumber = document.getElementById("phoneNumber");
       const companyName = document.getElementById("companyName");
+      const terms = document.getElementById("registerTerms");
 
       if (!firstName || !lastName || !email || !password) {
         alert("Please fill required fields.");
         return;
       }
 
+      if (!emailPattern.test(email.value.trim())) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      if (password.value.length < 8) {
+        alert("Your password must contain at least 8 characters.");
+        return;
+      }
+
       if (password && passwordConfirm && password.value !== passwordConfirm.value) {
         alert("Passwords do not match.");
+        return;
+      }
+
+      if (terms && !terms.checked) {
+        alert("Please agree to the Terms of Service and Privacy Policy.");
         return;
       }
 

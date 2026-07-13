@@ -40,15 +40,11 @@
           <div class="header-actions"><button class="btn-share" type="button" id="toggleUserForm">Add User</button></div>
         </div>
         <article class="admin-card">
-          <div class="admin-card-header"><div><h3>User Directory</h3><p>Recently active user accounts and subscription status.</p></div><span class="tiny-pill success" id="userDirectoryCount">5 users</span></div>
+          <div class="admin-card-header"><div><h3>User Directory</h3><p>Live user accounts, plans, and activity from the platform database.</p></div><span class="tiny-pill success" id="userDirectoryCount">Loading...</span></div>
           <table class="admin-table" id="userDirectoryTable">
-            <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Cards</th><th>Joined</th><th>Status</th></tr></thead>
+            <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Cards</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="userDirectoryBody">
-              <tr class="searchable-item" data-search="john doe pro plan active"><td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td><td>john.doe@example.com</td><td><span class="plan-pill pro">Pro Plan</span></td><td>3</td><td>May 19, 2025</td><td><span class="status-badge active">Active</span></td></tr>
-              <tr class="searchable-item" data-search="jane smith business"><td><div class="table-user"><span class="mini-avatar">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">@janesmith</div></div></div></td><td>jane.smith@example.com</td><td><span class="plan-pill business">Business Plan</span></td><td>5</td><td>May 19, 2025</td><td><span class="status-badge active">Active</span></td></tr>
-              <tr class="searchable-item" data-search="robert johnson pro"><td><div class="table-user"><span class="mini-avatar">RJ</span><div><strong>Robert Johnson</strong><div class="subtle-handle">@robertjohnson</div></div></div></td><td>robert.j@example.com</td><td><span class="plan-pill pro">Pro Plan</span></td><td>2</td><td>May 18, 2025</td><td><span class="status-badge active">Active</span></td></tr>
-              <tr class="searchable-item" data-search="emily davis enterprise"><td><div class="table-user"><span class="mini-avatar">ED</span><div><strong>Emily Davis</strong><div class="subtle-handle">@emilydavis</div></div></div></td><td>emily.d@example.com</td><td><span class="plan-pill enterprise">Enterprise</span></td><td>10</td><td>May 18, 2025</td><td><span class="status-badge active">Active</span></td></tr>
-              <tr class="searchable-item" data-search="michael brown inactive"><td><div class="table-user"><span class="mini-avatar">MB</span><div><strong>Michael Brown</strong><div class="subtle-handle">@michaelbrown</div></div></div></td><td>michael.b@example.com</td><td><span class="plan-pill business">Business Plan</span></td><td>4</td><td>May 17, 2025</td><td><span class="status-badge inactive">Inactive</span></td></tr>
+              <tr><td colspan="7"><div class="admin-data-empty"><strong>Loading users...</strong><span>Reading accounts from PostgreSQL.</span></div></td></tr>
             </tbody>
           </table>
         </article>
@@ -65,17 +61,18 @@
       </div>
       <div class="user-modal-body">
         <form id="addUserForm" class="admin-form-grid admin-form-grid-modal" novalidate>
+          <input id="userEditId" name="userId" type="hidden" />
           <div class="form-field">
             <label for="userFirstName">First Name:<span class="required-mark">*</span></label>
-            <input id="userFirstName" name="firstName" type="text" placeholder="First Name" required />
+            <input id="userFirstName" name="firstName" type="text" placeholder="First Name" maxlength="75" required />
           </div>
           <div class="form-field">
             <label for="userLastName">Last Name:<span class="required-mark">*</span></label>
-            <input id="userLastName" name="lastName" type="text" placeholder="Last Name" required />
+            <input id="userLastName" name="lastName" type="text" placeholder="Last Name" maxlength="74" required />
           </div>
           <div class="form-field">
             <label for="userEmail">Email:<span class="required-mark">*</span></label>
-            <input id="userEmail" name="email" type="email" placeholder="digital@syscare.com.au" required />
+            <input id="userEmail" name="email" type="email" placeholder="digital@syscare.com.au" maxlength="255" required />
           </div>
           <div class="form-field">
             <label for="userPhone">Contact No:</label>
@@ -86,37 +83,21 @@
                 <option value="+44">UK +44</option>
                 <option value="+94">LK +94</option>
               </select>
-              <input id="userPhone" name="phone" type="tel" placeholder="Phone Number" />
+              <input id="userPhone" name="phone" type="tel" placeholder="Phone Number" maxlength="40" />
             </div>
           </div>
           <div class="form-field">
             <label for="userPassword">Password:<span class="required-mark">*</span></label>
             <div class="password-input-wrap">
-              <input id="userPassword" name="password" type="password" placeholder="Create password" required />
+              <input id="userPassword" name="password" type="password" placeholder="Create password" minlength="8" maxlength="72" required />
               <button class="password-toggle" type="button" data-password-target="userPassword" aria-label="Toggle password visibility">Show</button>
             </div>
           </div>
           <div class="form-field">
             <label for="userConfirmPassword">Confirm Password:<span class="required-mark">*</span></label>
             <div class="password-input-wrap">
-              <input id="userConfirmPassword" name="confirmPassword" type="password" placeholder="Confirm Password" required />
+              <input id="userConfirmPassword" name="confirmPassword" type="password" placeholder="Confirm Password" minlength="8" maxlength="72" required />
               <button class="password-toggle" type="button" data-password-target="userConfirmPassword" aria-label="Toggle password visibility">Show</button>
-            </div>
-          </div>
-          <div class="form-field form-field-profile">
-            <label for="userProfile">Profile:</label>
-            <div class="profile-upload-wrap">
-              <label class="profile-upload-card" for="userProfile">
-                <span class="profile-upload-preview" id="userProfilePreview">
-                  <svg width="72" height="72" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="32" cy="21" r="11" fill="#A9A9A9"/>
-                    <path d="M16 52c2.8-8.4 9.2-13 16-13s13.2 4.6 16 13" fill="#A9A9A9"/>
-                  </svg>
-                </span>
-                <span class="profile-upload-edit">âœŽ</span>
-              </label>
-              <input id="userProfile" name="profile" type="file" accept=".png,.jpg,.jpeg" hidden />
-              <p class="profile-upload-note">Allowed file types: png, jpg, jpeg.</p>
             </div>
           </div>
           <div class="form-field">
@@ -125,10 +106,11 @@
               <option value="Active">Active</option>
               <option value="Pending">Pending</option>
               <option value="Inactive">Inactive</option>
+              <option value="Rejected">Rejected</option>
             </select>
           </div>
           <div class="form-field form-field-wide">
-            <label class="checkbox-row"><input id="sendInvite" name="sendInvite" type="checkbox" checked /> Send welcome email and password setup link immediately</label>
+            <label class="checkbox-row"><input id="sendInvite" name="sendInvite" type="checkbox" disabled /> Welcome email delivery is not configured yet</label>
           </div>
           <div class="form-actions form-field-wide">
             <button class="btn-share" type="submit">Save</button>

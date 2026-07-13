@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -21,252 +21,112 @@
         <a href="subscriptions.html" class="nav-item">Subscriptions</a>
         <a href="cash-payments.html" class="nav-item">Cash Payments</a>
         <a href="transactions.html" class="nav-item">Transactions</a>
-        <a href="payouts.html" class="nav-item">Payouts</a><a href="affiliations.html" class="nav-item">Affiliations</a><a href="withdrawals.html" class="nav-item">Withdrawals</a><a href="coupon-codes.html" class="nav-item">Coupon Codes</a>
+        <a href="payouts.html" class="nav-item">Payouts</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="withdrawals.html" class="nav-item">Withdrawals</a>
+        <a href="coupon-codes.html" class="nav-item">Coupon Codes</a>
         <div class="sidebar-section-label">Analytics</div>
         <a href="analytics.html" class="nav-item">Analytics</a>
         <a href="reports.html" class="nav-item">Reports</a>
         <div class="sidebar-section-label">Settings</div>
         <a href="settings.html" class="nav-item">Settings</a>
         <a href="system-logs.html" class="nav-item">System Logs</a>
-        </nav>
+      </nav>
     </aside>
+
     <div class="main-content">
       <header class="topbar">
-        <label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search vCards, users, URLs, or status..." /></label>
+        <label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search VCards, owners, templates, or email..." /></label>
       </header>
       <main class="page-content">
         <div class="page-header">
-          <div><h1>VCards</h1><p>Browse all published user vCards, verify links, inspect stats, and clone proven layouts to new accounts.</p></div>
-          <div class="header-actions">
-            <button class="btn-share" type="button" data-action="create-card">Create vCard</button>
-          </div>
+          <div><h1>VCards</h1><p>Manage every digital card, its owner, template, visibility, and contact information.</p></div>
+          <div class="header-actions"><button class="btn-share" type="button" id="openVCardModal">Create VCard</button></div>
         </div>
 
-        <section class="vcard-section-shell searchable-item" data-search="vcards templates template library live cards reusable layouts">
-          <div class="vcard-tabbar" role="tablist" aria-label="VCard tabs">
-            <button class="vcard-tab-btn active" type="button" role="tab" aria-selected="true" data-vcard-tab-target="vcardListPanel">All User VCards</button>
-            <button class="vcard-tab-btn" type="button" role="tab" aria-selected="false" data-vcard-tab-target="vcardTemplatesPanel">Template Library</button>
+        <section class="vcard-section-shell">
+          <div class="vcard-tabbar" role="tablist" aria-label="VCard views">
+            <button class="vcard-tab-btn active" type="button" role="tab" aria-selected="true" data-vcard-tab-target="vcardListPanel">Card Directory</button>
+            <button class="vcard-tab-btn" type="button" role="tab" aria-selected="false" data-vcard-tab-target="vcardTemplatesPanel">Templates</button>
           </div>
 
           <section class="tab-panel active" id="vcardListPanel">
             <article class="admin-card vcard-list-shell">
               <div class="admin-card-header">
-                <div>
-                  <h3>All User VCards</h3>
-                  <p>Centralized management for live profile cards and reusable layout instances.</p>
-                </div>
-                <span class="tiny-pill success">5 Active</span>
+                <div><h3>VCard Directory</h3><p>Live records from PostgreSQL. Changes here affect platform visibility immediately.</p></div>
+                <span class="tiny-pill success" id="vcardDirectoryCount">Loading...</span>
               </div>
-
-              <div class="vcard-table">
+              <div class="vcard-table" id="vcardDirectory">
                 <div class="vcard-table-head">
-                  <div>VCARD NAME</div>
-                  <div>USER NAME</div>
-                  <div>PREVIEW URL</div>
-                  <div>VERIFIED</div>
-                  <div>STATS</div>
-                  <div>CREATED AT</div>
-                  <div>STATUS</div>
-                  <div>CLONE TO</div>
+                  <div>VCard</div><div>Owner</div><div>Contact</div><div>Template</div><div>Updated</div><div>Status</div><div>Actions</div>
                 </div>
-
-                <div class="vcard-row searchable-item" data-search="myths of the felony justice system krystyna active verified sync card">
-                  <div class="vcard-name-cell">
-                    <div class="vcard-thumb vcard-thumb-light"></div>
-                    <div>
-                      <a href="../public-vcard/template-one.html" target="_blank" rel="noopener noreferrer" class="vcard-title-link">Myths Of The Felony Justice System</a>
-                    </div>
-                  </div>
-                  <div class="vcard-user">Krystyna</div>
-                  <div class="vcard-url-cell">
-                    <a href="../public-vcard/template-one.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/janellekrome0</a>
-                    <button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/janellekrome0" aria-label="Copy preview URL">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    </button>
-                  </div>
-                  <div><label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label></div>
-                  <div><button class="icon-stat-btn" type="button" data-action="export-report" aria-label="Open stats">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="m7 14 4-4 3 3 5-6"></path></svg>
-                  </button></div>
-                  <div><span class="date-pill">18 Jun 2026</span></div>
-                  <div><span class="status-badge completed">Active</span></div>
-                  <div><button class="clone-btn" type="button" data-clone-name="Myths Of The Felony Justice System">Clone To</button></div>
-                </div>
-
-                <div class="vcard-row searchable-item" data-search="best gold ira companies alannah active">
-                  <div class="vcard-name-cell">
-                    <div class="vcard-thumb vcard-thumb-light"></div>
-                    <div>
-                      <a href="../public-vcard/template-two.html" target="_blank" rel="noopener noreferrer" class="vcard-title-link">Best Gold IRA Companies Of 2020: A Complete Information</a>
-                    </div>
-                  </div>
-                  <div class="vcard-user">Alannah</div>
-                  <div class="vcard-url-cell">
-                    <a href="../public-vcard/template-two.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/racheles02011</a>
-                    <button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/racheles02011" aria-label="Copy preview URL">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    </button>
-                  </div>
-                  <div><label class="switch"><input type="checkbox" /><span class="switch-slider"></span></label></div>
-                  <div><button class="icon-stat-btn" type="button" data-action="export-report" aria-label="Open stats">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="m7 14 4-4 3 3 5-6"></path></svg>
-                  </button></div>
-                  <div><span class="date-pill">17 Jun 2026</span></div>
-                  <div><span class="status-badge completed">Active</span></div>
-                  <div><button class="clone-btn" type="button" data-clone-name="Best Gold IRA Companies Of 2020: A Complete Information">Clone To</button></div>
-                </div>
-
-                <div class="vcard-row searchable-item" data-search="importance retirement planning gold iras wilma active">
-                  <div class="vcard-name-cell">
-                    <div class="vcard-thumb vcard-thumb-light"></div>
-                    <div>
-                      <a href="../public-vcard/template-three.html" target="_blank" rel="noopener noreferrer" class="vcard-title-link">The Importance of Retirement Planning and the Role Of Gold IRAs</a>
-                    </div>
-                  </div>
-                  <div class="vcard-user">Wilma</div>
-                  <div class="vcard-url-cell">
-                    <a href="../public-vcard/template-three.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/shantell844756</a>
-                    <button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/shantell844756" aria-label="Copy preview URL">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    </button>
-                  </div>
-                  <div><label class="switch"><input type="checkbox" /><span class="switch-slider"></span></label></div>
-                  <div><button class="icon-stat-btn" type="button" data-action="export-report" aria-label="Open stats">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="m7 14 4-4 3 3 5-6"></path></svg>
-                  </button></div>
-                  <div><span class="date-pill">17 Jun 2026</span></div>
-                  <div><span class="status-badge completed">Active</span></div>
-                  <div><button class="clone-btn" type="button" data-clone-name="The Importance of Retirement Planning and the Role Of Gold IRAs">Clone To</button></div>
-                </div>
-
-                <div class="vcard-row searchable-item" data-search="ira authorized gold silver ronda active">
-                  <div class="vcard-name-cell">
-                    <div class="vcard-thumb vcard-thumb-dark"></div>
-                    <div>
-                      <a href="../public-vcard/template-one.html" target="_blank" rel="noopener noreferrer" class="vcard-title-link">IRA Authorized Gold and Silver: A Comprehensive Guide To Valuable Metallic Investments</a>
-                    </div>
-                  </div>
-                  <div class="vcard-user">Ronda</div>
-                  <div class="vcard-url-cell">
-                    <a href="../public-vcard/template-one.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/tamibaber5361</a>
-                    <button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/tamibaber5361" aria-label="Copy preview URL">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    </button>
-                  </div>
-                  <div><label class="switch"><input type="checkbox" /><span class="switch-slider"></span></label></div>
-                  <div><button class="icon-stat-btn" type="button" data-action="export-report" aria-label="Open stats">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="m7 14 4-4 3 3 5-6"></path></svg>
-                  </button></div>
-                  <div><span class="date-pill">17 Jun 2026</span></div>
-                  <div><span class="status-badge completed">Active</span></div>
-                  <div><button class="clone-btn" type="button" data-clone-name="IRA Authorized Gold and Silver">Clone To</button></div>
-                </div>
-
-                <div class="vcard-row searchable-item" data-search="understanding gold sep iras arnette active">
-                  <div class="vcard-name-cell">
-                    <div class="vcard-thumb vcard-thumb-light"></div>
-                    <div>
-                      <a href="../public-vcard/template-two.html" target="_blank" rel="noopener noreferrer" class="vcard-title-link">Understanding Gold SEP IRAs: A Comprehensive Case</a>
-                    </div>
-                  </div>
-                  <div class="vcard-user">Arnette</div>
-                  <div class="vcard-url-cell">
-                    <a href="../public-vcard/template-two.html" target="_blank" rel="noopener noreferrer">https://syncecard.com/adelemaccarthy</a>
-                    <button class="icon-copy-btn" type="button" data-copy-text="https://syncecard.com/adelemaccarthy" aria-label="Copy preview URL">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    </button>
-                  </div>
-                  <div><label class="switch"><input type="checkbox" checked /><span class="switch-slider"></span></label></div>
-                  <div><button class="icon-stat-btn" type="button" data-action="export-report" aria-label="Open stats">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="m7 14 4-4 3 3 5-6"></path></svg>
-                  </button></div>
-                  <div><span class="date-pill">17 Jun 2026</span></div>
-                  <div><span class="status-badge completed">Active</span></div>
-                  <div><button class="clone-btn" type="button" data-clone-name="Understanding Gold SEP IRAs">Clone To</button></div>
-                </div>
+                <div class="vcard-directory-state"><strong>Loading VCards...</strong><span>Reading card records from PostgreSQL.</span></div>
               </div>
             </article>
           </section>
 
           <section class="tab-panel" id="vcardTemplatesPanel">
-            <div class="content-grid content-grid-two">
-              <article class="admin-card searchable-item" data-search="luxury realtor real estate property consultant template two michael carter">
-                <div class="admin-card-header">
-                  <div>
-                    <h3>Luxury Realtor vCard</h3>
-                    <p>High-conversion design for agencies, brokers, and property advisors.</p>
-                  </div>
-                  <span class="status-badge active">Available</span>
-                </div>
-                <div class="card-showcase card-showcase-realtor">
-                  <div class="card-showcase-label">Template 02</div>
-                  <div class="card-showcase-title">Michael Carter Layout</div>
-                  <div class="card-showcase-copy">Large hero banner, gold and navy branding, service cards, listings, pricing, reviews, and QR contact panel.</div>
-                </div>
-                <div class="mini-metric-list">
-                  <div class="mini-metric"><strong>Industry</strong><span>Real Estate</span></div>
-                  <div class="mini-metric"><strong>Use case</strong><span>Premium consultant profile</span></div>
-                </div>
-                <div class="template-actions">
-                  <a href="../public-vcard/template-two.html" class="btn-preview" target="_blank" rel="noopener noreferrer">Preview Template</a>
-                  <button class="btn-preview" type="button" data-action="create-card">Assign to Users</button>
-                </div>
-              </article>
-
-              <article class="admin-card searchable-item" data-search="retail ecommerce consultant shopping template one michael carter">
-                <div class="admin-card-header">
-                  <div>
-                    <h3>Retail E-Commerce vCard</h3>
-                    <p>Commerce-focused template for retail strategists, marketplace advisors, and growth consultants.</p>
-                  </div>
-                  <span class="status-badge active">Available</span>
-                </div>
-                <div class="card-showcase card-showcase-retail">
-                  <div class="card-showcase-label">Template 01</div>
-                  <div class="card-showcase-title">Retail Growth Advisor</div>
-                  <div class="card-showcase-copy">Storefront hero, commerce expertise blocks, project highlights, pricing packages, and retail contact CTA sections.</div>
-                </div>
-                <div class="mini-metric-list">
-                  <div class="mini-metric"><strong>Industry</strong><span>Retail</span></div>
-                  <div class="mini-metric"><strong>Use case</strong><span>Brand and e-commerce consultant</span></div>
-                </div>
-                <div class="template-actions">
-                  <a href="../public-vcard/template-one.html" class="btn-preview" target="_blank" rel="noopener noreferrer">Preview Template</a>
-                  <button class="btn-preview" type="button" data-action="create-card">Assign to Users</button>
-                </div>
-              </article>
-
-              <article class="admin-card searchable-item" data-search="healthcare wellness consultant medical care template three michael carter">
-                <div class="admin-card-header">
-                  <div>
-                    <h3>Healthcare Wellness vCard</h3>
-                    <p>Consulting-focused healthcare profile with service, expertise, and program sections.</p>
-                  </div>
-                  <span class="status-badge active">Available</span>
-                </div>
-                <div class="card-showcase card-showcase-health">
-                  <div class="card-showcase-label">Template 03</div>
-                  <div class="card-showcase-title">Healthcare Advisor</div>
-                  <div class="card-showcase-copy">Teal medical branding, expertise pills, wellness programs, engagement packages, and QR contact panel.</div>
-                </div>
-                <div class="mini-metric-list">
-                  <div class="mini-metric"><strong>Industry</strong><span>Healthcare</span></div>
-                  <div class="mini-metric"><strong>Use case</strong><span>Consultant or clinic advisor</span></div>
-                </div>
-                <div class="template-actions">
-                  <a href="../public-vcard/template-three.html" class="btn-preview" target="_blank" rel="noopener noreferrer">Preview Template</a>
-                  <button class="btn-preview" type="button" data-action="create-card">Assign to Users</button>
-                </div>
-              </article>
+            <div class="vcard-template-grid" id="vcardTemplateGrid">
+              <div class="vcard-directory-state"><strong>Loading templates...</strong><span>Reading the database template library.</span></div>
             </div>
           </section>
         </section>
-        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another vCard search term.</p></div>
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another VCard search term.</p></div>
       </main>
     </div>
   </div>
+
+  <div class="user-modal" id="vcardModal" hidden>
+    <div class="user-modal-backdrop" id="vcardModalBackdrop"></div>
+    <div class="user-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="vcardModalTitle">
+      <div class="user-modal-header">
+        <div><span class="admin-page-eyebrow">Card management</span><h2 id="vcardModalTitle">Create VCard</h2></div>
+        <button class="user-modal-close" type="button" id="closeVCardModal">Back</button>
+      </div>
+      <div class="user-modal-body">
+        <form id="vcardAdminForm" class="admin-form-grid admin-form-grid-modal" novalidate>
+          <div class="form-field">
+            <label for="vcardOwner">Owner:<span class="required-mark">*</span></label>
+            <select id="vcardOwner" name="userId" required><option value="">Select active user</option></select>
+          </div>
+          <div class="form-field">
+            <label for="vcardTemplate">Template:</label>
+            <select id="vcardTemplate" name="templateId"><option value="">No template</option></select>
+          </div>
+          <div class="form-field form-field-wide">
+            <label for="vcardTitle">VCard title:<span class="required-mark">*</span></label>
+            <input id="vcardTitle" name="title" type="text" maxlength="255" placeholder="e.g. Nabeela — Digital Profile" required />
+          </div>
+          <div class="form-field">
+            <label for="vcardEmail">Contact email:</label>
+            <input id="vcardEmail" name="email" type="email" maxlength="255" placeholder="name@example.com" />
+          </div>
+          <div class="form-field">
+            <label for="vcardPhone">Contact phone:</label>
+            <input id="vcardPhone" name="phone" type="tel" maxlength="50" placeholder="+94 77 123 4567" />
+          </div>
+          <div class="form-field form-field-wide">
+            <label for="vcardWebsite">Website URL:</label>
+            <input id="vcardWebsite" name="websiteUrl" type="url" placeholder="https://example.com" />
+          </div>
+          <div class="form-field form-field-wide">
+            <label for="vcardDescription">Description:</label>
+            <textarea id="vcardDescription" name="description" rows="4" placeholder="Short summary shown on the digital card"></textarea>
+          </div>
+          <div class="form-field form-field-wide">
+            <label class="checkbox-row"><input name="isActive" type="checkbox" checked /> Publish this VCard immediately</label>
+          </div>
+          <div class="form-actions form-field-wide">
+            <button class="btn-share" type="submit">Create VCard</button>
+            <button class="btn-preview" type="button" id="resetVCardForm">Discard</button>
+          </div>
+          <p class="form-feedback form-field-wide" id="vcardFormFeedback" hidden></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
 </body>
 </html>
-

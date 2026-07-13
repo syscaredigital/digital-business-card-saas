@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/vcard-navigation.css" />
   <style>
     :root {
       --teal: #0b9b99;
@@ -629,6 +630,23 @@
   </style>
 </head>
 <body>
+  <header class="vcard-navigation">
+    <nav class="vcard-navbar" aria-label="Main navigation">
+      <a class="vcard-nav-brand" href="../website/home.html" aria-label="Sync E-Card home"><img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></a>
+      <button class="vcard-menu-toggle" type="button" data-vcard-menu aria-expanded="false" aria-controls="vcardMainNav" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+      <div class="vcard-menu" id="vcardMainNav" data-vcard-menu-panel>
+        <ul>
+          <li><a href="../website/home.html">Home</a></li>
+          <li><a href="../website/home.html#features">Features</a></li>
+          <li><a href="../website/templates.html">Templates</a></li>
+          <li><a href="../website/pricing.html">Pricing</a></li>
+          <li><a href="../website/nfc-cards.html">NFC Cards</a></li>
+          <li><a href="../website/contact.html">Contact</a></li>
+        </ul>
+        <div class="vcard-nav-actions"><a href="../auth/login.html" class="vcard-login">Login</a><a href="../auth/register.html" class="vcard-register">Register</a></div>
+      </div>
+    </nav>
+  </header>
   <div class="vcard-shell">
     <section class="hero">
       <div class="hero-banner">
@@ -821,5 +839,6 @@
       <a href="#" class="action-button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.59 13.51 15.42 17.49"></path><path d="M15.41 6.51 8.59 10.49"></path></svg>Share Profile</a>
     </div>
   </div>
+  <script src="../../public/assets/js/vcard-navigation.js"></script>
 </body>
 </html>

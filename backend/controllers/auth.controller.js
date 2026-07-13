@@ -1,27 +1,43 @@
-const fs = require("fs");
-const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const pool = require("../config/database.config");
 
-const usersFile = path.join(__dirname, "..", "data", "users.json");
-
-function readUsers() {
-  try {
-    if (!fs.existsSync(usersFile)) return [];
-    const raw = fs.readFileSync(usersFile, "utf8");
-    return JSON.parse(raw || "[]");
-  } catch (err) {
-    return [];
-  }
+function splitName(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts.shift() || "",
+    lastName: parts.join(" "),
+  };
 }
 
-function writeUsers(users) {
-  const dir = path.dirname(usersFile);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2), "utf8");
+function toSafeUser(row) {
+  const { firstName, lastName } = splitName(row.name);
+  return {
+    id: row.id,
+    firstName,
+    lastName,
+    name: row.name,
+    email: row.email,
+    phoneNumber: row.phone || null,
+    companyName: row.company_name || null,
+    role: row.role || "user",
+    status: row.status,
+    createdAt: row.created_at,
+  };
+}
+
+function createToken(user) {
+  return jwt.sign(
+    { id: user.id, email: user.email, role: user.role || "user" },
+    process.env.JWT_SECRET || "devsecret",
+    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+  );
 }
 
 exports.register = async (req, res, next) => {
+  const client = await pool.connect().catch(next);
+  if (!client) return;
+
   try {
     const { firstName, lastName, email, password, phoneNumber, companyName } = req.body;
 
@@ -29,52 +45,104 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const users = readUsers();
-    const exists = users.find((u) => u.email && u.email.toLowerCase() === email.toLowerCase());
-    if (exists) return res.status(409).json({ message: "Email already registered" });
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const fullName = `${String(firstName).trim()} ${String(lastName).trim()}`.trim();
 
-    const hashed = await bcrypt.hash(password, 10);
-    const user = {
-      id: Date.now(),
-      firstName: String(firstName).trim(),
-      lastName: String(lastName).trim(),
-      email: String(email).toLowerCase().trim(),
-      password: hashed,
-      phoneNumber: phoneNumber || null,
-      companyName: companyName || null,
+    await client.query("BEGIN");
+
+    const existing = await client.query(
+      "SELECT id FROM users WHERE LOWER(email) = $1 LIMIT 1",
+      [normalizedEmail]
+    );
+    if (existing.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "Email already registered" });
+    }
+
+    const roleResult = await client.query(
+      "SELECT id FROM roles WHERE name = 'user' LIMIT 1"
+    );
+    if (!roleResult.rowCount) {
+      throw new Error("The user role is missing. Run the database seeds first.");
+    }
+
+    let companyId = null;
+    if (companyName && String(companyName).trim()) {
+      const companyResult = await client.query(
+        `INSERT INTO companies (name, email)
+         VALUES ($1, $2)
+         RETURNING id`,
+        [String(companyName).trim(), normalizedEmail]
+      );
+      companyId = companyResult.rows[0].id;
+    }
+
+    const hashedPassword = await bcrypt.hash(String(password), 10);
+    const result = await client.query(
+      `INSERT INTO users (company_id, role_id, name, email, password, phone)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, email, phone, status, created_at`,
+      [
+        companyId,
+        roleResult.rows[0].id,
+        fullName,
+        normalizedEmail,
+        hashedPassword,
+        phoneNumber || null,
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    const user = toSafeUser({
+      ...result.rows[0],
+      company_name: companyName ? String(companyName).trim() : null,
       role: "user",
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(user);
-    writeUsers(users);
-
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET || "devsecret", { expiresIn: "7d" });
-
-    const { password: _p, ...safe } = user;
-    res.status(201).json({ user: safe, token });
+    });
+    res.status(201).json({ user, token: createToken(user) });
   } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    if (err.code === "23505") {
+      return res.status(409).json({ message: "Email already registered" });
+    }
     next(err);
+  } finally {
+    client.release();
   }
 };
 
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: "Missing email or password" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Missing email or password" });
+    }
 
-    const users = readUsers();
-    const user = users.find((u) => u.email && u.email.toLowerCase() === String(email).toLowerCase());
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.email, u.password, u.phone, u.status,
+              u.created_at, r.name AS role, c.name AS company_name
+       FROM users u
+       LEFT JOIN roles r ON r.id = u.role_id
+       LEFT JOIN companies c ON c.id = u.company_id
+       WHERE LOWER(u.email) = $1
+       LIMIT 1`,
+      [String(email).toLowerCase().trim()]
+    );
+    const userRow = result.rows[0];
 
-    const match = await bcrypt.compare(password, user.password || "");
-    if (!match) return res.status(401).json({ message: "Invalid credentials" });
+    if (!userRow || !(await bcrypt.compare(String(password), userRow.password || ""))) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+    if (userRow.status !== "active") {
+      return res.status(403).json({ message: "Account is not active" });
+    }
 
-    const payload = { id: user.id, email: user.email, role: user.role || "user" };
-    const token = jwt.sign(payload, process.env.JWT_SECRET || "devsecret", { expiresIn: "7d" });
+    await pool.query("UPDATE users SET last_login = NOW(), updated_at = NOW() WHERE id = $1", [
+      userRow.id,
+    ]);
 
-    const { password: _p, ...safe } = user;
-    res.json({ user: safe, token });
+    const user = toSafeUser(userRow);
+    res.json({ user, token: createToken(user) });
   } catch (err) {
     next(err);
   }

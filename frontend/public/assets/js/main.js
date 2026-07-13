@@ -3,6 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const contactForms = document.querySelectorAll(".contact-form, .newsletter-form");
   const counters = document.querySelectorAll(".count-up");
   const featuredVcardsRow = document.querySelector("[data-featured-vcards]");
+  const templatePreviousButton = document.querySelector("[data-template-prev]");
+  const templateNextButton = document.querySelector("[data-template-next]");
+  const templateCount = document.querySelector("[data-template-count]");
+  const templateProgress = document.querySelector(".gallery-progress span");
 
   const updateHeader = () => {
     if (!header) return;
@@ -174,11 +178,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return article;
   };
 
+  const scrollTemplates = (direction) => {
+    if (!featuredVcardsRow) return;
+    const card = featuredVcardsRow.querySelector(".vcard-template");
+    const distance = card ? card.getBoundingClientRect().width + 20 : featuredVcardsRow.clientWidth * 0.8;
+    featuredVcardsRow.scrollBy({ left: distance * direction, behavior: "smooth" });
+  };
+
+  templatePreviousButton?.addEventListener("click", () => scrollTemplates(-1));
+  templateNextButton?.addEventListener("click", () => scrollTemplates(1));
+
+  const updateTemplateProgress = () => {
+    if (!featuredVcardsRow || !templateProgress) return;
+    const availableScroll = featuredVcardsRow.scrollWidth - featuredVcardsRow.clientWidth;
+    const progress = availableScroll > 0 ? featuredVcardsRow.scrollLeft / availableScroll : 1;
+    templateProgress.style.width = `${Math.max(18, 18 + progress * 82)}%`;
+  };
+
+  featuredVcardsRow?.addEventListener("scroll", updateTemplateProgress, { passive: true });
+
   const loadFeaturedVcards = async () => {
     if (!featuredVcardsRow) return;
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/public/vcards/featured?limit=6`);
+      const response = await fetch(`${getApiBaseUrl()}/api/public/vcards/featured?limit=24`);
       if (!response.ok) return;
 
       const payload = await response.json();
@@ -186,9 +209,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       featuredVcardsRow.replaceChildren(...cards.map(createVcardPreview));
       featuredVcardsRow.classList.add("is-loaded");
+      if (templateCount) templateCount.textContent = `${cards.length}+`;
+      requestAnimationFrame(updateTemplateProgress);
     } catch (error) {
-      featuredVcardsRow.replaceChildren(...getStaticFeaturedVcards().map(createVcardPreview));
+      const cards = getStaticFeaturedVcards();
+      featuredVcardsRow.replaceChildren(...cards.map(createVcardPreview));
       featuredVcardsRow.classList.add("is-loaded");
+      if (templateCount) templateCount.textContent = `${cards.length}+`;
+      requestAnimationFrame(updateTemplateProgress);
     }
   };
 

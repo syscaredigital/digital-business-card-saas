@@ -20,6 +20,7 @@ app.get("/health", (req, res) => {
 // Register routes
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/public", require("./routes/public.routes"));
+app.use("/api/super-admin", require("./routes/super-admin.routes"));
 
 
 app.use((req, res) => {

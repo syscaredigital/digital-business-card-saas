@@ -3,198 +3,161 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome Back | Sync Card</title>
+  <meta name="theme-color" content="#07090f" />
+  <title>Sign In | Sync E-Card</title>
+  <link rel="icon" type="image/png" href="../../public/assets/images/logos/sync-e-symbol-red-web.png" />
   <link rel="stylesheet" href="../../public/assets/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../public/assets/css/auth.css" />
 </head>
 <body>
-  <main class="sync-login-page login-screen">
-    <div class="sync-login-shell">
-      <section class="sync-login-showcase">
-        <a href="../website/home.html" class="sync-login-brand" aria-label="Sync Card home">
-          <span class="sync-login-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 64 64" fill="none">
-              <path d="M41.7 12H24.4c-6.3 0-11.4 5.1-11.4 11.4v17.2c0 6.3 5.1 11.4 11.4 11.4h17.2c6.3 0 11.4-5.1 11.4-11.4V23.4c0-6.3-5.1-11.4-11.3-11.4Z" stroke="currentColor" stroke-width="2.5"/>
-              <path d="M20 42.7 30.3 32.4H23l4.7-4.7h13l-10.3 10.3h7.4L33 42.7H20Z" fill="currentColor"/>
+  <main class="login-v2 login-screen">
+    <div class="login-v2-orb login-v2-orb-one" aria-hidden="true"></div>
+    <div class="login-v2-orb login-v2-orb-two" aria-hidden="true"></div>
+
+    <header class="login-v2-header">
+      <a href="../website/home.html" class="login-v2-brand" aria-label="Sync E-Card home">
+        <img class="login-v2-brand-logo" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" />
+      </a>
+
+      <div class="login-v2-header-action">
+        <span>New to Sync E-Card?</span>
+        <a href="register.html">Create account <span aria-hidden="true">&#8599;</span></a>
+      </div>
+    </header>
+
+    <div class="login-v2-layout">
+      <section class="login-v2-story" aria-labelledby="loginStoryTitle">
+        <div class="login-v2-eyebrow">
+          <span class="login-v2-live-dot" aria-hidden="true"></span>
+          Your network, always within reach
+        </div>
+
+        <h1 id="loginStoryTitle">One card.<br />Every <em>connection.</em></h1>
+        <p class="login-v2-lead">Step back into the workspace where your professional identity lives, grows, and connects.</p>
+
+        <div class="login-v2-preview" aria-label="Custom Sync E-Card design preview">
+          <div class="login-v2-preview-glow" aria-hidden="true"></div>
+          <div class="login-v2-card login-v2-card-back" aria-hidden="true">
+            <img class="login-v2-card-image" src="../../public/assets/images/login-custom-card-back.png" alt="" />
+          </div>
+          <div class="login-v2-card login-v2-card-main">
+            <img class="login-v2-card-image" src="../../public/assets/images/login-custom-card-front.png" alt="Red custom NFC business card design" />
+          </div>
+          <div class="login-v2-tap-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7.5 8.5a6 6 0 0 1 0 7M11.5 5.5a10 10 0 0 1 0 13M15.5 2.5a14 14 0 0 1 0 19" />
             </svg>
-          </span>
-          <span class="sync-login-brand-copy">
-            <strong>Sync <span>Card</span></strong>
-            <small>Digital Business Card Platform</small>
-          </span>
-        </a>
-
-        <div class="sync-login-copy">
-          <h1>Connect.<br />Share.<br /><span>Grow.</span></h1>
-          <p>Create your digital identity, share instantly, and grow your professional network with Sync Card.</p>
+            <span><strong>Ready to share</strong><small>NFC active</small></span>
+          </div>
         </div>
 
-        <div class="sync-login-feature-list">
-          <article>
-            <span class="sync-feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M7.5 8.5a6 6 0 0 1 0 7" />
-                <path d="M11.5 5.5a10 10 0 0 1 0 13" />
-                <path d="M15.5 2.5a14 14 0 0 1 0 19" />
-              </svg>
-            </span>
-            <div>
-              <h2>Tap. Connect. Share.</h2>
-              <p>Seamlessly share your card with a simple tap using NFC technology.</p>
-            </div>
-          </article>
-          <article>
-            <span class="sync-feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <rect x="4" y="4" width="6" height="6" rx="1.2" />
-                <rect x="14" y="4" width="6" height="6" rx="1.2" />
-                <rect x="4" y="14" width="6" height="6" rx="1.2" />
-                <path d="M14 14h2v2h-2zM18 14h2v2h-2zM18 18h2v2h-2zM14 18h2v2h-2z" fill="currentColor" stroke="none" />
-              </svg>
-            </span>
-            <div>
-              <h2>Scan. Save. Connect.</h2>
-              <p>Instantly connect by scanning your unique QR code.</p>
-            </div>
-          </article>
-          <article>
-            <span class="sync-feature-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 3.5 5.5 6v5.5c0 4.1 2.7 7.8 6.5 9 3.8-1.2 6.5-4.9 6.5-9V6L12 3.5Z" />
-                <path d="m9.25 12.25 1.8 1.8 3.7-4.05" />
-              </svg>
-            </span>
-            <div>
-              <h2>Secure &amp; Trusted</h2>
-              <p>Your data is encrypted and secure, because your trust matters.</p>
-            </div>
-          </article>
-        </div>
-
-        <div class="sync-login-stage" aria-hidden="true">
-          <div class="sync-stage-glow"></div>
-          <div class="sync-stage-base-shadow"></div>
-          <div class="sync-stage-base"></div>
-          <div class="sync-stage-card sync-stage-card-front">
-            <img src="../../public/assets/images/login-card-front.png" alt="Sync Card front design" />
-          </div>
-          <div class="sync-stage-card sync-stage-card-back">
-            <img src="../../public/assets/images/login-card-back.png" alt="Sync Card back design with QR code" />
-          </div>
+        <div class="login-v2-proof" aria-label="Platform highlights">
+          <div><strong>10k+</strong><span>active cards</span></div>
+          <div><strong>2.4m</strong><span>connections made</span></div>
+          <div><strong>99.9%</strong><span>platform uptime</span></div>
         </div>
       </section>
 
-      <section class="sync-login-form-column">
-        <div class="sync-login-panel">
-          <h2>Welcome <span>Back</span></h2>
-          <p>Sign in to your Sync Card account</p>
+      <section class="login-v2-form-wrap" aria-labelledby="loginHeading">
+        <div class="login-v2-form-card">
+          <div class="login-v2-form-heading">
+            <span class="login-v2-form-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 3.5 19 6v5.7c0 4.1-2.8 7.7-7 8.8-4.2-1.1-7-4.7-7-8.8V6l7-2.5Z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </span>
+            <span class="login-v2-secure">Secure sign in</span>
+          </div>
+
+          <h2 id="loginHeading">Welcome back</h2>
+          <p>Enter your details to access your account.</p>
 
           <form id="loginForm" novalidate>
-            <div class="mb-4">
-              <label for="loginEmail">Email Address</label>
-              <div class="auth-input sync-login-input">
-                <span class="input-icon sync-login-input-icon" aria-hidden="true">
+            <div class="login-v2-field">
+              <label for="loginEmail">Email address</label>
+              <div class="auth-input login-v2-input">
+                <span class="input-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none">
-                    <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" />
+                    <rect x="3.5" y="5.5" width="17" height="13" rx="3" />
                     <path d="m5.5 8 6.5 5 6.5-5" />
                   </svg>
                 </span>
-                <input type="email" id="loginEmail" class="form-control" placeholder="Enter your email address" autocomplete="email" required />
+                <input type="email" id="loginEmail" class="form-control" placeholder="name@company.com" autocomplete="email" inputmode="email" required />
               </div>
             </div>
 
-            <div class="mb-4">
-              <label for="passwordInput">Password</label>
-              <div class="auth-input sync-login-input">
-                <span class="input-icon sync-login-input-icon" aria-hidden="true">
+            <div class="login-v2-field">
+              <div class="login-v2-label-row">
+                <label for="passwordInput">Password</label>
+                <a href="forgot-password.html">Forgot password?</a>
+              </div>
+              <div class="auth-input login-v2-input">
+                <span class="input-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none">
-                    <rect x="5.5" y="10.5" width="13" height="9" rx="2.5" />
-                    <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+                    <rect x="5" y="10" width="14" height="10" rx="3" />
+                    <path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10M12 14v2" />
                   </svg>
                 </span>
                 <input type="password" id="passwordInput" class="form-control" placeholder="Enter your password" autocomplete="current-password" required />
-                <button type="button" class="toggle-password sync-login-toggle-password" data-target="passwordInput" aria-label="Show password">
-                  <span class="toggle-password-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <path d="M2.75 12s3.25-5.5 9.25-5.5S21.25 12 21.25 12s-3.25 5.5-9.25 5.5S2.75 12 2.75 12Z" />
-                      <circle cx="12" cy="12" r="2.75" />
-                      <path d="m4 4 16 16" />
-                    </svg>
-                  </span>
+                <button type="button" class="toggle-password login-v2-password-toggle" data-target="passwordInput" aria-label="Show password">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 12s3.2-5 9-5 9 5 9 5-3.2 5-9 5-9-5-9-5Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                  </svg>
                   <span class="toggle-password-label visually-hidden">show</span>
                 </button>
               </div>
             </div>
 
-            <div class="sync-login-options">
-              <label class="sync-remember-row">
-                <input type="checkbox" checked />
-                <span class="sync-remember-box" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <path d="m6 12 4 4 8-8" />
-                  </svg>
-                </span>
-                <span>Remember me</span>
-              </label>
-              <a href="forgot-password.html">Forgot your password?</a>
-            </div>
-
-            <button type="submit" class="auth-submit sync-login-submit">
-              <span>Sign In</span>
-              <span class="sync-login-submit-arrow" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12h14" />
-                  <path d="m13 6 6 6-6 6" />
-                </svg>
+            <label class="login-v2-remember">
+              <input type="checkbox" id="rememberLogin" name="remember" checked />
+              <span aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none"><path d="m3.5 8 3 3 6-6" /></svg>
               </span>
+              Keep me signed in on this device
+            </label>
+
+            <button type="submit" class="auth-submit login-v2-submit">
+              <span>Sign in to my account</span>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M14 7l5 5-5 5" />
+              </svg>
             </button>
 
-            <div class="sync-login-divider">
-              <span></span>
-              <p>or continue with</p>
-              <span></span>
-            </div>
+            <div class="login-v2-divider"><span>or continue with</span></div>
 
-            <div class="sync-login-socials">
-              <button type="button" class="login-social-btn sync-login-social-btn" data-provider="Google" aria-label="Continue with Google">
-                <span class="social-google" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#EA4335" d="M12.24 10.285v3.955h5.49c-.24 1.27-.96 2.345-2.045 3.065l3.31 2.57c1.93-1.78 3.045-4.395 3.045-7.5 0-.72-.065-1.41-.185-2.09h-9.615Z"/>
-                    <path fill="#34A853" d="M12 22c2.76 0 5.08-.915 6.77-2.475l-3.31-2.57c-.915.615-2.085.98-3.46.98-2.66 0-4.91-1.795-5.715-4.21H2.865v2.65A9.996 9.996 0 0 0 12 22Z"/>
-                    <path fill="#FBBC05" d="M6.285 13.725A5.996 5.996 0 0 1 5.965 12c0-.6.11-1.18.32-1.725v-2.65H2.865A9.996 9.996 0 0 0 2 12c0 1.61.385 3.135 1.065 4.375l3.22-2.65Z"/>
-                    <path fill="#4285F4" d="M12 6.065c1.5 0 2.845.515 3.905 1.525l2.93-2.93C17.075 3.025 14.755 2 12 2A9.996 9.996 0 0 0 2.865 7.625l3.42 2.65c.805-2.415 3.055-4.21 5.715-4.21Z"/>
-                  </svg>
-                </span>
-                <span>Google</span>
+            <div class="login-v2-socials">
+              <button type="button" class="login-social-btn" data-provider="Google" aria-label="Continue with Google">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#EA4335" d="M12.2 10.3v3.9h5.5a4.8 4.8 0 0 1-2 3.1l3.3 2.6c1.9-1.8 3-4.4 3-7.5 0-.7-.1-1.4-.2-2.1h-9.6Z"/><path fill="#34A853" d="M12 22c2.8 0 5.1-.9 6.8-2.5l-3.3-2.6c-.9.6-2.1 1-3.5 1a6 6 0 0 1-5.7-4.2H2.9v2.7A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.3 13.7A6 6 0 0 1 6 12c0-.6.1-1.2.3-1.7V7.6H2.9A10 10 0 0 0 2 12c0 1.6.4 3.1 1.1 4.4l3.2-2.7Z"/><path fill="#4285F4" d="M12 6.1c1.5 0 2.8.5 3.9 1.5l2.9-2.9A9.8 9.8 0 0 0 12 2a10 10 0 0 0-9.1 5.6l3.4 2.7A6 6 0 0 1 12 6.1Z"/>
+                </svg>
+                Google
               </button>
-              <button type="button" class="login-social-btn sync-login-social-btn" data-provider="LinkedIn" aria-label="Continue with LinkedIn">
-                <span class="social-linkedin" aria-hidden="true">in</span>
-                <span>LinkedIn</span>
-              </button>
-              <button type="button" class="login-social-btn sync-login-social-btn" data-provider="Apple" aria-label="Continue with Apple">
-                <span class="social-apple" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M15.18 4.22c.87-1.06.74-2.03.72-2.22-1.05.06-2.26.71-3 1.58-.67.78-1.04 1.82-.94 2.8 1.12.08 2.28-.56 3.22-2.16Z"/>
-                    <path d="M19.97 16.78c-.45 1.03-.98 1.98-1.75 2.95-1.04 1.31-1.89 2.65-3.49 2.67-1.42.03-1.87-.85-3.49-.84-1.62.01-2.13.86-3.51.83-1.55-.02-2.73-1.5-3.78-2.81C1.79 17.1.15 12.52 2.42 8.59c1.13-1.95 3.14-3.19 5.32-3.22 1.4-.03 2.72.94 3.49.94.77 0 2.43-1.16 4.1-.99.7.03 2.68.28 3.95 2.13-3.47 1.9-2.91 6.89.69 9.33Z"/>
-                  </svg>
-                </span>
-                <span>Apple</span>
+              <button type="button" class="login-social-btn" data-provider="LinkedIn" aria-label="Continue with LinkedIn">
+                <span class="login-v2-linkedin" aria-hidden="true">in</span>
+                LinkedIn
               </button>
             </div>
-
-            <p class="sync-login-switch">Don't have an account? <a href="register.html">Sign Up</a></p>
           </form>
+
+          <p class="login-v2-mobile-signup">No account yet? <a href="register.html">Create one free</a></p>
         </div>
+
+        <p class="login-v2-security-note">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="3" /><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10" /></svg>
+          Protected by enterprise-grade encryption
+        </p>
       </section>
     </div>
 
-    <footer class="sync-login-footer">
-      <p>&copy; 2025 Sync Card. All rights reserved.</p>
-      <div class="sync-login-footer-links">
-        <a href="#">Terms of Service</a>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Contact Us</a>
-      </div>
+    <footer class="login-v2-footer">
+      <p>&copy; 2026 Sync E-Card</p>
+      <nav aria-label="Legal links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="../website/contact.html">Support</a>
+      </nav>
     </footer>
   </main>
 

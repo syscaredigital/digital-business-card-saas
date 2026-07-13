@@ -1,416 +1,181 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Super Admin Dashboard - Sync Card</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#090a0d" />
+  <title>Super Admin Dashboard | Sync E-Card</title>
+  <link rel="icon" type="image/png" href="../../public/assets/images/logos/sync-e-symbol-red-web.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
 </head>
-<body>
-  <div class="bg-orb bg-orb-1"></div>
-  <div class="bg-orb bg-orb-2"></div>
+<body class="super-admin-dashboard">
   <div class="dashboard-wrapper">
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Super admin navigation">
       <div class="sidebar-logo">
-        <div class="logo-icon">S</div>
-        <span class="logo-text">SYNC CARD</span>
+        <a class="super-admin-brand" href="dashboard.html" aria-label="Sync E-Card super admin dashboard">
+          <img class="super-admin-brand-logo" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" />
+        </a>
       </div>
 
       <nav class="sidebar-nav">
-        <a href="dashboard.html" class="nav-item active">Dashboard</a>
-        <div class="sidebar-section-label">Management</div>
-        <a href="users.html" class="nav-item">Users</a>
-        <a href="vcards.html" class="nav-item">VCards</a>
-        <a href="nfc-orders.html" class="nav-item">NFC Cards</a>
-        <a href="subscriptions.html" class="nav-item">Subscriptions</a>
-        <a href="cash-payments.html" class="nav-item">Cash Payments</a>
-        <a href="transactions.html" class="nav-item">Transactions</a>
-        <a href="payouts.html" class="nav-item">Payouts</a><a href="affiliations.html" class="nav-item">Affiliations</a><a href="withdrawals.html" class="nav-item">Withdrawals</a><a href="coupon-codes.html" class="nav-item">Coupon Codes</a>
-        <div class="sidebar-section-label">Analytics</div>
-        <a href="analytics.html" class="nav-item">Analytics</a>
-        <a href="reports.html" class="nav-item">Reports</a>
-        <div class="sidebar-section-label">Settings</div>
-        <a href="settings.html" class="nav-item">Settings</a>
-        <a href="system-logs.html" class="nav-item">System Logs</a>
-        </nav>
+        <a href="dashboard.html" class="nav-item active" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/></svg>
+          <span>Overview</span>
+        </a>
+        <div class="sidebar-section-label">Workspace</div>
+        <a href="users.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5Z"/></svg><span>Users</span></a>
+        <a href="vcards.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2ZM8 8.75A2.25 2.25 0 1 1 8 13.25 2.25 2.25 0 0 1 8 8.75ZM4.5 17c.23-1.75 1.85-2.75 3.5-2.75s3.27 1 3.5 2.75h-7Zm14.5-1h-5v-1.5h5V16Zm0-3h-5v-1.5h5V13Zm0-3h-5V8.5h5V10Z"/></svg><span>VCards</span></a>
+        <a href="nfc-orders.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0-2a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2V6c0-1.1-.9-2-2-2H4Zm3 5h5v2H7V9Zm0 4h8v2H7v-2Zm11-4h-2v2h2V9Z"/></svg><span>NFC Orders</span><em>12</em></a>
+        <a href="subscriptions.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v2H7V4Zm-2 4h14v2H5V8Zm-1 4h16v8H4v-8Zm4 2v2h5v-2H8Z"/></svg><span>Subscriptions</span></a>
+        <div class="sidebar-section-label">Finance</div>
+        <a href="transactions.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L21.8 8l-5.4 5.4L15 12l3-3H7V7Zm10 10H6l3 3-1.4 1.4L2.2 16l5.4-5.4L9 12l-3 3h11v2Z"/></svg><span>Transactions</span></a>
+        <a href="cash-payments.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 14H3V8h18v10Zm-9-1a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg><span>Cash Payments</span><em>5</em></a>
+        <a href="payouts.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v2h16V6l-8-4ZM6 10v7H4v3h16v-3h-2v-7h-2v7h-3v-7h-2v7H8v-7H6Z"/></svg><span>Payouts</span></a>
+        <a href="withdrawals.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10l3.5-3.5 1.4 1.4-5.9 5.9-5.9-5.9 1.4-1.4L11 13V3ZM5 19h14v2H5v-2Z"/></svg><span>Withdrawals</span></a>
+        <div class="sidebar-section-label">Insights</div>
+        <a href="analytics.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18v-2H5V3H3Zm4 13 4-4 3 3 5-6 1.5 1.3-6.4 7.7-3.1-3.1-2.6 2.6L7 16Z"/></svg><span>Analytics</span></a>
+        <a href="reports.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Zm8 2v4h4l-4-4ZM9 12v2h8v-2H9Zm0 4v2h8v-2H9Z"/></svg><span>Reports</span></a>
+        <a href="settings.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19.4 13 .1-1-.1-1 2.1-1.6-2-3.4-2.5 1a8 8 0 0 0-1.7-1L15 3.3h-4L10.6 6a8 8 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11l-.1 1 .1 1-2.1 1.6 2 3.4 2.5-1a8 8 0 0 0 1.7 1l.4 2.7h4l.4-2.7a8 8 0 0 0 1.7-1l2.5 1 2-3.4-2.3-1.6ZM13 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg><span>Settings</span></a>
+      </nav>
 
-      <div class="sidebar-upgrade">
-        <div class="upgrade-title">Upgrade Your Plan</div>
-        <div class="upgrade-desc">Unlock advanced features and boost your business.</div>
-        <a href="payments.html" class="btn-upgrade">Upgrade Now</a>
+      <div class="admin-profile-card">
+        <div class="table-user">
+          <span class="mini-avatar">SA</span>
+          <div><strong>Super Admin</strong><div class="subtle-handle">info@syncecard.lk</div></div>
+        </div>
+        <span class="admin-online"><i></i> All systems online</span>
       </div>
-
-      <div class="sidebar-footer-note">(c) 2025 Sync Card. All rights reserved.</div>
     </aside>
 
     <div class="main-content">
       <header class="topbar">
+        <div class="admin-breadcrumb"><span>Admin workspace</span><strong>Overview</strong></div>
         <label class="search-bar" for="dashboardSearch">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input id="dashboardSearch" type="text" placeholder="Search for users, cards, transactions..." />
-          <span class="topbar-search-shortcut">K</span>
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+          <input id="dashboardSearch" type="search" placeholder="Search dashboard..." />
+          <span class="topbar-search-shortcut">Ctrl K</span>
         </label>
-
         <div class="topbar-right">
-          <button class="topbar-chip" type="button" data-action="quick-action">Quick Action</button>
-          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
+          <a href="users.html" class="admin-create-button"><span>+</span> Add user</a>
+          <button class="notif-btn" type="button" id="notificationToggle" aria-label="Open notifications" aria-expanded="false" aria-controls="notificationPanel">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Zm-8 11h4a2 2 0 0 1-4 0Z"/></svg>
             <span class="notif-badge" id="notificationCount">3</span>
           </button>
-          <div class="user-profile">
-            <div class="user-avatar-placeholder">SA</div>
-            <div class="user-info">
-              <div class="user-name">Super Admin</div>
-              <div class="user-plan">Administrator</div>
-            </div>
-          </div>
+          <div class="user-profile"><div class="user-avatar-placeholder">SA</div><div class="user-info"><div class="user-name">Super Admin</div><div class="user-plan">Administrator</div></div></div>
         </div>
-
         <div class="notification-panel" id="notificationPanel" hidden>
-          <div class="notification-panel-header">
-            <strong>Notifications</strong>
-            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
-          </div>
+          <div class="notification-panel-header"><strong>Notifications</strong><button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear all</button></div>
           <div class="notification-list" id="notificationList"></div>
         </div>
       </header>
 
       <main class="page-content">
-        <div class="page-header">
+        <section class="admin-welcome">
           <div>
-            <h1>Dashboard</h1>
-            <p>Welcome back, Super Admin! Here's what's happening with your business today.</p>
+            <span class="admin-eyebrow" id="dashboardDataStatus"><i></i> Loading live platform data...</span>
+            <h1>Good morning, Super Admin</h1>
+            <p>Here is the latest activity across your Sync E-Card platform.</p>
           </div>
-        </div>
-
-        <section class="admin-stats-row">
-          <article class="admin-card admin-stat-card searchable-item" data-search="total users growth">
-            <div class="stat-top">
-              <div>
-                <div class="admin-kicker">Total Users</div>
-                <div class="admin-big-number">12,543</div>
-                <div class="positive-text">12.5% <span class="muted-inline">vs last month</span></div>
-              </div>
-              <div class="stat-icon-wrap">U</div>
-            </div>
-          </article>
-          <article class="admin-card admin-stat-card searchable-item" data-search="active subscriptions plans">
-            <div class="stat-top">
-              <div>
-                <div class="admin-kicker">Active Subscriptions</div>
-                <div class="admin-big-number">8,456</div>
-                <div class="positive-text">8.2% <span class="muted-inline">vs last month</span></div>
-              </div>
-              <div class="stat-icon-wrap">S</div>
-            </div>
-          </article>
-          <article class="admin-card admin-stat-card searchable-item" data-search="revenue">
-            <div class="stat-top">
-              <div>
-                <div class="admin-kicker">Total Revenue</div>
-                <div class="admin-big-number">$45,678</div>
-                <div class="positive-text">15.3% <span class="muted-inline">vs last month</span></div>
-              </div>
-              <div class="stat-icon-wrap">$</div>
-            </div>
-          </article>
-          <article class="admin-card admin-stat-card searchable-item" data-search="cards created">
-            <div class="stat-top">
-              <div>
-                <div class="admin-kicker">Cards Created</div>
-                <div class="admin-big-number">23,456</div>
-                <div class="positive-text">10.7% <span class="muted-inline">vs last month</span></div>
-              </div>
-              <div class="stat-icon-wrap">C</div>
-            </div>
-          </article>
-          <article class="admin-card admin-stat-card searchable-item" data-search="qr scans">
-            <div class="stat-top">
-              <div>
-                <div class="admin-kicker">QR Scans</div>
-                <div class="admin-big-number">78,905</div>
-                <div class="positive-text">18.6% <span class="muted-inline">vs last month</span></div>
-              </div>
-              <div class="stat-icon-wrap">Q</div>
-            </div>
-          </article>
-        </section>
-
-        <section class="admin-split-grid">
-          <article class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h3>Revenue Overview</h3>
-                <p>$45,678.90 <span class="positive-text">15.3%</span> <span class="muted-inline">vs last month</span></p>
-              </div>
-              <button type="button" class="period-selector" id="overviewPeriodButton">
-                <span id="overviewPeriodLabel">Last 30 Days</span>
-              </button>
-            </div>
-            <div class="period-options" id="periodOptions" hidden>
-              <button type="button" class="period-option active" data-period="30">Last 30 Days</button>
-              <button type="button" class="period-option" data-period="90">Last 90 Days</button>
-              <button type="button" class="period-option" data-period="365">This Year</button>
-            </div>
-            <div class="chart-holder">
-              <canvas id="analyticsChart"></canvas>
-            </div>
-          </article>
-
-          <article class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h3>Revenue Breakdown</h3>
-              </div>
-            </div>
-            <div class="donut-layout">
-              <div class="donut-wrap">
-                <canvas id="revenueBreakdownChart"></canvas>
-                <div class="donut-center">
-                  <strong>$45,678</strong>
-                  <span class="muted-inline">Total</span>
-                </div>
-              </div>
-              <div class="legend-list">
-                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#ff5563"></span>Pro Plan</span><span>$18,456</span></div>
-                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#7c5cff"></span>Business Plan</span><span>$14,258</span></div>
-                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#ffbe55"></span>Enterprise Plan</span><span>$8,765</span></div>
-                <div class="legend-item"><span class="legend-label"><span class="legend-dot" style="background:#ff7d6d"></span>Other Revenue</span><span>$4,199</span></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="admin-card overview-side-card">
-            <div class="admin-card-header">
-              <div>
-                <h3>Active Subscriptions</h3>
-              </div>
-              <a href="subscriptions.html" class="card-link">View All</a>
-            </div>
-            <div class="stack-item"><span>Pro Plan <span class="muted-inline">$9.99 / month</span></span><strong>4,567</strong></div>
-            <div class="stack-item"><span>Business Plan <span class="muted-inline">$19.99 / month</span></span><strong>2,890</strong></div>
-            <div class="stack-item"><span>Enterprise Plan <span class="muted-inline">$49.99 / month</span></span><strong>999</strong></div>
-            <div class="metric-row"><span>Total Active</span><strong>8,456</strong></div>
-          </article>
-        </section>
-
-        <section class="admin-wide-grid">
-          <article class="admin-card">
-            <div class="admin-card-header">
-              <div>
-                <h3>Recent Users</h3>
-              </div>
-              <a href="users.html" class="btn-preview">View All Users</a>
-            </div>
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Plan</th>
-                  <th>Cards</th>
-                  <th>Joined</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="searchable-item" data-search="john doe pro plan active">
-                  <td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td>
-                  <td>john.doe@example.com</td>
-                  <td><span class="plan-pill pro">Pro Plan</span></td>
-                  <td>3</td>
-                  <td>May 19, 2025</td>
-                  <td><span class="status-badge active">Active</span></td>
-                </tr>
-                <tr class="searchable-item" data-search="jane smith business plan active">
-                  <td><div class="table-user"><span class="mini-avatar">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">@janesmith</div></div></div></td>
-                  <td>jane.smith@example.com</td>
-                  <td><span class="plan-pill business">Business Plan</span></td>
-                  <td>5</td>
-                  <td>May 19, 2025</td>
-                  <td><span class="status-badge active">Active</span></td>
-                </tr>
-                <tr class="searchable-item" data-search="robert johnson pro plan active">
-                  <td><div class="table-user"><span class="mini-avatar">RJ</span><div><strong>Robert Johnson</strong><div class="subtle-handle">@robertjohnson</div></div></div></td>
-                  <td>robert.j@example.com</td>
-                  <td><span class="plan-pill pro">Pro Plan</span></td>
-                  <td>2</td>
-                  <td>May 18, 2025</td>
-                  <td><span class="status-badge active">Active</span></td>
-                </tr>
-                <tr class="searchable-item" data-search="michael brown business plan inactive">
-                  <td><div class="table-user"><span class="mini-avatar">MB</span><div><strong>Michael Brown</strong><div class="subtle-handle">@michaelbrown</div></div></div></td>
-                  <td>michael.b@example.com</td>
-                  <td><span class="plan-pill business">Business Plan</span></td>
-                  <td>4</td>
-                  <td>May 17, 2025</td>
-                  <td><span class="status-badge inactive">Inactive</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </article>
-
-          <div class="overview-side-card">
-            <article class="admin-card">
-              <div class="admin-card-header">
-                <div><h3>NFC Cards</h3></div>
-                <a href="nfc-orders.html" class="card-link">View All</a>
-              </div>
-              <div class="nfc-preview">NFC</div>
-              <div class="metric-list">
-                <div class="metric-row"><span>Total Cards</span><strong>4,567</strong></div>
-                <div class="metric-row"><span>Active Cards</span><strong>3,890</strong></div>
-                <div class="metric-row"><span>Inactive Cards</span><strong>677</strong></div>
-              </div>
-            </article>
-            <article class="admin-card">
-              <div class="admin-card-header">
-                <div><h3>QR Code Analytics</h3></div>
-                
-              </div>
-              <div class="stack-item">
-                <div class="qr-box"></div>
-                <div class="metric-list" style="flex:1;">
-                  <div class="metric-row"><span>Total Scans</span><strong>78,905</strong></div>
-                  <div class="metric-row"><span>Unique Scans</span><strong>45,678</strong></div>
-                  <div class="metric-row"><span>Scan Rate</span><strong>2.3%</strong></div>
-                </div>
-              </div>
-            </article>
-            <article class="admin-card searchable-item" data-search="vcard templates real estate template assign users super admin">
-              <div class="admin-card-header">
-                <div>
-                  <h3>vCard Templates</h3>
-                  <p>Choose the designs super admins can assign to user profiles.</p>
-                </div>
-                <a href="vcards.html" class="card-link">Manage</a>
-              </div>
-              <div class="card-showcase card-showcase-realtor">
-                <div class="card-showcase-label">New Template</div>
-                <div class="card-showcase-title">Luxury Realtor vCard</div>
-                <div class="card-showcase-copy">Built for real-estate consultants with services, listings, testimonials, and QR contact blocks.</div>
-              </div>
-              <div class="mini-metric-list">
-                <div class="mini-metric"><strong>Template 02</strong><span>Catalog ID</span></div>
-                <div class="mini-metric"><strong>Users assign</strong><span>Admin controlled</span></div>
-              </div>
-            </article>
-            <article class="admin-card searchable-item" data-search="all user vcards preview clone verified super admin">
-              <div class="admin-card-header">
-                <div>
-                  <h3>User VCards</h3>
-                  <p>Review every published user card, preview live URLs, verify listings, and clone high-performing layouts.</p>
-                </div>
-                <a href="vcards.html" class="card-link">Open</a>
-              </div>
-              <div class="card-showcase card-showcase-vcards">
-                <div class="card-showcase-label">Operations</div>
-                <div class="card-showcase-title">Central VCard Registry</div>
-                <div class="card-showcase-copy">Track status, verification, preview links, and clone actions for all user profile cards in one place.</div>
-              </div>
-              <div class="mini-metric-list">
-                <div class="mini-metric"><strong>5 Live</strong><span>Demo cards</span></div>
-                <div class="mini-metric"><strong>Clone ready</strong><span>Reuse winning cards</span></div>
-              </div>
-            </article>
-            <article class="admin-card searchable-item" data-search="retail ecommerce template vcard assign users super admin">
-              <div class="admin-card-header">
-                <div>
-                  <h3>Retail Template</h3>
-                  <p>Retail and e-commerce themed vCard ready for super admin assignment.</p>
-                </div>
-                <a href="vcards.html" class="card-link">Manage</a>
-              </div>
-              <div class="card-showcase card-showcase-retail">
-                <div class="card-showcase-label">New Template</div>
-                <div class="card-showcase-title">Retail E-Commerce vCard</div>
-                <div class="card-showcase-copy">Built for retail consultants with expertise cards, impact rows, recent projects, pricing, and QR contact sections.</div>
-              </div>
-              <div class="mini-metric-list">
-                <div class="mini-metric"><strong>Template 01</strong><span>Catalog ID</span></div>
-                <div class="mini-metric"><strong>Users assign</strong><span>Admin controlled</span></div>
-              </div>
-            </article>
-            <article class="admin-card searchable-item" data-search="healthcare template wellness vcard assign users super admin">
-              <div class="admin-card-header">
-                <div>
-                  <h3>Healthcare Template</h3>
-                  <p>Medical and wellness themed vCard ready for super admin assignment.</p>
-                </div>
-                <a href="vcards.html" class="card-link">Manage</a>
-              </div>
-              <div class="card-showcase card-showcase-health">
-                <div class="card-showcase-label">New Template</div>
-                <div class="card-showcase-title">Healthcare Wellness vCard</div>
-                <div class="card-showcase-copy">Built for healthcare consultants with services, expertise blocks, programs, pricing, and QR contact sections.</div>
-              </div>
-              <div class="mini-metric-list">
-                <div class="mini-metric"><strong>Template 03</strong><span>Catalog ID</span></div>
-                <div class="mini-metric"><strong>Users assign</strong><span>Admin controlled</span></div>
-              </div>
-            </article>
+          <div class="admin-welcome-actions">
+            <a href="reports.html" class="admin-secondary-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Zm8 2v4h4l-4-4ZM9 12v2h8v-2H9Zm0 4v2h8v-2H9Z"/></svg> View reports</a>
+            <a href="users.html" class="admin-primary-button"><span>+</span> Create new user</a>
           </div>
         </section>
 
-        <section class="admin-bottom-grid">
-          <article class="admin-card">
-            <div class="admin-card-header">
-              <div><h3>Recent Transactions</h3></div>
-              <a href="transactions.html" class="btn-preview">View All Transactions</a>
-            </div>
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Transaction ID</th>
-                  <th>User</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="searchable-item" data-search="trx12345678 john doe subscription completed">
-                  <td>#TRX12345678</td>
-                  <td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td>
-                  <td>Subscription</td>
-                  <td>$9.99</td>
-                  <td>May 19, 2025</td>
-                  <td><span class="status-badge completed">Completed</span></td>
-                </tr>
-                <tr class="searchable-item" data-search="trx12345679 company payout pending">
-                  <td>#TRX12345679</td>
-                  <td><div class="table-user"><span class="mini-avatar">AC</span><div><strong>Acme Inc.</strong><div class="subtle-handle">@acme</div></div></div></td>
-                  <td>Payout</td>
-                  <td>$580.00</td>
-                  <td>May 18, 2025</td>
-                  <td><span class="status-badge pending">Pending</span></td>
-                </tr>
-              </tbody>
-            </table>
+        <section class="admin-kpi-grid" aria-label="Platform summary">
+          <article class="admin-kpi-card searchable-item" data-dashboard-metric="revenue" data-search="monthly recurring revenue income growth">
+            <div class="admin-kpi-head"><span class="admin-kpi-icon revenue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6.1c1.7.2 2.6 1.1 2.7 2.4h-2.1c-.1-.6-.6-1-1.6-1-1.1 0-1.6.4-1.6.9 0 .6.6.8 2 1.2 2.4.5 3.7 1.3 3.7 3.2 0 1.8-1.2 2.9-3.1 3.2v2h-2v-2c-2-.3-3.2-1.4-3.3-3.1h2.2c.1.9.8 1.4 2.1 1.4 1.2 0 1.8-.4 1.8-1.1 0-.6-.6-.9-2.2-1.2-2.2-.5-3.5-1.2-3.5-3 0-1.6 1.1-2.7 2.9-3V4h2v2.1Z"/></svg></span><span class="admin-change up">+15.3%</span></div>
+            <span class="admin-kpi-label">Monthly revenue</span><strong>$45,678</strong><small>+$5,940 from last month</small>
+            <svg class="admin-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true"><path d="M2 31C18 30 22 23 38 25s25-8 39-5 20 9 35 2 26-16 39-11 20 0 27-8"/></svg>
           </article>
-
-          <article class="admin-card">
-            <div class="admin-card-header">
-              <div><h3>System Overview</h3></div>
-              <a href="system-logs.html" class="card-link">View Logs</a>
-            </div>
-            <div class="system-list">
-              <div class="system-row"><span><strong>Server Status</strong><span class="muted-inline">All systems operational</span></span><span class="tiny-pill success">Healthy</span></div>
-              <div class="system-row"><span><strong>Storage Usage</strong><span class="muted-inline">45.2% / 100GB</span></span><div class="progress-line"><span style="width:45%"></span></div></div>
-              <div class="system-row"><span><strong>API Requests</strong><span class="muted-inline">2.4M / 10M</span></span><div class="progress-line"><span style="width:24%"></span></div></div>
-            </div>
+          <article class="admin-kpi-card searchable-item" data-dashboard-metric="users" data-search="total active users customers">
+            <div class="admin-kpi-head"><span class="admin-kpi-icon users"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13Zm8 0-.9.1c1.1.8 1.9 2 1.9 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5Z"/></svg></span><span class="admin-change up">+12.5%</span></div>
+            <span class="admin-kpi-label">Active users</span><strong>12,543</strong><small>1,204 joined this month</small>
+            <svg class="admin-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true"><path d="M2 30c18 1 20-7 35-5s20 5 35-1 22-8 37-5 17 4 31-3 22-8 38-11"/></svg>
+          </article>
+          <article class="admin-kpi-card searchable-item" data-dashboard-metric="subscriptions" data-search="active subscriptions plans renewals">
+            <div class="admin-kpi-head"><span class="admin-kpi-icon plans"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v3H5V4Zm-2 5h18v11H3V9Zm4 3v2h6v-2H7Z"/></svg></span><span class="admin-change up">+8.2%</span></div>
+            <span class="admin-kpi-label">Active subscriptions</span><strong>8,456</strong><small>67.4% user conversion</small>
+            <svg class="admin-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true"><path d="M2 29c13-3 25 2 38-2s20-13 35-9 24 9 37 3 24-13 38-9 17-1 28-8"/></svg>
+          </article>
+          <article class="admin-kpi-card searchable-item" data-dashboard-metric="cards" data-search="published digital cards vcards">
+            <div class="admin-kpi-head"><span class="admin-kpi-icon cards"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM7 8h4v4H7V8Zm7 8H7v-2h7v2Zm4 0h-2v-2h2v2Zm0-4h-5v-2h5v2Z"/></svg></span><span class="admin-change up">+10.7%</span></div>
+            <span class="admin-kpi-label">Published cards</span><strong>23,456</strong><small>692 published this month</small>
+            <svg class="admin-sparkline" viewBox="0 0 180 38" preserveAspectRatio="none" aria-hidden="true"><path d="M2 32c14-2 22-11 37-6s20 4 34-3 21-4 34-2 24-13 39-10 20-3 32-7"/></svg>
           </article>
         </section>
 
-        <div class="empty-search-state" id="emptySearchState" hidden>
-          <h3>No matches found</h3>
-          <p>Try another dashboard search term.</p>
-        </div>
+        <section class="admin-command-grid">
+          <article class="admin-surface admin-revenue-panel">
+            <div class="admin-panel-heading">
+              <div><span class="admin-panel-kicker">Revenue performance</span><h2><span id="dashboardRevenueTotal">$0.00</span> <em id="dashboardRevenueGrowth">Live</em></h2><p>Recurring revenue over the selected period</p></div>
+              <div class="admin-period-wrap">
+                <button type="button" class="period-selector" id="overviewPeriodButton" aria-expanded="false"><span id="overviewPeriodLabel">Last 30 Days</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5H7Z"/></svg></button>
+                <div class="period-options" id="periodOptions" hidden><button type="button" class="period-option active" data-period="30">Last 30 Days</button><button type="button" class="period-option" data-period="90">Last 90 Days</button><button type="button" class="period-option" data-period="365">This Year</button></div>
+              </div>
+            </div>
+            <div class="admin-chart-legend"><span><i></i> Revenue</span><small>Updated 5 minutes ago</small></div>
+            <div class="chart-holder"><canvas id="analyticsChart"></canvas></div>
+          </article>
+
+          <aside class="admin-surface admin-quick-panel">
+            <div class="admin-panel-heading"><div><span class="admin-panel-kicker">Shortcuts</span><h2>Quick actions</h2></div></div>
+            <div class="admin-action-list">
+              <a href="users.html"><span class="admin-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM6 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm9 3c-3 0-9 1.5-9 4.5V21h18v-2.5c0-3-6-4.5-9-4.5ZM3 13H1v3H-2v2h3v3h2v-3h3v-2H3v-3Z"/></svg></span><span><strong>Add a new user</strong><small>Create account and assign a plan</small></span><b>›</b></a>
+              <a href="vcards.html"><span class="admin-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM8 8.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM4.5 17c.2-1.6 1.8-2.7 3.5-2.7s3.3 1.1 3.5 2.7h-7ZM19 15h-5v-2h5v2Zm0-4h-5V9h5v2Z"/></svg></span><span><strong>Create a VCard</strong><small>Publish a new digital identity</small></span><b>›</b></a>
+              <a href="nfc-orders.html"><span class="admin-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2Zm2 5v2h7V9H6Zm0 4v2h10v-2H6Zm12-4v2h2V9h-2Z"/></svg></span><span><strong>Review NFC orders</strong><small>12 orders need attention</small></span><b>›</b></a>
+              <a href="cash-payments.html"><span class="admin-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7c0-1.1.9-2 2-2Zm0 4v8h18V9H3Zm9 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/></svg></span><span><strong>Approve payments</strong><small>5 cash payments are pending</small></span><b>›</b></a>
+            </div>
+          </aside>
+        </section>
+
+        <section class="admin-detail-grid">
+          <article class="admin-surface admin-users-panel">
+            <div class="admin-panel-heading"><div><span class="admin-panel-kicker">Latest signups</span><h2>Recent users</h2></div><a href="users.html" class="admin-text-link">View all users <span>→</span></a></div>
+            <div class="admin-table-wrap">
+              <table class="admin-modern-table">
+                <thead><tr><th>User</th><th>Plan</th><th>Cards</th><th>Joined</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                <tbody id="dashboardRecentUsers">
+                  <tr class="searchable-item" data-search="john doe pro active"><td><div class="table-user"><span class="mini-avatar rose">JD</span><div><strong>John Doe</strong><div class="subtle-handle">john.doe@example.com</div></div></div></td><td><span class="admin-plan-tag">Pro</span></td><td>3</td><td>Jul 13, 2026</td><td><span class="admin-status active"><i></i>Active</span></td><td><a href="users.html" aria-label="Open John Doe">•••</a></td></tr>
+                  <tr class="searchable-item" data-search="jane smith business active"><td><div class="table-user"><span class="mini-avatar violet">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">jane.smith@example.com</div></div></div></td><td><span class="admin-plan-tag business">Business</span></td><td>5</td><td>Jul 13, 2026</td><td><span class="admin-status active"><i></i>Active</span></td><td><a href="users.html" aria-label="Open Jane Smith">•••</a></td></tr>
+                  <tr class="searchable-item" data-search="robert johnson pro pending"><td><div class="table-user"><span class="mini-avatar amber">RJ</span><div><strong>Robert Johnson</strong><div class="subtle-handle">robert.j@example.com</div></div></div></td><td><span class="admin-plan-tag">Pro</span></td><td>2</td><td>Jul 12, 2026</td><td><span class="admin-status pending"><i></i>Pending</span></td><td><a href="users.html" aria-label="Open Robert Johnson">•••</a></td></tr>
+                  <tr class="searchable-item" data-search="michael brown free active"><td><div class="table-user"><span class="mini-avatar blue">MB</span><div><strong>Michael Brown</strong><div class="subtle-handle">michael.b@example.com</div></div></div></td><td><span class="admin-plan-tag free">Free</span></td><td>1</td><td>Jul 12, 2026</td><td><span class="admin-status active"><i></i>Active</span></td><td><a href="users.html" aria-label="Open Michael Brown">•••</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <aside class="admin-surface admin-health-panel">
+            <div class="admin-panel-heading"><div><span class="admin-panel-kicker">Live monitoring</span><h2>System health</h2></div><span class="admin-health-badge"><i></i>Operational</span></div>
+            <div class="admin-health-score"><div><strong>99.98%</strong><span>Uptime this month</span></div><svg viewBox="0 0 120 44" preserveAspectRatio="none" aria-hidden="true"><path d="M1 34 12 31l10 3 11-17 10 12 11-5 10 3 11-18 10 10 11-4 11 3 12-12"/></svg></div>
+            <div class="admin-health-list">
+              <div><span><i class="healthy"></i><strong>API services</strong></span><em>42 ms</em></div>
+              <div><span><i class="healthy"></i><strong>PostgreSQL database</strong></span><em id="dashboardDatabaseLatency">Checking...</em></div>
+              <div><span><i class="healthy"></i><strong>Email delivery</strong></span><em>99.9%</em></div>
+              <div><span><i class="warning"></i><strong>Storage</strong></span><em>45.2 GB</em></div>
+            </div>
+            <a href="system-logs.html" class="admin-health-link">Open system logs <span>→</span></a>
+          </aside>
+        </section>
+
+        <section class="admin-lower-grid">
+          <article class="admin-surface admin-pending-panel">
+            <div class="admin-panel-heading"><div><span class="admin-panel-kicker">Needs attention</span><h2>Pending approvals</h2></div><span class="admin-count-badge" id="dashboardPendingTotal">0 total</span></div>
+            <div class="admin-pending-list">
+              <a href="nfc-orders.html" class="searchable-item" data-search="pending nfc orders"><span class="admin-pending-icon red" id="dashboardPendingNfc">0</span><span><strong>NFC card orders</strong><small>Waiting for fulfilment</small></span><b>Review →</b></a>
+              <a href="cash-payments.html" class="searchable-item" data-search="pending cash payments"><span class="admin-pending-icon amber" id="dashboardPendingPayments">0</span><span><strong>Cash payment confirmations</strong><small>Waiting for approval</small></span><b>Review →</b></a>
+            </div>
+          </article>
+          <article class="admin-surface admin-plan-panel">
+            <div class="admin-panel-heading"><div><span class="admin-panel-kicker">Subscription mix</span><h2>Plan distribution</h2></div><a href="subscriptions.html" class="admin-text-link">Manage <span>→</span></a></div>
+            <div class="admin-plan-bar" id="dashboardPlanBar" aria-label="Plan distribution"></div>
+            <div class="admin-plan-legend" id="dashboardPlanLegend"><span><strong>No active subscriptions</strong><em>Database has no plan data yet</em></span></div>
+          </article>
+        </section>
+
+        <div class="empty-search-state" id="emptySearchState" hidden><h3>No dashboard results</h3><p>Try searching for users, plans, revenue, orders, or system health.</p></div>
       </main>
     </div>
   </div>
@@ -420,5 +185,3 @@
   <script src="../../public/assets/js/dashboard.js"></script>
 </body>
 </html>
-
-

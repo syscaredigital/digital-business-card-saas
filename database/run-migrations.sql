@@ -23,3 +23,6 @@
 \i migrations/021_create_analytics_table.sql
 \i migrations/022_create_transactions_table.sql
 \i migrations/023_create_role_permissions_table.sql
+\i migrations/024_create_nfc_products_table.sql
+\i migrations/025_link_nfc_orders_to_products.sql
+\i migrations/026_extend_payments_for_manual_review.sql

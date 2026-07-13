@@ -18,29 +18,15 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNavbar">
           <ul class="navbar-nav mx-auto">
+            <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-            <li class="nav-item"><a class="nav-link" href="templates.html">Templates</a></li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Solutions</a>
-              <ul class="dropdown-menu dropdown-menu-dark">
-                <li><a class="dropdown-item" href="nfc-cards.html">NFC Cards</a></li>
-                <li><a class="dropdown-item" href="about.html">Team Management</a></li>
-                <li><a class="dropdown-item" href="#analytics">Analytics</a></li>
-              </ul>
-            </li>
-            <li class="nav-item"><a class="nav-link" href="pricing.html">Pricing</a></li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Resources</a>
-              <ul class="dropdown-menu dropdown-menu-dark">
-                <li><a class="dropdown-item" href="contact.html">Help Center</a></li>
-                <li><a class="dropdown-item" href="contact.html">Contact Sales</a></li>
-              </ul>
-            </li>
-            <li class="nav-item"><a class="nav-link" href="contact.html">Enterprise</a></li>
+            <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+            <li class="nav-item"><a class="nav-link" href="nfc-cards.html">NFC Cards</a></li>
+            <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
           </ul>
           <div class="nav-actions">
-            <a href="../auth/login.html" class="btn btn-ghost">Log in</a>
-            <a href="../auth/register.html" class="btn btn-red">Get Started Free</a>
+            <a href="../auth/login.html" class="btn btn-ghost">Login</a>
+            <a href="../auth/register.html" class="btn btn-red">Register</a>
           </div>
         </div>
       </div>
@@ -48,100 +34,64 @@
   </header>
 
   <main>
-    <section class="hero-section" id="home">
+    <section class="modern-hero" id="home">
+      <div class="hero-grid-lines" aria-hidden="true"></div>
+      <div class="hero-aurora aurora-one" aria-hidden="true"></div><div class="hero-aurora aurora-two" aria-hidden="true"></div>
       <div class="container">
-        <div class="row align-items-center g-5">
-          <div class="col-lg-6">
-            <span class="eyebrow">#1 Digital Business Card Platform</span>
-            <h1>Smart Connections. <span>Stronger</span> Impressions.</h1>
-            <p>Create, share and manage your digital business identity with our all-in-one platform. Built for modern professionals and forward-thinking teams.</p>
-            <div class="hero-actions">
-              <a href="../auth/register.html" class="btn btn-red btn-lg">Get Started Free <span>-></span></a>
-              <a href="contact.html" class="btn btn-outline-custom btn-lg">Book a Demo</a>
+        <div class="modern-hero-layout">
+          <div class="modern-hero-copy">
+            <span class="modern-eyebrow"><i></i> The future of first impressions <b>New</b></span>
+            <h1>Meet smarter.<br><span>Connect deeper.</span></h1>
+            <p>One beautiful digital identity that moves with you. Share it in a tap, update it in seconds, and turn every hello into an opportunity.</p>
+            <div class="modern-hero-actions">
+              <a href="../auth/register.html" class="btn btn-red btn-lg">Create your card <span>&rarr;</span></a>
+              <a href="contact.html" class="hero-demo-link"><i><span>&#9654;</span></i> Watch how it works</a>
             </div>
+            <div class="hero-trust"><div class="trust-faces"><span>AM</span><span>RK</span><span>SP</span><span>+</span></div><p><strong>25,000+ professionals</strong><br>already connecting smarter</p><div class="trust-stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><small>4.9 / 5</small></div></div>
           </div>
-          <div class="col-lg-6">
-            <div class="hero-device-wrap" aria-label="Sync E-Card digital card preview">
-              <div class="red-rings"></div>
-              <div class="connection-beam" aria-hidden="true"></div>
-              <div class="hero-phone">
-                <div class="phone-camera"></div>
-                <div class="phone-top">syncecard.lk</div>
-                <div class="profile-row">
-                  <div class="avatar avatar-man">JA</div>
-                  <div>
-                    <h3>James Anderson</h3>
-                    <p>Marketing Director<br>Acme Corporation</p>
-                  </div>
-                </div>
-                <div class="quick-actions">
-                  <span>Call</span><span>Email</span><span>Website</span><span>Location</span>
-                </div>
-                <ul class="contact-list">
-                  <li>+1 (234) 567-8904</li>
-                  <li>james.anderson@acme.com</li>
-                  <li>www.acme.com</li>
-                  <li>123 Business Ave, New York, NY 10001</li>
-                </ul>
-                <button class="btn btn-red w-100">Save Contact</button>
-              </div>
-              <div class="hero-nfc-card">
-                <span>NFC )))</span>
-                <strong><img class="card-logo" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></strong>
-              </div>
-              <div class="floating-chip chip-views" aria-hidden="true">
-                <strong>2.4K</strong>
-                <span>profile views</span>
-              </div>
-              <div class="floating-chip chip-saved" aria-hidden="true">
-                <strong>98%</strong>
-                <span>saved contacts</span>
+          <div class="modern-hero-stage" aria-label="Animated Sync E-Card product preview">
+            <div class="stage-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="hero-card-back"><img src="../../public/assets/images/login-card-front.png" alt="Original Sync E-Card NFC business card"></div>
+            <div class="modern-phone">
+              <div class="modern-phone-bar"><span>9:41</span><i></i><span>&bull;&bull;&bull;</span></div>
+              <div class="phone-profile-cover"><div class="cover-socials"><span>in</span><span>ig</span><span>x</span></div></div>
+              <div class="modern-phone-content">
+                <div class="modern-avatar">JA<span></span></div>
+                <h2>James Anderson</h2><p>Brand Director at Northstar</p>
+                <div class="modern-quick-actions"><span><i>&#9742;</i>Call</span><span><i>@</i>Email</span><span><i>&#8599;</i>Web</span><span><i>&#9678;</i>Save</span></div>
+                <button>Save contact <span>&rarr;</span></button>
+                <div class="modern-detail"><i>@</i><div><small>Work email</small><strong>james@northstar.co</strong></div></div>
+                <div class="modern-detail"><i>&#9742;</i><div><small>Mobile</small><strong>+94 76 454 5756</strong></div></div>
               </div>
             </div>
+            <div class="hero-float hero-float-views"><span class="float-icon">&#8599;</span><div><small>Profile views</small><strong>2,481</strong></div><b>+18%</b></div>
+            <div class="hero-float hero-float-saved"><span class="saved-check">&#10003;</span><div><strong>Contact saved</strong><small>Just now</small></div></div>
+            <div class="hero-tap-signal"><i></i><i></i><i></i><strong>Tap</strong></div>
           </div>
         </div>
-        <div class="stats-panel">
-          <div>
-            <span class="metric-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </span>
-            <strong class="count-up" data-count="25" data-suffix="K+">0K+</strong><small>Happy Users</small>
-          </div>
-          <div>
-            <span class="metric-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h.01"/><path d="M9 13h.01"/><path d="M9 17h.01"/><path d="M17 14h.01"/><path d="M17 18h.01"/></svg>
-            </span>
-            <strong class="count-up" data-count="1" data-suffix="K+">0K+</strong><small>Companies</small>
-          </div>
-          <div>
-            <span class="metric-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h10"/><path d="M7 14h6"/></svg>
-            </span>
-            <strong class="count-up" data-count="2" data-suffix="M+">0M+</strong><small>Cards Shared</small>
-          </div>
-          <div>
-            <span class="metric-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L11 4.93"/><path d="M14 11a5 5 0 0 0-7.07 0L4.81 13.12a5 5 0 0 0 7.07 7.07L13 19.07"/></svg>
-            </span>
-            <strong class="count-up" data-count="10" data-suffix="M+">0M+</strong><small>Connections Made</small>
-          </div>
-        </div>
+        <div class="modern-hero-stats"><div><strong class="count-up" data-count="25" data-suffix="K+">0K+</strong><small>Active professionals</small></div><div><strong class="count-up" data-count="1" data-suffix="K+">0K+</strong><small>Growing companies</small></div><div><strong class="count-up" data-count="2" data-suffix="M+">0M+</strong><small>Cards shared</small></div><div><strong class="count-up" data-count="10" data-suffix="M+">0M+</strong><small>Connections made</small></div></div>
       </div>
     </section>
 
-    <section class="section-block" id="templates">
+    <section class="section-block modern-templates" id="templates">
       <div class="container">
-        <div class="section-heading split-heading">
+        <div class="templates-heading">
           <div>
-            <h2>Beautiful <span>VCard</span> Templates</h2>
-            <p>Choose from professionally designed templates that reflect your style and personality.</p>
+            <span class="templates-kicker">Designed to stand out</span>
+            <h2>Find a VCard that<br><span>feels like you.</span></h2>
+            <p>Explore a growing collection of professionally crafted profiles for every industry, role and personal style.</p>
           </div>
-          <div class="carousel-buttons" aria-hidden="true">
-            <button type="button" class="mini-btn"><-</button>
-            <button type="button" class="mini-btn">-></button>
+          <div class="templates-heading-actions">
+            <a href="templates.html">View all templates <span>&rarr;</span></a>
+            <div class="modern-carousel-buttons">
+              <button type="button" data-template-prev aria-label="Show previous templates">&larr;</button>
+              <button type="button" data-template-next aria-label="Show next templates">&rarr;</button>
+            </div>
           </div>
         </div>
-        <div class="template-row" data-featured-vcards>
+        <div class="template-gallery-shell">
+          <div class="template-gallery-top"><span><i></i> Live template gallery</span><div><b data-template-count>6+</b> designs and growing</div></div>
+          <div class="template-row modern-template-row" data-featured-vcards>
           <article class="vcard-template red-template">
             <div class="avatar avatar-man">JA</div>
             <h3>James Anderson</h3>
@@ -182,36 +132,28 @@
       </div>
     </section>
 
-    <section class="section-block compact" id="features">
+    <section class="section-block modern-features" id="features">
       <div class="container">
-        <div class="section-heading text-center">
-          <h2>Everything You Need in <span>One Platform</span></h2>
-          <p>Powerful features to help you connect, engage and grow your network effortlessly.</p>
+        <div class="features-heading">
+          <div><span class="features-kicker">Everything connected</span><h2>One platform.<br><span>Endless possibilities.</span></h2></div>
+          <p>Create a standout identity, share it anywhere, and understand every interaction—all from one beautifully simple workspace.</p>
         </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M7 10h7"></path><path d="M7 14h4"></path><path d="M17 13.5h.01"></path></svg></span>
-            <div><h3>Digital Business Cards</h3><p>Create branded digital cards with contact details, links, QR sharing and a polished mobile profile.</p><small>Launch profiles fast</small></div>
+        <div class="feature-bento">
+          <article class="bento-feature feature-main">
+            <div class="bento-content"><span class="bento-number">01 / Identity</span><h3>A digital card that feels entirely <em>you.</em></h3><p>Bring your details, links, brand and story together in one polished profile that always stays current.</p><a href="templates.html">Explore templates <span>&rarr;</span></a></div>
+            <div class="card-builder-preview"><div class="builder-toolbar"><i></i><span>Live preview</span><b>Published</b></div><div class="builder-body"><div class="builder-controls"><span></span><span></span><span></span><span></span></div><div class="builder-phone"><div class="builder-cover"></div><i>JA</i><strong>James Anderson</strong><small>Brand Director</small><div><b></b><b></b><b></b></div></div></div></div>
           </article>
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.5 8.5a5 5 0 0 1 0 7"></path><path d="M9.5 6a8.5 8.5 0 0 1 0 12"></path><path d="M13 4a12 12 0 0 1 0 16"></path><rect x="15" y="7" width="5" height="10" rx="2"></rect></svg></span>
-            <div><h3>NFC Technology</h3><p>Share your profile instantly with NFC-enabled cards, taps and QR codes for every meeting.</p><small>Tap to connect</small></div>
+          <article class="bento-feature feature-share">
+            <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M7 8a5 5 0 0 1 0 8"></path><path d="M10 5a9 9 0 0 1 0 14"></path><rect x="15" y="7" width="5" height="10" rx="2"></rect></svg></span><span class="bento-number">02 / Share</span><h3>Tap. Scan. Send.</h3><p>Share with NFC, QR or your personal link. No app required.</p><div class="share-rings"><i></i><i></i><i></i><strong>NFC</strong></div>
           </article>
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-8 0"></path><path d="M4 20a8 8 0 0 1 16 0"></path><path d="M18 8h3"></path><path d="M19.5 6.5v3"></path></svg></span>
-            <div><h3>Contact Management</h3><p>Capture, organize and revisit leads from one workspace built for practical follow-up.</p><small>Never lose a lead</small></div>
+          <article class="bento-feature feature-contacts">
+            <span class="bento-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0"></path><path d="M18 8h4M20 6v4"></path></svg></span><span class="bento-number">03 / Capture</span><h3>Turn meetings into momentum.</h3><p>Save new contacts, add notes and keep every follow-up within reach.</p><div class="contact-pop"><span>AK</span><div><strong>Anna Kim</strong><small>Contact saved just now</small></div><b>&#10003;</b></div>
           </article>
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path><path d="M16 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path><path d="M2.5 21a5.5 5.5 0 0 1 11 0"></path><path d="M13.5 21a4.5 4.5 0 0 1 8 0"></path></svg></span>
-            <div><h3>Team Management</h3><p>Assign cards, manage roles and keep your company identity consistent across every team member.</p><small>Built for teams</small></div>
+          <article class="bento-feature feature-insights">
+            <div><span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M4 19h16"></path><path d="M7 16V9"></path><path d="M12 16V5"></path><path d="M17 16v-7"></path></svg></span><span class="bento-number">04 / Understand</span><h3>Insights that move you forward.</h3><p>See views, clicks and saved contacts in real time.</p></div><div class="mini-chart"><div><small>Engagement</small><strong>8,942 <b>+24%</b></strong></div><svg viewBox="0 0 400 120" preserveAspectRatio="none"><path d="M0 105 C50 100 60 48 110 70 S190 110 230 52 S310 74 400 18"></path></svg></div>
           </article>
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"></path><path d="M7 16V9"></path><path d="M12 16V5"></path><path d="M17 16v-7"></path><path d="m5 10 4-4 4 3 5-6"></path></svg></span>
-            <div><h3>Analytics & Insights</h3><p>Understand views, clicks and saved contacts so your networking strategy keeps improving.</p><small>Measure engagement</small></div>
-          </article>
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.5 7.5h-2A3.5 3.5 0 0 0 2 11v2a3.5 3.5 0 0 0 3.5 3.5h2"></path><path d="M16.5 7.5h2A3.5 3.5 0 0 1 22 11v2a3.5 3.5 0 0 1-3.5 3.5h-2"></path><path d="M8 12h8"></path><path d="M12 8v8"></path></svg></span>
-            <div><h3>Integrations</h3><p>Connect your card experience with websites, social channels and the tools your business already uses.</p><small>Works with your stack</small></div>
+          <article class="bento-feature feature-connect">
+            <div><span class="bento-number">05 / Scale</span><h3>Built for your whole business.</h3><p>Manage teams, permissions and brand consistency from one place.</p></div><div class="integration-row"><span>G</span><span>in</span><span>Z</span><span>S</span><i>+</i></div>
           </article>
         </div>
       </div>
@@ -219,145 +161,221 @@
 
     <section class="section-block" id="about">
       <div class="container">
-        <div class="team-panel">
-          <div class="dashboard-preview">
-            <aside>
-              <strong class="dashboard-brand">TeamHub</strong>
-              <span><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Z"></path><path d="M14 20h6V4h-6v16Z"></path><path d="M4 20h6v-3H4v3Z"></path></svg>Dashboard</span>
-              <span class="active"><svg viewBox="0 0 24 24"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path><path d="M2.5 21a5.5 5.5 0 0 1 11 0"></path><path d="M16 13a3 3 0 1 0 0-6"></path><path d="M14.5 21a4.5 4.5 0 0 1 7 0"></path></svg>Team Members</span>
-              <span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M7 10h7"></path><path d="M7 14h4"></path></svg>Cards</span>
-              <span><svg viewBox="0 0 24 24"><path d="M4 19h16"></path><path d="M7 16V9"></path><path d="M12 16V5"></path><path d="M17 16v-7"></path></svg>Analytics</span>
-              <span><svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"></path><path d="M7 11h5"></path><path d="M16 14h1"></path></svg>Billing</span>
-              <span><svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"></path><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2 2 0 0 1-2.83 2.83l-.04-.04a1.8 1.8 0 0 0-1.98-.36"></path><path d="M4.6 9a1.8 1.8 0 0 0-.36-1.98L4.2 6.98a2 2 0 0 1 2.83-2.83l.04.04A1.8 1.8 0 0 0 9.05 4.55"></path></svg>Settings</span>
-            </aside>
-            <div class="member-table">
-              <div class="table-top"><div><strong>Team Members</strong><small>4 active profiles</small></div><button><svg viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>Add Member</button></div>
-              <div class="team-stats"><span><strong>24</strong><small>Card taps</small></span><span><strong>96%</strong><small>Brand match</small></span></div>
-              <div><span class="avatar mini">JA</span><b>James Anderson<small>Marketing Director</small></b><em>Admin</em></div>
-              <div><span class="avatar mini">SP</span><b>Samantha Patel<small>Product Designer</small></b><em>Editor</em></div>
-              <div><span class="avatar mini">MJ</span><b>Michael Johnson<small>CEO & Founder</small></b><em>Viewer</em></div>
-              <div><span class="avatar mini">PS</span><b>Priya Sharma<small>UX/UI Designer</small></b><em>Editor</em></div>
-            </div>
+        <div class="modern-team">
+          <div class="modern-team-head">
+            <div><span class="team-kicker">One workspace. One brand.</span><h2>Your whole team,<br><span>perfectly in sync.</span></h2></div>
+            <div class="team-head-copy"><p>Create, update and measure every team member's digital card from one beautifully simple workspace.</p><a href="contact.html" class="btn btn-red">Explore teams <span>&rarr;</span></a></div>
           </div>
-          <div class="team-copy">
-            <span class="section-kicker">Team workspace</span>
-            <h2>Manage Your <span>Team.</span><br>Empower Your <span>Business.</span></h2>
-            <p>Add team members, assign roles, and manage permissions with ease. Perfect for businesses of all sizes.</p>
-            <div class="team-benefits">
-              <div><svg viewBox="0 0 24 24"><path d="M12 3 4 7v6c0 4.97 3.05 8.96 8 10 4.95-1.04 8-5.03 8-10V7l-8-4Z"></path><path d="m9 12 2 2 4-5"></path></svg><span>Role-based Access Control</span></div>
-              <div><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"></path><path d="M8 10h8"></path><path d="M8 14h5"></path></svg><span>Centralized Billing & Invoices</span></div>
-              <div><svg viewBox="0 0 24 24"><path d="M4 19h16"></path><path d="M7 16V9"></path><path d="M12 16V5"></path><path d="M17 16v-7"></path></svg><span>Team Activity Logs</span></div>
-              <div><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"></rect><rect x="13" y="4" width="7" height="7" rx="2"></rect><rect x="4" y="13" width="7" height="7" rx="2"></rect><rect x="13" y="13" width="7" height="7" rx="2"></rect></svg><span>Bulk Card Management</span></div>
+          <div class="team-product">
+            <aside class="team-rail"><img src="../../public/assets/images/logos/sync-e-symbol-red-web.png" alt=""><span class="active">&#9638;</span><span>&#9678;</span><span>&#8644;</span><span>&#8599;</span><span>&#9881;</span><i>JA</i></aside>
+            <div class="team-workspace">
+              <div class="workspace-top"><div><small>Northstar workspace</small><h3>People & cards</h3></div><div class="workspace-actions"><button>Import CSV</button><button class="add-person">+ Add person</button></div></div>
+              <div class="team-metrics"><div><span>Active cards</span><strong>48</strong><small><b>+6</b> this month</small></div><div><span>Total views</span><strong>12.4k</strong><small><b>+18%</b> vs last month</small></div><div><span>Brand health</span><strong>98%</strong><small><b>Excellent</b> consistency</small></div></div>
+              <div class="people-table">
+                <div class="people-head"><span>Team member</span><span>Card status</span><span>Views</span><span>Role</span></div>
+                <div class="person-row"><div><i class="person-avatar warm">JA</i><span><strong>James Anderson</strong><small>Marketing Director</small></span></div><em>Active</em><b>2,481</b><small>Admin</small></div>
+                <div class="person-row"><div><i class="person-avatar rose">SP</i><span><strong>Samantha Patel</strong><small>Product Designer</small></span></div><em>Active</em><b>1,908</b><small>Editor</small></div>
+                <div class="person-row"><div><i class="person-avatar blue">MJ</i><span><strong>Michael Johnson</strong><small>CEO & Founder</small></span></div><em>Active</em><b>3,126</b><small>Admin</small></div>
+              </div>
             </div>
+            <div class="team-float-card"><span class="float-check">&#10003;</span><div><small>Brand update complete</small><strong>48 cards synced</strong></div><i>Just now</i></div>
+            <div class="team-permissions"><span>&#9678;</span><div><small>Smart permissions</small><strong>Everyone has the right access</strong></div></div>
           </div>
+          <div class="team-feature-strip"><div><span>01</span><strong>Bulk card updates</strong></div><div><span>02</span><strong>Role-based access</strong></div><div><span>03</span><strong>Centralized billing</strong></div><div><span>04</span><strong>Team-wide analytics</strong></div></div>
+          </div>
+          <div class="template-gallery-footer"><div class="gallery-progress"><span></span></div><p>Drag or use the arrows to explore <span>&rarr;</span></p></div>
         </div>
       </div>
     </section>
 
     <section class="section-block" id="nfc">
       <div class="container">
-        <div class="nfc-band">
-          <div>
-            <h2>Tap. <span>Connect.</span> Impress.</h2>
-            <p>Our premium NFC cards help you share your digital profile, contact details and more with just a tap.</p>
-            <div class="nfc-points">
-              <span>NXP 215 Chip</span><span>Custom Design</span><span>Durable & Waterproof</span><span>Global Shipping</span>
+        <div class="modern-nfc">
+          <div class="modern-nfc-copy">
+            <span class="nfc-eyebrow"><i></i> Sync E-Card NFC</span>
+            <h2>Tap once.<br><span>Stay remembered.</span></h2>
+            <p>Turn every introduction into a real connection. One tap opens your complete digital profile—no app, no typing, no friction.</p>
+            <div class="modern-nfc-points">
+              <div><b>01</b><span><strong>Instant sharing</strong><small>Works with modern smartphones</small></span></div>
+              <div><b>02</b><span><strong>Designed for you</strong><small>Your brand, colors and identity</small></span></div>
+              <div><b>03</b><span><strong>Made to last</strong><small>Waterproof and durable finish</small></span></div>
             </div>
+            <a href="nfc-cards.html" class="btn btn-red">Explore NFC Cards <span aria-hidden="true">&rarr;</span></a>
           </div>
-          <div class="nfc-product-card"><img src="../../public/assets/images/login-card-back.png" alt="" /><span>NFC )))</span><strong><i>C</i> Card<span>Zynk</span></strong></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section-block two-col-section" id="pricing">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-lg-6">
-            <div class="section-heading">
-              <h2>Simple, Transparent <span>Pricing</span></h2>
-              <p>Choose the perfect plan for you or your team.</p>
+          <div class="modern-nfc-visual">
+            <div class="nfc-halo"></div>
+            <div class="nfc-radar" aria-hidden="true"><i></i><i></i><i></i><strong>NFC</strong></div>
+            <div class="modern-card"><img src="../../public/assets/images/login-card-front.png" alt="Custom Sync E-Card NFC business card"></div>
+            <div class="nfc-phone" aria-hidden="true">
+              <span class="phone-notch"></span><small>Contact received</small><b>JA</b><strong>James Anderson</strong><em>Brand Director</em><i>&#10003; Ready to save</i>
             </div>
-            <div class="pricing-grid">
-              <article class="price-card"><h3>Starter</h3><p>Perfect for individuals</p><strong>$0 <small>/mo</small></strong><ul><li>Digital Business Card</li><li>Basic Templates</li><li>Up to 50 Contacts</li><li>Standard Support</li></ul><a href="../auth/register.html" class="btn btn-outline-custom w-100">Get Started</a></article>
-              <article class="price-card featured"><h3>Professional</h3><p>For professionals & freelancers</p><strong>$5.99 <small>/mo</small></strong><ul><li>All Starter Features</li><li>Custom Domain</li><li>Up to 500 Contacts</li><li>Advanced Analytics</li><li>Priority Support</li></ul><a href="../auth/register.html" class="btn btn-red w-100">Start Free Trial</a></article>
-              <article class="price-card"><h3>Business</h3><p>For teams & businesses</p><strong>$12.99 <small>/mo</small></strong><ul><li>All Professional Features</li><li>Team Management</li><li>Up to 5000 Contacts</li><li>API Access</li><li>Dedicated Support</li></ul><a href="../auth/register.html" class="btn btn-outline-custom w-100">Start Free Trial</a></article>
-            </div>
-          </div>
-          <div class="col-lg-6" id="analytics">
-            <div class="analytics-card">
-              <div class="section-heading">
-                <h2>Analytics That <span>Drive Results</span></h2>
-                <p>Track engagement, views and interactions in real time.</p>
-              </div>
-              <div class="analytics-panel">
-                <div class="analytics-top"><strong>Analytics Overview</strong><span>May 1 - May 31, 2026</span></div>
-                <div class="analytics-stats"><span>12,489<br><small>Card Views</small></span><span>8,756<br><small>Profile Clicks</small></span><span>3,245<br><small>Contacts Saved</small></span><span>1,289<br><small>Shares</small></span></div>
-                <div class="chart-line"></div>
-              </div>
-            </div>
+            <div class="nfc-status"><span>&#10003;</span><div><strong>No subscription needed</strong><small>Tap and share forever</small></div></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section-block compact" id="testimonials">
+    <section class="section-block modern-growth" id="pricing">
       <div class="container">
-        <div class="section-heading text-center">
-          <h2>What Our <span>Users</span> Say</h2>
-          <p>Real stories from real professionals.</p>
+        <div class="growth-heading">
+          <div><span class="growth-kicker">Plans that scale with you</span><h2>Start free. <span>Grow without limits.</span></h2></div>
+          <p>Simple pricing with everything you need to make better connections. Upgrade or cancel whenever you want.</p>
         </div>
-        <div class="testimonial-grid">
-          <article><div class="avatar avatar-man">RM</div><p>Sync E-Card has completely transformed the way we network. The NFC cards are game changers.</p><strong>Rahul Mehta</strong><small>Sales Director, TechCorp</small></article>
-          <article><div class="avatar avatar-woman">AV</div><p>The analytics feature helps us understand our audience better and build stronger connections.</p><strong>Anita Verma</strong><small>Marketing Manager, Brandify</small></article>
-          <article><div class="avatar avatar-man">VS</div><p>Managing our team cards has never been easier. Highly recommended for businesses.</p><strong>Vikram Singh</strong><small>CEO, Innovate Labs</small></article>
+        <div class="modern-price-grid">
+          <article class="modern-price-card">
+            <div class="plan-top"><span class="plan-icon">S</span><div><h3>Starter</h3><p>Build your digital presence</p></div></div>
+            <div class="plan-price"><strong>$0</strong><span>Free forever</span></div>
+            <ul><li>One digital business card</li><li>Essential templates</li><li>Up to 50 contacts</li><li>Standard support</li></ul>
+            <a href="../auth/register.html" class="btn plan-button">Create free card <span>&rarr;</span></a>
+          </article>
+          <article class="modern-price-card recommended">
+            <div class="popular-label">Most popular</div>
+            <div class="plan-top"><span class="plan-icon">P</span><div><h3>Professional</h3><p>For ambitious professionals</p></div></div>
+            <div class="plan-price"><strong>$5.99</strong><span>per month</span></div>
+            <ul><li>Everything in Starter</li><li>Custom domain and branding</li><li>Up to 500 contacts</li><li>Advanced analytics</li></ul>
+            <a href="../auth/register.html" class="btn plan-button">Start free trial <span>&rarr;</span></a>
+          </article>
+          <article class="modern-price-card">
+            <div class="plan-top"><span class="plan-icon">B</span><div><h3>Business</h3><p>Scale your entire team</p></div></div>
+            <div class="plan-price"><strong>$12.99</strong><span>per member / month</span></div>
+            <ul><li>Everything in Professional</li><li>Team and role management</li><li>Up to 5,000 contacts</li><li>API and priority support</li></ul>
+            <a href="contact.html" class="btn plan-button">Talk to sales <span>&rarr;</span></a>
+          </article>
         </div>
+
+        <div class="growth-analytics" id="analytics">
+          <div class="analytics-copy">
+            <span class="growth-kicker">Built-in intelligence</span>
+            <h2>See what turns a tap into a <span>connection.</span></h2>
+            <p>Understand how people engage with your card and learn which links drive the most interest.</p>
+            <div class="analytics-benefits"><span><i>&#10003;</i> Live engagement</span><span><i>&#10003;</i> Contact insights</span><span><i>&#10003;</i> Team reports</span></div>
+          </div>
+          <div class="analytics-dashboard">
+            <div class="dash-toolbar"><div><small>Overview</small><strong>Card performance</strong></div><span>Last 30 days &#8964;</span></div>
+            <div class="modern-analytics-stats"><div><small>Total views</small><strong>12,489</strong><em>+18.2%</em></div><div><small>Link clicks</small><strong>8,756</strong><em>+12.4%</em></div><div><small>Contacts saved</small><strong>3,245</strong><em>+24.8%</em></div></div>
+            <div class="modern-chart"><div class="chart-label"><span>Profile engagement</span><b>2,400</b></div><svg viewBox="0 0 700 220" preserveAspectRatio="none" aria-label="Profile engagement increased over the last 30 days" role="img"><defs><linearGradient id="growthArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3438" stop-opacity=".3"/><stop offset="1" stop-color="#ff3438" stop-opacity="0"/></linearGradient></defs><path class="chart-area" d="M0 190 C55 182 75 142 130 158 S220 195 270 122 S355 154 405 105 S495 132 550 70 S635 92 700 30 V220 H0Z"/><path class="chart-stroke" d="M0 190 C55 182 75 142 130 158 S220 195 270 122 S355 154 405 105 S495 132 550 70 S635 92 700 30"/><circle cx="700" cy="30" r="6"/></svg><div class="chart-dates"><span>May 1</span><span>May 8</span><span>May 15</span><span>May 22</span><span>May 30</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block modern-stories" id="testimonials">
+      <div class="container">
+        <div class="stories-heading">
+          <div><span class="stories-kicker">Customer stories</span><h2>Built for connections.<br><span>Loved by people.</span></h2></div>
+          <div class="stories-score"><strong>4.9</strong><div><span aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><small>Based on 2,000+ customer reviews</small></div></div>
+        </div>
+        <div class="stories-layout">
+          <article class="story-featured">
+            <div class="story-top"><span class="story-brand">NORTHSTAR /</span><span class="story-stars">&#9733; 5.0</span></div>
+            <blockquote>“Sync E-Card changed the way our entire sales team connects. We look more professional, follow up faster, and never run out of cards.”</blockquote>
+            <div class="story-person"><span class="story-avatar coral">RM</span><div><strong>Rahul Mehta</strong><small>Sales Director, Northstar</small></div><i>Verified customer</i></div>
+            <span class="giant-quote" aria-hidden="true">“</span>
+          </article>
+          <div class="story-stack">
+            <article class="story-compact">
+              <div class="story-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <blockquote>“The insights finally show us what people care about. It has made every follow-up much more relevant.”</blockquote>
+              <div class="story-person"><span class="story-avatar plum">AV</span><div><strong>Anita Verma</strong><small>Marketing Manager, Brandify</small></div></div>
+            </article>
+            <article class="story-compact accent">
+              <div class="story-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+              <blockquote>“Onboarding our whole company took one afternoon. Keeping every card on-brand is now effortless.”</blockquote>
+              <div class="story-person"><span class="story-avatar navy">VS</span><div><strong>Vikram Singh</strong><small>CEO, Innovate Labs</small></div></div>
+            </article>
+          </div>
+        </div>
+        <div class="stories-footer"><span><strong>25K+</strong> active professionals</span><span><strong>98%</strong> would recommend</span><span><strong>42</strong> countries connected</span></div>
       </div>
     </section>
 
     <section class="section-block" id="contact">
       <div class="container">
-        <div class="contact-panel">
-          <div>
-            <h2>Get in Touch</h2>
-            <p>Have questions or want to learn more? We'd love to hear from you.</p>
+        <div class="modern-contact">
+          <div class="contact-intro">
+            <span class="contact-kicker">Let's build something better</span>
+            <h2>Have a question?<br><span>We're all ears.</span></h2>
+            <p>Whether you're creating your first card or rolling out Sync E-Card across an entire organization, our team is ready to help.</p>
+            <div class="response-note"><span><i></i></span><div><strong>Real people, real answers</strong><small>We usually reply within one business day.</small></div></div>
+            <div class="contact-socials" aria-label="Sync E-Card social channels"><small>Follow us</small><div><span aria-label="Facebook">f</span><span aria-label="LinkedIn">in</span><span aria-label="TikTok">t</span><span aria-label="Instagram">ig</span></div></div>
+            <div class="contact-shape" aria-hidden="true"><i></i><i></i><i></i><b>&rarr;</b></div>
+          </div>
+          <div class="contact-form-card">
+            <div class="form-heading"><div><span>Send us a message</span><h3>Tell us what you need</h3></div><b>01 / 01</b></div>
             <form class="contact-form">
-              <div class="row g-3">
-                <div class="col-md-6"><input type="text" class="form-control custom-input" placeholder="Your Name" required></div>
-                <div class="col-md-6"><input type="email" class="form-control custom-input" placeholder="Your Email" required></div>
-                <div class="col-md-6"><input type="text" class="form-control custom-input" placeholder="Company Name"></div>
-                <div class="col-md-6"><input type="text" class="form-control custom-input" placeholder="Subject"></div>
-                <div class="col-12"><textarea class="form-control custom-input" rows="4" placeholder="Your Message" required></textarea></div>
-                <div class="col-12"><button type="submit" class="btn btn-red w-100">Send Message</button></div>
+              <div class="modern-form-grid">
+                <div class="form-field"><label for="contact-name">Your name</label><input id="contact-name" type="text" class="form-control custom-input" placeholder="e.g. James Anderson" autocomplete="name" required></div>
+                <div class="form-field"><label for="contact-email">Work email</label><input id="contact-email" type="email" class="form-control custom-input" placeholder="you@company.com" autocomplete="email" required></div>
+                <div class="form-field"><label for="contact-company">Company <span>Optional</span></label><input id="contact-company" type="text" class="form-control custom-input" placeholder="Your company" autocomplete="organization"></div>
+                <div class="form-field"><label for="contact-subject">What can we help with?</label><select id="contact-subject" class="form-control custom-input"><option>General enquiry</option><option>Team & enterprise</option><option>NFC cards</option><option>Billing support</option></select></div>
+                <div class="form-field full"><label for="contact-message">Your message</label><textarea id="contact-message" class="form-control custom-input" rows="4" placeholder="Share a little about what you're looking for..." required></textarea></div>
+                <div class="form-submit full"><small>By submitting, you agree to our privacy policy.</small><button type="submit" class="btn btn-red">Send message <span>&rarr;</span></button></div>
               </div>
             </form>
           </div>
-          <div class="contact-info-card">
-            <h3>Contact Information</h3>
-            <p><strong>Email</strong><br>hello@syncecard.com</p>
-            <p><strong>Phone</strong><br>+1 (555) 123-4567</p>
-            <p><strong>Address</strong><br>123 Business Ave, New York, NY 10001, USA</p>
-            <p><strong>Website</strong><br>www.syncecard.com</p>
+          <div class="contact-methods">
+            <a href="mailto:info@syncecard.lk"><span class="method-icon">@</span><div><small>Email us</small><strong>info@syncecard.lk</strong></div><b>&rarr;</b></a>
+            <a href="tel:+94764545756"><span class="method-icon">&#9742;</span><div><small>Call now</small><strong>076 454 5756</strong></div><b>&rarr;</b></a>
+            <div><span class="method-icon">&#9678;</span><div><small>Visit us</small><strong>109/4 Manning Pl, Colombo 00600</strong></div></div>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="footer footer-modern">
+    <div class="footer-glow footer-glow-left" aria-hidden="true"></div>
+    <div class="footer-glow footer-glow-right" aria-hidden="true"></div>
     <div class="container">
-      <div class="footer-grid">
-        <div>
-          <a class="brand-mark footer-logo" href="home.html"><img class="brand-logo-img footer-logo-img" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></a>
-          <p>The all-in-one digital business card platform for modern professionals and businesses.</p>
-          <div class="social-row"><span>f</span><span>x</span><span>in</span><span>ig</span><span>yt</span></div>
+      <div class="footer-cta">
+        <div class="footer-cta-copy">
+          <span class="footer-kicker"><i></i> Your digital identity, reimagined</span>
+          <h2>Make every <em>hello</em> count.</h2>
+          <p>Create a memorable first impression with one smart card that is always up to date.</p>
         </div>
-        <div><h3>Product</h3><a href="#features">Features</a><a href="templates.html">Templates</a><a href="pricing.html">Pricing</a><a href="nfc-cards.html">NFC Cards</a><a href="#features">Integrations</a></div>
-        <div><h3>Company</h3><a href="about.html">About Us</a><a href="contact.html">Careers</a><a href="contact.html">Blog</a><a href="contact.html">Press Kit</a><a href="contact.html">Contact Us</a></div>
-        <div><h3>Resources</h3><a href="contact.html">Help Center</a><a href="contact.html">Guides</a><a href="#features">API Documentation</a><a href="contact.html">Community</a><a href="contact.html">Status</a></div>
-        <div><h3>Legal</h3><a href="contact.html">Privacy Policy</a><a href="contact.html">Terms of Service</a><a href="contact.html">Cookie Policy</a><a href="contact.html">GDPR Compliance</a></div>
-        <div><h3>Newsletter</h3><p>Subscribe to get updates and news about Sync E-Card.</p><form class="newsletter-form"><input type="email" placeholder="Enter your email"><button type="submit">-></button></form></div>
+        <div class="footer-cta-actions">
+          <a class="footer-demo-link" href="#contact">Book a demo <span>&nearr;</span></a>
+          <a class="footer-start-link" href="../auth/register.html">Create your card <span>&rarr;</span></a>
+        </div>
       </div>
-      <div class="footer-bottom"><p>&copy; 2026 Sync E-Card. All rights reserved.</p><p>Made with love by Sync E-Card</p></div>
+
+      <div class="footer-content">
+        <div class="footer-brand-column">
+          <a class="brand-mark footer-logo" href="home.html" aria-label="Sync E-Card home"><img class="brand-logo-img footer-logo-img" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></a>
+          <p>One smart digital identity for better introductions, stronger connections, and lasting opportunities.</p>
+          <div class="footer-socials" aria-label="Follow Sync E-Card">
+            <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3.3 0-5 2-5 5v2H6v4h3v7h4v-7h3l1-4h-4V9c0-.7.3-1 1-1Z"/></svg></a>
+            <a href="#" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.6 3H22l-7.5 8.6L23 21h-6.7l-5.2-6.8L5.2 21H1.8l7.7-8.8L1.3 3h6.8l4.7 6.2L18.6 3Zm-1.2 16h1.9L7.1 4.9h-2L17.4 19Z"/></svg></a>
+            <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 8.3H2.7V21h3.8V8.3ZM4.6 2A2.3 2.3 0 1 0 4.6 6.6 2.3 2.3 0 0 0 4.6 2ZM21.3 13.7c0-3.8-2-5.8-4.8-5.8-2.2 0-3.2 1.2-3.8 2V8.3H9V21h3.8v-6.3c0-1.7.3-3.3 2.4-3.3 2 0 2.1 1.9 2.1 3.4V21h3.8l.2-7.3Z"/></svg></a>
+            <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm-.2 2A3.3 3.3 0 0 0 4 7.3v9.4A3.3 3.3 0 0 0 7.3 20h9.4a3.3 3.3 0 0 0 3.3-3.3V7.3A3.3 3.3 0 0 0 16.7 4H7.3ZM17 5.5A1.5 1.5 0 1 1 17 8a1.5 1.5 0 0 1 0-2.5ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg></a>
+          </div>
+        </div>
+
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <div><h3>Product</h3><a href="#features">Features</a><a href="templates.html">Templates</a><a href="pricing.html">Pricing</a><a href="nfc-cards.html">NFC Cards</a><a href="#features">Integrations</a></div>
+          <div><h3>Company</h3><a href="about.html">About Us</a><a href="contact.html">Careers</a><a href="contact.html">Blog</a><a href="contact.html">Contact Us</a></div>
+          <div><h3>Resources</h3><a href="contact.html">Help Center</a><a href="contact.html">Guides</a><a href="#features">API Docs</a><a href="contact.html">Community</a></div>
+        </nav>
+
+        <div class="footer-newsletter">
+          <span class="newsletter-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm8 7.3L19.4 7H4.6l7.4 5.3ZM4 17h16V9.5l-8 5.7-8-5.7V17Z"/></svg></span>
+          <span class="newsletter-label">The Sync Signal</span>
+          <h3>Ideas worth sharing.</h3>
+          <p>Fresh product news and smarter networking tips, delivered occasionally.</p>
+          <form class="newsletter-form" action="#" method="post">
+            <label class="visually-hidden" for="footer-email">Email address</label>
+            <input id="footer-email" name="email" type="email" placeholder="you@company.com" autocomplete="email" required>
+            <button type="submit" aria-label="Subscribe to newsletter"><span>&rarr;</span></button>
+          </form>
+          <small>No spam. Just useful things.</small>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Sync E-Card. All rights reserved.</p>
+        <div class="footer-legal"><a href="contact.html">Privacy</a><a href="contact.html">Terms</a><a href="contact.html">Cookies</a></div>
+        <p class="footer-status"><i></i> All systems operational</p>
+      </div>
     </div>
   </footer>
 

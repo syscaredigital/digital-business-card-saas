@@ -1,4 +1,113 @@
 document.addEventListener("DOMContentLoaded", function () {
+  var isSuperAdminPage = /[\\/]super-admin[\\/]/.test(window.location.pathname);
+  var sidebarLogo = document.querySelector(".sidebar-logo");
+
+  if (isSuperAdminPage && sidebarLogo) {
+    sidebarLogo.innerHTML =
+      '<a class="super-admin-brand" href="dashboard.html" aria-label="Sync E-Card super admin dashboard">' +
+      '<img class="super-admin-brand-logo" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" />' +
+      "</a>";
+  }
+
+  var adminPageSlug = isSuperAdminPage
+    ? (window.location.pathname.split("/").pop() || "dashboard.html").replace(/\.html$/i, "")
+    : "";
+
+  var adminNavigation = [
+    ["Overview", "dashboard.html", "OV", "main"],
+    ["Users", "users.html", "US", "Workspace"],
+    ["VCards", "vcards.html", "VC", ""],
+    ["NFC Cards", "nfc-orders.html", "NF", ""],
+    ["Subscriptions", "subscriptions.html", "SU", ""],
+    ["Cash Payments", "cash-payments.html", "CP", "Finance"],
+    ["Transactions", "transactions.html", "TR", ""],
+    ["Payouts", "payouts.html", "PO", ""],
+    ["Withdrawals", "withdrawals.html", "WD", ""],
+    ["Affiliations", "affiliations.html", "AF", "Growth"],
+    ["Coupon Codes", "coupon-codes.html", "CO", ""],
+    ["Analytics", "analytics.html", "AN", "Insights"],
+    ["Reports", "reports.html", "RE", ""],
+    ["Settings", "settings.html", "SE", "System"],
+    ["System Logs", "system-logs.html", "LO", ""]
+  ];
+
+  function renderAdminNavigation(activeSlug) {
+    var sidebarNav = document.querySelector(".sidebar-nav");
+    if (!sidebarNav) return;
+
+    sidebarNav.innerHTML = adminNavigation.map(function (item) {
+      var section = item[3] && item[3] !== "main" ? '<div class="sidebar-section-label">' + item[3] + "</div>" : "";
+      var active = item[1] === activeSlug + ".html" ? " active" : "";
+      return section + '<a href="' + item[1] + '" class="nav-item' + active + '"><span class="admin-nav-mark">' + item[2] + "</span><span>" + item[0] + "</span></a>";
+    }).join("");
+
+    var sidebar = sidebarNav.closest(".sidebar");
+    if (sidebar && !sidebar.querySelector(".admin-profile-card")) {
+      sidebar.insertAdjacentHTML(
+        "beforeend",
+        '<div class="admin-profile-card">' +
+          '<div class="table-user">' +
+            '<span class="mini-avatar">SA</span>' +
+            '<div><strong>Super Admin</strong><div class="subtle-handle">info@syncecard.lk</div></div>' +
+          "</div>" +
+          '<span class="admin-online"><i></i> All systems online</span>' +
+        "</div>"
+      );
+    }
+  }
+
+  if (isSuperAdminPage) {
+    renderAdminNavigation(adminPageSlug);
+  }
+
+  if (isSuperAdminPage && adminPageSlug !== "dashboard") {
+    var adminPageConfig = {
+      users: { title: "Users", eyebrow: "Identity management", stats: [["Total users", "12,543", "+12.5%"], ["Active today", "8,421", "67.1%"], ["Awaiting review", "83", "Needs action"]] },
+      vcards: { title: "VCards", eyebrow: "Digital identity", stats: [["Published cards", "23,456", "+10.7%"], ["Profile views", "1.24M", "+18.4%"], ["Draft cards", "318", "In progress"]] },
+      "nfc-orders": { title: "NFC Cards", eyebrow: "Physical products", stats: [["Total orders", "4,567", "+9.2%"], ["Awaiting fulfilment", "12", "Needs action"], ["Delivered", "3,890", "85.2%"]] },
+      subscriptions: { title: "Subscriptions", eyebrow: "Recurring billing", stats: [["Active plans", "8,456", "+8.2%"], ["Monthly revenue", "$45,678", "+15.3%"], ["Renewing soon", "246", "Next 7 days"]] },
+      transactions: { title: "Transactions", eyebrow: "Financial ledger", stats: [["Gross volume", "$68,420", "+13.8%"], ["Successful", "2,846", "98.7%"], ["Pending", "17", "Needs review"]] },
+      "cash-payments": { title: "Cash Payments", eyebrow: "Manual payments", stats: [["Pending value", "$1,420", "5 payments"], ["Approved today", "$2,860", "12 payments"], ["Approval rate", "96.4%", "+2.1%"]] },
+      payouts: { title: "Payouts", eyebrow: "Partner finance", stats: [["Ready to pay", "$1,470", "2 payouts"], ["Paid this month", "$18,240", "+11.6%"], ["Next payout", "Jul 15", "2 days"]] },
+      withdrawals: { title: "Withdrawals", eyebrow: "Fund requests", stats: [["Pending requests", "8", "$2,780"], ["Processed", "142", "This month"], ["Average time", "1.8 days", "-12%"]] },
+      affiliations: { title: "Affiliations", eyebrow: "Partner network", stats: [["Active partners", "284", "+24 this month"], ["Conversions", "1,892", "14.6%"], ["Commission due", "$6,840", "Next cycle"]] },
+      "coupon-codes": { title: "Coupon Codes", eyebrow: "Promotions", stats: [["Active coupons", "18", "4 ending soon"], ["Redemptions", "1,246", "+22.8%"], ["Revenue influenced", "$12,840", "This month"]] },
+      analytics: { title: "Analytics", eyebrow: "Platform intelligence", stats: [["Profile views", "1.24M", "+18.4%"], ["QR scans", "78,905", "+16.2%"], ["Contact saves", "42,680", "34.4% rate"]] },
+      reports: { title: "Reports", eyebrow: "Exports & insights", stats: [["Saved reports", "24", "6 scheduled"], ["Exports this month", "186", "+14.8%"], ["Next delivery", "Tomorrow", "08:00 AM"]] },
+      settings: { title: "Settings", eyebrow: "Platform controls", stats: [["System status", "Healthy", "All services"], ["Admin alerts", "3", "Unread"], ["Last backup", "12 min ago", "Successful"]] }
+    };
+    var pageConfig = adminPageConfig[adminPageSlug];
+
+    if (pageConfig) {
+      document.body.classList.add("super-admin-management", "admin-page-" + adminPageSlug);
+
+      var topbar = document.querySelector(".topbar");
+      if (topbar) {
+        topbar.classList.add("admin-management-topbar");
+        topbar.insertAdjacentHTML("afterbegin", '<div class="admin-shell-context"><span>Super admin</span><strong>' + pageConfig.title + "</strong></div>");
+        topbar.insertAdjacentHTML("beforeend", '<div class="admin-shell-account"><a href="settings.html" aria-label="Open settings">SA</a><span><strong>Super Admin</strong><small>Administrator</small></span></div>');
+      }
+
+      var pageContent = document.querySelector(".page-content");
+      var pageHeader = pageContent ? pageContent.querySelector(".page-header") : null;
+      if (!pageHeader && pageContent) {
+        pageHeader = document.createElement("div");
+        pageHeader.className = "page-header admin-generated-header";
+        pageHeader.innerHTML = '<div><h1>' + pageConfig.title + '</h1><p>Manage ' + pageConfig.title.toLowerCase() + " across the Sync E-Card platform.</p></div>";
+        pageContent.insertBefore(pageHeader, pageContent.firstChild);
+      }
+      if (pageHeader) {
+        pageHeader.classList.add("admin-management-hero");
+        var headingCopy = pageHeader.querySelector("div");
+        if (headingCopy) headingCopy.insertAdjacentHTML("afterbegin", '<span class="admin-page-eyebrow">' + pageConfig.eyebrow + "</span>");
+        var statsMarkup = '<section class="admin-page-stats" aria-label="' + pageConfig.title + ' summary">' + pageConfig.stats.map(function (stat, index) {
+          return '<article><span>' + stat[0] + '</span><strong>' + stat[1] + '</strong><small class="' + (index === 2 ? "attention" : "") + '">' + stat[2] + "</small></article>";
+        }).join("") + "</section>";
+        pageHeader.insertAdjacentHTML("afterend", statsMarkup);
+      }
+    }
+  }
+
   var searchInput = document.getElementById("dashboardSearch");
   var emptySearchState = document.getElementById("emptySearchState");
   var toastStack = document.getElementById("toastStack");
@@ -22,8 +131,49 @@ document.addEventListener("DOMContentLoaded", function () {
   var userFormFeedback = document.getElementById("userFormFeedback");
   var userDirectoryBody = document.getElementById("userDirectoryBody");
   var userDirectoryCount = document.getElementById("userDirectoryCount");
+  var userEditId = document.getElementById("userEditId");
+  var userModalTitle = document.getElementById("userModalTitle");
   var userProfileInput = document.getElementById("userProfile");
   var userProfilePreview = document.getElementById("userProfilePreview");
+  var superAdminUsersById = {};
+  var vcardDirectory = document.getElementById("vcardDirectory");
+  var vcardDirectoryCount = document.getElementById("vcardDirectoryCount");
+  var vcardTemplateGrid = document.getElementById("vcardTemplateGrid");
+  var vcardModal = document.getElementById("vcardModal");
+  var vcardModalBackdrop = document.getElementById("vcardModalBackdrop");
+  var openVCardModalButton = document.getElementById("openVCardModal");
+  var closeVCardModalButton = document.getElementById("closeVCardModal");
+  var resetVCardFormButton = document.getElementById("resetVCardForm");
+  var vcardAdminForm = document.getElementById("vcardAdminForm");
+  var vcardFormFeedback = document.getElementById("vcardFormFeedback");
+  var superAdminVCardsById = {};
+  var nfcRegistryBody = document.getElementById("nfcRegistryBody");
+  var nfcOrdersLiveBody = document.getElementById("nfcOrdersLiveBody");
+  var nfcRegistryCount = document.getElementById("nfcRegistryCount");
+  var nfcOrdersLiveCount = document.getElementById("nfcOrdersLiveCount");
+  var nfcPendingTabCount = document.getElementById("nfcPendingTabCount");
+  var nfcRegistryModal = document.getElementById("nfcRegistryModal");
+  var nfcRegistryModalBackdrop = document.getElementById("nfcRegistryModalBackdrop");
+  var openNfcRegistryModalButton = document.getElementById("openNfcRegistryModal");
+  var closeNfcRegistryModalButton = document.getElementById("closeNfcRegistryModal");
+  var resetNfcRegistryFormButton = document.getElementById("resetNfcRegistryForm");
+  var nfcRegistryForm = document.getElementById("nfcRegistryForm");
+  var nfcRegistryFeedback = document.getElementById("nfcRegistryFeedback");
+  var nfcRegistryModalTitle = document.getElementById("nfcRegistryModalTitle");
+  var superAdminNfcCardsById = {};
+  var nfcProductsGrid = document.getElementById("nfcProductsGrid");
+  var nfcProductsCount = document.getElementById("nfcProductsCount");
+  var nfcProductModal = document.getElementById("nfcProductModal");
+  var nfcProductModalBackdrop = document.getElementById("nfcProductModalBackdrop");
+  var openNfcProductModalButton = document.getElementById("openNfcProductModal");
+  var closeNfcProductModalButton = document.getElementById("closeNfcProductModal");
+  var resetNfcProductFormButton = document.getElementById("resetNfcProductForm");
+  var nfcProductForm = document.getElementById("nfcProductForm");
+  var nfcProductFeedback = document.getElementById("nfcProductFeedback");
+  var nfcProductModalTitle = document.getElementById("nfcProductModalTitle");
+  var nfcProductFrontPreview = document.getElementById("nfcProductFrontPreview");
+  var nfcProductBackPreview = document.getElementById("nfcProductBackPreview");
+  var superAdminNfcProductsById = {};
   var nfcCatalogSearch = document.getElementById("nfcCatalogSearch");
   var vcardTabButtons = Array.from(document.querySelectorAll("[data-vcard-tab-target]"));
   var nfcTabButtons = Array.from(document.querySelectorAll("[data-nfc-tab-target]"));
@@ -48,6 +198,19 @@ document.addEventListener("DOMContentLoaded", function () {
   var cashPaymentSearch = document.getElementById("cashPaymentSearch");
   var cashPaymentsTableBody = document.getElementById("cashPaymentsTableBody");
   var cashPaymentsResults = document.getElementById("cashPaymentsResults");
+  var cashPaymentAdminBody = document.getElementById("cashPaymentAdminBody");
+  var cashPaymentAdminCount = document.getElementById("cashPaymentAdminCount");
+  var cashPaymentStatusFilter = document.getElementById("cashPaymentStatusFilter");
+  var cashPaymentAdminModal = document.getElementById("cashPaymentAdminModal");
+  var cashPaymentAdminModalBackdrop = document.getElementById("cashPaymentAdminModalBackdrop");
+  var openCashPaymentAdminModalButton = document.getElementById("openCashPaymentAdminModal");
+  var closeCashPaymentAdminModalButton = document.getElementById("closeCashPaymentAdminModal");
+  var resetCashPaymentAdminFormButton = document.getElementById("resetCashPaymentAdminForm");
+  var cashPaymentAdminForm = document.getElementById("cashPaymentAdminForm");
+  var cashPaymentAdminFeedback = document.getElementById("cashPaymentAdminFeedback");
+  var cashPaymentAdminModalTitle = document.getElementById("cashPaymentAdminModalTitle");
+  var superAdminCashPaymentsById = {};
+  var superAdminCashSubscriptions = [];
   var subscriptionSearch = document.getElementById("subscriptionSearch");
   var subscriptionsTabButtons = Array.from(document.querySelectorAll("[data-subscriptions-tab-target]"));
   var subscriptionsTableBody = document.getElementById("subscriptionsTableBody");
@@ -74,6 +237,28 @@ document.addEventListener("DOMContentLoaded", function () {
   var planModalTitle = document.getElementById("planModalTitle");
   var planSubmitButton = document.getElementById("planSubmitButton");
   var planEditRowIndexInput = document.getElementById("planEditRowIndex");
+  var subscriptionAdminBody = document.getElementById("subscriptionAdminBody");
+  var subscriptionAdminCount = document.getElementById("subscriptionAdminCount");
+  var planAdminBody = document.getElementById("planAdminBody");
+  var planAdminCount = document.getElementById("planAdminCount");
+  var subscriptionAdminModal = document.getElementById("subscriptionAdminModal");
+  var subscriptionAdminModalBackdrop = document.getElementById("subscriptionAdminModalBackdrop");
+  var openSubscriptionAdminModalButton = document.getElementById("openSubscriptionAdminModal");
+  var closeSubscriptionAdminModalButton = document.getElementById("closeSubscriptionAdminModal");
+  var resetSubscriptionAdminFormButton = document.getElementById("resetSubscriptionAdminForm");
+  var subscriptionAdminForm = document.getElementById("subscriptionAdminForm");
+  var subscriptionAdminFeedback = document.getElementById("subscriptionAdminFeedback");
+  var subscriptionAdminModalTitle = document.getElementById("subscriptionAdminModalTitle");
+  var planAdminModal = document.getElementById("planAdminModal");
+  var planAdminModalBackdrop = document.getElementById("planAdminModalBackdrop");
+  var openPlanAdminModalButton = document.getElementById("openPlanAdminModal");
+  var closePlanAdminModalButton = document.getElementById("closePlanAdminModal");
+  var resetPlanAdminFormButton = document.getElementById("resetPlanAdminForm");
+  var planAdminForm = document.getElementById("planAdminForm");
+  var planAdminFeedback = document.getElementById("planAdminFeedback");
+  var planAdminModalTitle = document.getElementById("planAdminModalTitle");
+  var superAdminSubscriptionsById = {};
+  var superAdminPlansById = {};
   var affiliationsTabButtons = Array.from(document.querySelectorAll("[data-affiliations-tab-target]"));
   var couponTabButtons = Array.from(document.querySelectorAll("[data-coupon-tab-target]"));
   var settingsTabButtons = Array.from(document.querySelectorAll("[data-settings-tab-target]"));
@@ -1367,12 +1552,13 @@ document.addEventListener("DOMContentLoaded", function () {
     return article;
   }
 
-  function updateUserDirectoryCount() {
+  function updateUserDirectoryCount(total) {
     if (!userDirectoryBody || !userDirectoryCount) {
       return;
     }
 
-    userDirectoryCount.textContent = userDirectoryBody.children.length + " users";
+    var count = Number.isFinite(Number(total)) ? Number(total) : userDirectoryBody.querySelectorAll(".searchable-item").length;
+    userDirectoryCount.textContent = formatDashboardNumber(count) + (count === 1 ? " user" : " users");
   }
 
   function avatarInitials(name) {
@@ -1394,7 +1580,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function statusClass(status) {
-    if (status === "Inactive") {
+    if (status === "Inactive" || status === "Rejected") {
       return "inactive";
     }
 
@@ -1423,37 +1609,500 @@ document.addEventListener("DOMContentLoaded", function () {
     userFormFeedback.textContent = message;
   }
 
-  function buildUserRow(formData) {
-    var firstName = formData.get("firstName").trim();
-    var lastName = formData.get("lastName").trim();
-    var fullName = (firstName + " " + lastName).trim();
-    var email = formData.get("email").trim();
-    var username = (firstName + lastName).toLowerCase().replace(/[^a-z0-9]/g, "");
-    var plan = "Pending Purchase";
-    var cards = "1";
-    var status = formData.get("status");
-    var row = document.createElement("tr");
-    var searchTerms = [
-      fullName,
-      username,
-      email,
-      plan,
-      status,
-      formData.get("phone") || ""
-    ].join(" ").toLowerCase();
+  function renderSuperAdminUsers(users, total) {
+    if (!userDirectoryBody) return;
+    superAdminUsersById = {};
+    if (!users.length) {
+      userDirectoryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>No users found</strong><span>Create the first user with the Add User button.</span></div></td></tr>';
+      updateUserDirectoryCount(total);
+      return;
+    }
 
-    row.className = "searchable-item";
-    row.setAttribute("data-search", searchTerms);
-    row.innerHTML = [
-      '<td><div class="table-user"><span class="mini-avatar">' + avatarInitials(fullName) + '</span><div><strong>' + fullName + '</strong><div class="subtle-handle">@' + username + '</div></div></div></td>',
-      "<td>" + email + "</td>",
-      '<td><span class="plan-pill ' + planClass(plan) + '">' + plan + "</span></td>",
-      "<td>" + cards + "</td>",
-      "<td>" + formatDate(new Date()) + "</td>",
-      '<td><span class="status-badge ' + statusClass(status) + '">' + status + "</span></td>"
-    ].join("");
+    userDirectoryBody.innerHTML = users.map(function (user) {
+      superAdminUsersById[String(user.id)] = user;
+      var name = user.name || user.email || "User";
+      var email = user.email || "";
+      var username = email.split("@")[0];
+      var plan = user.plan || "Free";
+      var rawStatus = String(user.status || "inactive").toLowerCase();
+      var displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+      var joinedAt = user.joinedAt ? formatDate(new Date(user.joinedAt)) : "Not available";
+      var searchTerms = [name, email, username, plan, rawStatus, user.phoneNumber || "", user.companyName || ""].join(" ").toLowerCase();
+      var approveAction = '<button type="button" class="user-action-btn approve" data-user-action="status" data-user-status="active" data-user-id="' + user.id + '">Approve</button>';
+      var rejectAction = '<button type="button" class="user-action-btn reject" data-user-action="status" data-user-status="rejected" data-user-id="' + user.id + '">Reject</button>';
+      var reviewAction = rawStatus === "pending"
+        ? approveAction + rejectAction
+        : (rawStatus === "active" ? rejectAction : approveAction);
+      return '<tr class="searchable-item" data-search="' + escapeDashboardHtml(searchTerms) + '">' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(name) || "U") + '</span><div><strong>' + escapeDashboardHtml(name) + '</strong><div class="subtle-handle">@' + escapeDashboardHtml(username) + '</div></div></div></td>' +
+        '<td>' + escapeDashboardHtml(email) + '</td>' +
+        '<td><span class="plan-pill ' + planClass(plan) + '">' + escapeDashboardHtml(plan) + '</span></td>' +
+        '<td>' + formatDashboardNumber(user.cards) + '</td>' +
+        '<td>' + escapeDashboardHtml(joinedAt) + '</td>' +
+        '<td><span class="status-badge ' + statusClass(displayStatus) + '">' + escapeDashboardHtml(displayStatus) + '</span></td>' +
+        '<td><div class="user-row-actions">' +
+          '<button type="button" class="user-action-btn edit" data-user-action="edit" data-user-id="' + user.id + '">Edit</button>' +
+          reviewAction +
+          '<button type="button" class="user-action-btn delete" data-user-action="delete" data-user-id="' + user.id + '">Delete</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join("");
+    updateUserDirectoryCount(total);
+    applySearchFilter();
+  }
 
-    return row;
+  function updateUsersPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-users .admin-page-stats article");
+    if (cards.length < 3) return;
+    cards[0].querySelector("strong").textContent = formatDashboardNumber(summary.total);
+    cards[0].querySelector("small").textContent = "Database accounts";
+    cards[1].querySelector("strong").textContent = formatDashboardNumber(summary.active);
+    cards[1].querySelector("small").textContent = "Active accounts";
+    cards[2].querySelector("strong").textContent = formatDashboardNumber(summary.pending);
+    cards[2].querySelector("small").textContent = "Needs action";
+  }
+
+  async function loadSuperAdminUsers() {
+    if (adminPageSlug !== "users" || !userDirectoryBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      userDirectoryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to view database users.</span></div></td></tr>';
+      updateUserDirectoryCount(0);
+      return;
+    }
+
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/users?limit=100&search=" + encodeURIComponent(search), {
+        headers: { Authorization: "Bearer " + token }
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load users");
+      renderSuperAdminUsers(data.users || [], data.pagination ? data.pagination.total : 0);
+      updateUsersPageSummary(data.summary || {});
+    } catch (error) {
+      userDirectoryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Users could not be loaded</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      updateUserDirectoryCount(0);
+      console.error("Super admin users:", error);
+    }
+  }
+
+  function updateVCardsPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-vcards .admin-page-stats article");
+    if (cards.length < 3) return;
+    cards[0].querySelector("span").textContent = "Total VCards";
+    cards[0].querySelector("strong").textContent = formatDashboardNumber(summary.total);
+    cards[0].querySelector("small").textContent = "Database records";
+    cards[1].querySelector("span").textContent = "Active VCards";
+    cards[1].querySelector("strong").textContent = formatDashboardNumber(summary.active);
+    cards[1].querySelector("small").textContent = "Visible on platform";
+    cards[2].querySelector("span").textContent = "Inactive VCards";
+    cards[2].querySelector("strong").textContent = formatDashboardNumber(summary.inactive);
+    cards[2].querySelector("small").textContent = "Hidden cards";
+  }
+
+  function renderSuperAdminVCards(vcards, total) {
+    if (!vcardDirectory) return;
+    superAdminVCardsById = {};
+    Array.from(vcardDirectory.children).forEach(function (child) {
+      if (!child.classList.contains("vcard-table-head")) child.remove();
+    });
+    if (!vcards.length) {
+      vcardDirectory.insertAdjacentHTML("beforeend", '<div class="vcard-directory-state"><strong>No VCards found</strong><span>Create a VCard or try another search.</span></div>');
+      if (vcardDirectoryCount) vcardDirectoryCount.textContent = "0 cards";
+      return;
+    }
+
+    var markup = vcards.map(function (card, index) {
+      superAdminVCardsById[String(card.id)] = card;
+      var owner = card.owner || {};
+      var template = card.template || {};
+      var contactParts = [];
+      if (card.email) contactParts.push('<a href="mailto:' + escapeDashboardHtml(card.email) + '">' + escapeDashboardHtml(card.email) + '</a>');
+      if (card.phone) contactParts.push('<span>' + escapeDashboardHtml(card.phone) + '</span>');
+      if (card.websiteUrl) contactParts.push('<a href="' + escapeDashboardHtml(card.websiteUrl) + '" target="_blank" rel="noopener noreferrer">Open website</a>');
+      var initials = avatarInitials(card.title || "VCard") || "VC";
+      var updatedAt = card.updatedAt ? formatDate(new Date(card.updatedAt)) : "Not available";
+      var statusText = card.isActive ? "Active" : "Inactive";
+      return '<div class="vcard-row" data-vcard-id="' + card.id + '">' +
+        '<div class="vcard-name-cell"><div class="vcard-thumb vcard-thumb-database"><span>' + escapeDashboardHtml(initials) + '</span></div><div><strong class="vcard-title-link">' + escapeDashboardHtml(card.title) + '</strong><small>#' + card.id + (card.description ? " · " + escapeDashboardHtml(card.description) : "") + '</small></div></div>' +
+        '<div class="vcard-owner-cell"><strong>' + escapeDashboardHtml(owner.name || "Unknown user") + '</strong><span>' + escapeDashboardHtml(owner.email || "No owner email") + '</span></div>' +
+        '<div class="vcard-contact-cell">' + (contactParts.length ? contactParts.join("") : '<span>No contact details</span>') + '</div>' +
+        '<div><span class="vcard-template-chip">' + escapeDashboardHtml(template.name || "No template") + '</span></div>' +
+        '<div><span class="date-pill">' + escapeDashboardHtml(updatedAt) + '</span></div>' +
+        '<div><label class="switch" title="Toggle VCard visibility"><input type="checkbox" data-vcard-admin-action="status" data-vcard-id="' + card.id + '"' + (card.isActive ? " checked" : "") + ' /><span class="switch-slider"></span></label><span class="status-badge ' + (card.isActive ? "completed" : "inactive") + '">' + statusText + '</span></div>' +
+        '<div class="vcard-admin-actions"><button type="button" class="user-action-btn delete" data-vcard-admin-action="delete" data-vcard-id="' + card.id + '">Delete</button></div>' +
+      '</div>';
+    }).join("");
+    vcardDirectory.insertAdjacentHTML("beforeend", markup);
+    if (vcardDirectoryCount) vcardDirectoryCount.textContent = formatDashboardNumber(total) + (Number(total) === 1 ? " card" : " cards");
+  }
+
+  function renderVCardTemplates(templates, search) {
+    if (!vcardTemplateGrid) return;
+    var term = String(search || "").toLowerCase();
+    var visibleTemplates = templates.filter(function (template) {
+      return !term || [template.name, template.description].join(" ").toLowerCase().includes(term);
+    });
+    if (!visibleTemplates.length) {
+      vcardTemplateGrid.innerHTML = '<div class="vcard-directory-state"><strong>No templates found</strong><span>Run the template seed or try another search.</span></div>';
+      return;
+    }
+    vcardTemplateGrid.innerHTML = visibleTemplates.map(function (template, index) {
+      var preview = template.previewUrl
+        ? '<a class="btn-preview" href="' + escapeDashboardHtml(template.previewUrl) + '" target="_blank" rel="noopener noreferrer">Preview</a>'
+        : '<span class="vcard-preview-unavailable">Preview not configured</span>';
+      return '<article class="admin-card vcard-template-card">' +
+        '<div class="vcard-template-visual tone-' + (index % 3 + 1) + '"><span>Template ' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeDashboardHtml(template.name) + '</strong></div>' +
+        '<div class="admin-card-header"><div><h3>' + escapeDashboardHtml(template.name) + '</h3><p>' + escapeDashboardHtml(template.description || "Reusable digital card layout") + '</p></div><span class="status-badge ' + (template.isPublic ? "active" : "pending") + '">' + (template.isPublic ? "Public" : "Private") + '</span></div>' +
+        '<div class="template-actions">' + preview + '<button class="btn-share" type="button" data-vcard-admin-action="assign-template" data-template-id="' + template.id + '">Assign</button></div>' +
+      '</article>';
+    }).join("");
+  }
+
+  function populateVCardFormOptions(users, templates) {
+    if (!vcardAdminForm) return;
+    var ownerSelect = vcardAdminForm.elements.userId;
+    var templateSelect = vcardAdminForm.elements.templateId;
+    ownerSelect.innerHTML = '<option value="">Select active user</option>' + users.map(function (user) {
+      return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name || user.email) + ' · ' + escapeDashboardHtml(user.email) + '</option>';
+    }).join("");
+    templateSelect.innerHTML = '<option value="">No template</option>' + templates.map(function (template) {
+      return '<option value="' + template.id + '">' + escapeDashboardHtml(template.name) + '</option>';
+    }).join("");
+  }
+
+  async function loadSuperAdminVCards() {
+    if (adminPageSlug !== "vcards" || !vcardDirectory) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      Array.from(vcardDirectory.children).forEach(function (child) { if (!child.classList.contains("vcard-table-head")) child.remove(); });
+      vcardDirectory.insertAdjacentHTML("beforeend", '<div class="vcard-directory-state"><strong>Sign in required</strong><span>Log in as a super admin to manage VCards.</span></div>');
+      return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load VCards");
+      renderSuperAdminVCards(data.vcards || [], search ? (data.vcards || []).length : (data.summary ? data.summary.total : 0));
+      renderVCardTemplates(data.templates || [], search);
+      populateVCardFormOptions(data.users || [], data.templates || []);
+      updateVCardsPageSummary(data.summary || {});
+    } catch (error) {
+      Array.from(vcardDirectory.children).forEach(function (child) { if (!child.classList.contains("vcard-table-head")) child.remove(); });
+      vcardDirectory.insertAdjacentHTML("beforeend", '<div class="vcard-directory-state"><strong>VCards could not be loaded</strong><span>' + escapeDashboardHtml(error.message) + '</span></div>');
+      console.error("Super admin VCards:", error);
+    }
+  }
+
+  function setVCardModal(open, templateId) {
+    if (!vcardModal || !vcardAdminForm) return;
+    vcardModal.hidden = !open;
+    document.body.style.overflow = open ? "hidden" : "";
+    if (open) {
+      if (vcardFormFeedback) vcardFormFeedback.hidden = true;
+      if (templateId) vcardAdminForm.elements.templateId.value = String(templateId);
+      window.setTimeout(function () { vcardAdminForm.elements.userId.focus(); }, 30);
+    }
+  }
+
+  async function updateSuperAdminVCardStatus(cardId, isActive, input) {
+    var token = localStorage.getItem("token");
+    try {
+      if (input) input.disabled = true;
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards/" + encodeURIComponent(cardId) + "/status", {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: isActive })
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to update VCard");
+      await loadSuperAdminVCards();
+      showToast(isActive ? "VCard activated" : "VCard hidden", "Platform visibility was updated in the database.");
+    } catch (error) {
+      if (input) { input.checked = !isActive; input.disabled = false; }
+      showToast("Update failed", error.message);
+    }
+  }
+
+  async function deleteSuperAdminVCard(cardId, button) {
+    var card = superAdminVCardsById[String(cardId)];
+    if (!window.confirm("Permanently delete " + (card ? card.title : "this VCard") + "?")) return;
+    var token = localStorage.getItem("token");
+    try {
+      if (button) { button.disabled = true; button.textContent = "Deleting..."; }
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards/" + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to delete VCard");
+      await loadSuperAdminVCards();
+      showToast("VCard deleted", "The card was permanently removed from the database.");
+    } catch (error) {
+      if (button) { button.disabled = false; button.textContent = "Delete"; }
+      showToast("Delete failed", error.message);
+    }
+  }
+
+  function formatNfcMoney(value) {
+    return new Intl.NumberFormat("en-LK", { style: "currency", currency: "LKR", minimumFractionDigits: 2 }).format(Number(value || 0));
+  }
+
+  function updateNfcPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-nfc-orders .admin-page-stats article");
+    if (cards.length < 3) return;
+    cards[0].querySelector("span").textContent = "Card products";
+    cards[0].querySelector("strong").textContent = formatDashboardNumber(summary.total_products);
+    cards[0].querySelector("small").textContent = "Sellable NFC designs";
+    cards[1].querySelector("span").textContent = "Registered tags";
+    cards[1].querySelector("strong").textContent = formatDashboardNumber(summary.total_cards);
+    cards[1].querySelector("small").textContent = formatDashboardNumber(summary.active_cards) + " active / assigned";
+    cards[2].querySelector("span").textContent = "Pending orders";
+    cards[2].querySelector("strong").textContent = formatDashboardNumber(summary.pending_orders);
+    cards[2].querySelector("small").textContent = formatNfcMoney(summary.order_value) + " open value";
+    if (nfcPendingTabCount) nfcPendingTabCount.textContent = formatDashboardNumber(summary.pending_orders);
+  }
+
+  function nfcStatusClass(status) {
+    if (status === "active" || status === "assigned" || status === "completed") return "active";
+    if (status === "pending" || status === "processing" || status === "shipped") return "pending";
+    return "inactive";
+  }
+
+  function renderNfcRegistry(cards, total) {
+    if (!nfcRegistryBody) return;
+    superAdminNfcCardsById = {};
+    if (!cards.length) {
+      nfcRegistryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>No NFC cards registered</strong><span>Register the first physical tag using the button above.</span></div></td></tr>';
+      if (nfcRegistryCount) nfcRegistryCount.textContent = "0 cards";
+      return;
+    }
+    nfcRegistryBody.innerHTML = cards.map(function (card) {
+      superAdminNfcCardsById[String(card.id)] = card;
+      var status = String(card.status || "inactive").toLowerCase();
+      var updated = card.updatedAt ? formatDate(new Date(card.updatedAt)) : "Not available";
+      return '<tr class="nfc-live-row">' +
+        '<td><div class="nfc-registry-card"><span class="nfc-registry-icon">NFC</span><div><strong>' + escapeDashboardHtml(card.label) + '</strong><small>#' + card.id + (card.notes ? " · " + escapeDashboardHtml(card.notes) : "") + '</small></div></div></td>' +
+        '<td><div class="nfc-code-stack"><code>' + escapeDashboardHtml(card.tagIdentifier) + '</code><span>' + escapeDashboardHtml(card.serialNumber || "No serial") + '</span></div></td>' +
+        '<td><div class="nfc-owner-stack"><strong>' + escapeDashboardHtml(card.owner ? card.owner.name : "Unassigned") + '</strong><span>' + escapeDashboardHtml(card.owner && card.owner.email ? card.owner.email : "No owner") + '</span></div></td>' +
+        '<td>' + escapeDashboardHtml(card.businessCard ? card.businessCard.title : "Not linked") + '</td>' +
+        '<td><span class="status-badge ' + nfcStatusClass(status) + '">' + escapeDashboardHtml(status.charAt(0).toUpperCase() + status.slice(1)) + '</span></td>' +
+        '<td><span class="date-pill">' + escapeDashboardHtml(updated) + '</span></td>' +
+        '<td><div class="user-row-actions"><button class="user-action-btn edit" type="button" data-nfc-live-action="edit" data-nfc-card-id="' + card.id + '">Edit</button><button class="user-action-btn delete" type="button" data-nfc-live-action="delete" data-nfc-card-id="' + card.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+    if (nfcRegistryCount) nfcRegistryCount.textContent = formatDashboardNumber(total) + (Number(total) === 1 ? " card" : " cards");
+  }
+
+  function renderNfcProducts(products, search) {
+    if (!nfcProductsGrid) return;
+    superAdminNfcProductsById = {};
+    var term = String(search || "").toLowerCase();
+    var visible = products.filter(function (product) { return !term || [product.name, product.description].join(" ").toLowerCase().includes(term); });
+    if (!visible.length) {
+      nfcProductsGrid.innerHTML = '<div class="admin-data-empty"><strong>No NFC products found</strong><span>Add a card product or try another search.</span></div>';
+      if (nfcProductsCount) nfcProductsCount.textContent = "0 products";
+      return;
+    }
+    nfcProductsGrid.innerHTML = visible.map(function (product) {
+      superAdminNfcProductsById[String(product.id)] = product;
+      return '<article class="nfc-product-directory-row">' +
+        '<div class="nfc-product-name-cell"><img src="' + escapeDashboardHtml(product.frontImage) + '" alt="' + escapeDashboardHtml(product.name) + ' front" /><div><h3>' + escapeDashboardHtml(product.name) + '</h3><p>' + escapeDashboardHtml(product.description || "No description provided") + '</p></div></div>' +
+        '<div class="nfc-product-price">' + escapeDashboardHtml(formatNfcMoney(product.price)) + '</div>' +
+        '<div><span class="nfc-product-order-count">' + formatDashboardNumber(product.ordersCount) + '</span></div>' +
+        '<div><span class="status-badge ' + (product.isActive ? "active" : "inactive") + '">' + (product.isActive ? "Available" : "Hidden") + '</span></div>' +
+        '<div class="user-row-actions"><button class="user-action-btn edit" type="button" data-nfc-product-action="edit" data-product-id="' + product.id + '">Edit</button><button class="user-action-btn delete" type="button" data-nfc-product-action="delete" data-product-id="' + product.id + '">Delete</button></div>' +
+      '</article>';
+    }).join("");
+    if (nfcProductsCount) nfcProductsCount.textContent = formatDashboardNumber(visible.length) + (visible.length === 1 ? " product" : " products");
+  }
+
+  function renderNfcOrders(orders) {
+    if (!nfcOrdersLiveBody) return;
+    if (!orders.length) {
+      nfcOrdersLiveBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>No NFC orders found</strong><span>Customer orders will appear here when submitted.</span></div></td></tr>';
+      if (nfcOrdersLiveCount) nfcOrdersLiveCount.textContent = "0 orders";
+      return;
+    }
+    var statuses = ["pending", "processing", "shipped", "completed", "cancelled"];
+    nfcOrdersLiveBody.innerHTML = orders.map(function (order) {
+      var ordered = order.orderedAt ? formatDate(new Date(order.orderedAt)) : "Not available";
+      var options = statuses.map(function (status) { return '<option value="' + status + '"' + (status === order.status ? " selected" : "") + '>' + status.charAt(0).toUpperCase() + status.slice(1) + '</option>'; }).join("");
+      return '<tr class="nfc-live-row" data-nfc-order-id="' + order.id + '">' +
+        '<td><strong>#' + order.id + '</strong></td>' +
+        '<td><div class="nfc-owner-stack"><strong>' + escapeDashboardHtml(order.userName) + '</strong><span>' + escapeDashboardHtml(order.userEmail || "No email") + '</span></div></td>' +
+        '<td><span class="nfc-quantity-pill">' + formatDashboardNumber(order.quantity) + '</span></td>' +
+        '<td><strong>' + escapeDashboardHtml(formatNfcMoney(order.amount)) + '</strong></td>' +
+        '<td><span class="nfc-shipping-copy">' + escapeDashboardHtml(order.shippingAddress || "Not provided") + '</span></td>' +
+        '<td><input class="nfc-tracking-input" type="text" maxlength="255" value="' + escapeDashboardHtml(order.trackingNumber || "") + '" placeholder="Add tracking" data-nfc-order-field="tracking" data-nfc-order-id="' + order.id + '" /></td>' +
+        '<td><select class="nfc-order-status-select" data-nfc-order-field="status" data-nfc-order-id="' + order.id + '">' + options + '</select></td>' +
+        '<td><span class="date-pill">' + escapeDashboardHtml(ordered) + '</span></td>' +
+      '</tr>';
+    }).join("");
+    if (nfcOrdersLiveCount) nfcOrdersLiveCount.textContent = formatDashboardNumber(orders.length) + (orders.length === 1 ? " order" : " orders");
+  }
+
+  function populateNfcRegistryOptions(users, businessCards) {
+    if (!nfcRegistryForm) return;
+    nfcRegistryForm.elements.userId.innerHTML = '<option value="">Unassigned</option>' + users.map(function (user) { return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name || user.email) + ' · ' + escapeDashboardHtml(user.email) + '</option>'; }).join("");
+    nfcRegistryForm.elements.businessCardId.innerHTML = '<option value="">Not linked</option>' + businessCards.map(function (card) { return '<option value="' + card.id + '">' + escapeDashboardHtml(card.title || "Untitled card") + (card.user_name ? " · " + escapeDashboardHtml(card.user_name) : "") + '</option>'; }).join("");
+  }
+
+  async function loadSuperAdminNfc() {
+    if (adminPageSlug !== "nfc-orders" || !nfcRegistryBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      if (nfcProductsGrid) nfcProductsGrid.innerHTML = '<div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage NFC products.</span></div>';
+      nfcRegistryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage NFC cards.</span></div></td></tr>';
+      return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load NFC management data");
+      renderNfcProducts(data.products || [], search);
+      renderNfcRegistry(data.cards || [], search ? (data.cards || []).length : Number(data.summary && data.summary.total_cards));
+      renderNfcOrders(data.orders || []);
+      populateNfcRegistryOptions(data.users || [], data.businessCards || []);
+      updateNfcPageSummary(data.summary || {});
+    } catch (error) {
+      nfcRegistryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>NFC data could not be loaded</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      if (nfcOrdersLiveBody) nfcOrdersLiveBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Orders could not be loaded</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      console.error("Super admin NFC:", error);
+    }
+  }
+
+  function resetNfcRegistryMode() {
+    if (!nfcRegistryForm) return;
+    nfcRegistryForm.reset();
+    nfcRegistryForm.elements.cardId.value = "";
+    if (nfcRegistryModalTitle) nfcRegistryModalTitle.textContent = "Register NFC Card";
+    if (nfcRegistryFeedback) nfcRegistryFeedback.hidden = true;
+  }
+
+  function setNfcProductPreview(node, src, fallback) {
+    if (!node) return;
+    node.innerHTML = src ? '<img src="' + escapeDashboardHtml(src) + '" alt="NFC card preview" />' : escapeDashboardHtml(fallback);
+  }
+
+  function resetNfcProductMode() {
+    if (!nfcProductForm) return;
+    nfcProductForm.reset();
+    nfcProductForm.elements.productId.value = "";
+    nfcProductForm.elements.frontImage.required = true;
+    nfcProductForm.elements.backImage.required = true;
+    if (nfcProductModalTitle) nfcProductModalTitle.textContent = "Add NFC Card";
+    if (nfcProductFeedback) nfcProductFeedback.hidden = true;
+    setNfcProductPreview(nfcProductFrontPreview, "", "Choose front image");
+    setNfcProductPreview(nfcProductBackPreview, "", "Choose back image");
+  }
+
+  function setNfcProductModal(open, product) {
+    if (!nfcProductModal || !nfcProductForm) return;
+    if (open) {
+      resetNfcProductMode();
+      if (product) {
+        nfcProductForm.elements.productId.value = product.id;
+        nfcProductForm.elements.name.value = product.name;
+        nfcProductForm.elements.price.value = product.price;
+        nfcProductForm.elements.description.value = product.description || "";
+        nfcProductForm.elements.isActive.checked = product.isActive;
+        nfcProductForm.elements.frontImage.required = false;
+        nfcProductForm.elements.backImage.required = false;
+        setNfcProductPreview(nfcProductFrontPreview, product.frontImage, "Choose front image");
+        setNfcProductPreview(nfcProductBackPreview, product.backImage, "Choose back image");
+        if (nfcProductModalTitle) nfcProductModalTitle.textContent = "Edit NFC Card";
+      }
+    }
+    nfcProductModal.hidden = !open;
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+
+  function readNfcProductImage(input, previewNode) {
+    var file = input.files && input.files[0];
+    if (!file) return Promise.resolve(null);
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return Promise.reject(new Error("Choose a PNG, JPG, or WebP image."));
+    if (file.size > 1500000) return Promise.reject(new Error("Each card image must be smaller than 1.5 MB."));
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { setNfcProductPreview(previewNode, reader.result, ""); resolve(reader.result); };
+      reader.onerror = function () { reject(new Error("The selected image could not be read.")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function deleteNfcProduct(productId, button) {
+    var product = superAdminNfcProductsById[String(productId)];
+    if (!window.confirm("Permanently delete " + (product ? product.name : "this NFC product") + "?")) return;
+    try {
+      button.disabled = true; button.textContent = "Deleting...";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/products/" + encodeURIComponent(productId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to delete NFC product");
+      await loadSuperAdminNfc();
+      showToast("NFC card deleted", "The product was removed from the database catalog.");
+    } catch (error) {
+      button.disabled = false; button.textContent = "Delete"; showToast("Delete failed", error.message);
+    }
+  }
+
+  function setNfcRegistryModal(open, card) {
+    if (!nfcRegistryModal || !nfcRegistryForm) return;
+    if (open) {
+      resetNfcRegistryMode();
+      if (card) {
+        nfcRegistryForm.elements.cardId.value = card.id;
+        nfcRegistryForm.elements.label.value = card.label || "";
+        nfcRegistryForm.elements.status.value = card.status || "inactive";
+        nfcRegistryForm.elements.tagIdentifier.value = card.tagIdentifier || "";
+        nfcRegistryForm.elements.serialNumber.value = card.serialNumber || "";
+        nfcRegistryForm.elements.userId.value = card.owner ? String(card.owner.id) : "";
+        nfcRegistryForm.elements.businessCardId.value = card.businessCard ? String(card.businessCard.id) : "";
+        nfcRegistryForm.elements.expiresAt.value = card.expiresAt ? String(card.expiresAt).slice(0, 10) : "";
+        nfcRegistryForm.elements.notes.value = card.notes || "";
+        if (nfcRegistryModalTitle) nfcRegistryModalTitle.textContent = "Edit NFC Card";
+      }
+    }
+    nfcRegistryModal.hidden = !open;
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+
+  async function deleteSuperAdminNfcCard(cardId, button) {
+    var card = superAdminNfcCardsById[String(cardId)];
+    if (!window.confirm("Permanently delete " + (card ? card.label : "this NFC card") + " from the registry?")) return;
+    try {
+      if (button) { button.disabled = true; button.textContent = "Deleting..."; }
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/cards/" + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to delete NFC card");
+      await loadSuperAdminNfc();
+      showToast("NFC card deleted", "The physical tag record was removed from PostgreSQL.");
+    } catch (error) {
+      if (button) { button.disabled = false; button.textContent = "Delete"; }
+      showToast("Delete failed", error.message);
+    }
+  }
+
+  async function updateSuperAdminNfcOrder(orderId, row) {
+    var statusSelect = row.querySelector('[data-nfc-order-field="status"]');
+    var trackingInput = row.querySelector('[data-nfc-order-field="tracking"]');
+    try {
+      statusSelect.disabled = true;
+      trackingInput.disabled = true;
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/orders/" + encodeURIComponent(orderId), {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+        body: JSON.stringify({ status: statusSelect.value, trackingNumber: trackingInput.value.trim() })
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to update NFC order");
+      await loadSuperAdminNfc();
+      showToast("Order updated", "Fulfilment status and tracking were saved.");
+    } catch (error) {
+      statusSelect.disabled = false;
+      trackingInput.disabled = false;
+      showToast("Order update failed", error.message);
+    }
   }
 
   function closeUserModal() {
@@ -1486,6 +2135,120 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 50);
   }
 
+  function resetUserFormMode() {
+    if (!addUserForm) return;
+    addUserForm.reset();
+    if (userEditId) userEditId.value = "";
+    if (userModalTitle) userModalTitle.textContent = "Add User";
+    var passwordField = document.getElementById("userPassword");
+    var confirmPasswordField = document.getElementById("userConfirmPassword");
+    if (passwordField) {
+      passwordField.required = true;
+      passwordField.placeholder = "Create password";
+    }
+    if (confirmPasswordField) {
+      confirmPasswordField.required = true;
+      confirmPasswordField.placeholder = "Confirm Password";
+    }
+  }
+
+  function openUserEditor(user) {
+    if (!addUserForm || !user) return;
+    resetUserFormMode();
+    var nameParts = String(user.name || "").trim().split(/\s+/);
+    addUserForm.elements.firstName.value = nameParts.shift() || "";
+    addUserForm.elements.lastName.value = nameParts.join(" ");
+    addUserForm.elements.email.value = user.email || "";
+    addUserForm.elements.status.value = String(user.status || "active").charAt(0).toUpperCase() + String(user.status || "active").slice(1);
+    if (userEditId) userEditId.value = user.id;
+    if (userModalTitle) userModalTitle.textContent = "Edit User";
+
+    var phone = String(user.phoneNumber || "").trim();
+    var countryCodes = ["+61", "+94", "+44", "+1"];
+    var countryCode = countryCodes.find(function (code) { return phone.indexOf(code) === 0; });
+    if (countryCode) {
+      addUserForm.elements.countryCode.value = countryCode;
+      addUserForm.elements.phone.value = phone.slice(countryCode.length).trim();
+    } else if (adminPageSlug === "vcards") {
+      var vcardsSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(vcardsSearchTimer);
+        vcardsSearchTimer = window.setTimeout(loadSuperAdminVCards, 250);
+      });
+    } else {
+      addUserForm.elements.phone.value = phone;
+    }
+
+    var passwordField = document.getElementById("userPassword");
+    var confirmPasswordField = document.getElementById("userConfirmPassword");
+    if (passwordField) {
+      passwordField.required = false;
+      passwordField.value = "";
+      passwordField.placeholder = "Leave blank to keep current password";
+    }
+    if (confirmPasswordField) {
+      confirmPasswordField.required = false;
+      confirmPasswordField.value = "";
+      confirmPasswordField.placeholder = "Confirm new password if changing";
+    }
+    openUserModal();
+  }
+
+  async function changeSuperAdminUserStatus(userId, status, button) {
+    var token = localStorage.getItem("token");
+    if (!token) return showToast("Sign in required", "Log in as a super admin to manage users.");
+    var originalText = button ? button.textContent : "";
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Saving...";
+    }
+    try {
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/users/" + encodeURIComponent(userId) + "/status", {
+        method: "PATCH",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify({ status: status })
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to update user status");
+      await loadSuperAdminUsers();
+      showToast(status === "active" ? "User approved" : "User rejected", "The account status was updated in the database.");
+    } catch (error) {
+      showToast("Update failed", error.message);
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+  }
+
+  async function deleteSuperAdminUser(userId, button) {
+    var user = superAdminUsersById[String(userId)];
+    var userName = user ? (user.name || user.email) : "this user";
+    if (!window.confirm("Permanently delete " + userName + "? This also removes their cards and subscriptions.")) return;
+    var token = localStorage.getItem("token");
+    if (!token) return showToast("Sign in required", "Log in as a super admin to manage users.");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Deleting...";
+    }
+    try {
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/users/" + encodeURIComponent(userId), {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to delete user");
+      await loadSuperAdminUsers();
+      showToast("User deleted", userName + " was permanently removed.");
+    } catch (error) {
+      showToast("Delete failed", error.message);
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Delete";
+      }
+    }
+  }
+
   function resetProfilePreview() {
     if (!userProfilePreview) {
       return;
@@ -1500,7 +2263,39 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (searchInput) {
-    searchInput.addEventListener("input", applySearchFilter);
+    if (adminPageSlug === "users") {
+      var usersSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(usersSearchTimer);
+        usersSearchTimer = window.setTimeout(loadSuperAdminUsers, 250);
+      });
+    } else if (adminPageSlug === "vcards") {
+      var vcardsSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(vcardsSearchTimer);
+        vcardsSearchTimer = window.setTimeout(loadSuperAdminVCards, 250);
+      });
+    } else if (adminPageSlug === "nfc-orders") {
+      var nfcLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(nfcLiveSearchTimer);
+        nfcLiveSearchTimer = window.setTimeout(loadSuperAdminNfc, 250);
+      });
+    } else if (adminPageSlug === "subscriptions") {
+      var subscriptionsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(subscriptionsLiveSearchTimer);
+        subscriptionsLiveSearchTimer = window.setTimeout(loadSuperAdminSubscriptions, 250);
+      });
+    } else if (adminPageSlug === "cash-payments") {
+      var cashPaymentsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(cashPaymentsLiveSearchTimer);
+        cashPaymentsLiveSearchTimer = window.setTimeout(loadSuperAdminCashPayments, 250);
+      });
+    } else {
+      searchInput.addEventListener("input", applySearchFilter);
+    }
   }
 
   if (nfcCatalogSearch) {
@@ -1547,6 +2342,672 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   }
+
+  if (openVCardModalButton) openVCardModalButton.addEventListener("click", function () { setVCardModal(true); });
+  if (closeVCardModalButton) closeVCardModalButton.addEventListener("click", function () { setVCardModal(false); });
+  if (vcardModalBackdrop) vcardModalBackdrop.addEventListener("click", function () { setVCardModal(false); });
+  if (resetVCardFormButton && vcardAdminForm) resetVCardFormButton.addEventListener("click", function () { vcardAdminForm.reset(); setVCardModal(false); });
+
+  if (vcardAdminForm) {
+    vcardAdminForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!vcardAdminForm.checkValidity()) {
+        if (vcardFormFeedback) { vcardFormFeedback.hidden = false; vcardFormFeedback.textContent = "Select an owner and enter a VCard title."; }
+        return;
+      }
+      var formData = new FormData(vcardAdminForm);
+      var submitButton = vcardAdminForm.querySelector('[type="submit"]');
+      try {
+        if (submitButton) { submitButton.disabled = true; submitButton.textContent = "Creating..."; }
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: Number(formData.get("userId")),
+            templateId: formData.get("templateId") ? Number(formData.get("templateId")) : null,
+            title: formData.get("title").trim(),
+            email: formData.get("email").trim(),
+            phone: formData.get("phone").trim(),
+            websiteUrl: formData.get("websiteUrl").trim(),
+            description: formData.get("description").trim(),
+            isActive: formData.get("isActive") === "on"
+          })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to create VCard");
+        vcardAdminForm.reset();
+        setVCardModal(false);
+        await loadSuperAdminVCards();
+        showToast("VCard created", "The new card was saved to PostgreSQL.");
+      } catch (error) {
+        if (vcardFormFeedback) { vcardFormFeedback.hidden = false; vcardFormFeedback.textContent = error.message; }
+      } finally {
+        if (submitButton) { submitButton.disabled = false; submitButton.textContent = "Create VCard"; }
+      }
+    });
+  }
+
+  if (openNfcRegistryModalButton) openNfcRegistryModalButton.addEventListener("click", function () { setNfcRegistryModal(true); });
+  if (closeNfcRegistryModalButton) closeNfcRegistryModalButton.addEventListener("click", function () { setNfcRegistryModal(false); });
+  if (nfcRegistryModalBackdrop) nfcRegistryModalBackdrop.addEventListener("click", function () { setNfcRegistryModal(false); });
+  if (resetNfcRegistryFormButton) resetNfcRegistryFormButton.addEventListener("click", function () { resetNfcRegistryMode(); setNfcRegistryModal(false); });
+  if (openNfcProductModalButton) openNfcProductModalButton.addEventListener("click", function () { setNfcProductModal(true); });
+  if (closeNfcProductModalButton) closeNfcProductModalButton.addEventListener("click", function () { setNfcProductModal(false); });
+  if (nfcProductModalBackdrop) nfcProductModalBackdrop.addEventListener("click", function () { setNfcProductModal(false); });
+  if (resetNfcProductFormButton) resetNfcProductFormButton.addEventListener("click", function () { resetNfcProductMode(); setNfcProductModal(false); });
+
+  if (nfcProductForm) {
+    nfcProductForm.elements.frontImage.addEventListener("change", function () {
+      readNfcProductImage(nfcProductForm.elements.frontImage, nfcProductFrontPreview).catch(function (error) { nfcProductForm.elements.frontImage.value = ""; showToast("Image rejected", error.message); });
+    });
+    nfcProductForm.elements.backImage.addEventListener("change", function () {
+      readNfcProductImage(nfcProductForm.elements.backImage, nfcProductBackPreview).catch(function (error) { nfcProductForm.elements.backImage.value = ""; showToast("Image rejected", error.message); });
+    });
+    nfcProductForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!nfcProductForm.checkValidity()) {
+        if (nfcProductFeedback) { nfcProductFeedback.hidden = false; nfcProductFeedback.textContent = "Complete the name, price, description, front image, and back image."; }
+        return;
+      }
+      var formData = new FormData(nfcProductForm);
+      var productId = String(formData.get("productId") || "").trim();
+      var submitButton = nfcProductForm.querySelector('[type="submit"]');
+      try {
+        submitButton.disabled = true; submitButton.textContent = "Saving...";
+        var frontImage = await readNfcProductImage(nfcProductForm.elements.frontImage, nfcProductFrontPreview);
+        var backImage = await readNfcProductImage(nfcProductForm.elements.backImage, nfcProductBackPreview);
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/products" + (productId ? "/" + encodeURIComponent(productId) : ""), {
+          method: productId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), description: formData.get("description").trim(), frontImage: frontImage, backImage: backImage, isActive: formData.get("isActive") === "on" })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save NFC card product");
+        resetNfcProductMode(); setNfcProductModal(false); await loadSuperAdminNfc();
+        showToast(productId ? "NFC card updated" : "NFC card added", "Name, price, description, and both images were saved.");
+      } catch (error) {
+        if (nfcProductFeedback) { nfcProductFeedback.hidden = false; nfcProductFeedback.textContent = error.message; }
+      } finally {
+        submitButton.disabled = false; submitButton.textContent = "Save NFC Card";
+      }
+    });
+  }
+
+  if (nfcRegistryForm) {
+    nfcRegistryForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!nfcRegistryForm.checkValidity()) {
+        if (nfcRegistryFeedback) { nfcRegistryFeedback.hidden = false; nfcRegistryFeedback.textContent = "Enter the NFC tag identifier before saving."; }
+        return;
+      }
+      var formData = new FormData(nfcRegistryForm);
+      var cardId = String(formData.get("cardId") || "").trim();
+      var submitButton = nfcRegistryForm.querySelector('[type="submit"]');
+      try {
+        if (submitButton) { submitButton.disabled = true; submitButton.textContent = "Saving..."; }
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/cards" + (cardId ? "/" + encodeURIComponent(cardId) : ""), {
+          method: cardId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label: formData.get("label").trim(), status: formData.get("status"),
+            tagIdentifier: formData.get("tagIdentifier").trim(), serialNumber: formData.get("serialNumber").trim(),
+            userId: formData.get("userId") ? Number(formData.get("userId")) : null,
+            businessCardId: formData.get("businessCardId") ? Number(formData.get("businessCardId")) : null,
+            expiresAt: formData.get("expiresAt") || null, notes: formData.get("notes").trim()
+          })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save NFC card");
+        resetNfcRegistryMode();
+        setNfcRegistryModal(false);
+        await loadSuperAdminNfc();
+        showToast(cardId ? "NFC card updated" : "NFC card registered", "The physical tag record was saved to PostgreSQL.");
+      } catch (error) {
+        if (nfcRegistryFeedback) { nfcRegistryFeedback.hidden = false; nfcRegistryFeedback.textContent = error.message; }
+      } finally {
+        if (submitButton) { submitButton.disabled = false; submitButton.textContent = "Save NFC Card"; }
+      }
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    var actionButton = event.target.closest("[data-nfc-live-action]");
+    var productButton = event.target.closest("[data-nfc-product-action]");
+    if (actionButton) {
+      var action = actionButton.getAttribute("data-nfc-live-action");
+      var cardId = actionButton.getAttribute("data-nfc-card-id");
+      if (action === "edit") setNfcRegistryModal(true, superAdminNfcCardsById[String(cardId)]);
+      if (action === "delete") deleteSuperAdminNfcCard(cardId, actionButton);
+    }
+    if (productButton) {
+      var productId = productButton.getAttribute("data-product-id");
+      if (productButton.getAttribute("data-nfc-product-action") === "edit") setNfcProductModal(true, superAdminNfcProductsById[String(productId)]);
+      if (productButton.getAttribute("data-nfc-product-action") === "delete") deleteNfcProduct(productId, productButton);
+    }
+  });
+
+  document.addEventListener("change", function (event) {
+    var orderField = event.target.closest("[data-nfc-order-field]");
+    if (!orderField) return;
+    var row = orderField.closest("[data-nfc-order-id]");
+    if (row) updateSuperAdminNfcOrder(orderField.getAttribute("data-nfc-order-id"), row);
+  });
+
+  function subscriptionMoney(value) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+  }
+
+  function subscriptionDate(value) {
+    if (!value) return "No end date";
+    var date = new Date(String(value).slice(0, 10) + "T00:00:00");
+    return Number.isNaN(date.getTime()) ? "Not set" : formatDate(date);
+  }
+
+  function subscriptionStatusClass(status) {
+    status = String(status || "").toLowerCase();
+    if (status === "active") return "active";
+    if (status === "pending" || status === "trial") return "pending";
+    return "inactive";
+  }
+
+  function updateSubscriptionsPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-subscriptions .admin-page-stats article");
+    if (cards.length < 3) return;
+    cards[0].querySelector("span").textContent = "Active subscriptions";
+    cards[0].querySelector("strong").textContent = formatDashboardNumber(summary.active_subscriptions);
+    cards[0].querySelector("small").textContent = formatDashboardNumber(summary.total_subscriptions) + " total records";
+    cards[1].querySelector("span").textContent = "Monthly recurring revenue";
+    cards[1].querySelector("strong").textContent = subscriptionMoney(summary.monthly_recurring_revenue);
+    cards[1].querySelector("small").textContent = "From active plans";
+    cards[2].querySelector("span").textContent = "Pending or trial";
+    cards[2].querySelector("strong").textContent = formatDashboardNumber(summary.pending_subscriptions);
+    cards[2].querySelector("small").textContent = "Needs review";
+  }
+
+  function renderSubscriptionAdmin(subscriptions) {
+    if (!subscriptionAdminBody) return;
+    superAdminSubscriptionsById = {};
+    if (subscriptionAdminCount) subscriptionAdminCount.textContent = formatDashboardNumber(subscriptions.length) + (subscriptions.length === 1 ? " subscription" : " subscriptions");
+    if (!subscriptions.length) {
+      subscriptionAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>No subscriptions found</strong><span>Use New Subscription to assign a billing plan to a user.</span></div></td></tr>';
+      return;
+    }
+    subscriptionAdminBody.innerHTML = subscriptions.map(function (subscription) {
+      superAdminSubscriptionsById[String(subscription.id)] = subscription;
+      var user = subscription.user || {};
+      var plan = subscription.plan || {};
+      var status = String(subscription.status || "pending").toLowerCase();
+      var displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+      return '<tr>' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(user.name || "User") || "U") + '</span><div><strong>' + escapeDashboardHtml(user.name || "Unknown user") + '</strong><div class="subtle-handle">' + escapeDashboardHtml(user.email || "Account unavailable") + '</div></div></div></td>' +
+        '<td><strong>' + escapeDashboardHtml(plan.name || "No plan") + '</strong><div class="subtle-handle">' + subscriptionMoney(plan.price) + ' / ' + escapeDashboardHtml(plan.billingInterval || "month") + '</div></td>' +
+        '<td><div class="subscription-period"><strong>' + escapeDashboardHtml(subscriptionDate(subscription.startDate)) + '</strong><span>to ' + escapeDashboardHtml(subscriptionDate(subscription.endDate)) + '</span></div></td>' +
+        '<td><span class="subscription-renew-pill ' + (subscription.autoRenew ? "on" : "off") + '">' + (subscription.autoRenew ? "Auto-renew" : "Manual") + '</span></td>' +
+        '<td><span class="status-badge ' + subscriptionStatusClass(status) + '">' + escapeDashboardHtml(displayStatus) + '</span></td>' +
+        '<td><div class="user-row-actions"><button class="user-action-btn edit" type="button" data-live-subscription-action="edit" data-subscription-id="' + subscription.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-subscription-action="delete" data-subscription-id="' + subscription.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function planFeatureNames(features) {
+    if (Array.isArray(features)) return features;
+    if (features && typeof features === "object") return Object.keys(features).filter(function (key) { return features[key]; });
+    return [];
+  }
+
+  function renderPlanAdmin(plans) {
+    if (!planAdminBody) return;
+    superAdminPlansById = {};
+    if (planAdminCount) planAdminCount.textContent = formatDashboardNumber(plans.length) + (plans.length === 1 ? " plan" : " plans");
+    if (!plans.length) {
+      planAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>No billing plans found</strong><span>Create the first plan to begin assigning subscriptions.</span></div></td></tr>';
+      return;
+    }
+    planAdminBody.innerHTML = plans.map(function (plan) {
+      superAdminPlansById[String(plan.id)] = plan;
+      var status = String(plan.status || "inactive").toLowerCase();
+      var features = planFeatureNames(plan.features);
+      return '<tr>' +
+        '<td><div class="subscription-plan-name"><strong>' + escapeDashboardHtml(plan.name) + '</strong><span>' + escapeDashboardHtml(features.slice(0, 2).join(" · ") || "Core platform access") + '</span></div></td>' +
+        '<td><strong class="subscription-plan-price">' + subscriptionMoney(plan.price) + '</strong><div class="subtle-handle">per ' + escapeDashboardHtml(plan.billingInterval) + '</div></td>' +
+        '<td><div class="subscription-limit-list"><span>' + formatDashboardNumber(plan.vcardLimit) + ' VCards</span><span>' + formatDashboardNumber(plan.nfcLimit) + ' NFC</span><span>' + formatDashboardNumber(plan.analyticsLimit) + ' analytics</span></div></td>' +
+        '<td><strong>' + formatDashboardNumber(plan.activeSubscribers) + ' active</strong><div class="subtle-handle">' + formatDashboardNumber(plan.subscribers) + ' total</div></td>' +
+        '<td><span class="status-badge ' + subscriptionStatusClass(status) + '">' + escapeDashboardHtml(status.charAt(0).toUpperCase() + status.slice(1)) + '</span></td>' +
+        '<td><div class="user-row-actions"><button class="user-action-btn edit" type="button" data-live-plan-action="edit" data-plan-id="' + plan.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-plan-action="delete" data-plan-id="' + plan.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function populateSubscriptionAdminOptions(users, plans) {
+    if (!subscriptionAdminForm) return;
+    var userSelect = subscriptionAdminForm.elements.userId;
+    var planSelect = subscriptionAdminForm.elements.planId;
+    var currentUser = userSelect.value;
+    var currentPlan = planSelect.value;
+    userSelect.innerHTML = '<option value="">Select active user</option>' + users.map(function (user) { return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name + " — " + user.email) + '</option>'; }).join("");
+    planSelect.innerHTML = '<option value="">Select plan</option>' + plans.map(function (plan) { return '<option value="' + plan.id + '">' + escapeDashboardHtml(plan.name + " — " + subscriptionMoney(plan.price)) + '</option>'; }).join("");
+    userSelect.value = currentUser;
+    planSelect.value = currentPlan;
+  }
+
+  async function loadSuperAdminSubscriptions() {
+    if (adminPageSlug !== "subscriptions" || !subscriptionAdminBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      subscriptionAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage subscriptions.</span></div></td></tr>';
+      if (planAdminBody) planAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage billing plans.</span></div></td></tr>';
+      if (subscriptionAdminCount) subscriptionAdminCount.textContent = "Sign in required";
+      if (planAdminCount) planAdminCount.textContent = "Sign in required";
+      updateSubscriptionsPageSummary({ active_subscriptions: 0, total_subscriptions: 0, monthly_recurring_revenue: 0, pending_subscriptions: 0 });
+      return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/subscriptions?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load subscriptions");
+      renderSubscriptionAdmin(data.subscriptions || []);
+      renderPlanAdmin(data.plans || []);
+      populateSubscriptionAdminOptions(data.users || [], data.plans || []);
+      updateSubscriptionsPageSummary(data.summary || {});
+    } catch (error) {
+      subscriptionAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>Subscriptions unavailable</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      if (subscriptionAdminCount) subscriptionAdminCount.textContent = "Unavailable";
+      updateSubscriptionsPageSummary({ active_subscriptions: 0, total_subscriptions: 0, monthly_recurring_revenue: 0, pending_subscriptions: 0 });
+      showToast("Could not load subscriptions", error.message);
+    }
+  }
+
+  function setSubscriptionAdminModal(open, subscription) {
+    if (!subscriptionAdminModal || !subscriptionAdminForm) return;
+    if (!open) {
+      subscriptionAdminModal.hidden = true;
+      document.body.style.overflow = "";
+      return;
+    }
+    subscriptionAdminForm.reset();
+    subscriptionAdminForm.elements.subscriptionId.value = subscription ? subscription.id : "";
+    subscriptionAdminForm.elements.startDate.value = subscription ? String(subscription.startDate || "").slice(0, 10) : new Date().toISOString().slice(0, 10);
+    if (subscription) {
+      subscriptionAdminForm.elements.userId.value = subscription.user ? subscription.user.id : "";
+      subscriptionAdminForm.elements.planId.value = subscription.plan ? subscription.plan.id : "";
+      subscriptionAdminForm.elements.endDate.value = String(subscription.endDate || "").slice(0, 10);
+      subscriptionAdminForm.elements.status.value = subscription.status;
+      subscriptionAdminForm.elements.autoRenew.checked = Boolean(subscription.autoRenew);
+      subscriptionAdminForm.elements.cancelReason.value = subscription.cancelReason || "";
+    }
+    if (subscriptionAdminModalTitle) subscriptionAdminModalTitle.textContent = subscription ? "Edit Subscription" : "New Subscription";
+    if (subscriptionAdminFeedback) { subscriptionAdminFeedback.hidden = true; subscriptionAdminFeedback.textContent = ""; }
+    subscriptionAdminModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function setPlanAdminModal(open, plan) {
+    if (!planAdminModal || !planAdminForm) return;
+    if (!open) {
+      planAdminModal.hidden = true;
+      document.body.style.overflow = "";
+      return;
+    }
+    planAdminForm.reset();
+    planAdminForm.elements.planId.value = plan ? plan.id : "";
+    if (plan) {
+      planAdminForm.elements.name.value = plan.name || "";
+      planAdminForm.elements.price.value = plan.price;
+      planAdminForm.elements.billingInterval.value = plan.billingInterval;
+      planAdminForm.elements.vcardLimit.value = plan.vcardLimit;
+      planAdminForm.elements.nfcLimit.value = plan.nfcLimit;
+      planAdminForm.elements.analyticsLimit.value = plan.analyticsLimit;
+      planAdminForm.elements.features.value = planFeatureNames(plan.features).join(", ");
+      planAdminForm.elements.status.value = plan.status;
+    }
+    if (planAdminModalTitle) planAdminModalTitle.textContent = plan ? "Edit Plan" : "New Plan";
+    if (planAdminFeedback) { planAdminFeedback.hidden = true; planAdminFeedback.textContent = ""; }
+    planAdminModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  if (openSubscriptionAdminModalButton) openSubscriptionAdminModalButton.addEventListener("click", function () { setSubscriptionAdminModal(true); });
+  if (closeSubscriptionAdminModalButton) closeSubscriptionAdminModalButton.addEventListener("click", function () { setSubscriptionAdminModal(false); });
+  if (subscriptionAdminModalBackdrop) subscriptionAdminModalBackdrop.addEventListener("click", function () { setSubscriptionAdminModal(false); });
+  if (resetSubscriptionAdminFormButton) resetSubscriptionAdminFormButton.addEventListener("click", function () { setSubscriptionAdminModal(false); });
+  if (openPlanAdminModalButton) openPlanAdminModalButton.addEventListener("click", function () { setPlanAdminModal(true); });
+  if (closePlanAdminModalButton) closePlanAdminModalButton.addEventListener("click", function () { setPlanAdminModal(false); });
+  if (planAdminModalBackdrop) planAdminModalBackdrop.addEventListener("click", function () { setPlanAdminModal(false); });
+  if (resetPlanAdminFormButton) resetPlanAdminFormButton.addEventListener("click", function () { setPlanAdminModal(false); });
+
+  if (subscriptionAdminForm) {
+    subscriptionAdminForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!subscriptionAdminForm.checkValidity()) {
+        if (subscriptionAdminFeedback) { subscriptionAdminFeedback.hidden = false; subscriptionAdminFeedback.textContent = "Select a user and plan, then enter a valid start date."; }
+        return;
+      }
+      var formData = new FormData(subscriptionAdminForm);
+      var subscriptionId = String(formData.get("subscriptionId") || "");
+      var submitButton = subscriptionAdminForm.querySelector('[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/subscriptions" + (subscriptionId ? "/" + encodeURIComponent(subscriptionId) : ""), {
+          method: subscriptionId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: Number(formData.get("userId")), planId: Number(formData.get("planId")), status: formData.get("status"), startDate: formData.get("startDate"), endDate: formData.get("endDate") || null, autoRenew: formData.get("autoRenew") === "on", cancelReason: formData.get("cancelReason").trim() })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save subscription");
+        setSubscriptionAdminModal(false);
+        await loadSuperAdminSubscriptions();
+        showToast(subscriptionId ? "Subscription updated" : "Subscription created", "The billing assignment was saved to PostgreSQL.");
+      } catch (error) {
+        if (subscriptionAdminFeedback) { subscriptionAdminFeedback.hidden = false; subscriptionAdminFeedback.textContent = error.message; }
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Save Subscription";
+      }
+    });
+  }
+
+  if (planAdminForm) {
+    planAdminForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!planAdminForm.checkValidity()) {
+        if (planAdminFeedback) { planAdminFeedback.hidden = false; planAdminFeedback.textContent = "Complete the plan name, price, and non-negative usage limits."; }
+        return;
+      }
+      var formData = new FormData(planAdminForm);
+      var planId = String(formData.get("planId") || "");
+      var submitButton = planAdminForm.querySelector('[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/plans" + (planId ? "/" + encodeURIComponent(planId) : ""), {
+          method: planId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), billingInterval: formData.get("billingInterval"), vcardLimit: Number(formData.get("vcardLimit")), nfcLimit: Number(formData.get("nfcLimit")), analyticsLimit: Number(formData.get("analyticsLimit")), features: formData.get("features").split(",").map(function (feature) { return feature.trim(); }).filter(Boolean), status: formData.get("status") })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save plan");
+        setPlanAdminModal(false);
+        await loadSuperAdminSubscriptions();
+        showToast(planId ? "Plan updated" : "Plan created", "Pricing and limits were saved to PostgreSQL.");
+      } catch (error) {
+        if (planAdminFeedback) { planAdminFeedback.hidden = false; planAdminFeedback.textContent = error.message; }
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Save Plan";
+      }
+    });
+  }
+
+  document.addEventListener("click", async function (event) {
+    var subscriptionButton = event.target.closest("[data-live-subscription-action]");
+    var planButton = event.target.closest("[data-live-plan-action]");
+    if (subscriptionButton) {
+      var subscriptionId = subscriptionButton.getAttribute("data-subscription-id");
+      if (subscriptionButton.getAttribute("data-live-subscription-action") === "edit") setSubscriptionAdminModal(true, superAdminSubscriptionsById[String(subscriptionId)]);
+      if (subscriptionButton.getAttribute("data-live-subscription-action") === "delete" && window.confirm("Delete this subscription record?")) {
+        try {
+          subscriptionButton.disabled = true;
+          var response = await fetch("http://127.0.0.1:5000/api/super-admin/subscriptions/" + encodeURIComponent(subscriptionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+          var data = await response.json().catch(function () { return {}; });
+          if (!response.ok) throw new Error(data.message || "Unable to delete subscription");
+          await loadSuperAdminSubscriptions();
+          showToast("Subscription deleted", "The database record was removed.");
+        } catch (error) { subscriptionButton.disabled = false; showToast("Delete failed", error.message); }
+      }
+    }
+    if (planButton) {
+      var planId = planButton.getAttribute("data-plan-id");
+      var plan = superAdminPlansById[String(planId)];
+      if (planButton.getAttribute("data-live-plan-action") === "edit") setPlanAdminModal(true, plan);
+      if (planButton.getAttribute("data-live-plan-action") === "delete" && window.confirm("Delete " + (plan ? plan.name : "this plan") + "?")) {
+        try {
+          planButton.disabled = true;
+          var planResponse = await fetch("http://127.0.0.1:5000/api/super-admin/plans/" + encodeURIComponent(planId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+          var planData = await planResponse.json().catch(function () { return {}; });
+          if (!planResponse.ok) throw new Error(planData.message || "Unable to delete plan");
+          await loadSuperAdminSubscriptions();
+          showToast("Plan deleted", "The unused billing plan was removed.");
+        } catch (error) { planButton.disabled = false; showToast("Delete failed", error.message); }
+      }
+    }
+  });
+
+  function cashPaymentMoney(value, currency) {
+    try {
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: String(currency || "USD") }).format(Number(value || 0));
+    } catch (error) {
+      return String(currency || "USD") + " " + Number(value || 0).toFixed(2);
+    }
+  }
+
+  function updateCashPaymentsPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-cash-payments .admin-page-stats article");
+    if (cards.length < 3) return;
+    cards[0].querySelector("span").textContent = "Pending value";
+    cards[0].querySelector("strong").textContent = cashPaymentMoney(summary.pending_value, "USD");
+    cards[0].querySelector("small").textContent = formatDashboardNumber(summary.pending_count) + " awaiting review";
+    cards[1].querySelector("span").textContent = "Approved today";
+    cards[1].querySelector("strong").textContent = cashPaymentMoney(summary.approved_today_value, "USD");
+    cards[1].querySelector("small").textContent = formatDashboardNumber(summary.approved_today_count) + " payments";
+    cards[2].querySelector("span").textContent = "Approval rate";
+    cards[2].querySelector("strong").textContent = Number(summary.approval_rate || 0).toFixed(1) + "%";
+    cards[2].querySelector("small").textContent = formatDashboardNumber(summary.total) + " total records";
+  }
+
+  function cashPaymentDate(value, emptyText) {
+    if (!value) return emptyText || "Not set";
+    var date = new Date(String(value).length === 10 ? value + "T00:00:00" : value);
+    return Number.isNaN(date.getTime()) ? (emptyText || "Not set") : formatDate(date);
+  }
+
+  function renderSuperAdminCashPayments(payments) {
+    if (!cashPaymentAdminBody) return;
+    superAdminCashPaymentsById = {};
+    if (cashPaymentAdminCount) cashPaymentAdminCount.textContent = formatDashboardNumber(payments.length) + (payments.length === 1 ? " payment" : " payments");
+    if (!payments.length) {
+      cashPaymentAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>No cash payments found</strong><span>Record a payment or change the current search and status filter.</span></div></td></tr>';
+      return;
+    }
+    cashPaymentAdminBody.innerHTML = payments.map(function (payment) {
+      superAdminCashPaymentsById[String(payment.id)] = payment;
+      var user = payment.user || {};
+      var status = String(payment.status || "pending").toLowerCase();
+      var statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+      var plan = payment.plan;
+      var evidence = payment.proofUrl && /^https?:\/\//i.test(payment.proofUrl)
+        ? '<a class="cash-proof-link" href="' + escapeDashboardHtml(payment.proofUrl) + '" target="_blank" rel="noopener noreferrer">Open proof</a>'
+        : '<span class="cash-proof-missing">No attachment</span>';
+      var quickActions = status === "pending"
+        ? '<button class="user-action-btn approve" type="button" data-live-cash-action="approve" data-payment-id="' + payment.id + '">Approve</button><button class="user-action-btn reject" type="button" data-live-cash-action="reject" data-payment-id="' + payment.id + '">Reject</button>'
+        : "";
+      return '<tr>' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(user.name || "User") || "U") + '</span><div><strong>' + escapeDashboardHtml(user.name || "Unknown user") + '</strong><div class="subtle-handle">' + escapeDashboardHtml(user.email || payment.reference || "Manual payment") + '</div></div></div></td>' +
+        '<td><div class="cash-plan-cell"><strong>' + escapeDashboardHtml(plan ? plan.name : "Standalone") + '</strong><span>' + (plan ? cashPaymentMoney(plan.price, payment.currency) : "No subscription linked") + '</span></div></td>' +
+        '<td><strong class="cash-amount-value">' + cashPaymentMoney(payment.amount, payment.currency) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(payment.reference || "No reference") + '</div></td>' +
+        '<td><div class="cash-period-cell"><strong>' + escapeDashboardHtml(cashPaymentDate(payment.startDate, cashPaymentDate(payment.createdAt))) + '</strong><span>' + escapeDashboardHtml(payment.endDate ? "to " + cashPaymentDate(payment.endDate) : "Recorded " + cashPaymentDate(payment.createdAt)) + '</span></div></td>' +
+        '<td><div class="cash-evidence-cell">' + evidence + '<span>' + escapeDashboardHtml(payment.notes || "No notes") + '</span></div></td>' +
+        '<td><span class="cash-status-badge ' + escapeDashboardHtml(status) + '">' + escapeDashboardHtml(statusLabel) + '</span></td>' +
+        '<td><div class="cash-reviewer-cell"><strong>' + escapeDashboardHtml(payment.reviewerName || "Not reviewed") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(payment.reviewedAt, "Awaiting action")) + '</span></div></td>' +
+        '<td><div class="user-row-actions cash-row-actions">' + quickActions + '<button class="user-action-btn edit" type="button" data-live-cash-action="edit" data-payment-id="' + payment.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-cash-action="delete" data-payment-id="' + payment.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function populateCashPaymentUsers(users) {
+    if (!cashPaymentAdminForm) return;
+    var select = cashPaymentAdminForm.elements.userId;
+    var current = select.value;
+    select.innerHTML = '<option value="">Select user</option>' + users.map(function (user) {
+      return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name + " — " + user.email) + '</option>';
+    }).join("");
+    select.value = current;
+  }
+
+  function filterCashPaymentSubscriptions(selectedId) {
+    if (!cashPaymentAdminForm) return;
+    var userId = Number(cashPaymentAdminForm.elements.userId.value);
+    var select = cashPaymentAdminForm.elements.subscriptionId;
+    var desired = selectedId === undefined ? select.value : String(selectedId || "");
+    var choices = superAdminCashSubscriptions.filter(function (subscription) { return Number(subscription.userId) === userId; });
+    select.innerHTML = '<option value="">No linked subscription</option>' + choices.map(function (subscription) {
+      return '<option value="' + subscription.id + '">' + escapeDashboardHtml(subscription.planName + " — " + cashPaymentMoney(subscription.planPrice, "USD") + " (" + subscription.status + ")") + '</option>';
+    }).join("");
+    select.value = desired;
+  }
+
+  async function loadSuperAdminCashPayments() {
+    if (adminPageSlug !== "cash-payments" || !cashPaymentAdminBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      cashPaymentAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to review cash payments.</span></div></td></tr>';
+      if (cashPaymentAdminCount) cashPaymentAdminCount.textContent = "Sign in required";
+      updateCashPaymentsPageSummary({});
+      return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var status = cashPaymentStatusFilter ? cashPaymentStatusFilter.value : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load cash payments");
+      superAdminCashSubscriptions = data.subscriptions || [];
+      populateCashPaymentUsers(data.users || []);
+      filterCashPaymentSubscriptions();
+      renderSuperAdminCashPayments(data.payments || []);
+      updateCashPaymentsPageSummary(data.summary || {});
+    } catch (error) {
+      cashPaymentAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Cash payments unavailable</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      if (cashPaymentAdminCount) cashPaymentAdminCount.textContent = "Unavailable";
+      updateCashPaymentsPageSummary({});
+      showToast("Could not load cash payments", error.message);
+    }
+  }
+
+  function setCashPaymentAdminModal(open, payment) {
+    if (!cashPaymentAdminModal || !cashPaymentAdminForm) return;
+    if (!open) {
+      cashPaymentAdminModal.hidden = true;
+      document.body.style.overflow = "";
+      return;
+    }
+    cashPaymentAdminForm.reset();
+    cashPaymentAdminForm.elements.paymentId.value = payment ? payment.id : "";
+    if (payment) {
+      cashPaymentAdminForm.elements.userId.value = payment.user ? payment.user.id : "";
+      filterCashPaymentSubscriptions(payment.subscriptionId);
+      cashPaymentAdminForm.elements.amount.value = payment.amount;
+      cashPaymentAdminForm.elements.currency.value = payment.currency || "USD";
+      cashPaymentAdminForm.elements.status.value = payment.status;
+      cashPaymentAdminForm.elements.reference.value = payment.reference || "";
+      cashPaymentAdminForm.elements.proofUrl.value = payment.proofUrl || "";
+      cashPaymentAdminForm.elements.notes.value = payment.notes || "";
+    } else {
+      filterCashPaymentSubscriptions();
+    }
+    if (cashPaymentAdminModalTitle) cashPaymentAdminModalTitle.textContent = payment ? "Edit Cash Payment" : "Record Cash Payment";
+    if (cashPaymentAdminFeedback) { cashPaymentAdminFeedback.hidden = true; cashPaymentAdminFeedback.textContent = ""; }
+    cashPaymentAdminModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function cashPaymentPayload(payment, status) {
+    return {
+      userId: payment.user ? payment.user.id : null,
+      subscriptionId: payment.subscriptionId || null,
+      amount: payment.amount, currency: payment.currency, status: status || payment.status,
+      reference: payment.reference || "", proofUrl: payment.proofUrl || "", notes: payment.notes || ""
+    };
+  }
+
+  async function updateCashPaymentStatus(payment, status, button) {
+    if (!payment) return;
+    try {
+      button.disabled = true;
+      button.textContent = status === "approved" ? "Approving..." : "Rejecting...";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments/" + encodeURIComponent(payment.id), {
+        method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(cashPaymentPayload(payment, status))
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to review payment");
+      await loadSuperAdminCashPayments();
+      showToast(status === "approved" ? "Payment approved" : "Payment rejected", status === "approved" ? "Revenue, transaction, and subscription records were synchronized." : "The payment was marked as rejected.");
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = status === "approved" ? "Approve" : "Reject";
+      showToast("Review failed", error.message);
+    }
+  }
+
+  if (openCashPaymentAdminModalButton) openCashPaymentAdminModalButton.addEventListener("click", function () { setCashPaymentAdminModal(true); });
+  if (closeCashPaymentAdminModalButton) closeCashPaymentAdminModalButton.addEventListener("click", function () { setCashPaymentAdminModal(false); });
+  if (cashPaymentAdminModalBackdrop) cashPaymentAdminModalBackdrop.addEventListener("click", function () { setCashPaymentAdminModal(false); });
+  if (resetCashPaymentAdminFormButton) resetCashPaymentAdminFormButton.addEventListener("click", function () { setCashPaymentAdminModal(false); });
+  if (cashPaymentStatusFilter) cashPaymentStatusFilter.addEventListener("change", loadSuperAdminCashPayments);
+  if (cashPaymentAdminForm) cashPaymentAdminForm.elements.userId.addEventListener("change", function () { filterCashPaymentSubscriptions(); });
+
+  if (cashPaymentAdminForm) {
+    cashPaymentAdminForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!cashPaymentAdminForm.checkValidity()) {
+        if (cashPaymentAdminFeedback) { cashPaymentAdminFeedback.hidden = false; cashPaymentAdminFeedback.textContent = "Select a user and enter a valid payment amount."; }
+        return;
+      }
+      var formData = new FormData(cashPaymentAdminForm);
+      var paymentId = String(formData.get("paymentId") || "");
+      var submitButton = cashPaymentAdminForm.querySelector('[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments" + (paymentId ? "/" + encodeURIComponent(paymentId) : ""), {
+          method: paymentId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: Number(formData.get("userId")), subscriptionId: formData.get("subscriptionId") ? Number(formData.get("subscriptionId")) : null,
+            amount: Number(formData.get("amount")), currency: formData.get("currency"), status: formData.get("status"),
+            reference: formData.get("reference").trim(), proofUrl: formData.get("proofUrl").trim(), notes: formData.get("notes").trim()
+          })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save cash payment");
+        setCashPaymentAdminModal(false);
+        await loadSuperAdminCashPayments();
+        showToast(paymentId ? "Payment updated" : "Payment recorded", "The manual payment and transaction ledger were saved to PostgreSQL.");
+      } catch (error) {
+        if (cashPaymentAdminFeedback) { cashPaymentAdminFeedback.hidden = false; cashPaymentAdminFeedback.textContent = error.message; }
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Save Payment";
+      }
+    });
+  }
+
+  document.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-live-cash-action]");
+    if (!button) return;
+    var paymentId = button.getAttribute("data-payment-id");
+    var payment = superAdminCashPaymentsById[String(paymentId)];
+    var action = button.getAttribute("data-live-cash-action");
+    if (action === "edit") setCashPaymentAdminModal(true, payment);
+    if (action === "approve") updateCashPaymentStatus(payment, "approved", button);
+    if (action === "reject") updateCashPaymentStatus(payment, "rejected", button);
+    if (action === "delete" && window.confirm("Permanently delete this cash payment and its linked transaction record?")) {
+      try {
+        button.disabled = true;
+        button.textContent = "Deleting...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments/" + encodeURIComponent(paymentId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to delete cash payment");
+        await loadSuperAdminCashPayments();
+        showToast("Payment deleted", "The payment and linked transaction were removed.");
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "Delete";
+        showToast("Delete failed", error.message);
+      }
+    }
+  });
 
   if (nfcOrderSearch) {
     nfcOrderSearch.addEventListener("input", applyNfcOrdersFilter);
@@ -1707,7 +3168,7 @@ document.addEventListener("DOMContentLoaded", function () {
           item.setAttribute("aria-selected", "false");
         });
 
-        Array.from(document.querySelectorAll("#nfcCardsPanel, #nfcOrdersPanel")).forEach(function (panel) {
+        Array.from(document.querySelectorAll("#nfcCardsPanel, #nfcProductsPanel, #nfcRegistryPanel, #nfcOrdersPanel")).forEach(function (panel) {
           panel.classList.remove("active");
         });
 
@@ -1952,6 +3413,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (toggleUserForm) {
     toggleUserForm.addEventListener("click", function () {
+      resetUserFormMode();
       openUserModal();
     });
   }
@@ -2041,6 +3503,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (resetUserForm && addUserForm) {
     resetUserForm.addEventListener("click", function () {
       addUserForm.reset();
+      resetUserFormMode();
       resetProfilePreview();
       if (userFormFeedback) {
         userFormFeedback.hidden = true;
@@ -2088,6 +3551,16 @@ document.addEventListener("DOMContentLoaded", function () {
     var subscriptionActionButton = event.target.closest("[data-subscription-action]");
     var planActionButton = event.target.closest("[data-plan-action]");
     var couponActionButton = event.target.closest("[data-coupon-action]");
+    var vcardAdminAction = event.target.closest("[data-vcard-admin-action]");
+
+    if (vcardAdminAction && vcardAdminAction.tagName !== "INPUT") {
+      var vcardAction = vcardAdminAction.getAttribute("data-vcard-admin-action");
+      if (vcardAction === "delete") deleteSuperAdminVCard(vcardAdminAction.getAttribute("data-vcard-id"), vcardAdminAction);
+      if (vcardAction === "assign-template") {
+        if (vcardAdminForm) vcardAdminForm.reset();
+        setVCardModal(true, vcardAdminAction.getAttribute("data-template-id"));
+      }
+    }
 
     if (copyButton) {
       var copyText = copyButton.getAttribute("data-copy-text");
@@ -2183,6 +3656,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  document.addEventListener("change", function (event) {
+    var statusInput = event.target.closest('input[data-vcard-admin-action="status"]');
+    if (statusInput) updateSuperAdminVCardStatus(statusInput.getAttribute("data-vcard-id"), statusInput.checked, statusInput);
+  });
+
   document.addEventListener("click", function (event) {
     var passwordToggle = event.target.closest(".password-toggle");
     if (passwordToggle) {
@@ -2193,14 +3671,23 @@ document.addEventListener("DOMContentLoaded", function () {
         passwordToggle.textContent = passwordInput.type === "password" ? "Show" : "Hide";
       }
     }
+
+    var userActionButton = event.target.closest("[data-user-action]");
+    if (userActionButton) {
+      var userId = userActionButton.getAttribute("data-user-id");
+      var action = userActionButton.getAttribute("data-user-action");
+      if (action === "edit") openUserEditor(superAdminUsersById[String(userId)]);
+      if (action === "status") changeSuperAdminUserStatus(userId, userActionButton.getAttribute("data-user-status"), userActionButton);
+      if (action === "delete") deleteSuperAdminUser(userId, userActionButton);
+    }
   });
 
   if (addUserForm && userDirectoryBody) {
-    addUserForm.addEventListener("submit", function (event) {
+    addUserForm.addEventListener("submit", async function (event) {
       event.preventDefault();
 
       if (!addUserForm.checkValidity()) {
-        setUserFormFeedback("Please complete the required user fields before creating the account.", false);
+        setUserFormFeedback("Please complete all required user fields before saving the account.", false);
         return;
       }
 
@@ -2213,17 +3700,53 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       var formData = new FormData(addUserForm);
+      var editingUserId = String(formData.get("userId") || "").trim();
       var fullName = (formData.get("firstName").trim() + " " + formData.get("lastName").trim()).trim();
-      var row = buildUserRow(formData);
-      userDirectoryBody.insertBefore(row, userDirectoryBody.firstChild);
-      updateUserDirectoryCount();
-      applySearchFilter();
+      var phone = String(formData.get("phone") || "").trim();
+      var submitButton = addUserForm.querySelector('[type="submit"]');
+      var token = localStorage.getItem("token");
+      if (!token) {
+        setUserFormFeedback("Please sign in as a super admin before creating a user.", false);
+        return;
+      }
 
-      setUserFormFeedback("User created successfully. The account has been added to the directory" + (formData.get("sendInvite") ? " and the invite is marked for sending." : "."), true);
-      showToast("User created", fullName + " has been added to the directory.");
-      addUserForm.reset();
-      resetProfilePreview();
-      closeUserModal();
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving...";
+      }
+
+      try {
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/users" + (editingUserId ? "/" + encodeURIComponent(editingUserId) : ""), {
+          method: editingUserId ? "PATCH" : "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            firstName: formData.get("firstName").trim(),
+            lastName: formData.get("lastName").trim(),
+            email: formData.get("email").trim(),
+            password: formData.get("password"),
+            phoneNumber: phone ? (String(formData.get("countryCode") || "") + " " + phone).trim() : null,
+            status: String(formData.get("status") || "active").toLowerCase()
+          })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to create user");
+
+        await loadSuperAdminUsers();
+        showToast(editingUserId ? "User updated" : "User created", fullName + " has been saved to the database.");
+        addUserForm.reset();
+        resetProfilePreview();
+        closeUserModal();
+      } catch (error) {
+        setUserFormFeedback(error.message, false);
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = "Save";
+        }
+      }
     });
   }
 
@@ -2449,6 +3972,148 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function escapeDashboardHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function formatDashboardNumber(value) {
+    return new Intl.NumberFormat("en-US").format(Number(value || 0));
+  }
+
+  function formatDashboardMoney(value) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(Number(value || 0));
+  }
+
+  function setDashboardMetric(name, value, growth, note) {
+    var card = document.querySelector('[data-dashboard-metric="' + name + '"]');
+    if (!card) return;
+    var valueNode = card.querySelector(":scope > strong");
+    var changeNode = card.querySelector(".admin-change");
+    var noteNode = card.querySelector(":scope > small");
+    if (valueNode) valueNode.textContent = value;
+    if (changeNode) {
+      var numericGrowth = Number(growth || 0);
+      changeNode.textContent = (numericGrowth > 0 ? "+" : "") + numericGrowth.toFixed(1) + "%";
+      changeNode.classList.toggle("up", numericGrowth >= 0);
+    }
+    if (noteNode) noteNode.textContent = note;
+  }
+
+  function renderDashboardUsers(users) {
+    var body = document.getElementById("dashboardRecentUsers");
+    if (!body) return;
+    if (!users.length) {
+      body.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>No users yet</strong><span>New database users will appear here.</span></div></td></tr>';
+      return;
+    }
+
+    body.innerHTML = users.map(function (user) {
+      var initials = String(user.name || user.email || "U").split(/\s+/).map(function (part) { return part.charAt(0); }).join("").slice(0, 2).toUpperCase();
+      var joined = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(user.joinedAt));
+      var status = String(user.status || "inactive").toLowerCase();
+      return '<tr class="searchable-item" data-search="' + escapeDashboardHtml([user.name, user.email, user.plan, status].join(" ").toLowerCase()) + '">' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(initials) + '</span><div><strong>' + escapeDashboardHtml(user.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(user.email) + '</div></div></div></td>' +
+        '<td><span class="admin-plan-tag">' + escapeDashboardHtml(user.plan) + '</span></td>' +
+        '<td>' + formatDashboardNumber(user.cards) + '</td>' +
+        '<td>' + escapeDashboardHtml(joined) + '</td>' +
+        '<td><span class="admin-status ' + (status === "active" ? "active" : "pending") + '"><i></i>' + escapeDashboardHtml(status.charAt(0).toUpperCase() + status.slice(1)) + '</span></td>' +
+        '<td><a href="users.html" aria-label="Open ' + escapeDashboardHtml(user.name) + '">•••</a></td>' +
+      "</tr>";
+    }).join("");
+  }
+
+  function renderDashboardPlans(plans) {
+    var bar = document.getElementById("dashboardPlanBar");
+    var legend = document.getElementById("dashboardPlanLegend");
+    if (!bar || !legend) return;
+    if (!plans.length) {
+      bar.innerHTML = "";
+      legend.innerHTML = '<span><strong>No active subscriptions</strong><em>Create plans and subscriptions to populate this chart.</em></span>';
+      return;
+    }
+
+    var classes = ["pro", "business", "enterprise"];
+    bar.innerHTML = plans.slice(0, 3).map(function (plan, index) {
+      return '<span class="' + classes[index] + '" style="width:' + Math.max(0, Number(plan.percentage || 0)) + '%"></span>';
+    }).join("");
+    legend.innerHTML = plans.slice(0, 3).map(function (plan, index) {
+      return '<span><i class="' + classes[index] + '"></i><strong>' + escapeDashboardHtml(plan.name) + '</strong><em>' + formatDashboardNumber(plan.count) + ' · ' + Number(plan.percentage || 0).toFixed(1) + "%</em></span>";
+    }).join("");
+  }
+
+  async function loadSuperAdminDashboard() {
+    if (adminPageSlug !== "dashboard") return;
+    var statusNode = document.getElementById("dashboardDataStatus");
+    var token = localStorage.getItem("token");
+    if (!token) {
+      if (statusNode) statusNode.innerHTML = "<i></i> Sign in to load live platform data";
+      return;
+    }
+
+    try {
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/dashboard", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (!response.ok) {
+        var failure = await response.json().catch(function () { return {}; });
+        throw new Error(failure.message || "Unable to load dashboard data");
+      }
+      var data = await response.json();
+      var metrics = data.metrics || {};
+      var growth = metrics.growth || {};
+
+      setDashboardMetric("revenue", formatDashboardMoney(metrics.monthlyRevenue), growth.revenue, "Revenue recorded this month");
+      setDashboardMetric("users", formatDashboardNumber(metrics.totalUsers), growth.users, formatDashboardNumber(metrics.activeUsers) + " active accounts");
+      setDashboardMetric("subscriptions", formatDashboardNumber(metrics.activeSubscriptions), growth.subscriptions, "Active database subscriptions");
+      setDashboardMetric("cards", formatDashboardNumber(metrics.publishedCards), growth.cards, "Published database VCards");
+
+      var revenueTotal = document.getElementById("dashboardRevenueTotal");
+      var revenueGrowth = document.getElementById("dashboardRevenueGrowth");
+      if (revenueTotal) revenueTotal.textContent = formatDashboardMoney(metrics.monthlyRevenue);
+      if (revenueGrowth) revenueGrowth.textContent = (growth.revenue > 0 ? "+" : "") + Number(growth.revenue || 0).toFixed(1) + "%";
+
+      var pendingNfc = document.getElementById("dashboardPendingNfc");
+      var pendingPayments = document.getElementById("dashboardPendingPayments");
+      var pendingTotal = document.getElementById("dashboardPendingTotal");
+      if (pendingNfc) pendingNfc.textContent = formatDashboardNumber(metrics.pendingNfcOrders);
+      if (pendingPayments) pendingPayments.textContent = formatDashboardNumber(metrics.pendingPayments);
+      if (pendingTotal) pendingTotal.textContent = formatDashboardNumber(Number(metrics.pendingNfcOrders || 0) + Number(metrics.pendingPayments || 0)) + " total";
+
+      renderDashboardUsers(data.recentUsers || []);
+      renderDashboardPlans(data.planDistribution || []);
+
+      if (Array.isArray(data.revenueSeries) && data.revenueSeries.length) {
+        analyticsSeries["30"] = {
+          label: "Last 30 Days",
+          labels: data.revenueSeries.map(function (point) {
+            return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(point.date));
+          }),
+          data: data.revenueSeries.map(function (point) { return Number(point.amount || 0); }),
+        };
+        buildAnalyticsChart("30");
+      }
+
+      var databaseLatency = document.getElementById("dashboardDatabaseLatency");
+      if (databaseLatency) databaseLatency.textContent = formatDashboardNumber(data.system && data.system.databaseLatencyMs) + " ms";
+      if (statusNode) {
+        var generatedAt = new Date(data.generatedAt);
+        statusNode.innerHTML = "<i></i> Live database data · updated " + generatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+    } catch (error) {
+      if (statusNode) statusNode.innerHTML = "<i></i> " + escapeDashboardHtml(error.message);
+      console.error("Super admin dashboard:", error);
+    }
+  }
+
   renderActivity();
   renderNotifications();
   resetProfilePreview();
@@ -2473,4 +4138,10 @@ document.addEventListener("DOMContentLoaded", function () {
   buildEngagementChart();
   buildRevenueBreakdownChart();
   buildRevenueBarChart();
+  loadSuperAdminDashboard();
+  loadSuperAdminUsers();
+  loadSuperAdminVCards();
+  loadSuperAdminNfc();
+  loadSuperAdminSubscriptions();
+  loadSuperAdminCashPayments();
 });

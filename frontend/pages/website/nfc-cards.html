@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../../public/assets/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
 </head>
-<body class="website-page">
+<body class="website-page nfc-storefront-page">
   <header class="site-header fixed-top">
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container">
@@ -16,80 +16,113 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="mainNavbar">
           <ul class="navbar-nav mx-auto">
+            <li class="nav-item"><a class="nav-link" href="home.html#home">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="home.html#features">Features</a></li>
-            <li class="nav-item"><a class="nav-link" href="templates.html">Templates</a></li>
-            <li class="nav-item"><a class="nav-link active" href="nfc-cards.html">Solutions</a></li>
-            <li class="nav-item"><a class="nav-link" href="pricing.html">Pricing</a></li>
-            <li class="nav-item"><a class="nav-link" href="contact.html">Resources</a></li>
-            <li class="nav-item"><a class="nav-link" href="contact.html">Enterprise</a></li>
+            <li class="nav-item"><a class="nav-link" href="home.html#pricing">Pricing</a></li>
+            <li class="nav-item"><a class="nav-link active" href="nfc-cards.html" aria-current="page">NFC Cards</a></li>
+            <li class="nav-item"><a class="nav-link" href="home.html#contact">Contact</a></li>
           </ul>
-          <div class="nav-actions"><a href="../auth/login.html" class="btn btn-ghost">Log in</a><a href="../auth/register.html" class="btn btn-red">Get Started Free</a></div>
+          <div class="nav-actions"><a href="../auth/login.html" class="btn btn-ghost">Login</a><a href="../auth/register.html" class="btn btn-red">Register</a></div>
         </div>
       </div>
     </nav>
   </header>
 
   <main>
-    <section class="page-hero">
-      <div class="container">
-        <span class="eyebrow">NFC Cards</span>
-        <h1>Tap. <span>Connect.</span> Impress.</h1>
-        <p>Premium NFC cards that launch your Sync E-Card profile with one tap. Perfect for sales teams, founders, events and client-facing staff.</p>
-        <div class="page-hero-visual nfc-hero-visual" aria-hidden="true">
-          <img src="../../public/assets/images/login-card-front.png" alt="" />
-          <img src="../../public/assets/images/login-card-back.png" alt="" />
+    <section class="nfc-catalog-hero">
+      <div class="container nfc-hero-layout">
+        <div class="nfc-hero-copy">
+          <span class="nfc-kicker"><i></i> The card that keeps up with you</span>
+          <h1>Make every<br><span>tap count.</span></h1>
+          <p>A physical card with a digital pulse. Share your identity, grow your network, and update everything in real time.</p>
+          <div class="nfc-hero-actions"><a class="btn btn-red btn-lg" href="#nfcProductLines">Explore the collection <span>&rarr;</span></a><span><b>NFC</b> No app required</span></div>
+          <div class="nfc-hero-proof"><div><strong>01</strong><span>Choose your finish</span></div><div><strong>02</strong><span>Personalise it</span></div><div><strong>03</strong><span>Tap &amp; connect</span></div></div>
+        </div>
+        <div class="nfc-hero-stage" aria-label="Sync E-Card NFC card preview">
+          <div class="nfc-stage-orbit"><i></i><i></i><i></i></div>
+          <div class="nfc-stage-card nfc-stage-card-back"><img src="../../public/assets/images/login-card-back.png" alt="" /></div>
+          <div class="nfc-stage-card nfc-stage-card-front"><img src="../../public/assets/images/login-card-front.png" alt="Sync E-Card premium NFC card" /></div>
+          <div class="nfc-stage-signal"><span></span><span></span><span></span><b>NFC</b></div>
+          <div class="nfc-stage-chip nfc-stage-chip-top"><i></i><span><b>Instant sharing</b><small>Contact in one tap</small></span></div>
+          <div class="nfc-stage-chip nfc-stage-chip-bottom"><strong>100%</strong><span>Reusable<br>profile</span></div>
         </div>
       </div>
     </section>
 
-    <section class="section-block">
-      <div class="container">
-        <div class="nfc-band">
-          <div>
-            <h2>Share your profile without an app.</h2>
-            <p>Your NFC card opens a mobile-friendly digital business card with contact details, social links, location, files and follow-up actions.</p>
-            <div class="nfc-points"><span>NXP 215 Chip</span><span>Custom Design</span><span>Durable & Waterproof</span><span>Global Shipping</span></div>
-          </div>
-          <div class="nfc-product-card"><img src="../../public/assets/images/login-card-back.png" alt="" /><span>NFC )))</span><strong><i>C</i> Card<span>Zynk</span></strong></div>
-        </div>
-      </div>
+    <section class="nfc-value-strip" aria-label="NFC card benefits">
+      <div class="container"><div><span>01</span><b>No monthly card fee</b></div><div><span>02</span><b>Works with modern phones</b></div><div><span>03</span><b>Update details anytime</b></div><div><span>04</span><b>Built for everyday use</b></div></div>
     </section>
 
-    <section class="section-block">
-      <div class="container page-grid">
-        <article class="page-card"><h3>Instant sharing</h3><p>Tap the card on compatible phones or use the backup QR code for every other device.</p></article>
-        <article class="page-card"><h3>Brand control</h3><p>Match cards to your company design system and keep every employee profile consistent.</p></article>
-        <article class="page-card"><h3>Easy updates</h3><p>Change your phone, email, links or role in Sync E-Card without reprinting the physical card.</p></article>
-      </div>
-    </section>
+    <nav class="nfc-collection-nav" aria-label="NFC card collections">
+      <div class="container"><span>Shop by collection</span><div><a href="#essential-line">Essential</a><a href="#signature-line">Signature</a><a href="#prestige-line">Prestige</a><a href="#exclusive-line">Exclusive</a></div></div>
+    </nav>
 
-    <section class="section-block">
-      <div class="container">
-        <div class="process-strip">
-          <article><span>01</span><h3>Design</h3><p>Upload a logo or choose a Sync E-Card card style.</p></article>
-          <article><span>02</span><h3>Assign</h3><p>Connect each physical card to a user profile.</p></article>
-          <article><span>03</span><h3>Tap</h3><p>Share contact details, links and files instantly.</p></article>
-          <article><span>04</span><h3>Measure</h3><p>Track views, saves and follow-up signals.</p></article>
-        </div>
-      </div>
+    <div id="nfcProductLines" aria-live="polite"></div>
+
+    <section class="nfc-catalog-cta">
+      <div class="container"><div><span>Need something uniquely yours?</span><h2>Your identity deserves<br>a card of its own.</h2><p>Custom colours, finishes and artwork for teams that refuse to blend in.</p></div><a class="btn btn-red btn-lg" href="contact.html">Create a custom card <span>&rarr;</span></a></div>
     </section>
   </main>
 
-  <footer class="footer">
+  <footer class="footer footer-modern">
+    <div class="footer-glow footer-glow-left" aria-hidden="true"></div>
+    <div class="footer-glow footer-glow-right" aria-hidden="true"></div>
     <div class="container">
-      <div class="footer-grid">
-        <div><a class="brand-mark footer-logo" href="home.html"><img class="brand-logo-img footer-logo-img" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></a><p>The all-in-one digital business card platform for modern professionals and businesses.</p></div>
-        <div><h3>Product</h3><a href="home.html#features">Features</a><a href="templates.html">Templates</a><a href="pricing.html">Pricing</a><a href="nfc-cards.html">NFC Cards</a></div>
-        <div><h3>Company</h3><a href="about.html">About Us</a><a href="contact.html">Careers</a><a href="contact.html">Blog</a><a href="contact.html">Contact Us</a></div>
-        <div><h3>Resources</h3><a href="contact.html">Help Center</a><a href="contact.html">Guides</a><a href="home.html#analytics">API Documentation</a></div>
-        <div><h3>Legal</h3><a href="contact.html">Privacy Policy</a><a href="contact.html">Terms of Service</a><a href="contact.html">Cookie Policy</a></div>
-        <div><h3>Newsletter</h3><p>Subscribe to get updates and news about Sync E-Card.</p><form class="newsletter-form"><input type="email" placeholder="Enter your email"><button type="submit">-></button></form></div>
+      <div class="footer-cta">
+        <div class="footer-cta-copy">
+          <span class="footer-kicker"><i></i> Your digital identity, reimagined</span>
+          <h2>Make every <em>hello</em> count.</h2>
+          <p>Create a memorable first impression with one smart card that is always up to date.</p>
+        </div>
+        <div class="footer-cta-actions">
+          <a class="footer-demo-link" href="contact.html">Book a demo <span>&nearr;</span></a>
+          <a class="footer-start-link" href="../auth/register.html">Create your card <span>&rarr;</span></a>
+        </div>
       </div>
-      <div class="footer-bottom"><p>&copy; 2026 Sync E-Card. All rights reserved.</p><p>Made with love by Sync E-Card</p></div>
+
+      <div class="footer-content">
+        <div class="footer-brand-column">
+          <a class="brand-mark footer-logo" href="home.html" aria-label="Sync E-Card home"><img class="brand-logo-img footer-logo-img" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></a>
+          <p>One smart digital identity for better introductions, stronger connections, and lasting opportunities.</p>
+          <div class="footer-socials" aria-label="Follow Sync E-Card">
+            <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3.3 0-5 2-5 5v2H6v4h3v7h4v-7h3l1-4h-4V9c0-.7.3-1 1-1Z"/></svg></a>
+            <a href="#" aria-label="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.6 3H22l-7.5 8.6L23 21h-6.7l-5.2-6.8L5.2 21H1.8l7.7-8.8L1.3 3h6.8l4.7 6.2L18.6 3Zm-1.2 16h1.9L7.1 4.9h-2L17.4 19Z"/></svg></a>
+            <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 8.3H2.7V21h3.8V8.3ZM4.6 2A2.3 2.3 0 1 0 4.6 6.6 2.3 2.3 0 0 0 4.6 2ZM21.3 13.7c0-3.8-2-5.8-4.8-5.8-2.2 0-3.2 1.2-3.8 2V8.3H9V21h3.8v-6.3c0-1.7.3-3.3 2.4-3.3 2 0 2.1 1.9 2.1 3.4V21h3.8l.2-7.3Z"/></svg></a>
+            <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm-.2 2A3.3 3.3 0 0 0 4 7.3v9.4A3.3 3.3 0 0 0 7.3 20h9.4a3.3 3.3 0 0 0 3.3-3.3V7.3A3.3 3.3 0 0 0 16.7 4H7.3ZM17 5.5A1.5 1.5 0 1 1 17 8a1.5 1.5 0 0 1 0-2.5ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg></a>
+          </div>
+        </div>
+
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <div><h3>Product</h3><a href="home.html#features">Features</a><a href="templates.html">Templates</a><a href="pricing.html">Pricing</a><a href="nfc-cards.html">NFC Cards</a><a href="home.html#features">Integrations</a></div>
+          <div><h3>Company</h3><a href="about.html">About Us</a><a href="contact.html">Careers</a><a href="contact.html">Blog</a><a href="contact.html">Contact Us</a></div>
+          <div><h3>Resources</h3><a href="contact.html">Help Center</a><a href="contact.html">Guides</a><a href="home.html#features">API Docs</a><a href="contact.html">Community</a></div>
+        </nav>
+
+        <div class="footer-newsletter">
+          <span class="newsletter-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm8 7.3L19.4 7H4.6l7.4 5.3ZM4 17h16V9.5l-8 5.7-8-5.7V17Z"/></svg></span>
+          <span class="newsletter-label">The Sync Signal</span>
+          <h3>Ideas worth sharing.</h3>
+          <p>Fresh product news and smarter networking tips, delivered occasionally.</p>
+          <form class="newsletter-form" action="#" method="post">
+            <label class="visually-hidden" for="footer-email">Email address</label>
+            <input id="footer-email" name="email" type="email" placeholder="you@company.com" autocomplete="email" required>
+            <button type="submit" aria-label="Subscribe to newsletter"><span>&rarr;</span></button>
+          </form>
+          <small>No spam. Just useful things.</small>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Sync E-Card. All rights reserved.</p>
+        <div class="footer-legal"><a href="contact.html">Privacy</a><a href="contact.html">Terms</a><a href="contact.html">Cookies</a></div>
+        <p class="footer-status"><i></i> All systems operational</p>
+      </div>
     </div>
   </footer>
 
   <script src="../../public/assets/js/bootstrap.bundle.min.js"></script>
   <script src="../../public/assets/js/main.js"></script>
+  <script src="../../public/assets/js/nfc-catalog.js"></script>
+  <script src="../../public/assets/js/nfc-storefront.js"></script>
 </body>
 </html>
