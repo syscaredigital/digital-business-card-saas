@@ -334,6 +334,8 @@ document.addEventListener("DOMContentLoaded", function () {
   var planAdminForm = document.getElementById("planAdminForm");
   var planAdminFeedback = document.getElementById("planAdminFeedback");
   var planAdminModalTitle = document.getElementById("planAdminModalTitle");
+  var planVcardFeatureOptions = document.getElementById("planVcardFeatureOptions");
+  var planVcardTemplateOptions = document.getElementById("planVcardTemplateOptions");
   var superAdminSubscriptionsById = {};
   var superAdminPlansById = {};
   var affiliationsTabButtons = Array.from(document.querySelectorAll("[data-affiliations-tab-target]"));
@@ -2006,7 +2008,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!nfcProductsGrid) return;
     superAdminNfcProductsById = {};
     var term = String(search || "").toLowerCase();
-    var visible = products.filter(function (product) { return !term || [product.name, product.description].join(" ").toLowerCase().includes(term); });
+    var visible = products.filter(function (product) { return !term || [product.name, product.description, product.category].join(" ").toLowerCase().includes(term); });
     if (!visible.length) {
       nfcProductsGrid.innerHTML = '<div class="admin-data-empty"><strong>No NFC products found</strong><span>Add a card product or try another search.</span></div>';
       if (nfcProductsCount) nfcProductsCount.textContent = "0 products";
@@ -2015,7 +2017,7 @@ document.addEventListener("DOMContentLoaded", function () {
     nfcProductsGrid.innerHTML = visible.map(function (product) {
       superAdminNfcProductsById[String(product.id)] = product;
       return '<article class="nfc-product-directory-row">' +
-        '<div class="nfc-product-name-cell"><img src="' + escapeDashboardHtml(product.frontImage) + '" alt="' + escapeDashboardHtml(product.name) + ' front" /><div><h3>' + escapeDashboardHtml(product.name) + '</h3><p>' + escapeDashboardHtml(product.description || "No description provided") + '</p></div></div>' +
+        '<div class="nfc-product-name-cell"><img src="' + escapeDashboardHtml(product.frontImage) + '" alt="' + escapeDashboardHtml(product.name) + ' front" /><div><h3>' + escapeDashboardHtml(product.name) + '</h3><p>' + escapeDashboardHtml((product.category || "essential").replace(/^./, function (value) { return value.toUpperCase(); })) + ' &middot; ' + escapeDashboardHtml(product.description || "No description provided") + '</p></div></div>' +
         '<div class="nfc-product-price">' + escapeDashboardHtml(formatNfcMoney(product.price)) + '</div>' +
         '<div><span class="nfc-product-order-count">' + formatDashboardNumber(product.ordersCount) + '</span></div>' +
         '<div><span class="status-badge ' + (product.isActive ? "active" : "inactive") + '">' + (product.isActive ? "Available" : "Hidden") + '</span></div>' +
@@ -2114,6 +2116,7 @@ document.addEventListener("DOMContentLoaded", function () {
         nfcProductForm.elements.productId.value = product.id;
         nfcProductForm.elements.name.value = product.name;
         nfcProductForm.elements.price.value = product.price;
+        nfcProductForm.elements.category.value = product.category || "essential";
         nfcProductForm.elements.description.value = product.description || "";
         nfcProductForm.elements.isActive.checked = product.isActive;
         nfcProductForm.elements.frontImage.required = false;
@@ -2490,6 +2493,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (targetPanel) {
           targetPanel.classList.add("active");
+          if (!button.classList.contains("vcard-tab-btn")) {
+            window.setTimeout(function () { targetPanel.scrollIntoView({ behavior: "smooth", block: "start" }); }, 40);
+          }
         }
       });
     });
@@ -2571,7 +2577,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/products" + (productId ? "/" + encodeURIComponent(productId) : ""), {
           method: productId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-          body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), description: formData.get("description").trim(), frontImage: frontImage, backImage: backImage, isActive: formData.get("isActive") === "on" })
+          body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), category: formData.get("category"), description: formData.get("description").trim(), frontImage: frontImage, backImage: backImage, isActive: formData.get("isActive") === "on" })
         });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to save NFC card product");
@@ -2703,8 +2709,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function planFeatureNames(features) {
     if (Array.isArray(features)) return features;
-    if (features && typeof features === "object") return Object.keys(features).filter(function (key) { return features[key]; });
+    if (features && typeof features === "object" && Array.isArray(features.benefits)) return features.benefits;
     return [];
+  }
+
+  function renderPlanEntitlementOptions(features, templates) {
+    if (planVcardFeatureOptions) planVcardFeatureOptions.innerHTML = features.map(function (feature) {
+      return '<label class="plan-entitlement-option"><input type="checkbox" name="vcardFeatures" value="' + escapeDashboardHtml(feature.key) + '"><span>' + escapeDashboardHtml(feature.label) + '</span></label>';
+    }).join("");
+    if (planVcardTemplateOptions) planVcardTemplateOptions.innerHTML = templates.map(function (template) {
+      return '<label class="plan-entitlement-option"><input type="checkbox" name="templateIds" value="' + template.id + '"><span><strong>' + escapeDashboardHtml(template.name) + '</strong><small>' + escapeDashboardHtml(template.description || "Available VCard design") + '</small></span></label>';
+    }).join("");
   }
 
   function renderPlanAdmin(plans) {
@@ -2761,6 +2776,7 @@ document.addEventListener("DOMContentLoaded", function () {
       renderSubscriptionAdmin(data.subscriptions || []);
       renderPlanAdmin(data.plans || []);
       populateSubscriptionAdminOptions(data.users || [], data.plans || []);
+      renderPlanEntitlementOptions(data.vcardFeatures || [], data.templates || []);
       updateSubscriptionsPageSummary(data.summary || {});
     } catch (error) {
       subscriptionAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>Subscriptions unavailable</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
@@ -2813,6 +2829,11 @@ document.addEventListener("DOMContentLoaded", function () {
       planAdminForm.elements.features.value = planFeatureNames(plan.features).join(", ");
       planAdminForm.elements.status.value = plan.status;
     }
+    var structuredFeatures = plan && plan.features && !Array.isArray(plan.features) ? plan.features : {};
+    var selectedVcardFeatures = structuredFeatures.vcardFeatures || (plan ? ["basic-details"] : []);
+    var selectedTemplateIds = structuredFeatures.templateIds || [];
+    Array.from(planAdminForm.querySelectorAll('input[name="vcardFeatures"]')).forEach(function (input) { input.checked = selectedVcardFeatures.indexOf(input.value) !== -1; });
+    Array.from(planAdminForm.querySelectorAll('input[name="templateIds"]')).forEach(function (input) { input.checked = selectedTemplateIds.map(String).indexOf(input.value) !== -1; });
     if (planAdminModalTitle) planAdminModalTitle.textContent = plan ? "Edit Plan" : "New Plan";
     if (planAdminFeedback) { planAdminFeedback.hidden = true; planAdminFeedback.textContent = ""; }
     planAdminModal.hidden = false;
@@ -2869,6 +2890,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       var formData = new FormData(planAdminForm);
       var planId = String(formData.get("planId") || "");
+      var vcardFeatures = formData.getAll("vcardFeatures");
+      var templateIds = formData.getAll("templateIds").map(Number);
+      if (!vcardFeatures.length || !templateIds.length) {
+        if (planAdminFeedback) { planAdminFeedback.hidden = false; planAdminFeedback.textContent = "Select at least one VCard feature and one VCard template."; }
+        return;
+      }
       var submitButton = planAdminForm.querySelector('[type="submit"]');
       try {
         submitButton.disabled = true;
@@ -2876,7 +2903,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var response = await fetch("http://127.0.0.1:5000/api/super-admin/plans" + (planId ? "/" + encodeURIComponent(planId) : ""), {
           method: planId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-          body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), billingInterval: formData.get("billingInterval"), vcardLimit: Number(formData.get("vcardLimit")), nfcLimit: Number(formData.get("nfcLimit")), analyticsLimit: Number(formData.get("analyticsLimit")), features: formData.get("features").split(",").map(function (feature) { return feature.trim(); }).filter(Boolean), status: formData.get("status") })
+          body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), billingInterval: formData.get("billingInterval"), vcardLimit: Number(formData.get("vcardLimit")), nfcLimit: Number(formData.get("nfcLimit")), analyticsLimit: Number(formData.get("analyticsLimit")), benefits: formData.get("features").split(",").map(function (feature) { return feature.trim(); }).filter(Boolean), vcardFeatures: vcardFeatures, templateIds: templateIds, status: formData.get("status") })
         });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to save plan");

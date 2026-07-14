@@ -106,6 +106,18 @@ exports.register = async (req, res, next) => {
       ]
     );
 
+    const freePlan = await client.query(
+      `SELECT id, name FROM plans
+       WHERE status = 'active' AND price = 0
+       ORDER BY (LOWER(name) = 'free') DESC, created_at, id LIMIT 1`
+    );
+    if (!freePlan.rowCount) throw new Error("An active free plan is required before users can register.");
+    await client.query(
+      `INSERT INTO subscriptions (user_id, plan_id, status, start_date, auto_renew)
+       VALUES ($1, $2, 'active', CURRENT_DATE, FALSE)`,
+      [result.rows[0].id, freePlan.rows[0].id]
+    );
+
     await client.query("COMMIT");
 
     const user = toSafeUser({
@@ -113,7 +125,7 @@ exports.register = async (req, res, next) => {
       company_name: companyName ? String(companyName).trim() : null,
       role: "user",
     });
-    res.status(201).json({ user, token: createToken(user) });
+    res.status(201).json({ user, subscription: { name: freePlan.rows[0].name, status: "active" }, token: createToken(user) });
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     if (err.code === "23505") {

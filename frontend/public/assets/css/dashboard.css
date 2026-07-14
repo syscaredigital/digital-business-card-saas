@@ -6600,6 +6600,17 @@
   color: #ffffff;
 }
 
+.plan-entitlement-fieldset { margin: 0; padding: 16px; border: 1px solid rgba(148,163,184,.25); border-radius: 14px; }
+.plan-entitlement-fieldset legend { padding: 0 7px; color: #f8fafc; font-weight: 700; }
+.plan-entitlement-fieldset > p { margin: 0 0 12px; color: #94a3b8; font-size: 12px; }
+.plan-entitlement-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.plan-entitlement-option { display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border: 1px solid rgba(148,163,184,.18); border-radius: 10px; background: rgba(15,23,42,.42); cursor: pointer; }
+.plan-entitlement-option input { width: auto !important; margin-top: 3px; accent-color: #ef4444; }
+.plan-entitlement-option span { display: grid; gap: 3px; color: #e2e8f0; font-size: 13px; }
+.plan-entitlement-option small { color: #94a3b8; font-weight: 400; line-height: 1.35; }
+
+@media (max-width: 700px) { .plan-entitlement-grid { grid-template-columns: 1fr; } }
+
 .alias-input-group input {
   border-radius: 6px 0 0 6px;
 }

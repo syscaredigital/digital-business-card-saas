@@ -23,3 +23,15 @@
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/021_create_analytics_table.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/022_create_transactions_table.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/023_create_role_permissions_table.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/024_create_nfc_products_table.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/025_link_nfc_orders_to_products.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/026_extend_payments_for_manual_review.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/027_create_payouts_table.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/028_create_withdrawals_table.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/029_create_affiliate_program_tables.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/030_create_coupon_management_tables.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/031_create_saved_reports_tables.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/032_seed_platform_settings_and_permissions.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/033_create_auth_sessions_table.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/034_create_appointments_table.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/035_add_category_to_nfc_products.sql

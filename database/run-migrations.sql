@@ -34,3 +34,4 @@
 \i migrations/032_seed_platform_settings_and_permissions.sql
 \i migrations/033_create_auth_sessions_table.sql
 \i migrations/034_create_appointments_table.sql
+\i migrations/035_add_category_to_nfc_products.sql

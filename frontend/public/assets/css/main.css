@@ -3687,6 +3687,18 @@ p {
 .nfc-line-heading p { margin-left: 49px; }
 .nfc-package-card { border-radius: 22px; background: linear-gradient(155deg, rgba(31,31,34,.94), rgba(16,16,18,.98)); }
 .nfc-package-image { position: relative; height: 190px; margin: 14px 14px 0; border-radius: 15px; }
+.nfc-package-images { position: relative; height: 210px; margin: 14px 14px 0; overflow: hidden; border-radius: 15px; background: radial-gradient(circle at 50% 35%, rgba(255,255,255,.1), transparent 48%), #202023; }
+.nfc-package-images .nfc-product-index { z-index: 4; }
+.nfc-card-face { position: absolute; width: 72%; margin: 0; aspect-ratio: 1.586; overflow: visible; border-radius: 9px; box-shadow: 0 18px 35px rgba(0,0,0,.42); transition: transform .35s ease; }
+.nfc-card-face img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.nfc-card-face figcaption { position: absolute; right: 7px; bottom: 6px; padding: 3px 6px; border-radius: 999px; color: #fff; background: rgba(0,0,0,.66); font-size: 7px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.nfc-card-face-front { z-index: 2; left: 8%; top: 23px; transform: rotate(-5deg); }
+.nfc-card-face-back { right: 6%; top: 54px; transform: rotate(6deg); }
+.nfc-package-card:hover .nfc-card-face-front { transform: translate(-4px,-4px) rotate(-7deg); }
+.nfc-package-card:hover .nfc-card-face-back { transform: translate(5px,4px) rotate(8deg); }
+.nfc-catalog-state { display: grid; place-items: center; gap: 7px; min-height: 280px; padding: 70px 20px; color: #fff; text-align: center; }
+.nfc-catalog-state span { color: #85858b; font-size: 13px; }
+.nfc-catalog-state button { margin-top: 12px; padding: 10px 18px; border: 1px solid rgba(255,57,68,.55); border-radius: 9px; color: #fff; background: rgba(255,57,68,.12); }
 .nfc-product-index { position: absolute; z-index: 2; left: 13px; top: 12px; display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; color: rgba(255,255,255,.75); background: rgba(10,10,11,.32); backdrop-filter: blur(8px); font-size: 8px; font-weight: 900; }
 .nfc-package-body { padding: 21px 22px 23px; }.nfc-product-label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }.nfc-product-label span { color: #68686e; font-size: 8px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }.nfc-product-label i { width: 18px; height: 1px; background: #3f3f43; }
 .nfc-package-body h3 { font-size: 22px; }.nfc-package-price { margin-block: 9px 20px; }.nfc-select-button { padding: 14px 15px; }
@@ -3703,3 +3715,4 @@ p {
 @media(max-width:991px){.templates-heading{grid-template-columns:1fr;gap:24px}.templates-heading-actions{justify-content:space-between}.modern-template-row{grid-auto-columns:minmax(270px,40vw)}}
 @media(max-width:650px){.templates-heading-actions>a{display:none}.templates-heading-actions{justify-content:flex-end}.modern-template-row{grid-auto-columns:minmax(255px,82vw);padding-inline:14px}.template-gallery-top,.template-gallery-footer{padding-inline:14px}.modern-template-row .vcard-template{height:390px;min-height:390px}.gallery-progress{width:110px}}
 @media(prefers-reduced-motion:reduce){.template-gallery-top i{animation:none}.modern-template-row .vcard-template{transition:none}}
+.pricing-live-state{grid-column:1/-1;padding:45px 20px;color:#8c8c91;text-align:center}.pricing-live-state.is-error{color:#ff6068}

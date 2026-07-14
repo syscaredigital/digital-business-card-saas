@@ -13,14 +13,17 @@
     <aside class="sidebar"><a class="sidebar-logo" href="dashboard.html"><img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" /></a><nav class="sidebar-nav"><a href="dashboard.html" class="nav-item">Overview</a><a href="vcards.html" class="nav-item active">My cards</a><a href="enquiries.html" class="nav-item">Enquiries</a><a href="appointments.html" class="nav-item">Appointments</a><a href="my-nfc-cards.html" class="nav-item">NFC cards</a><a href="settings.html" class="nav-item">Settings</a></nav></aside>
     <div class="main-content">
       <header class="topbar"><a class="user-secondary-btn" href="vcards.html">← Back to cards</a><div class="topbar-right"><button class="logout-btn" id="logoutButton" type="button">Sign out</button><div class="user-profile"><div class="user-avatar-placeholder">U</div><div class="user-info"><div class="user-name">My account</div><div class="user-plan">Card editor</div></div></div></div></header>
-      <main class="page-content"><div class="page-header"><div><span class="user-kicker">Digital identity</span><h1>Edit your card</h1><p>Keep your public contact details accurate and ready to share.</p></div></div>
+      <main class="page-content"><div class="page-header"><div><span class="user-kicker">Digital identity</span><h1>Edit your card</h1><p>Only the editor sections and templates included in your active billing plan are shown.</p></div></div>
         <section class="user-dashboard-card"><form id="userVcardEditor" class="client-vcard-form">
           <div class="form-field"><label for="editCardTitle">Card name *</label><input id="editCardTitle" name="title" required /></div>
+          <div class="form-field"><label for="editCardTemplate">VCard template *</label><select id="editCardTemplate" name="templateId" required></select></div>
+          <div class="form-field"><label for="editCardOccupation">Occupation</label><input id="editCardOccupation" name="occupation" data-vcard-section="basic-details" /></div>
           <div class="form-field"><label for="editCardEmail">Email</label><input id="editCardEmail" name="email" type="email" /></div>
           <div class="form-field"><label for="editCardPhone">Phone</label><input id="editCardPhone" name="phone" /></div>
           <div class="form-field"><label for="editCardWebsite">Website</label><input id="editCardWebsite" name="websiteUrl" type="url" /></div>
           <div class="form-field form-field-wide"><label for="editCardAddress">Address</label><input id="editCardAddress" name="address" /></div>
           <div class="form-field form-field-wide"><label for="editCardDescription">Description</label><textarea id="editCardDescription" name="description" rows="5"></textarea></div>
+          <div class="form-field form-field-wide vcard-feature-editor" id="vcardFeatureEditor"><p class="user-loading">Loading the features included in your plan...</p></div>
           <label class="client-order-toggle"><span>Card is live</span><input id="editCardActive" name="isActive" type="checkbox" /><i></i></label>
           <div class="user-hero-actions"><button class="user-primary-btn" type="submit">Save changes</button><span id="vcardEditorStatus" class="user-loading"></span></div>
         </form></section>

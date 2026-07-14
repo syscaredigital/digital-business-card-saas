@@ -77,9 +77,9 @@
       <main class="page-content client-vcards-page">
         <div class="page-header">
           <div>
-            <span class="eyebrow">VCards</span>
-            <h1>Manage client vCards</h1>
-            <p>Create one vCard for a single-user plan or multiple user cards for team plans.</p>
+            <span class="eyebrow">Digital identity studio</span>
+            <h1>Your VCard collection</h1>
+            <p>Create, personalize and share memorable digital business cards from one workspace.</p>
           </div>
           <div class="client-vcard-header-actions">
             <div class="client-view-toggle" aria-label="View options">
@@ -93,6 +93,30 @@
             <button class="btn-share" type="button" data-vcard-tab-target="newVcardPanel">New VCard</button>
           </div>
         </div>
+
+        <section class="vcard-command-hero" aria-label="VCard workspace overview">
+          <div class="vcard-command-copy">
+            <span class="vcard-live-kicker"><i></i> Your cards, always ready to share</span>
+            <h2>Turn every introduction into a lasting connection.</h2>
+            <p>Choose a design, add your story and publish a professional card that stays current everywhere you share it.</p>
+            <div class="vcard-command-actions">
+              <button class="vcard-command-primary" type="button" data-vcard-tab-target="newVcardPanel">Create a new VCard <span>&rarr;</span></button>
+              <a class="vcard-command-secondary" href="../website/templates.html" target="_blank" rel="noopener noreferrer">Explore templates</a>
+            </div>
+          </div>
+          <div class="vcard-command-visual" aria-hidden="true">
+            <div class="vcard-visual-glow"></div>
+            <article class="vcard-visual-card back"><span>SYNC</span></article>
+            <article class="vcard-visual-card front"><div class="vcard-visual-avatar">SC</div><strong>Your Name</strong><small>Digital Business Card</small><div class="vcard-visual-links"><i></i><i></i><i></i></div></article>
+          </div>
+        </section>
+
+        <section class="vcard-overview-grid" aria-label="VCard statistics">
+          <article><span class="vcard-stat-icon">01</span><div><strong id="vcardOverviewTotal">0</strong><small>Total VCards</small></div></article>
+          <article><span class="vcard-stat-icon live">&#9679;</span><div><strong id="vcardOverviewLive">0</strong><small>Published now</small></div></article>
+          <article class="vcard-plan-overview"><div class="vcard-plan-overview-head"><span><strong id="vcardOverviewPlan">Free</strong><small>Current plan</small></span><b id="vcardOverviewUsage">0 / 1</b></div><div class="vcard-plan-track"><i id="vcardOverviewProgress"></i></div></article>
+        </section>
+        <div class="vcard-action-feedback" id="vcardActionFeedback" role="status" aria-live="polite" hidden></div>
 
         <section class="vcard-section-shell searchable-item" data-search="vcards user cards preview url stats subscribers contact status created action new form">
           <div class="vcard-tabbar client-vcard-tabbar" role="tablist" aria-label="VCard tabs">
@@ -162,10 +186,16 @@
                   <h3>Add New VCard</h3>
                   <p>Use this form when the selected subscription plan still has available vCard slots.</p>
                 </div>
-                <span class="status-badge active">13 slots left</span>
+                <span class="status-badge active" id="createVcardAllowance">Checking plan limit...</span>
               </div>
 
               <form class="client-vcard-form">
+                <div class="form-field form-field-wide" id="createVcardPlanSummary"></div>
+                <div class="form-field form-field-wide">
+                  <label for="createVcardTemplate">VCard Template:<span class="required-mark">*</span></label>
+                  <select id="createVcardTemplate" name="templateId" required><option value="">Loading your plan templates...</option></select>
+                  <div class="vcard-template-picker" id="createVcardTemplateGallery" aria-label="Available templates"></div>
+                </div>
                 <div class="form-field form-field-wide">
                   <label for="urlAlias">URL Alias:<span class="required-mark">*</span> <span class="field-help">?</span></label>
                   <div class="alias-input-group">
@@ -190,6 +220,8 @@
                   <textarea id="vcardDescription" placeholder="Enter Description of Your VCard"></textarea>
                 </div>
 
+                <div class="form-field form-field-wide vcard-feature-editor" id="createVcardFeatureEditor"></div>
+
                 <div class="form-field client-upload-field">
                   <label>Profile Image:</label>
                   <label class="client-image-upload">
@@ -211,7 +243,7 @@
                 </div>
 
                 <div class="form-actions form-field-wide">
-                  <button class="btn-share" type="button" data-action="create-card">Save</button>
+                  <button class="btn-share" type="submit">Save and continue</button>
                   <button class="btn-preview" type="reset">Discard</button>
                 </div>
               </form>

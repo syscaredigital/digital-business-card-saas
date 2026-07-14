@@ -117,6 +117,15 @@
             <input id="nfcProductPrice" name="price" type="number" min="0" step="0.01" placeholder="4500.00" required />
           </div>
           <div class="form-field form-field-wide">
+            <label for="nfcProductCategory">Category:<span class="required-mark">*</span></label>
+            <select id="nfcProductCategory" name="category" required>
+              <option value="essential">Essential</option>
+              <option value="signature">Signature</option>
+              <option value="prestige">Prestige</option>
+              <option value="exclusive">Exclusive</option>
+            </select>
+          </div>
+          <div class="form-field form-field-wide">
             <label for="nfcProductDescription">Description:<span class="required-mark">*</span></label>
             <textarea id="nfcProductDescription" name="description" rows="4" maxlength="3000" placeholder="Describe the card material, finish, features, and ideal use" required></textarea>
           </div>

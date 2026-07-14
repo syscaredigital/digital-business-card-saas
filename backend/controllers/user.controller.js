@@ -1,7 +1,42 @@
 const pool = require("../config/database.config");
+const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
 
 function number(value) {
   return Number(value || 0);
+}
+
+async function loadVcardEntitlements(db, userId) {
+  const [planResult, templateResult] = await Promise.all([
+    db.query(`SELECT p.id,p.name,p.vcard_limit,p.features
+      FROM subscriptions s JOIN plans p ON p.id=s.plan_id
+      WHERE s.user_id=$1 AND s.status='active'
+      ORDER BY s.created_at DESC LIMIT 1`, [userId]),
+    db.query(`SELECT id,name,description,preview_url,template_json FROM vcard_templates WHERE is_public=TRUE ORDER BY name,id`),
+  ]);
+  const plan = planResult.rows[0] || { id: null, name: "Free", vcard_limit: 1, features: [] };
+  const normalized = normalizePlanFeatures(plan.features);
+  const allowedTemplateIds = new Set(normalized.templateIds);
+  const templates = templateResult.rows
+    .filter((template) => !allowedTemplateIds.size || allowedTemplateIds.has(Number(template.id)))
+    .map((template) => ({ id: template.id, name: template.name, description: template.description || "", previewUrl: template.preview_url || null, templateJson: template.template_json || {} }));
+  return {
+    planId: plan.id,
+    planName: plan.name || "Free",
+    vcardLimit: number(plan.vcard_limit) || 1,
+    features: VCARD_FEATURES.filter((feature) => normalized.vcardFeatures.includes(feature.key)),
+    templates,
+  };
+}
+
+function normalizeSections(value, allowedKeys) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const sections = {};
+  for (const [key, content] of Object.entries(value)) {
+    if (!allowedKeys.has(key)) continue;
+    const text = typeof content === "string" ? content.trim() : JSON.stringify(content);
+    if (text && text.length <= 20000) sections[key] = text;
+  }
+  return sections;
 }
 
 exports.dashboard = async (req, res, next) => {
@@ -16,14 +51,14 @@ exports.dashboard = async (req, res, next) => {
       ),
       pool.query(
         `SELECT s.status, s.start_date, s.end_date, s.auto_renew,
-                p.name AS plan_name, p.vcard_limit, p.nfc_limit, p.analytics_limit
+                p.name AS plan_name, p.vcard_limit, p.nfc_limit, p.analytics_limit, p.features
          FROM subscriptions s LEFT JOIN plans p ON p.id = s.plan_id
          WHERE s.user_id = $1
          ORDER BY (s.status = 'active') DESC, s.created_at DESC LIMIT 1`, [userId]
       ),
       pool.query(
-        `SELECT id, title, email, phone, is_active, updated_at
-         FROM vcards WHERE user_id = $1 ORDER BY updated_at DESC`, [userId]
+        `SELECT v.id,v.title,v.email,v.phone,v.is_active,v.updated_at,v.template_id,t.name AS template_name
+         FROM vcards v LEFT JOIN vcard_templates t ON t.id=v.template_id WHERE v.user_id = $1 ORDER BY v.updated_at DESC`, [userId]
       ),
       pool.query(
         `SELECT id, quantity, amount, status, tracking_number, ordered_at
@@ -60,6 +95,7 @@ exports.dashboard = async (req, res, next) => {
 
     const plan = subscription.rows[0] || { plan_name: "Free", status: "inactive", vcard_limit: 1, nfc_limit: 0 };
     const cardRows = cards.rows;
+    const entitlements = await loadVcardEntitlements(pool, userId);
     const analyticsRow = analytics.rows[0] || {};
     const affiliateRow = affiliate.rows[0] || {};
     res.json({
@@ -75,6 +111,7 @@ exports.dashboard = async (req, res, next) => {
       },
       metrics: {
         activeCards: cardRows.filter((card) => card.is_active).length,
+        totalCards: cardRows.length,
         enquiries: number(enquiries.rows[0]?.total),
         profileViews: number(analyticsRow.views),
         clicks: number(analyticsRow.clicks),
@@ -84,7 +121,8 @@ exports.dashboard = async (req, res, next) => {
         referrals: number(affiliateRow.referrals),
         commission: number(affiliateRow.commission),
       },
-      vcards: cardRows.slice(0, 4),
+      vcards: cardRows,
+      vcardEntitlements: entitlements,
       orders: orders.rows,
       nfcCards: nfc.rows,
       notifications: notifications.rows,
@@ -128,6 +166,47 @@ exports.orders = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+function mapUserPlan(plan) {
+  const normalized = normalizePlanFeatures(plan.features);
+  return { id: plan.id, name: plan.name, price: number(plan.price), billingInterval: plan.billing_interval,
+    vcardLimit: number(plan.vcard_limit), nfcLimit: number(plan.nfc_limit), analyticsLimit: number(plan.analytics_limit),
+    features: normalized.benefits, vcardFeatures: normalized.vcardFeatures, templateIds: normalized.templateIds };
+}
+
+exports.plans = async (req, res, next) => {
+  try {
+    const [plansResult, subscriptionsResult] = await Promise.all([
+      pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,features FROM plans WHERE status='active' ORDER BY price,name`),
+      pool.query(`SELECT s.id,s.plan_id,s.status,s.created_at,p.name AS plan_name FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id WHERE s.user_id=$1 AND s.status IN ('active','pending','trial') ORDER BY (s.status='active') DESC,s.created_at DESC`, [req.user.id]),
+    ]);
+    const active = subscriptionsResult.rows.find((item) => item.status === "active") || null;
+    const pending = subscriptionsResult.rows.find((item) => item.status === "pending") || null;
+    res.json({ plans: plansResult.rows.map(mapUserPlan), currentPlanId: active ? active.plan_id : null,
+      pending: pending ? { id: pending.id, planId: pending.plan_id, planName: pending.plan_name } : null });
+  } catch (error) { next(error); }
+};
+
+exports.requestPlanUpgrade = async (req, res, next) => {
+  const planId = Number(req.body.planId);
+  if (!Number.isInteger(planId) || planId < 1) return res.status(400).json({ message: "Select a valid plan" });
+  let client;
+  try {
+    client = await pool.connect(); await client.query("BEGIN");
+    const planResult = await client.query("SELECT id,name,price FROM plans WHERE id=$1 AND status='active'", [planId]);
+    if (!planResult.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "This plan is no longer available" }); }
+    const activeResult = await client.query(`SELECT s.id,s.plan_id,p.price FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id WHERE s.user_id=$1 AND s.status='active' ORDER BY s.created_at DESC LIMIT 1`, [req.user.id]);
+    if (activeResult.rows[0] && activeResult.rows[0].plan_id === planId) { await client.query("ROLLBACK"); return res.status(409).json({ message: "This is already your current plan" }); }
+    if (activeResult.rows[0] && Number(planResult.rows[0].price) <= Number(activeResult.rows[0].price || 0)) { await client.query("ROLLBACK"); return res.status(400).json({ message: "Choose a plan priced above your current plan" }); }
+    await client.query(`UPDATE subscriptions SET status='cancelled',cancel_reason='Superseded by a newer upgrade request',updated_at=NOW() WHERE user_id=$1 AND status='pending'`, [req.user.id]);
+    const result = await client.query(`INSERT INTO subscriptions (user_id,plan_id,status,start_date,auto_renew,cancel_reason) VALUES($1,$2,'pending',CURRENT_DATE,TRUE,'Awaiting payment verification / admin approval') RETURNING id,plan_id,status`, [req.user.id, planId]);
+    await client.query(`INSERT INTO notifications (user_id,title,message,type) VALUES($1,'Upgrade request received',$2,'billing')`, [req.user.id, `Your request for the ${planResult.rows[0].name} plan is awaiting approval.`]);
+    await client.query(`INSERT INTO activity_logs (user_id,action,resource_type,resource_id,metadata) VALUES($1,'subscription.upgrade_requested','subscription',$2,$3::jsonb)`, [req.user.id, result.rows[0].id, JSON.stringify({ planId, planName: planResult.rows[0].name })]);
+    await client.query("COMMIT");
+    res.status(201).json({ subscription: result.rows[0], message: "Upgrade request submitted for approval" });
+  } catch (error) { if (client) await client.query("ROLLBACK").catch(() => {}); next(error); }
+  finally { if (client) client.release(); }
+};
+
 exports.markNotificationsRead = async (req, res, next) => {
   try {
     await pool.query("UPDATE notifications SET is_read = TRUE, updated_at = NOW() WHERE user_id = $1", [req.user.id]);
@@ -138,11 +217,12 @@ exports.markNotificationsRead = async (req, res, next) => {
 exports.getVcard = async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id, title, description, website_url, phone, email, address, is_active
+      `SELECT id,template_id,title,description,website_url,phone,email,address,social_links,settings,is_active
        FROM vcards WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Card not found" });
-    res.json({ vcard: result.rows[0] });
+    const entitlements = await loadVcardEntitlements(pool, req.user.id);
+    res.json({ vcard: result.rows[0], entitlements });
   } catch (error) { next(error); }
 };
 
@@ -160,11 +240,16 @@ exports.createVcard = async (req, res, next) => {
     );
     const limit = allowance.rows[0]?.card_limit || 1;
     if ((allowance.rows[0]?.card_count || 0) >= limit) return res.status(403).json({ message: "Your plan's card limit has been reached" });
+    const entitlements = await loadVcardEntitlements(pool, req.user.id);
+    const templateId = Number(req.body.templateId || entitlements.templates[0]?.id);
+    if (!entitlements.templates.some((template) => Number(template.id) === templateId)) return res.status(403).json({ message: "This VCard template is not included in your plan" });
+    const allowedKeys = new Set(entitlements.features.map((feature) => feature.key));
+    const sections = normalizeSections(req.body.sections, allowedKeys);
     const result = await pool.query(
-      `INSERT INTO vcards (user_id, title, description, website_url, phone, email, address)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING id, title, description, website_url, phone, email, address, is_active, created_at`,
-      [req.user.id, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null]
+      `INSERT INTO vcards (user_id,template_id,title,description,website_url,phone,email,address,settings)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
+       RETURNING id,template_id,title,description,website_url,phone,email,address,settings,is_active,created_at`,
+      [req.user.id, templateId, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections })]
     );
     res.status(201).json({ vcard: result.rows[0] });
   } catch (error) { next(error); }
@@ -174,14 +259,50 @@ exports.updateVcard = async (req, res, next) => {
   try {
     const title = String(req.body.title || "").trim();
     if (!title) return res.status(400).json({ message: "Card name is required" });
+    const entitlements = await loadVcardEntitlements(pool, req.user.id);
+    const templateId = Number(req.body.templateId);
+    if (!entitlements.templates.some((template) => Number(template.id) === templateId)) return res.status(403).json({ message: "This VCard template is not included in your plan" });
+    const allowedKeys = new Set(entitlements.features.map((feature) => feature.key));
+    const sections = normalizeSections(req.body.sections, allowedKeys);
     const result = await pool.query(
-      `UPDATE vcards SET title=$1, description=$2, website_url=$3, phone=$4,
-              email=$5, address=$6, is_active=COALESCE($7,is_active), updated_at=NOW()
-       WHERE id=$8 AND user_id=$9
-       RETURNING id, title, description, website_url, phone, email, address, is_active, updated_at`,
-      [title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, typeof req.body.isActive === "boolean" ? req.body.isActive : null, req.params.id, req.user.id]
+      `UPDATE vcards SET template_id=$1,title=$2,description=$3,website_url=$4,phone=$5,
+              email=$6,address=$7,settings=jsonb_set(COALESCE(settings,'{}'::jsonb),'{sections}',$8::jsonb,TRUE),
+              is_active=COALESCE($9,is_active),updated_at=NOW()
+       WHERE id=$10 AND user_id=$11
+       RETURNING id,template_id,title,description,website_url,phone,email,address,settings,is_active,updated_at`,
+      [templateId, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify(sections), typeof req.body.isActive === "boolean" ? req.body.isActive : null, req.params.id, req.user.id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Card not found" });
     res.json({ vcard: result.rows[0] });
   } catch (error) { next(error); }
+};
+
+exports.deleteVcard = async (req, res, next) => {
+  const vcardId = Number(req.params.id);
+  if (!Number.isInteger(vcardId) || vcardId < 1) return res.status(400).json({ message: "Invalid VCard ID" });
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const result = await client.query(
+      `DELETE FROM vcards WHERE id=$1 AND user_id=$2 RETURNING id,title,template_id`,
+      [vcardId, req.user.id]
+    );
+    if (!result.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "VCard not found or you do not have permission to delete it" });
+    }
+    await client.query(
+      `INSERT INTO activity_logs (user_id,action,resource_type,resource_id,metadata)
+       VALUES ($1,'vcard.deleted','vcard',$2,$3::jsonb)`,
+      [req.user.id, vcardId, JSON.stringify({ title: result.rows[0].title, templateId: result.rows[0].template_id })]
+    );
+    await client.query("COMMIT");
+    res.json({ message: "VCard deleted successfully", vcard: { id: result.rows[0].id, title: result.rows[0].title } });
+  } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+    next(error);
+  } finally {
+    if (client) client.release();
+  }
 };

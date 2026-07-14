@@ -1,5 +1,6 @@
 const pool = require("../config/database.config");
 const bcrypt = require("bcrypt");
+const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
 
 function number(value) {
   return Number(value || 0);
@@ -805,7 +806,7 @@ exports.listNfcManagement = async (req, res, next) => {
 
     const [productsResult, cardsResult, ordersResult, summaryResult, usersResult, businessCardsResult] = await Promise.all([
       pool.query(`
-        SELECT p.id, p.name, p.price, p.description, p.front_image, p.back_image,
+        SELECT p.id, p.name, p.price, p.description, p.front_image, p.back_image, p.category,
                p.is_active, p.created_at, p.updated_at,
                (SELECT COUNT(*) FROM nfc_orders o WHERE o.nfc_product_id = p.id)::int AS order_count
         FROM nfc_products p
@@ -863,6 +864,7 @@ exports.listNfcManagement = async (req, res, next) => {
         description: product.description || null,
         frontImage: product.front_image,
         backImage: product.back_image,
+        category: product.category,
         ordersCount: number(product.order_count),
         isActive: Boolean(product.is_active),
         createdAt: product.created_at,
@@ -905,25 +907,27 @@ exports.createNfcProduct = async (req, res, next) => {
     const name = String(req.body.name || "").trim();
     const price = Number(req.body.price);
     const description = String(req.body.description || "").trim() || null;
+    const category = String(req.body.category || "").trim().toLowerCase();
     const frontImage = String(req.body.frontImage || "");
     const backImage = String(req.body.backImage || "");
     const isActive = req.body.isActive !== false;
     if (!name || name.length > 150) return res.status(400).json({ message: "Enter an NFC card name up to 150 characters" });
     if (!Number.isFinite(price) || price < 0) return res.status(400).json({ message: "Enter a valid non-negative price" });
     if (description && description.length > 3000) return res.status(400).json({ message: "Description must not exceed 3000 characters" });
+    if (!["essential", "signature", "prestige", "exclusive"].includes(category)) return res.status(400).json({ message: "Choose a valid NFC card category" });
     const imageError = validateNfcProductImage(frontImage, "Front image") || validateNfcProductImage(backImage, "Back image");
     if (imageError) return res.status(400).json({ message: imageError });
 
     const result = await pool.query(
-      `INSERT INTO nfc_products (name, price, description, front_image, back_image, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, price, is_active`,
-      [name, price, description, frontImage, backImage, isActive]
+      `INSERT INTO nfc_products (name, price, description, front_image, back_image, category, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, name, price, category, is_active`,
+      [name, price, description, frontImage, backImage, category, isActive]
     );
     await pool.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'nfc_product.created', 'nfc_product', $2, $3::jsonb, $4, $5)`,
-      [req.user.id, result.rows[0].id, JSON.stringify({ name, price }), req.ip || null, req.get("user-agent") || null]
+      [req.user.id, result.rows[0].id, JSON.stringify({ name, price, category }), req.ip || null, req.get("user-agent") || null]
     );
     res.status(201).json({ product: result.rows[0] });
   } catch (error) {
@@ -940,25 +944,27 @@ exports.updateNfcProduct = async (req, res, next) => {
     const name = String(req.body.name || "").trim();
     const price = Number(req.body.price);
     const description = String(req.body.description || "").trim() || null;
+    const category = String(req.body.category || "").trim().toLowerCase();
     const frontImage = req.body.frontImage ? String(req.body.frontImage) : existing.rows[0].front_image;
     const backImage = req.body.backImage ? String(req.body.backImage) : existing.rows[0].back_image;
     const isActive = req.body.isActive !== false;
     if (!name || name.length > 150) return res.status(400).json({ message: "Enter an NFC card name up to 150 characters" });
     if (!Number.isFinite(price) || price < 0) return res.status(400).json({ message: "Enter a valid non-negative price" });
     if (description && description.length > 3000) return res.status(400).json({ message: "Description must not exceed 3000 characters" });
+    if (!["essential", "signature", "prestige", "exclusive"].includes(category)) return res.status(400).json({ message: "Choose a valid NFC card category" });
     const imageError = validateNfcProductImage(frontImage, "Front image") || validateNfcProductImage(backImage, "Back image");
     if (imageError) return res.status(400).json({ message: imageError });
 
     const result = await pool.query(
       `UPDATE nfc_products SET name = $1, price = $2, description = $3, front_image = $4,
-       back_image = $5, is_active = $6, updated_at = NOW() WHERE id = $7
-       RETURNING id, name, price, is_active`,
-      [name, price, description, frontImage, backImage, isActive, productId]
+       back_image = $5, category = $6, is_active = $7, updated_at = NOW() WHERE id = $8
+       RETURNING id, name, price, category, is_active`,
+      [name, price, description, frontImage, backImage, category, isActive, productId]
     );
     await pool.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'nfc_product.updated', 'nfc_product', $2, $3::jsonb, $4, $5)`,
-      [req.user.id, productId, JSON.stringify({ name, price, isActive }), req.ip || null, req.get("user-agent") || null]
+      [req.user.id, productId, JSON.stringify({ name, price, category, isActive }), req.ip || null, req.get("user-agent") || null]
     );
     res.json({ product: result.rows[0] });
   } catch (error) {
@@ -1201,7 +1207,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
       values.push(`%${search}%`);
       subscriptionSearch = `WHERE (COALESCE(u.name, '') ILIKE $1 OR COALESCE(u.email, '') ILIKE $1 OR COALESCE(p.name, '') ILIKE $1 OR s.status ILIKE $1)`;
     }
-    const [subscriptionsResult, plansResult, usersResult, summaryResult] = await Promise.all([
+    const [subscriptionsResult, plansResult, usersResult, summaryResult, templatesResult] = await Promise.all([
       pool.query(
         `SELECT s.id, s.user_id, s.plan_id, s.status, s.start_date, s.end_date, s.auto_renew,
                 s.cancel_reason, s.created_at, s.updated_at,
@@ -1242,6 +1248,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
             ELSE p.price END), 0) AS monthly_recurring_revenue
         FROM subscriptions s LEFT JOIN plans p ON p.id = s.plan_id
       `),
+      pool.query(`SELECT id,name,description,preview_url FROM vcard_templates WHERE is_public=TRUE ORDER BY name,id`),
     ]);
 
     res.json({
@@ -1273,6 +1280,10 @@ exports.listSubscriptionManagement = async (req, res, next) => {
         updatedAt: plan.updated_at,
       })),
       users: usersResult.rows,
+      templates: templatesResult.rows.map((template) => ({
+        id: template.id, name: template.name, description: template.description || "", previewUrl: template.preview_url || null,
+      })),
+      vcardFeatures: VCARD_FEATURES,
       summary: summaryResult.rows[0],
     });
   } catch (error) {
@@ -1281,7 +1292,12 @@ exports.listSubscriptionManagement = async (req, res, next) => {
 };
 
 function normalizePlanPayload(body) {
-  const featureText = Array.isArray(body.features) ? body.features : String(body.features || "").split(",");
+  const legacyBenefits = Array.isArray(body.features) ? body.features : String(body.features || "").split(",");
+  const structured = normalizePlanFeatures({
+    benefits: Array.isArray(body.benefits) ? body.benefits : legacyBenefits,
+    vcardFeatures: body.vcardFeatures,
+    templateIds: body.templateIds,
+  });
   return {
     name: String(body.name || "").trim(),
     price: Number(body.price),
@@ -1289,7 +1305,11 @@ function normalizePlanPayload(body) {
     vcardLimit: Number(body.vcardLimit),
     nfcLimit: Number(body.nfcLimit),
     analyticsLimit: Number(body.analyticsLimit),
-    features: featureText.map((feature) => String(feature).trim()).filter(Boolean),
+    features: {
+      benefits: structured.benefits.map((feature) => String(feature).trim()).filter(Boolean).slice(0, 100),
+      vcardFeatures: structured.vcardFeatures,
+      templateIds: structured.templateIds,
+    },
     status: String(body.status || "active").toLowerCase(),
   };
 }
@@ -1300,7 +1320,14 @@ function planValidationMessage(plan) {
   if (!billingIntervals.includes(plan.billingInterval)) return "Invalid billing interval";
   if (!planStatuses.includes(plan.status)) return "Invalid plan status";
   if (![plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit].every((limit) => Number.isInteger(limit) && limit >= 0 && limit <= 2147483647)) return "Plan limits must be whole numbers from 0 to 2,147,483,647";
+  if (!plan.features.vcardFeatures.length) return "Select at least one VCard feature";
+  if (!plan.features.templateIds.length) return "Select at least one VCard template";
   return null;
+}
+
+async function planTemplateValidationMessage(plan) {
+  const result = await pool.query(`SELECT COUNT(*)::int AS count FROM vcard_templates WHERE is_public=TRUE AND id=ANY($1::int[])`, [plan.features.templateIds]);
+  return result.rows[0].count === plan.features.templateIds.length ? null : "One or more selected VCard templates are unavailable";
 }
 
 exports.createPlan = async (req, res, next) => {
@@ -1308,6 +1335,8 @@ exports.createPlan = async (req, res, next) => {
     const plan = normalizePlanPayload(req.body);
     const validation = planValidationMessage(plan);
     if (validation) return res.status(400).json({ message: validation });
+    const templateValidation = await planTemplateValidationMessage(plan);
+    if (templateValidation) return res.status(400).json({ message: templateValidation });
     const result = await pool.query(
       `INSERT INTO plans (name, price, billing_interval, vcard_limit, nfc_limit, analytics_limit, features, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
@@ -1333,6 +1362,8 @@ exports.updatePlan = async (req, res, next) => {
     const plan = normalizePlanPayload(req.body);
     const validation = planValidationMessage(plan);
     if (validation) return res.status(400).json({ message: validation });
+    const templateValidation = await planTemplateValidationMessage(plan);
+    if (templateValidation) return res.status(400).json({ message: templateValidation });
     const result = await pool.query(
       `UPDATE plans SET name = $1, price = $2, billing_interval = $3, vcard_limit = $4,
        nfc_limit = $5, analytics_limit = $6, features = $7::jsonb, status = $8, updated_at = NOW()
@@ -1450,6 +1481,9 @@ exports.updateSubscription = async (req, res, next) => {
       [subscription.userId, subscription.planId, subscription.status, subscription.startDate, subscription.endDate, subscription.autoRenew, subscription.cancelReason, subscriptionId]
     );
     if (!result.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Subscription not found" }); }
+    if (subscription.status === "active") {
+      await client.query(`UPDATE subscriptions SET status='cancelled',cancel_reason='Replaced by approved subscription',updated_at=NOW() WHERE user_id=$1 AND status='active' AND id<>$2`, [subscription.userId, subscriptionId]);
+    }
     await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata)
        VALUES ($1, 'subscription.updated', 'subscription', $2, $3::jsonb)`,
