@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const pool = require("../config/database.config");
 
 function splitName(name) {
@@ -28,9 +29,22 @@ function toSafeUser(row) {
 
 function createToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role || "user" },
+    { id: user.id, email: user.email, role: user.role || "user", jti: crypto.randomUUID() },
     process.env.JWT_SECRET || "devsecret",
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+  );
+}
+
+async function recordSession(token, userId, req) {
+  const payload = jwt.decode(token) || {};
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const issuedAt = payload.iat ? new Date(payload.iat * 1000) : new Date();
+  const expiresAt = payload.exp ? new Date(payload.exp * 1000) : new Date(Date.now() + 7 * 86400000);
+  await pool.query(
+    `INSERT INTO auth_sessions (user_id, token_hash, issued_at, expires_at, ip_address, user_agent)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (token_hash) DO NOTHING`,
+    [userId, tokenHash, issuedAt, expiresAt, req.ip || null, req.get("user-agent") || null]
   );
 }
 
@@ -142,8 +156,41 @@ exports.login = async (req, res, next) => {
     ]);
 
     const user = toSafeUser(userRow);
-    res.json({ user, token: createToken(user) });
+    const token = createToken(user);
+    await recordSession(token, user.id, req);
+    res.json({ user, token });
   } catch (err) {
     next(err);
+  }
+};
+
+exports.logout = async (req, res, next) => {
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const payload = req.authPayload || {};
+    const issuedAt = payload.iat ? new Date(payload.iat * 1000) : new Date();
+    const expiresAt = payload.exp ? new Date(payload.exp * 1000) : new Date();
+    const session = await client.query(
+      `INSERT INTO auth_sessions (user_id, token_hash, issued_at, expires_at, revoked_at, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, NOW(), $5, $6)
+       ON CONFLICT (token_hash) DO UPDATE SET revoked_at = COALESCE(auth_sessions.revoked_at, NOW())
+       RETURNING id, revoked_at`,
+      [req.user.id, req.authTokenHash, issuedAt, expiresAt, req.ip || null, req.get("user-agent") || null]
+    );
+    await client.query(
+      `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
+       VALUES ($1, 'auth.logout', 'auth_session', $2, $3::jsonb, $4, $5)`,
+      [req.user.id, session.rows[0].id, JSON.stringify({ role: req.user.role }), req.ip || null, req.get("user-agent") || null]
+    );
+    await client.query("DELETE FROM auth_sessions WHERE expires_at < NOW() - INTERVAL '30 days'");
+    await client.query("COMMIT");
+    res.json({ message: "Signed out successfully" });
+  } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
+    next(error);
+  } finally {
+    if (client) client.release();
   }
 };

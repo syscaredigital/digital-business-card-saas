@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -10,94 +10,54 @@
 </head>
 <body>
   <div class="dashboard-wrapper">
-    <aside class="sidebar">
-      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div>
-      <nav class="sidebar-nav">
-        <a href="dashboard.html" class="nav-item">Dashboard</a>
-        <div class="sidebar-section-label">Management</div>
-        <a href="users.html" class="nav-item">Users</a>
-        <a href="vcards.html" class="nav-item">VCards</a>
-        <a href="nfc-orders.html" class="nav-item">NFC Cards</a>
-        <a href="subscriptions.html" class="nav-item">Subscriptions</a>
-        <a href="cash-payments.html" class="nav-item">Cash Payments</a>
-        <a href="transactions.html" class="nav-item">Transactions</a>
-        <a href="payouts.html" class="nav-item">Payouts</a>
-        <a href="affiliations.html" class="nav-item">Affiliations</a>
-        <a href="withdrawals.html" class="nav-item active">Withdrawals</a>
-        <a href="coupon-codes.html" class="nav-item">Coupon Codes</a>
-        <div class="sidebar-section-label">Analytics</div>
-        <a href="analytics.html" class="nav-item">Analytics</a>
-        <a href="reports.html" class="nav-item">Reports</a>
-        <div class="sidebar-section-label">Settings</div>
-        <a href="settings.html" class="nav-item">Settings</a>
-        <a href="system-logs.html" class="nav-item">System Logs</a>
-        </nav>
-    </aside>
-
+    <aside class="sidebar"><div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div><nav class="sidebar-nav"></nav></aside>
     <div class="main-content">
-      <header class="topbar">
-        <label class="search-bar" for="dashboardSearch">
-          <input id="dashboardSearch" type="text" placeholder="Search withdrawals..." />
-        </label>
-      </header>
-
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search user, method, status, or notes..." /></label></header>
       <main class="page-content">
         <div class="page-header">
-          <div>
-            <h1>Withdrawals</h1>
-            <p>Review affiliate withdrawal records and payout method details.</p>
-          </div>
+          <div><h1>Withdrawals</h1><p>Review user fund requests and reconcile approved withdrawals through payouts and transactions.</p></div>
+          <div class="header-actions"><button class="btn-share" type="button" id="openWithdrawalAdminModal">New Request</button></div>
         </div>
 
-        <section class="affiliate-panel-shell searchable-item" data-search="withdrawals affiliate payouts payment type amount">
-          <div class="affiliate-toolbar">
-            <label class="nfc-search affiliate-search" for="affiliateWithdrawalsSearch">
-              <span class="nfc-search-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
-                  <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                </svg>
-              </span>
-              <input id="affiliateWithdrawalsSearch" type="text" placeholder="Search" />
-            </label>
+        <section class="admin-card withdrawal-live-card">
+          <div class="admin-card-header withdrawal-live-header">
+            <div><h3>Withdrawal Requests</h3><p>Pending requests appear first. Approval automatically creates a protected payout and ledger entry.</p></div>
+            <div class="withdrawal-live-tools"><select id="withdrawalStatusFilter" aria-label="Filter withdrawals by status"><option value="">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="processing">Processing</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option></select><span class="tiny-pill success" id="withdrawalAdminCount">Loading...</span></div>
           </div>
-
-          <div class="light-admin-table-wrap">
-            <table class="admin-table light-admin-table">
-              <thead>
-                <tr>
-                  <th>USER</th>
-                  <th>AMOUNT</th>
-                  <th>PAYMENT TYPE</th>
-                  <th>DATE</th>
-                </tr>
-              </thead>
-              <tbody id="affiliateWithdrawalsTableBody">
-                <tr>
-                  <td class="light-empty-cell" colspan="4">No Data Available</td>
-                </tr>
-              </tbody>
+          <div class="withdrawal-live-table-wrap">
+            <table class="admin-table withdrawal-live-table">
+              <thead><tr><th>Requester</th><th>Amount</th><th>Method</th><th>Requested</th><th>Status</th><th>Reviewer</th><th>Finance links</th><th>Actions</th></tr></thead>
+              <tbody id="withdrawalAdminBody"><tr><td colspan="8" class="withdrawal-live-state">Loading withdrawals from PostgreSQL...</td></tr></tbody>
             </table>
           </div>
-
-          <div class="subscriptions-footer">
-            <div class="subscriptions-footer-left">
-              <span>Show</span>
-              <select class="subscriptions-limit-select" aria-label="Withdrawals rows per page">
-                <option selected>10</option>
-                <option>25</option>
-                <option>50</option>
-              </select>
-            </div>
-            <p class="subscriptions-results" id="affiliateWithdrawalsResults">Showing 0 results</p>
-          </div>
         </section>
-
-        <div class="empty-search-state" id="emptySearchState" hidden>
-          <h3>No matches found</h3>
-          <p>Try another withdrawal search term.</p>
-        </div>
       </main>
+    </div>
+  </div>
+
+  <div class="user-modal" id="withdrawalAdminModal" hidden>
+    <div class="user-modal-backdrop" id="withdrawalAdminModalBackdrop"></div>
+    <div class="user-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="withdrawalAdminModalTitle">
+      <div class="user-modal-header">
+        <div><span class="admin-page-eyebrow">Fund request</span><h2 id="withdrawalAdminModalTitle">New Withdrawal</h2></div>
+        <button class="user-modal-close" type="button" id="closeWithdrawalAdminModal">Back</button>
+      </div>
+      <div class="user-modal-body">
+        <form id="withdrawalAdminForm" class="admin-form-grid admin-form-grid-modal" novalidate>
+          <input type="hidden" name="withdrawalId" />
+          <div class="form-field"><label for="withdrawalAdminUser">User:<span class="required-mark">*</span></label><select id="withdrawalAdminUser" name="userId" required><option value="">Select active user</option></select></div>
+          <div class="form-field"><label for="withdrawalAdminStatus">Review status:</label><select id="withdrawalAdminStatus" name="status"><option value="pending">Pending</option><option value="approved">Approved</option><option value="processing">Processing</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option></select></div>
+          <div class="form-field"><label for="withdrawalAdminAmount">Amount:<span class="required-mark">*</span></label><input id="withdrawalAdminAmount" name="amount" type="number" min="0.01" max="9999999999.99" step="0.01" required /></div>
+          <div class="form-field"><label for="withdrawalAdminCurrency">Currency:</label><select id="withdrawalAdminCurrency" name="currency"><option value="USD">USD</option><option value="LKR">LKR</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+          <div class="form-field"><label for="withdrawalAdminMethod">Withdrawal method:</label><select id="withdrawalAdminMethod" name="method"><option value="bank_transfer">Bank transfer</option><option value="paypal">PayPal</option><option value="cash">Cash</option><option value="other">Other</option></select></div>
+          <div class="form-field"><label for="withdrawalAdminAccount">Account details:</label><input id="withdrawalAdminAccount" name="accountName" type="text" maxlength="500" placeholder="Bank/account label (avoid sensitive credentials)" /></div>
+          <div class="form-field form-field-wide"><label for="withdrawalAdminRequestNote">Request note:</label><textarea id="withdrawalAdminRequestNote" name="requestNote" rows="3" maxlength="3000" placeholder="Reason supplied by the requester"></textarea></div>
+          <div class="form-field form-field-wide"><label for="withdrawalAdminNote">Admin review note:</label><textarea id="withdrawalAdminNote" name="adminNote" rows="3" maxlength="3000" placeholder="Approval, rejection, or processing context"></textarea></div>
+          <div class="withdrawal-flow-note form-field-wide"><strong>Approval workflow</strong><span>Approved requests create a payout. Completed requests mark that payout paid and complete its linked transaction.</span></div>
+          <div class="form-actions form-field-wide"><button class="btn-share" type="submit">Save Withdrawal</button><button class="btn-preview" type="button" id="resetWithdrawalAdminForm">Discard</button></div>
+          <p class="form-feedback form-field-wide" id="withdrawalAdminFeedback" hidden></p>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -105,4 +65,3 @@
   <script src="../../public/assets/js/dashboard.js"></script>
 </body>
 </html>
-

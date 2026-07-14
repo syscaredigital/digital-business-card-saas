@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -9,6 +9,63 @@
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
 </head>
 <body>
-  <div class="dashboard-wrapper"><aside class="sidebar"><div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div><nav class="sidebar-nav"><a href="dashboard.html" class="nav-item">Dashboard</a><div class="sidebar-section-label">Management</div><a href="users.html" class="nav-item">Users</a><a href="vcards.html" class="nav-item">VCards</a><a href="nfc-orders.html" class="nav-item">NFC Cards</a><a href="subscriptions.html" class="nav-item">Subscriptions</a><a href="cash-payments.html" class="nav-item">Cash Payments</a><a href="transactions.html" class="nav-item active">Transactions</a><a href="payouts.html" class="nav-item">Payouts</a><a href="affiliations.html" class="nav-item">Affiliations</a><a href="withdrawals.html" class="nav-item">Withdrawals</a><a href="coupon-codes.html" class="nav-item">Coupon Codes</a><div class="sidebar-section-label">Analytics</div><a href="analytics.html" class="nav-item">Analytics</a><a href="reports.html" class="nav-item">Reports</a><div class="sidebar-section-label">Settings</div><a href="settings.html" class="nav-item">Settings</a><a href="system-logs.html" class="nav-item">System Logs</a></nav></aside><div class="main-content"><header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search transactions..." /></label></header><main class="page-content"><div class="page-header"><div><h1>Transactions</h1><p>Track subscription charges, adjustments, and internal payment events.</p></div></div><article class="admin-card"><table class="admin-table"><thead><tr><th>Transaction ID</th><th>User</th><th>Type</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead><tbody><tr class="searchable-item" data-search="trx12345678 john doe subscription completed"><td>#TRX12345678</td><td><div class="table-user"><span class="mini-avatar">JD</span><div><strong>John Doe</strong><div class="subtle-handle">@johndoe</div></div></div></td><td>Subscription</td><td>$9.99</td><td>May 19, 2025</td><td><span class="status-badge completed">Completed</span></td></tr><tr class="searchable-item" data-search="trx12345679 jane smith subscription completed"><td>#TRX12345679</td><td><div class="table-user"><span class="mini-avatar">JS</span><div><strong>Jane Smith</strong><div class="subtle-handle">@janesmith</div></div></div></td><td>Subscription</td><td>$19.99</td><td>May 19, 2025</td><td><span class="status-badge completed">Completed</span></td></tr><tr class="searchable-item" data-search="trx12345680 acme payout pending"><td>#TRX12345680</td><td><div class="table-user"><span class="mini-avatar">AC</span><div><strong>Acme Inc.</strong><div class="subtle-handle">@acme</div></div></div></td><td>Payout</td><td>$580.00</td><td>May 18, 2025</td><td><span class="status-badge pending">Pending</span></td></tr></tbody></table></article><div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another transaction search term.</p></div></main></div></div><div class="toast-stack" id="toastStack"></div><script src="../../public/assets/js/dashboard.js"></script></body>
-</html>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar"><div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div><nav class="sidebar-nav"></nav></aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search reference, user, type, or gateway..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><h1>Transactions</h1><p>Monitor every financial event and maintain standalone adjustments without altering source payments.</p></div>
+          <div class="header-actions"><button class="btn-share" type="button" id="openTransactionAdminModal">New Adjustment</button></div>
+        </div>
 
+        <section class="admin-card transaction-live-card">
+          <div class="admin-card-header transaction-live-header">
+            <div><h3>Financial Ledger</h3><p>Live PostgreSQL records from payments, subscriptions, NFC orders, payouts, refunds, and adjustments.</p></div>
+            <div class="transaction-live-tools">
+              <select id="transactionTypeFilter" aria-label="Filter by transaction type"><option value="">All types</option><option value="subscription">Subscription</option><option value="cash_payment">Cash payment</option><option value="nfc_order">NFC order</option><option value="payout">Payout</option><option value="refund">Refund</option><option value="adjustment">Adjustment</option><option value="other">Other</option></select>
+              <select id="transactionStatusFilter" aria-label="Filter by transaction status"><option value="">All statuses</option><option value="pending">Pending</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="refunded">Refunded</option><option value="cancelled">Cancelled</option><option value="rejected">Rejected</option></select>
+              <span class="tiny-pill success" id="transactionAdminCount">Loading...</span>
+            </div>
+          </div>
+          <div class="transaction-live-table-wrap">
+            <table class="admin-table transaction-live-table">
+              <thead><tr><th>Transaction</th><th>User</th><th>Type</th><th>Amount</th><th>Source</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="transactionAdminBody"><tr><td colspan="8" class="transaction-live-state">Loading transactions from PostgreSQL...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="user-modal" id="transactionAdminModal" hidden>
+    <div class="user-modal-backdrop" id="transactionAdminModalBackdrop"></div>
+    <div class="user-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="transactionAdminModalTitle">
+      <div class="user-modal-header">
+        <div><span class="admin-page-eyebrow">Ledger adjustment</span><h2 id="transactionAdminModalTitle">New Transaction</h2></div>
+        <button class="user-modal-close" type="button" id="closeTransactionAdminModal">Back</button>
+      </div>
+      <div class="user-modal-body">
+        <form id="transactionAdminForm" class="admin-form-grid admin-form-grid-modal" novalidate>
+          <input type="hidden" name="transactionId" />
+          <div class="form-field"><label for="transactionAdminUser">User:<span class="required-mark">*</span></label><select id="transactionAdminUser" name="userId" required><option value="">Select user</option></select></div>
+          <div class="form-field"><label for="transactionAdminType">Transaction type:</label><select id="transactionAdminType" name="type"><option value="adjustment">Adjustment</option><option value="refund">Refund</option><option value="subscription">Subscription</option><option value="cash_payment">Cash payment</option><option value="nfc_order">NFC order</option><option value="payout">Payout</option><option value="other">Other</option></select></div>
+          <div class="form-field"><label for="transactionAdminAmount">Amount:<span class="required-mark">*</span></label><input id="transactionAdminAmount" name="amount" type="number" min="-9999999999.99" max="9999999999.99" step="0.01" required placeholder="Use a negative value for deductions" /></div>
+          <div class="form-field"><label for="transactionAdminCurrency">Currency:</label><select id="transactionAdminCurrency" name="currency"><option value="USD">USD</option><option value="LKR">LKR</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+          <div class="form-field"><label for="transactionAdminStatus">Status:</label><select id="transactionAdminStatus" name="status"><option value="pending">Pending</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="refunded">Refunded</option><option value="cancelled">Cancelled</option><option value="rejected">Rejected</option></select></div>
+          <div class="form-field"><label for="transactionAdminGateway">Gateway/source:</label><input id="transactionAdminGateway" name="gateway" type="text" maxlength="100" value="manual" placeholder="manual" /></div>
+          <div class="form-field form-field-wide"><label for="transactionAdminReference">Reference:</label><input id="transactionAdminReference" name="reference" type="text" maxlength="255" placeholder="e.g. ADJ-2026-001" /></div>
+          <div class="form-field form-field-wide"><label for="transactionAdminNote">Internal note:</label><textarea id="transactionAdminNote" name="note" rows="4" maxlength="3000" placeholder="Explain the reason for this ledger entry"></textarea></div>
+          <div class="transaction-integrity-note form-field-wide"><strong>Ledger protection</strong><span>Entries generated by payments are managed from their source payment and cannot be changed here.</span></div>
+          <div class="form-actions form-field-wide"><button class="btn-share" type="submit">Save Transaction</button><button class="btn-preview" type="button" id="resetTransactionAdminForm">Discard</button></div>
+          <p class="form-feedback form-field-wide" id="transactionAdminFeedback" hidden></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

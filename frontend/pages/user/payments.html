@@ -7,23 +7,38 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
 </head>
 <body>
   <div class="dashboard-wrapper">
     <aside class="sidebar">
-      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Sync Card</span></div>
-      <nav class="sidebar-nav">
-        <a href="dashboard.html" class="nav-item">Dashboard</a>
-        <a href="my-vcard.html" class="nav-item">My Cards</a>
-        <a href="contacts.html" class="nav-item">Contacts</a>
-        <a href="analytics.html" class="nav-item">Analytics</a>
-        <a href="qr-code.html" class="nav-item">QR Codes</a>
-        <a href="nfc-request.html" class="nav-item">NFC Cards</a>
+      <a class="sidebar-logo" href="dashboard.html" aria-label="Sync E-Card dashboard">
+        <img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" />
+      </a>
+      <nav class="sidebar-nav" aria-label="User workspace navigation">
+        <a href="dashboard.html" class="nav-item">Overview</a>
+        <a href="vcards.html" class="nav-item">My cards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">NFC cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
         <a href="settings.html" class="nav-item">Settings</a>
+        <a href="payments.html" class="nav-item active" aria-current="page">Billing</a>
       </nav>
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title"><span class="user-plan">Your plan</span></div>
+        <div class="upgrade-desc">Manage your current subscription and payment history.</div>
+      </div>
     </aside>
     <div class="main-content">
-      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search billing..." /></label></header>
+      <header class="topbar">
+        <label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search billing..." /></label>
+        <div class="topbar-right"><button class="logout-btn" id="logoutButton" type="button">Sign out</button><div class="user-profile"><div class="user-avatar-placeholder">U</div><div class="user-info"><div class="user-name">My account</div><div class="user-plan">Loading plan</div></div></div></div>
+      </header>
       <main class="page-content">
         <div class="page-header">
           <div><span class="eyebrow">Billing</span><h2>Manage your subscription</h2><p>Review your plan, invoices, and renewal settings.</p></div>
@@ -32,13 +47,13 @@
         <div class="content-grid content-grid-two">
           <article class="feature-panel searchable-item" data-search="pro plan subscription renewal">
             <div class="feature-panel-header">
-              <div><h3>Current plan</h3><p>Sync Card Pro with monthly billing.</p></div>
-              <span class="status-pill status-live">Active</span>
+              <div><h3>Current plan</h3><p id="billingPlanDescription">Loading your subscription...</p></div>
+              <span class="status-pill status-live" id="billingPlanStatus">Loading</span>
             </div>
             <div class="inline-metrics">
-              <div><strong>$24</strong><span>Monthly</span></div>
-              <div><strong>Jun 30</strong><span>Renews</span></div>
-              <div><strong>4</strong><span>Team seats</span></div>
+              <div><strong id="billingPlanName">—</strong><span>Plan</span></div>
+              <div><strong id="billingRenewalDate">—</strong><span>Renews</span></div>
+              <div><strong id="billingCardLimit">—</strong><span>Card allowance</span></div>
             </div>
           </article>
           <article class="feature-panel searchable-item" data-search="invoice payment history">
@@ -58,5 +73,6 @@
   </div>
   <div class="toast-stack" id="toastStack"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
+  <script src="../../public/assets/js/user-workspace.js"></script>
 </body>
 </html>

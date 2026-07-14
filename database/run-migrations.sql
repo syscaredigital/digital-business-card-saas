@@ -26,3 +26,11 @@
 \i migrations/024_create_nfc_products_table.sql
 \i migrations/025_link_nfc_orders_to_products.sql
 \i migrations/026_extend_payments_for_manual_review.sql
+\i migrations/027_create_payouts_table.sql
+\i migrations/028_create_withdrawals_table.sql
+\i migrations/029_create_affiliate_program_tables.sql
+\i migrations/030_create_coupon_management_tables.sql
+\i migrations/031_create_saved_reports_tables.sql
+\i migrations/032_seed_platform_settings_and_permissions.sql
+\i migrations/033_create_auth_sessions_table.sql
+\i migrations/034_create_appointments_table.sql

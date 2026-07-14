@@ -3,222 +3,92 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Client Dashboard - Sync Card</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#080a0f" />
+  <title>My Workspace | Sync E-Card</title>
+  <link rel="icon" type="image/png" href="../../public/assets/images/logos/sync-e-symbol-red-web.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
 </head>
-<body>
-  <div class="bg-orb bg-orb-1"></div>
-  <div class="bg-orb bg-orb-2"></div>
-
-  <div class="dashboard-wrapper">
+<body class="user-workspace">
+  <div class="bg-orb bg-orb-1"></div><div class="bg-orb bg-orb-2"></div>
+  <div class="dashboard-wrapper" id="userDashboardRoot">
     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-icon">S</div>
-        <span class="logo-text">Sync Card</span>
-      </div>
-
-      <nav class="sidebar-nav" aria-label="Client dashboard navigation">
-        <a href="dashboard.html" class="nav-item active">Dashboard</a>
-        <a href="vcards.html" class="nav-item">VCards</a>
+      <a class="sidebar-logo" href="dashboard.html" aria-label="Sync E-Card dashboard">
+        <img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" />
+      </a>
+      <nav class="sidebar-nav" aria-label="User workspace navigation">
+        <a href="dashboard.html" class="nav-item active">Overview</a>
+        <a href="vcards.html" class="nav-item">My cards</a>
         <a href="enquiries.html" class="nav-item">Enquiries</a>
         <a href="appointments.html" class="nav-item">Appointments</a>
-        <a href="product-orders.html" class="nav-item">Product Orders</a>
+        <a href="product-orders.html" class="nav-item">Orders</a>
         <a href="affiliations.html" class="nav-item">Affiliations</a>
-        <a href="my-nfc-cards.html" class="nav-item">My NFC Cards</a>
-        <a href="nfc-backgrounds.html" class="nav-item">Virtual Backgrounds</a>
+        <a href="my-nfc-cards.html" class="nav-item">NFC cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Backgrounds</a>
         <a href="storage.html" class="nav-item">Storage</a>
         <a href="settings.html" class="nav-item">Settings</a>
-        <a href="manage-subscription.html" class="nav-item">Manage Subscription</a>
+        <a href="payments.html" class="nav-item">Billing</a>
       </nav>
-
       <div class="sidebar-upgrade">
         <div class="upgrade-dot"></div>
-        <div class="upgrade-title">Business Plan Active</div>
-        <div class="upgrade-desc">This account can create multiple vCards. Single-card clients are limited by their subscription.</div>
-        <a href="manage-subscription.html" class="btn-upgrade">Manage Plan</a>
+        <div class="upgrade-title"><span class="user-plan">Your plan</span></div>
+        <div class="upgrade-desc">Keep your professional identity current and ready to share.</div>
+        <a href="payments.html" class="btn-upgrade">Manage billing</a>
       </div>
-
-      <button class="sidebar-help" type="button" data-action="help-support">
-        <span class="sidebar-help-main">Help &amp; Support</span>
-        <span>&gt;</span>
-      </button>
     </aside>
 
     <div class="main-content">
       <header class="topbar">
         <label class="search-bar" for="dashboardSearch">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input id="dashboardSearch" type="text" placeholder="Search vCards, enquiries, orders, NFC cards..." />
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+          <input id="dashboardSearch" type="search" placeholder="Search your workspace" />
         </label>
-
         <div class="topbar-right">
-          <button class="notif-btn" type="button" id="notificationToggle" aria-expanded="false" aria-controls="notificationPanel">
-            <span class="notif-badge" id="notificationCount">3</span>
-          </button>
-          <button class="logout-btn" type="button" id="logoutButton">Logout</button>
-          <div class="user-profile">
-            <div class="user-avatar-placeholder">AC</div>
-            <div class="user-info">
-              <div class="user-name">Acme Client</div>
-              <div class="user-plan">Business Plan</div>
-            </div>
-          </div>
+          <button class="notif-btn" type="button" id="notificationToggle" aria-label="Notifications" aria-expanded="false" aria-controls="notificationPanel"><span class="notif-badge" id="notificationCount">0</span></button>
+          <button class="logout-btn" type="button" id="logoutButton">Sign out</button>
+          <div class="user-profile"><div class="user-avatar-placeholder">U</div><div class="user-info"><div class="user-name">My account</div><div class="user-plan">Loading plan</div></div></div>
         </div>
-
-        <div class="notification-panel" id="notificationPanel" hidden>
-          <div class="notification-panel-header">
-            <strong>Notifications</strong>
-            <button type="button" class="notification-clear-btn" data-action="clear-notifications">Clear</button>
-          </div>
-          <div class="notification-list" id="notificationList"></div>
-        </div>
+        <div class="notification-panel" id="notificationPanel" hidden><div class="notification-panel-header"><strong>Notifications</strong></div><div class="notification-list" id="notificationList"><div class="user-loading">Loading...</div></div></div>
       </header>
 
       <main class="page-content">
-        <div class="page-header">
-          <div>
-            <span class="eyebrow">Client dashboard</span>
-            <h1>Manage every vCard from one place</h1>
-            <p>Your subscription decides whether this account creates a single vCard or multiple vCards for many users.</p>
-          </div>
-          <a class="btn-customize" href="manage-subscription.html">Manage Subscription</a>
-        </div>
-
-        <section class="client-plan-banner searchable-item" data-search="subscription plan limits multiple users single vcard business plan">
-          <div>
-            <span class="status-badge active">Business Plan</span>
-            <h2>Multiple vCard access is enabled</h2>
-            <p>Create and manage vCards for teams, staff, branches, or individual representatives under one client account.</p>
-          </div>
-          <div class="client-plan-usage">
-            <div class="client-usage-number">12 / 25</div>
-            <span>vCards used</span>
-            <div class="client-progress"><span style="width:48%"></span></div>
-          </div>
+        <section class="user-dashboard-hero">
+          <div><span class="user-kicker">Personal workspace</span><h1 id="userGreeting">Welcome back</h1><p>Everything you need to build your digital identity, understand engagement, and follow up with new connections.</p></div>
+          <div class="user-hero-actions"><a class="user-secondary-btn" href="qr-code.html">Open QR code</a><a class="user-primary-btn" href="vcards.html">Create a card&nbsp; +</a></div>
         </section>
 
-        <div class="stats-row">
-          <article class="stat-card searchable-item" data-search="active vcards users cards">
-            <div class="stat-top"><span class="stat-label">Active VCards</span><div class="stat-icon-wrap">V</div></div>
-            <div class="stat-value">12</div><div class="stat-change">48% of plan</div><div class="stat-vs">25 cards included</div>
-            <canvas id="spark1" class="sparkline-area" width="220" height="40"></canvas>
-          </article>
-          <article class="stat-card searchable-item" data-search="enquiries leads contacts">
-            <div class="stat-top"><span class="stat-label">New Enquiries</span><div class="stat-icon-wrap">E</div></div>
-            <div class="stat-value">86</div><div class="stat-change">18.6%</div><div class="stat-vs">vs last 30 days</div>
-            <canvas id="spark2" class="sparkline-area" width="220" height="40"></canvas>
-          </article>
-          <article class="stat-card searchable-item" data-search="appointments bookings meetings">
-            <div class="stat-top"><span class="stat-label">Appointments</span><div class="stat-icon-wrap">A</div></div>
-            <div class="stat-value">24</div><div class="stat-change">9 confirmed</div><div class="stat-vs">this week</div>
-            <canvas id="spark3" class="sparkline-area" width="220" height="40"></canvas>
-          </article>
-          <article class="stat-card searchable-item" data-search="product orders nfc storage">
-            <div class="stat-top"><span class="stat-label">Product Orders</span><div class="stat-icon-wrap">O</div></div>
-            <div class="stat-value">18</div><div class="stat-change">5 pending</div><div class="stat-vs">NFC cards and add-ons</div>
-            <canvas id="spark4" class="sparkline-area" width="220" height="40"></canvas>
-          </article>
-        </div>
-
-        <div class="client-dashboard-grid">
-          <section class="analytics-card">
-            <div class="card-header-row">
-              <span class="card-title">Client Activity Overview</span>
-              <button type="button" class="period-selector" id="overviewPeriodButton"><span id="overviewPeriodLabel">Last 30 Days</span></button>
-            </div>
-            <div class="period-options" id="periodOptions" hidden>
-              <button type="button" class="period-option active" data-period="30">Last 30 Days</button>
-              <button type="button" class="period-option" data-period="90">Last 90 Days</button>
-              <button type="button" class="period-option" data-period="365">This Year</button>
-            </div>
-            <div class="chart-holder"><canvas id="analyticsChart"></canvas></div>
-          </section>
-
-          <section class="quick-actions-card searchable-item" data-search="quick actions create vcard nfc subscription storage">
-            <div class="card-title">Quick Actions</div>
-            <div class="quick-actions-grid client-actions-grid">
-              <a href="vcards.html" class="qa-btn"><div class="qa-icon">+</div>Create VCard</a>
-              <a href="enquiries.html" class="qa-btn"><div class="qa-icon">E</div>View Enquiries</a>
-              <a href="appointments.html" class="qa-btn"><div class="qa-icon">A</div>Appointments</a>
-              <a href="product-orders.html" class="qa-btn"><div class="qa-icon">O</div>Orders</a>
-              <a href="my-nfc-cards.html" class="qa-btn"><div class="qa-icon">N</div>NFC Cards</a>
-              <a href="nfc-backgrounds.html" class="qa-btn"><div class="qa-icon">BG</div>Backgrounds</a>
-              <a href="storage.html" class="qa-btn"><div class="qa-icon">GB</div>Storage</a>
-              <a href="manage-subscription.html" class="qa-btn"><div class="qa-icon">$</div>Subscription</a>
-            </div>
-          </section>
-        </div>
-
-        <div class="client-dashboard-grid">
-          <section class="admin-card searchable-item" data-search="vcards list users single multiple plan limits">
-            <div class="admin-card-header"><div><h3>VCards</h3><p>Manage one or many cards depending on the active subscription plan.</p></div><a href="vcards.html" class="card-link">View all</a></div>
-            <div class="client-list">
-              <div class="client-list-row"><div><strong>John Smith</strong><span>Sales Manager • john@acme.com</span></div><span class="status-badge completed">Live</span></div>
-              <div class="client-list-row"><div><strong>Acme Support</strong><span>Customer Success • support@acme.com</span></div><span class="status-badge active">NFC Linked</span></div>
-              <div class="client-list-row"><div><strong>Event Team</strong><span>Expo profile • events@acme.com</span></div><span class="status-badge pending">Draft</span></div>
-            </div>
-          </section>
-
-          <section class="admin-card searchable-item" data-search="enquiries appointments product orders leads bookings">
-            <div class="admin-card-header"><div><h3>Work Queue</h3><p>Follow up client activity across enquiries, bookings, and orders.</p></div></div>
-            <div class="client-metric-list">
-              <a href="enquiries.html"><strong>14</strong><span>Unanswered enquiries</span></a>
-              <a href="appointments.html"><strong>9</strong><span>Appointments today</span></a>
-              <a href="product-orders.html"><strong>5</strong><span>Orders awaiting action</span></a>
-            </div>
-          </section>
-        </div>
-
-        <div class="client-dashboard-grid client-dashboard-grid-three">
-          <section class="admin-card searchable-item" data-search="my nfc cards physical cards assigned status">
-            <div class="admin-card-header"><div><h3>My NFC Cards</h3><p>Physical cards connected to your client account.</p></div><a href="my-nfc-cards.html" class="card-link">Manage</a></div>
-            <div class="client-list compact">
-              <div class="client-list-row"><span>Black Metal Card</span><span class="status-badge completed">Active</span></div>
-              <div class="client-list-row"><span>Team Pack - 10 Cards</span><span class="status-badge pending">Printing</span></div>
-              <div class="client-list-row"><span>Executive Card</span><span class="status-badge info">Assigned</span></div>
-            </div>
-          </section>
-
-          <section class="admin-card searchable-item" data-search="storage files images documents usage">
-            <div class="admin-card-header"><div><h3>Storage</h3><p>Media and documents used by your vCards.</p></div><a href="storage.html" class="card-link">Open</a></div>
-            <div class="client-storage-meter"><div><strong>3.8 GB</strong><span>of 10 GB used</span></div><div class="client-progress"><span style="width:38%"></span></div></div>
-          </section>
-
-          <section class="admin-card searchable-item" data-search="affiliations referrals commission subscription">
-            <div class="admin-card-header"><div><h3>Affiliations</h3><p>Referral performance and pending commissions.</p></div><a href="affiliations.html" class="card-link">Details</a></div>
-            <div class="client-affiliate-summary"><strong>$420.00</strong><span>Estimated commission</span><small>7 active referrals</small></div>
-          </section>
-        </div>
-
-        <section class="admin-card searchable-item" data-search="virtual backgrounds nfc cards templates designs">
-          <div class="admin-card-header">
-            <div><h3>Virtual Backgrounds for NFC Cards</h3><p>Select branded digital backgrounds that pair with NFC card sharing and online profiles.</p></div>
-            <a href="nfc-backgrounds.html" class="card-link">View library</a>
-          </div>
-          <div class="client-background-grid">
-            <article class="client-background-card bg-gradient-red"><span class="status-badge completed">Active</span><strong>Executive Red</strong><small>Default for leadership cards</small></article>
-            <article class="client-background-card bg-gradient-blue"><span class="status-badge info">Available</span><strong>Corporate Blue</strong><small>Great for team and support profiles</small></article>
-            <article class="client-background-card bg-gradient-gold"><span class="status-badge pending">Premium</span><strong>Gold NFC Reveal</strong><small>Unlocked on higher plans</small></article>
-            <article class="client-background-card bg-gradient-dark"><span class="status-badge active">Brand Kit</span><strong>Custom Brand</strong><small>Use logos, colors, and campaign art</small></article>
-          </div>
+        <section class="user-metrics" aria-label="Account overview">
+          <article class="user-metric"><div class="user-metric-head"><span>Active cards</span><span class="user-metric-icon">C</span></div><strong id="metricCards">—</strong><small>Published identities</small></article>
+          <article class="user-metric"><div class="user-metric-head"><span>Profile views</span><span class="user-metric-icon">V</span></div><strong id="metricViews">—</strong><small>Last 30 days</small></article>
+          <article class="user-metric"><div class="user-metric-head"><span>Enquiries</span><span class="user-metric-icon">E</span></div><strong id="metricEnquiries">—</strong><small>Captured connections</small></article>
+          <article class="user-metric"><div class="user-metric-head"><span>Pending orders</span><span class="user-metric-icon">N</span></div><strong id="metricOrders">—</strong><small>NFC products</small></article>
         </section>
 
-        <div class="empty-search-state" id="emptySearchState" hidden>
-          <h3>No matches found</h3>
-          <p>Try another search term on this page.</p>
-        </div>
+        <section class="user-dashboard-layout">
+          <article class="user-dashboard-card">
+            <div class="user-card-heading"><div><span class="user-kicker">Your identity</span><h2>Recently updated cards</h2></div><a href="vcards.html">View all cards →</a></div>
+            <div class="user-plan-row"><div><strong id="dashboardPlan">Loading plan</strong><span id="planUsageLabel">Checking card allowance...</span></div><div class="user-progress" aria-label="Plan usage"><i id="planUsageFill" style="width:0%"></i></div></div>
+            <div class="user-card-list" id="dashboardCards"><div class="user-loading">Loading your cards...</div></div>
+          </article>
+          <article class="user-dashboard-card">
+            <div class="user-card-heading"><div><span class="user-kicker">Shortcuts</span><h2>Move quickly</h2></div></div>
+            <div class="user-action-grid">
+              <a class="user-action" href="vcards.html"><span>+</span>New digital card</a>
+              <a class="user-action" href="enquiries.html"><span>↗</span>View enquiries</a>
+              <a class="user-action" href="my-nfc-cards.html"><span>N</span>Manage NFC</a>
+              <a class="user-action" href="analytics.html"><span>⌁</span>Open analytics</a>
+              <a class="user-action" href="appointments.html"><span>□</span>Appointments</a>
+              <a class="user-action" href="settings.html"><span>⚙</span>Account settings</a>
+            </div>
+          </article>
+        </section>
       </main>
     </div>
   </div>
-
-  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
+  <script src="../../public/assets/js/user-workspace.js"></script>
 </body>
 </html>

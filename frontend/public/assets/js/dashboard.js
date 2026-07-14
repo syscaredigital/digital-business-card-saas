@@ -51,8 +51,13 @@ document.addEventListener("DOMContentLoaded", function () {
             '<div><strong>Super Admin</strong><div class="subtle-handle">info@syncecard.lk</div></div>' +
           "</div>" +
           '<span class="admin-online"><i></i> All systems online</span>' +
+          '<button class="admin-logout-btn" type="button" id="logoutButton"><span aria-hidden="true">↪</span> Sign out</button>' +
         "</div>"
       );
+    }
+    var profileCard = sidebar ? sidebar.querySelector(".admin-profile-card") : null;
+    if (profileCard && !profileCard.querySelector("#logoutButton")) {
+      profileCard.insertAdjacentHTML("beforeend", '<button class="admin-logout-btn" type="button" id="logoutButton"><span aria-hidden="true">↪</span> Sign out</button>');
     }
   }
 
@@ -71,10 +76,11 @@ document.addEventListener("DOMContentLoaded", function () {
       payouts: { title: "Payouts", eyebrow: "Partner finance", stats: [["Ready to pay", "$1,470", "2 payouts"], ["Paid this month", "$18,240", "+11.6%"], ["Next payout", "Jul 15", "2 days"]] },
       withdrawals: { title: "Withdrawals", eyebrow: "Fund requests", stats: [["Pending requests", "8", "$2,780"], ["Processed", "142", "This month"], ["Average time", "1.8 days", "-12%"]] },
       affiliations: { title: "Affiliations", eyebrow: "Partner network", stats: [["Active partners", "284", "+24 this month"], ["Conversions", "1,892", "14.6%"], ["Commission due", "$6,840", "Next cycle"]] },
-      "coupon-codes": { title: "Coupon Codes", eyebrow: "Promotions", stats: [["Active coupons", "18", "4 ending soon"], ["Redemptions", "1,246", "+22.8%"], ["Revenue influenced", "$12,840", "This month"]] },
-      analytics: { title: "Analytics", eyebrow: "Platform intelligence", stats: [["Profile views", "1.24M", "+18.4%"], ["QR scans", "78,905", "+16.2%"], ["Contact saves", "42,680", "34.4% rate"]] },
-      reports: { title: "Reports", eyebrow: "Exports & insights", stats: [["Saved reports", "24", "6 scheduled"], ["Exports this month", "186", "+14.8%"], ["Next delivery", "Tomorrow", "08:00 AM"]] },
-      settings: { title: "Settings", eyebrow: "Platform controls", stats: [["System status", "Healthy", "All services"], ["Admin alerts", "3", "Unread"], ["Last backup", "12 min ago", "Successful"]] }
+      "coupon-codes": { title: "Coupon Codes", eyebrow: "Promotions", stats: [["Active coupons", "—", "Loading availability"], ["Redemptions", "—", "Loading ledger"], ["Discounts granted", "—", "This month"]] },
+      analytics: { title: "Analytics", eyebrow: "Platform intelligence", stats: [["Profile views", "—", "Loading database metrics"], ["Engaged clicks", "—", "Loading database metrics"], ["Contact requests", "—", "Loading database metrics"]] },
+      reports: { title: "Reports", eyebrow: "Exports & insights", stats: [["Saved reports", "—", "Loading definitions"], ["Exports this month", "—", "Loading snapshots"], ["Last export", "—", "Loading history"]] },
+      settings: { title: "Settings", eyebrow: "Platform controls", stats: [["System status", "—", "Loading controls"], ["Stored settings", "—", "Loading database"], ["Last updated", "—", "Loading database"]] },
+      "system-logs": { title: "System Logs", eyebrow: "Audit & security", stats: [["Total events", "—", "Loading audit trail"], ["Events today", "—", "Loading audit trail"], ["Needs attention", "—", "Loading audit trail"]] }
     };
     var pageConfig = adminPageConfig[adminPageSlug];
 
@@ -211,6 +217,77 @@ document.addEventListener("DOMContentLoaded", function () {
   var cashPaymentAdminModalTitle = document.getElementById("cashPaymentAdminModalTitle");
   var superAdminCashPaymentsById = {};
   var superAdminCashSubscriptions = [];
+  var transactionAdminBody = document.getElementById("transactionAdminBody");
+  var transactionAdminCount = document.getElementById("transactionAdminCount");
+  var transactionTypeFilter = document.getElementById("transactionTypeFilter");
+  var transactionStatusFilter = document.getElementById("transactionStatusFilter");
+  var transactionAdminModal = document.getElementById("transactionAdminModal");
+  var transactionAdminModalBackdrop = document.getElementById("transactionAdminModalBackdrop");
+  var openTransactionAdminModalButton = document.getElementById("openTransactionAdminModal");
+  var closeTransactionAdminModalButton = document.getElementById("closeTransactionAdminModal");
+  var resetTransactionAdminFormButton = document.getElementById("resetTransactionAdminForm");
+  var transactionAdminForm = document.getElementById("transactionAdminForm");
+  var transactionAdminFeedback = document.getElementById("transactionAdminFeedback");
+  var transactionAdminModalTitle = document.getElementById("transactionAdminModalTitle");
+  var superAdminTransactionsById = {};
+  var payoutAdminBody = document.getElementById("payoutAdminBody");
+  var payoutAdminCount = document.getElementById("payoutAdminCount");
+  var payoutStatusFilter = document.getElementById("payoutStatusFilter");
+  var payoutAdminModal = document.getElementById("payoutAdminModal");
+  var payoutAdminModalBackdrop = document.getElementById("payoutAdminModalBackdrop");
+  var openPayoutAdminModalButton = document.getElementById("openPayoutAdminModal");
+  var closePayoutAdminModalButton = document.getElementById("closePayoutAdminModal");
+  var resetPayoutAdminFormButton = document.getElementById("resetPayoutAdminForm");
+  var payoutAdminForm = document.getElementById("payoutAdminForm");
+  var payoutAdminFeedback = document.getElementById("payoutAdminFeedback");
+  var payoutAdminModalTitle = document.getElementById("payoutAdminModalTitle");
+  var superAdminPayoutsById = {};
+  var withdrawalAdminBody = document.getElementById("withdrawalAdminBody");
+  var withdrawalAdminCount = document.getElementById("withdrawalAdminCount");
+  var withdrawalStatusFilter = document.getElementById("withdrawalStatusFilter");
+  var withdrawalAdminModal = document.getElementById("withdrawalAdminModal");
+  var withdrawalAdminModalBackdrop = document.getElementById("withdrawalAdminModalBackdrop");
+  var openWithdrawalAdminModalButton = document.getElementById("openWithdrawalAdminModal");
+  var closeWithdrawalAdminModalButton = document.getElementById("closeWithdrawalAdminModal");
+  var resetWithdrawalAdminFormButton = document.getElementById("resetWithdrawalAdminForm");
+  var withdrawalAdminForm = document.getElementById("withdrawalAdminForm");
+  var withdrawalAdminFeedback = document.getElementById("withdrawalAdminFeedback");
+  var withdrawalAdminModalTitle = document.getElementById("withdrawalAdminModalTitle");
+  var superAdminWithdrawalsById = {};
+  var affiliatePartnerBody = document.getElementById("affiliatePartnerBody");
+  var affiliatePartnerCount = document.getElementById("affiliatePartnerCount");
+  var affiliateReferralBody = document.getElementById("affiliateReferralBody");
+  var affiliateReferralCount = document.getElementById("affiliateReferralCount");
+  var affiliateCommissionBody = document.getElementById("affiliateCommissionBody");
+  var affiliateCommissionCount = document.getElementById("affiliateCommissionCount");
+  var affiliatePartnerModal = document.getElementById("affiliatePartnerModal");
+  var affiliatePartnerModalBackdrop = document.getElementById("affiliatePartnerModalBackdrop");
+  var openAffiliatePartnerModalButton = document.getElementById("openAffiliatePartnerModal");
+  var closeAffiliatePartnerModalButton = document.getElementById("closeAffiliatePartnerModal");
+  var resetAffiliatePartnerFormButton = document.getElementById("resetAffiliatePartnerForm");
+  var affiliatePartnerForm = document.getElementById("affiliatePartnerForm");
+  var affiliatePartnerFeedback = document.getElementById("affiliatePartnerFeedback");
+  var affiliatePartnerModalTitle = document.getElementById("affiliatePartnerModalTitle");
+  var affiliateReferralModal = document.getElementById("affiliateReferralModal");
+  var affiliateReferralModalBackdrop = document.getElementById("affiliateReferralModalBackdrop");
+  var openAffiliateReferralModalButton = document.getElementById("openAffiliateReferralModal");
+  var closeAffiliateReferralModalButton = document.getElementById("closeAffiliateReferralModal");
+  var resetAffiliateReferralFormButton = document.getElementById("resetAffiliateReferralForm");
+  var affiliateReferralForm = document.getElementById("affiliateReferralForm");
+  var affiliateReferralFeedback = document.getElementById("affiliateReferralFeedback");
+  var affiliateReferralModalTitle = document.getElementById("affiliateReferralModalTitle");
+  var affiliateCommissionModal = document.getElementById("affiliateCommissionModal");
+  var affiliateCommissionModalBackdrop = document.getElementById("affiliateCommissionModalBackdrop");
+  var openAffiliateCommissionModalButton = document.getElementById("openAffiliateCommissionModal");
+  var closeAffiliateCommissionModalButton = document.getElementById("closeAffiliateCommissionModal");
+  var resetAffiliateCommissionFormButton = document.getElementById("resetAffiliateCommissionForm");
+  var affiliateCommissionForm = document.getElementById("affiliateCommissionForm");
+  var affiliateCommissionFeedback = document.getElementById("affiliateCommissionFeedback");
+  var affiliateCommissionModalTitle = document.getElementById("affiliateCommissionModalTitle");
+  var superAdminAffiliatePartnersById = {};
+  var superAdminAffiliateReferralsById = {};
+  var superAdminAffiliateCommissionsById = {};
+  var superAdminAffiliateUsers = [];
   var subscriptionSearch = document.getElementById("subscriptionSearch");
   var subscriptionsTabButtons = Array.from(document.querySelectorAll("[data-subscriptions-tab-target]"));
   var subscriptionsTableBody = document.getElementById("subscriptionsTableBody");
@@ -281,6 +358,38 @@ document.addEventListener("DOMContentLoaded", function () {
   var usedCouponCodeSearch = document.getElementById("usedCouponCodeSearch");
   var usedCouponCodesTableBody = document.getElementById("usedCouponCodesTableBody");
   var usedCouponCodesResults = document.getElementById("usedCouponCodesResults");
+  var couponAdminBody = document.getElementById("couponAdminBody");
+  var couponAdminCount = document.getElementById("couponAdminCount");
+  var couponRedemptionBody = document.getElementById("couponRedemptionBody");
+  var couponRedemptionCount = document.getElementById("couponRedemptionCount");
+  var couponAdminModal = document.getElementById("couponAdminModal");
+  var couponAdminForm = document.getElementById("couponAdminForm");
+  var couponAdminModalTitle = document.getElementById("couponAdminModalTitle");
+  var couponRedemptionModal = document.getElementById("couponRedemptionModal");
+  var couponRedemptionForm = document.getElementById("couponRedemptionForm");
+  var superAdminCouponsById = {};
+  var superAdminCouponPlans = [];
+  var superAdminCouponUsers = [];
+  var analyticsRange = document.getElementById("analyticsRange");
+  var analyticsCardsBody = document.getElementById("analyticsCardsBody");
+  var analyticsSourceList = document.getElementById("analyticsSourceList");
+  var reportTabButtons = Array.from(document.querySelectorAll("[data-report-tab-target]"));
+  var reportAdminBody = document.getElementById("reportAdminBody");
+  var reportAdminCount = document.getElementById("reportAdminCount");
+  var reportRunBody = document.getElementById("reportRunBody");
+  var reportRunCount = document.getElementById("reportRunCount");
+  var reportAdminModal = document.getElementById("reportAdminModal");
+  var reportAdminForm = document.getElementById("reportAdminForm");
+  var reportAdminModalTitle = document.getElementById("reportAdminModalTitle");
+  var superAdminReportsById = {};
+  var platformSettingsForm = document.getElementById("platformSettingsForm");
+  var rolePermissionGrid = document.getElementById("rolePermissionGrid");
+  var systemLogBody = document.getElementById("systemLogBody");
+  var systemLogResource = document.getElementById("systemLogResource");
+  var systemLogActor = document.getElementById("systemLogActor");
+  var systemLogPage = 1;
+  var systemLogPages = 1;
+  var superAdminSystemLogsById = {};
   var enquiriesSearch = document.getElementById("enquiriesSearch");
   var enquiriesTableBody = document.getElementById("enquiriesTableBody");
   var enquiriesResults = document.getElementById("enquiriesResults");
@@ -2293,6 +2402,49 @@ document.addEventListener("DOMContentLoaded", function () {
         window.clearTimeout(cashPaymentsLiveSearchTimer);
         cashPaymentsLiveSearchTimer = window.setTimeout(loadSuperAdminCashPayments, 250);
       });
+    } else if (adminPageSlug === "transactions") {
+      var transactionsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(transactionsLiveSearchTimer);
+        transactionsLiveSearchTimer = window.setTimeout(loadSuperAdminTransactions, 250);
+      });
+    } else if (adminPageSlug === "payouts") {
+      var payoutsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(payoutsLiveSearchTimer);
+        payoutsLiveSearchTimer = window.setTimeout(loadSuperAdminPayouts, 250);
+      });
+    } else if (adminPageSlug === "withdrawals") {
+      var withdrawalsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(withdrawalsLiveSearchTimer);
+        withdrawalsLiveSearchTimer = window.setTimeout(loadSuperAdminWithdrawals, 250);
+      });
+    } else if (adminPageSlug === "affiliations") {
+      var affiliationsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(affiliationsLiveSearchTimer);
+        affiliationsLiveSearchTimer = window.setTimeout(loadSuperAdminAffiliations, 250);
+      });
+    } else if (adminPageSlug === "coupon-codes") {
+      var couponsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(couponsLiveSearchTimer);
+        couponsLiveSearchTimer = window.setTimeout(loadSuperAdminCoupons, 250);
+      });
+    } else if (adminPageSlug === "reports") {
+      var reportsLiveSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(reportsLiveSearchTimer);
+        reportsLiveSearchTimer = window.setTimeout(loadSuperAdminReports, 250);
+      });
+    } else if (adminPageSlug === "system-logs") {
+      var systemLogsSearchTimer;
+      searchInput.addEventListener("input", function () {
+        window.clearTimeout(systemLogsSearchTimer);
+        systemLogPage = 1;
+        systemLogsSearchTimer = window.setTimeout(loadSuperAdminSystemLogs, 250);
+      });
     } else {
       searchInput.addEventListener("input", applySearchFilter);
     }
@@ -3009,6 +3161,870 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  function transactionTypeLabel(type) {
+    return String(type || "other").split("_").map(function (part) { return part.charAt(0).toUpperCase() + part.slice(1); }).join(" ");
+  }
+
+  function transactionStatusClass(status) {
+    status = String(status || "").toLowerCase();
+    if (status === "completed") return "completed";
+    if (status === "pending") return "pending";
+    if (status === "refunded") return "info";
+    return "inactive";
+  }
+
+  function updateTransactionsPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-transactions .admin-page-stats article");
+    if (cards.length < 3) return;
+    var volumes = summary.volumeByCurrency || [];
+    var primary = volumes.find(function (entry) { return entry.currency === "USD"; }) || volumes[0] || { currency: "USD", amount: 0 };
+    cards[0].querySelector("span").textContent = "Completed volume";
+    cards[0].querySelector("strong").textContent = cashPaymentMoney(primary.amount, primary.currency);
+    cards[0].querySelector("small").textContent = volumes.length > 1 ? volumes.length + " currencies in ledger" : primary.currency + " settled volume";
+    cards[1].querySelector("span").textContent = "Successful";
+    cards[1].querySelector("strong").textContent = formatDashboardNumber(summary.successful);
+    cards[1].querySelector("small").textContent = Number(summary.success_rate || 0).toFixed(1) + "% completion rate";
+    cards[2].querySelector("span").textContent = "Pending";
+    cards[2].querySelector("strong").textContent = formatDashboardNumber(summary.pending);
+    cards[2].querySelector("small").textContent = formatDashboardNumber(summary.total) + " total records";
+  }
+
+  function renderSuperAdminTransactions(transactions) {
+    if (!transactionAdminBody) return;
+    superAdminTransactionsById = {};
+    if (transactionAdminCount) transactionAdminCount.textContent = formatDashboardNumber(transactions.length) + (transactions.length === 1 ? " transaction" : " transactions");
+    if (!transactions.length) {
+      transactionAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>No transactions found</strong><span>Create an adjustment or change the current search and filters.</span></div></td></tr>';
+      return;
+    }
+    transactionAdminBody.innerHTML = transactions.map(function (transaction) {
+      superAdminTransactionsById[String(transaction.id)] = transaction;
+      var user = transaction.user || {};
+      var status = String(transaction.status || "pending").toLowerCase();
+      var sourceLabel = transaction.sourceType === "payout" ? "Payout #" + transaction.sourceId : (transaction.sourceManaged ? "Payment #" + transaction.sourceId : transaction.gateway || "Manual");
+      var sourceDetail = transaction.reference || (transaction.sourceManaged ? "System-managed" : "No reference");
+      var actions = transaction.sourceManaged
+        ? '<span class="transaction-locked-action" title="Manage this record from its source payment">Source managed</span>'
+        : '<div class="user-row-actions"><button class="user-action-btn edit" type="button" data-live-transaction-action="edit" data-transaction-id="' + transaction.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-transaction-action="delete" data-transaction-id="' + transaction.id + '">Delete</button></div>';
+      return '<tr>' +
+        '<td><div class="transaction-id-cell"><strong>#TRX' + String(transaction.id).padStart(8, "0") + '</strong><span>' + escapeDashboardHtml(transaction.reference || "No external reference") + '</span></div></td>' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(user.name || "User") || "U") + '</span><div><strong>' + escapeDashboardHtml(user.name || "Unknown user") + '</strong><div class="subtle-handle">' + escapeDashboardHtml(user.email || "Account unavailable") + '</div></div></div></td>' +
+        '<td><span class="transaction-type-pill type-' + escapeDashboardHtml(transaction.type) + '">' + escapeDashboardHtml(transactionTypeLabel(transaction.type)) + '</span></td>' +
+        '<td><strong class="transaction-amount ' + (Number(transaction.amount) < 0 ? "negative" : "positive") + '">' + cashPaymentMoney(transaction.amount, transaction.currency) + '</strong></td>' +
+        '<td><div class="transaction-source-cell"><strong>' + escapeDashboardHtml(sourceLabel) + '</strong><span>' + escapeDashboardHtml(sourceDetail) + '</span></div></td>' +
+        '<td><div class="transaction-date-cell"><strong>' + escapeDashboardHtml(cashPaymentDate(transaction.createdAt)) + '</strong><span>Updated ' + escapeDashboardHtml(cashPaymentDate(transaction.updatedAt)) + '</span></div></td>' +
+        '<td><span class="status-badge ' + transactionStatusClass(status) + '">' + escapeDashboardHtml(transactionTypeLabel(status)) + '</span></td>' +
+        '<td>' + actions + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function populateTransactionUsers(users) {
+    if (!transactionAdminForm) return;
+    var select = transactionAdminForm.elements.userId;
+    var current = select.value;
+    select.innerHTML = '<option value="">Select user</option>' + users.map(function (user) {
+      return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name + " — " + user.email) + '</option>';
+    }).join("");
+    select.value = current;
+  }
+
+  async function loadSuperAdminTransactions() {
+    if (adminPageSlug !== "transactions" || !transactionAdminBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      transactionAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to view the financial ledger.</span></div></td></tr>';
+      if (transactionAdminCount) transactionAdminCount.textContent = "Sign in required";
+      updateTransactionsPageSummary({});
+      return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var status = transactionStatusFilter ? transactionStatusFilter.value : "";
+      var type = transactionTypeFilter ? transactionTypeFilter.value : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/transactions?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status) + "&type=" + encodeURIComponent(type), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load transactions");
+      populateTransactionUsers(data.users || []);
+      renderSuperAdminTransactions(data.transactions || []);
+      updateTransactionsPageSummary(data.summary || {});
+    } catch (error) {
+      transactionAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Transactions unavailable</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      if (transactionAdminCount) transactionAdminCount.textContent = "Unavailable";
+      updateTransactionsPageSummary({});
+      showToast("Could not load transactions", error.message);
+    }
+  }
+
+  function setTransactionAdminModal(open, transaction) {
+    if (!transactionAdminModal || !transactionAdminForm) return;
+    if (!open) {
+      transactionAdminModal.hidden = true;
+      document.body.style.overflow = "";
+      return;
+    }
+    transactionAdminForm.reset();
+    transactionAdminForm.elements.transactionId.value = transaction ? transaction.id : "";
+    if (transaction) {
+      transactionAdminForm.elements.userId.value = transaction.user ? transaction.user.id : "";
+      transactionAdminForm.elements.type.value = transaction.type;
+      transactionAdminForm.elements.amount.value = transaction.amount;
+      transactionAdminForm.elements.currency.value = transaction.currency;
+      transactionAdminForm.elements.status.value = transaction.status;
+      transactionAdminForm.elements.gateway.value = transaction.gateway || "manual";
+      transactionAdminForm.elements.reference.value = transaction.reference || "";
+      transactionAdminForm.elements.note.value = transaction.note || "";
+    }
+    if (transactionAdminModalTitle) transactionAdminModalTitle.textContent = transaction ? "Edit Transaction" : "New Transaction";
+    if (transactionAdminFeedback) { transactionAdminFeedback.hidden = true; transactionAdminFeedback.textContent = ""; }
+    transactionAdminModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  if (openTransactionAdminModalButton) openTransactionAdminModalButton.addEventListener("click", function () { setTransactionAdminModal(true); });
+  if (closeTransactionAdminModalButton) closeTransactionAdminModalButton.addEventListener("click", function () { setTransactionAdminModal(false); });
+  if (transactionAdminModalBackdrop) transactionAdminModalBackdrop.addEventListener("click", function () { setTransactionAdminModal(false); });
+  if (resetTransactionAdminFormButton) resetTransactionAdminFormButton.addEventListener("click", function () { setTransactionAdminModal(false); });
+  if (transactionTypeFilter) transactionTypeFilter.addEventListener("change", loadSuperAdminTransactions);
+  if (transactionStatusFilter) transactionStatusFilter.addEventListener("change", loadSuperAdminTransactions);
+
+  if (transactionAdminForm) {
+    transactionAdminForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!transactionAdminForm.checkValidity() || Number(transactionAdminForm.elements.amount.value) === 0) {
+        if (transactionAdminFeedback) { transactionAdminFeedback.hidden = false; transactionAdminFeedback.textContent = "Select a user and enter a non-zero transaction amount."; }
+        return;
+      }
+      var formData = new FormData(transactionAdminForm);
+      var transactionId = String(formData.get("transactionId") || "");
+      var submitButton = transactionAdminForm.querySelector('[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/transactions" + (transactionId ? "/" + encodeURIComponent(transactionId) : ""), {
+          method: transactionId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: Number(formData.get("userId")), type: formData.get("type"), amount: Number(formData.get("amount")), currency: formData.get("currency"), status: formData.get("status"), gateway: formData.get("gateway").trim(), reference: formData.get("reference").trim(), note: formData.get("note").trim() })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save transaction");
+        setTransactionAdminModal(false);
+        await loadSuperAdminTransactions();
+        showToast(transactionId ? "Transaction updated" : "Transaction created", "The standalone ledger entry was saved to PostgreSQL.");
+      } catch (error) {
+        if (transactionAdminFeedback) { transactionAdminFeedback.hidden = false; transactionAdminFeedback.textContent = error.message; }
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Save Transaction";
+      }
+    });
+  }
+
+  document.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-live-transaction-action]");
+    if (!button) return;
+    var transactionId = button.getAttribute("data-transaction-id");
+    var transaction = superAdminTransactionsById[String(transactionId)];
+    var action = button.getAttribute("data-live-transaction-action");
+    if (action === "edit") setTransactionAdminModal(true, transaction);
+    if (action === "delete" && window.confirm("Permanently delete this standalone ledger entry?")) {
+      try {
+        button.disabled = true;
+        button.textContent = "Deleting...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/transactions/" + encodeURIComponent(transactionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to delete transaction");
+        await loadSuperAdminTransactions();
+        showToast("Transaction deleted", "The standalone ledger entry was removed.");
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "Delete";
+        showToast("Delete failed", error.message);
+      }
+    }
+  });
+
+  function payoutPrimaryVolume(volumes) {
+    return (volumes || []).find(function (entry) { return entry.currency === "USD"; }) || (volumes || [])[0] || { currency: "USD", amount: 0 };
+  }
+
+  function updatePayoutsPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-payouts .admin-page-stats article");
+    if (cards.length < 3) return;
+    var ready = payoutPrimaryVolume(summary.readyByCurrency);
+    var paid = payoutPrimaryVolume(summary.paidByCurrency);
+    cards[0].querySelector("span").textContent = "Ready to pay";
+    cards[0].querySelector("strong").textContent = cashPaymentMoney(ready.amount, ready.currency);
+    cards[0].querySelector("small").textContent = formatDashboardNumber(summary.ready_count) + " pending or processing";
+    cards[1].querySelector("span").textContent = "Paid this month";
+    cards[1].querySelector("strong").textContent = cashPaymentMoney(paid.amount, paid.currency);
+    cards[1].querySelector("small").textContent = formatDashboardNumber(summary.paid_month_count) + " completed payouts";
+    cards[2].querySelector("span").textContent = "Next payout";
+    cards[2].querySelector("strong").textContent = summary.next_payout ? cashPaymentDate(summary.next_payout) : "Not scheduled";
+    cards[2].querySelector("small").textContent = formatDashboardNumber(summary.total) + " total records";
+  }
+
+  function payoutStatusClass(status) {
+    if (status === "paid") return "completed";
+    if (status === "pending" || status === "processing") return "pending";
+    return "inactive";
+  }
+
+  function renderSuperAdminPayouts(payouts) {
+    if (!payoutAdminBody) return;
+    superAdminPayoutsById = {};
+    if (payoutAdminCount) payoutAdminCount.textContent = formatDashboardNumber(payouts.length) + (payouts.length === 1 ? " payout" : " payouts");
+    if (!payouts.length) {
+      payoutAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>No payouts found</strong><span>Create a payout or change the current search and status filter.</span></div></td></tr>';
+      return;
+    }
+    payoutAdminBody.innerHTML = payouts.map(function (payout) {
+      superAdminPayoutsById[String(payout.id)] = payout;
+      var status = String(payout.status || "pending").toLowerCase();
+      var quickActions = "";
+      if (status === "pending") quickActions = '<button class="user-action-btn approve" type="button" data-live-payout-action="processing" data-payout-id="' + payout.id + '">Process</button>';
+      if (status === "pending" || status === "processing") quickActions += '<button class="user-action-btn approve" type="button" data-live-payout-action="paid" data-payout-id="' + payout.id + '">Mark Paid</button><button class="user-action-btn reject" type="button" data-live-payout-action="failed" data-payout-id="' + payout.id + '">Fail</button>';
+      var payoutActions = payout.sourceManaged
+        ? '<a class="transaction-locked-action" href="withdrawals.html" title="Manage this payout from its source withdrawal">Managed by withdrawal</a>'
+        : '<div class="user-row-actions payout-row-actions">' + quickActions + '<button class="user-action-btn edit" type="button" data-live-payout-action="edit" data-payout-id="' + payout.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-payout-action="delete" data-payout-id="' + payout.id + '">Delete</button></div>';
+      return '<tr>' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(payout.payeeName || "Payee") || "P") + '</span><div><strong>' + escapeDashboardHtml(payout.payeeName) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(payout.payeeEmail || (payout.user ? payout.user.email : "External payee")) + '</div></div></div></td>' +
+        '<td><div class="payout-method-cell"><strong>' + escapeDashboardHtml(transactionTypeLabel(payout.method)) + '</strong><span>' + escapeDashboardHtml(payout.accountName || "No account label") + '</span></div></td>' +
+        '<td><strong class="payout-amount">' + cashPaymentMoney(payout.amount, payout.currency) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(payout.reference || "No reference") + '</div></td>' +
+        '<td><div class="payout-schedule-cell"><strong>' + escapeDashboardHtml(cashPaymentDate(payout.scheduledAt, "Not scheduled")) + '</strong><span>' + escapeDashboardHtml(payout.paidAt ? "Paid " + cashPaymentDate(payout.paidAt) : "Created " + cashPaymentDate(payout.createdAt)) + '</span></div></td>' +
+        '<td><span class="status-badge ' + payoutStatusClass(status) + '">' + escapeDashboardHtml(transactionTypeLabel(status)) + '</span></td>' +
+        '<td><div class="payout-reviewer-cell"><strong>' + escapeDashboardHtml(payout.reviewerName || "Not reviewed") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(payout.reviewedAt, "Awaiting action")) + '</span></div></td>' +
+        '<td><div class="payout-ledger-cell"><strong>#TRX' + String(payout.transactionId || 0).padStart(8, "0") + '</strong><span>Auto-synced</span></div></td>' +
+        '<td>' + payoutActions + '</td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function populatePayoutUsers(users) {
+    if (!payoutAdminForm) return;
+    var select = payoutAdminForm.elements.userId;
+    var current = select.value;
+    select.innerHTML = '<option value="">External vendor / no user</option>' + users.map(function (user) { return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name + " — " + user.email) + '</option>'; }).join("");
+    select.value = current;
+  }
+
+  async function loadSuperAdminPayouts() {
+    if (adminPageSlug !== "payouts" || !payoutAdminBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      payoutAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage payouts.</span></div></td></tr>';
+      if (payoutAdminCount) payoutAdminCount.textContent = "Sign in required";
+      updatePayoutsPageSummary({});
+      return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var status = payoutStatusFilter ? payoutStatusFilter.value : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load payouts");
+      populatePayoutUsers(data.users || []);
+      renderSuperAdminPayouts(data.payouts || []);
+      updatePayoutsPageSummary(data.summary || {});
+    } catch (error) {
+      payoutAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Payouts unavailable</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      if (payoutAdminCount) payoutAdminCount.textContent = "Unavailable";
+      updatePayoutsPageSummary({});
+      showToast("Could not load payouts", error.message);
+    }
+  }
+
+  function payoutDatetimeInput(value) {
+    if (!value) return "";
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+  }
+
+  function setPayoutAdminModal(open, payout) {
+    if (!payoutAdminModal || !payoutAdminForm) return;
+    if (!open) {
+      payoutAdminModal.hidden = true;
+      document.body.style.overflow = "";
+      return;
+    }
+    payoutAdminForm.reset();
+    payoutAdminForm.elements.payoutId.value = payout ? payout.id : "";
+    if (payout) {
+      payoutAdminForm.elements.userId.value = payout.user ? payout.user.id : "";
+      payoutAdminForm.elements.payeeName.value = payout.payeeName || "";
+      payoutAdminForm.elements.payeeEmail.value = payout.payeeEmail || "";
+      payoutAdminForm.elements.accountName.value = payout.accountName || "";
+      payoutAdminForm.elements.amount.value = payout.amount;
+      payoutAdminForm.elements.currency.value = payout.currency;
+      payoutAdminForm.elements.method.value = payout.method;
+      payoutAdminForm.elements.status.value = payout.status;
+      payoutAdminForm.elements.scheduledAt.value = payoutDatetimeInput(payout.scheduledAt);
+      payoutAdminForm.elements.reference.value = payout.reference || "";
+      payoutAdminForm.elements.notes.value = payout.notes || "";
+    }
+    if (payoutAdminModalTitle) payoutAdminModalTitle.textContent = payout ? "Edit Payout" : "New Payout";
+    if (payoutAdminFeedback) { payoutAdminFeedback.hidden = true; payoutAdminFeedback.textContent = ""; }
+    payoutAdminModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function payoutPayload(payout, status) {
+    return { userId: payout.user ? payout.user.id : null, payeeName: payout.payeeName, payeeEmail: payout.payeeEmail || "", accountName: payout.accountName || "", amount: payout.amount, currency: payout.currency, method: payout.method, status: status || payout.status, scheduledAt: payout.scheduledAt || null, reference: payout.reference || "", notes: payout.notes || "" };
+  }
+
+  async function updatePayoutStatus(payout, status, button) {
+    if (!payout) return;
+    var originalLabel = button.textContent;
+    try {
+      button.disabled = true;
+      button.textContent = "Saving...";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts/" + encodeURIComponent(payout.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(payoutPayload(payout, status)) });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to update payout status");
+      await loadSuperAdminPayouts();
+      showToast(status === "paid" ? "Payout completed" : "Payout updated", status === "paid" ? "The linked ledger transaction is now completed." : "The payout status was saved to PostgreSQL.");
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+      showToast("Update failed", error.message);
+    }
+  }
+
+  if (openPayoutAdminModalButton) openPayoutAdminModalButton.addEventListener("click", function () { setPayoutAdminModal(true); });
+  if (closePayoutAdminModalButton) closePayoutAdminModalButton.addEventListener("click", function () { setPayoutAdminModal(false); });
+  if (payoutAdminModalBackdrop) payoutAdminModalBackdrop.addEventListener("click", function () { setPayoutAdminModal(false); });
+  if (resetPayoutAdminFormButton) resetPayoutAdminFormButton.addEventListener("click", function () { setPayoutAdminModal(false); });
+  if (payoutStatusFilter) payoutStatusFilter.addEventListener("change", loadSuperAdminPayouts);
+
+  if (payoutAdminForm) {
+    payoutAdminForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!payoutAdminForm.checkValidity()) {
+        if (payoutAdminFeedback) { payoutAdminFeedback.hidden = false; payoutAdminFeedback.textContent = "Enter the payee name and a valid positive payout amount."; }
+        return;
+      }
+      var formData = new FormData(payoutAdminForm);
+      var payoutId = String(formData.get("payoutId") || "");
+      var submitButton = payoutAdminForm.querySelector('[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts" + (payoutId ? "/" + encodeURIComponent(payoutId) : ""), {
+          method: payoutId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: formData.get("userId") ? Number(formData.get("userId")) : null, payeeName: formData.get("payeeName").trim(), payeeEmail: formData.get("payeeEmail").trim(), accountName: formData.get("accountName").trim(), amount: Number(formData.get("amount")), currency: formData.get("currency"), method: formData.get("method"), status: formData.get("status"), scheduledAt: formData.get("scheduledAt") || null, reference: formData.get("reference").trim(), notes: formData.get("notes").trim() })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save payout");
+        setPayoutAdminModal(false);
+        await loadSuperAdminPayouts();
+        showToast(payoutId ? "Payout updated" : "Payout created", "The payout and linked ledger transaction were saved.");
+      } catch (error) {
+        if (payoutAdminFeedback) { payoutAdminFeedback.hidden = false; payoutAdminFeedback.textContent = error.message; }
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Save Payout";
+      }
+    });
+  }
+
+  document.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-live-payout-action]");
+    if (!button) return;
+    var payoutId = button.getAttribute("data-payout-id");
+    var payout = superAdminPayoutsById[String(payoutId)];
+    var action = button.getAttribute("data-live-payout-action");
+    if (action === "edit") setPayoutAdminModal(true, payout);
+    if (["processing", "paid", "failed"].indexOf(action) !== -1) updatePayoutStatus(payout, action, button);
+    if (action === "delete" && window.confirm("Permanently delete this payout and its linked ledger transaction?")) {
+      try {
+        button.disabled = true;
+        button.textContent = "Deleting...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts/" + encodeURIComponent(payoutId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to delete payout");
+        await loadSuperAdminPayouts();
+        showToast("Payout deleted", "The payout and its linked transaction were removed.");
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "Delete";
+        showToast("Delete failed", error.message);
+      }
+    }
+  });
+
+  function updateWithdrawalsPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-withdrawals .admin-page-stats article");
+    if (cards.length < 3) return;
+    var pending = payoutPrimaryVolume(summary.pendingByCurrency);
+    var processed = payoutPrimaryVolume(summary.processedByCurrency);
+    cards[0].querySelector("span").textContent = "Pending requests";
+    cards[0].querySelector("strong").textContent = formatDashboardNumber(summary.pending_count);
+    cards[0].querySelector("small").textContent = cashPaymentMoney(pending.amount, pending.currency) + " requested";
+    cards[1].querySelector("span").textContent = "Processed this month";
+    cards[1].querySelector("strong").textContent = formatDashboardNumber(summary.processed_month_count);
+    cards[1].querySelector("small").textContent = cashPaymentMoney(processed.amount, processed.currency) + " completed";
+    cards[2].querySelector("span").textContent = "Average review time";
+    cards[2].querySelector("strong").textContent = Number(summary.average_review_days || 0).toFixed(1) + " days";
+    cards[2].querySelector("small").textContent = formatDashboardNumber(summary.total) + " total requests";
+  }
+
+  function withdrawalStatusClass(status) {
+    if (status === "completed") return "completed";
+    if (["pending", "approved", "processing"].indexOf(status) !== -1) return "pending";
+    return "inactive";
+  }
+
+  function renderSuperAdminWithdrawals(withdrawals) {
+    if (!withdrawalAdminBody) return;
+    superAdminWithdrawalsById = {};
+    if (withdrawalAdminCount) withdrawalAdminCount.textContent = formatDashboardNumber(withdrawals.length) + (withdrawals.length === 1 ? " request" : " requests");
+    if (!withdrawals.length) {
+      withdrawalAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>No withdrawals found</strong><span>Create a request or change the current search and status filter.</span></div></td></tr>';
+      return;
+    }
+    withdrawalAdminBody.innerHTML = withdrawals.map(function (withdrawal) {
+      superAdminWithdrawalsById[String(withdrawal.id)] = withdrawal;
+      var status = String(withdrawal.status || "pending").toLowerCase();
+      var quickActions = "";
+      if (status === "pending") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="approved" data-withdrawal-id="' + withdrawal.id + '">Approve</button><button class="user-action-btn reject" type="button" data-live-withdrawal-action="rejected" data-withdrawal-id="' + withdrawal.id + '">Reject</button>';
+      if (status === "approved") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="processing" data-withdrawal-id="' + withdrawal.id + '">Process</button><button class="user-action-btn approve" type="button" data-live-withdrawal-action="completed" data-withdrawal-id="' + withdrawal.id + '">Complete</button>';
+      if (status === "processing") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="completed" data-withdrawal-id="' + withdrawal.id + '">Complete</button><button class="user-action-btn reject" type="button" data-live-withdrawal-action="rejected" data-withdrawal-id="' + withdrawal.id + '">Reject</button>';
+      var financeLinks = withdrawal.payoutId
+        ? '<div class="withdrawal-finance-cell"><a href="payouts.html">Payout #' + withdrawal.payoutId + '</a><span>#TRX' + String(withdrawal.transactionId || 0).padStart(8, "0") + '</span></div>'
+        : '<span class="withdrawal-awaiting-link">Created after approval</span>';
+      return '<tr>' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(withdrawal.user.name || "User") || "U") + '</span><div><strong>' + escapeDashboardHtml(withdrawal.user.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(withdrawal.user.email) + '</div></div></div></td>' +
+        '<td><strong class="withdrawal-amount">' + cashPaymentMoney(withdrawal.amount, withdrawal.currency) + '</strong><div class="subtle-handle">Request #WDL' + String(withdrawal.id).padStart(8, "0") + '</div></td>' +
+        '<td><div class="withdrawal-method-cell"><strong>' + escapeDashboardHtml(transactionTypeLabel(withdrawal.method)) + '</strong><span>' + escapeDashboardHtml(withdrawal.accountName || "No account label") + '</span></div></td>' +
+        '<td><div class="withdrawal-date-cell"><strong>' + escapeDashboardHtml(cashPaymentDate(withdrawal.createdAt)) + '</strong><span>' + escapeDashboardHtml(withdrawal.processedAt ? "Processed " + cashPaymentDate(withdrawal.processedAt) : withdrawal.requestNote || "No request note") + '</span></div></td>' +
+        '<td><span class="status-badge ' + withdrawalStatusClass(status) + '">' + escapeDashboardHtml(transactionTypeLabel(status)) + '</span></td>' +
+        '<td><div class="withdrawal-reviewer-cell"><strong>' + escapeDashboardHtml(withdrawal.reviewerName || "Not reviewed") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(withdrawal.reviewedAt, "Awaiting action")) + '</span></div></td>' +
+        '<td>' + financeLinks + '</td>' +
+        '<td><div class="user-row-actions withdrawal-row-actions">' + quickActions + '<button class="user-action-btn edit" type="button" data-live-withdrawal-action="edit" data-withdrawal-id="' + withdrawal.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-withdrawal-action="delete" data-withdrawal-id="' + withdrawal.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function populateWithdrawalUsers(users) {
+    if (!withdrawalAdminForm) return;
+    var select = withdrawalAdminForm.elements.userId;
+    var current = select.value;
+    select.innerHTML = '<option value="">Select active user</option>' + users.map(function (user) { return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name + " — " + user.email) + '</option>'; }).join("");
+    select.value = current;
+  }
+
+  async function loadSuperAdminWithdrawals() {
+    if (adminPageSlug !== "withdrawals" || !withdrawalAdminBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      withdrawalAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to review withdrawals.</span></div></td></tr>';
+      if (withdrawalAdminCount) withdrawalAdminCount.textContent = "Sign in required";
+      updateWithdrawalsPageSummary({});
+      return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var status = withdrawalStatusFilter ? withdrawalStatusFilter.value : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/withdrawals?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load withdrawals");
+      populateWithdrawalUsers(data.users || []);
+      renderSuperAdminWithdrawals(data.withdrawals || []);
+      updateWithdrawalsPageSummary(data.summary || {});
+    } catch (error) {
+      withdrawalAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Withdrawals unavailable</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      if (withdrawalAdminCount) withdrawalAdminCount.textContent = "Unavailable";
+      updateWithdrawalsPageSummary({});
+      showToast("Could not load withdrawals", error.message);
+    }
+  }
+
+  function setWithdrawalAdminModal(open, withdrawal) {
+    if (!withdrawalAdminModal || !withdrawalAdminForm) return;
+    if (!open) {
+      withdrawalAdminModal.hidden = true;
+      document.body.style.overflow = "";
+      return;
+    }
+    withdrawalAdminForm.reset();
+    withdrawalAdminForm.elements.withdrawalId.value = withdrawal ? withdrawal.id : "";
+    if (withdrawal) {
+      withdrawalAdminForm.elements.userId.value = withdrawal.user.id;
+      withdrawalAdminForm.elements.status.value = withdrawal.status;
+      withdrawalAdminForm.elements.amount.value = withdrawal.amount;
+      withdrawalAdminForm.elements.currency.value = withdrawal.currency;
+      withdrawalAdminForm.elements.method.value = withdrawal.method;
+      withdrawalAdminForm.elements.accountName.value = withdrawal.accountName || "";
+      withdrawalAdminForm.elements.requestNote.value = withdrawal.requestNote || "";
+      withdrawalAdminForm.elements.adminNote.value = withdrawal.adminNote || "";
+    }
+    if (withdrawalAdminModalTitle) withdrawalAdminModalTitle.textContent = withdrawal ? "Edit Withdrawal" : "New Withdrawal";
+    if (withdrawalAdminFeedback) { withdrawalAdminFeedback.hidden = true; withdrawalAdminFeedback.textContent = ""; }
+    withdrawalAdminModal.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function withdrawalPayload(withdrawal, status) {
+    return { userId: withdrawal.user.id, amount: withdrawal.amount, currency: withdrawal.currency, method: withdrawal.method, status: status || withdrawal.status, accountName: withdrawal.accountName || "", requestNote: withdrawal.requestNote || "", adminNote: withdrawal.adminNote || "" };
+  }
+
+  async function updateWithdrawalStatus(withdrawal, status, button) {
+    if (!withdrawal) return;
+    var originalLabel = button.textContent;
+    try {
+      button.disabled = true;
+      button.textContent = "Saving...";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/withdrawals/" + encodeURIComponent(withdrawal.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(withdrawalPayload(withdrawal, status)) });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to update withdrawal");
+      await loadSuperAdminWithdrawals();
+      showToast(status === "completed" ? "Withdrawal completed" : "Withdrawal updated", status === "approved" ? "A protected payout and transaction were created." : "The request and linked finance records were synchronized.");
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = originalLabel;
+      showToast("Update failed", error.message);
+    }
+  }
+
+  if (openWithdrawalAdminModalButton) openWithdrawalAdminModalButton.addEventListener("click", function () { setWithdrawalAdminModal(true); });
+  if (closeWithdrawalAdminModalButton) closeWithdrawalAdminModalButton.addEventListener("click", function () { setWithdrawalAdminModal(false); });
+  if (withdrawalAdminModalBackdrop) withdrawalAdminModalBackdrop.addEventListener("click", function () { setWithdrawalAdminModal(false); });
+  if (resetWithdrawalAdminFormButton) resetWithdrawalAdminFormButton.addEventListener("click", function () { setWithdrawalAdminModal(false); });
+  if (withdrawalStatusFilter) withdrawalStatusFilter.addEventListener("change", loadSuperAdminWithdrawals);
+
+  if (withdrawalAdminForm) {
+    withdrawalAdminForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (!withdrawalAdminForm.checkValidity()) {
+        if (withdrawalAdminFeedback) { withdrawalAdminFeedback.hidden = false; withdrawalAdminFeedback.textContent = "Select a user and enter a valid positive amount."; }
+        return;
+      }
+      var formData = new FormData(withdrawalAdminForm);
+      var withdrawalId = String(formData.get("withdrawalId") || "");
+      var submitButton = withdrawalAdminForm.querySelector('[type="submit"]');
+      try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/withdrawals" + (withdrawalId ? "/" + encodeURIComponent(withdrawalId) : ""), {
+          method: withdrawalId ? "PATCH" : "POST",
+          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: Number(formData.get("userId")), amount: Number(formData.get("amount")), currency: formData.get("currency"), method: formData.get("method"), status: formData.get("status"), accountName: formData.get("accountName").trim(), requestNote: formData.get("requestNote").trim(), adminNote: formData.get("adminNote").trim() })
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to save withdrawal");
+        setWithdrawalAdminModal(false);
+        await loadSuperAdminWithdrawals();
+        showToast(withdrawalId ? "Withdrawal updated" : "Withdrawal created", "The request and any linked finance records were saved.");
+      } catch (error) {
+        if (withdrawalAdminFeedback) { withdrawalAdminFeedback.hidden = false; withdrawalAdminFeedback.textContent = error.message; }
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Save Withdrawal";
+      }
+    });
+  }
+
+  document.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-live-withdrawal-action]");
+    if (!button) return;
+    var withdrawalId = button.getAttribute("data-withdrawal-id");
+    var withdrawal = superAdminWithdrawalsById[String(withdrawalId)];
+    var action = button.getAttribute("data-live-withdrawal-action");
+    if (action === "edit") setWithdrawalAdminModal(true, withdrawal);
+    if (["approved", "processing", "completed", "rejected"].indexOf(action) !== -1) updateWithdrawalStatus(withdrawal, action, button);
+    if (action === "delete" && window.confirm("Permanently delete this withdrawal and all linked payout and transaction records?")) {
+      try {
+        button.disabled = true;
+        button.textContent = "Deleting...";
+        var response = await fetch("http://127.0.0.1:5000/api/super-admin/withdrawals/" + encodeURIComponent(withdrawalId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.message || "Unable to delete withdrawal");
+        await loadSuperAdminWithdrawals();
+        showToast("Withdrawal deleted", "The request and linked finance records were removed.");
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "Delete";
+        showToast("Delete failed", error.message);
+      }
+    }
+  });
+
+  function updateAffiliationsPageSummary(summary) {
+    var cards = document.querySelectorAll(".admin-page-affiliations .admin-page-stats article");
+    if (cards.length < 3) return;
+    var due = payoutPrimaryVolume(summary.dueByCurrency);
+    cards[0].querySelector("span").textContent = "Active partners";
+    cards[0].querySelector("strong").textContent = formatDashboardNumber(summary.active_partners);
+    cards[0].querySelector("small").textContent = "Enabled affiliate profiles";
+    cards[1].querySelector("span").textContent = "Qualified conversions";
+    cards[1].querySelector("strong").textContent = formatDashboardNumber(summary.qualified_conversions);
+    cards[1].querySelector("small").textContent = "Attributed referred users";
+    cards[2].querySelector("span").textContent = "Commission due";
+    cards[2].querySelector("strong").textContent = cashPaymentMoney(due.amount, due.currency);
+    cards[2].querySelector("small").textContent = formatDashboardNumber(summary.pending_commissions) + " awaiting review";
+  }
+
+  function renderAffiliatePartners(partners) {
+    if (!affiliatePartnerBody) return;
+    superAdminAffiliatePartnersById = {};
+    if (affiliatePartnerCount) affiliatePartnerCount.textContent = formatDashboardNumber(partners.length) + (partners.length === 1 ? " partner" : " partners");
+    if (!partners.length) {
+      affiliatePartnerBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>No affiliate partners found</strong><span>Create a partner profile to start tracking referrals.</span></div></td></tr>';
+      return;
+    }
+    affiliatePartnerBody.innerHTML = partners.map(function (partner) {
+      superAdminAffiliatePartnersById[String(partner.id)] = partner;
+      var commission = partner.commissionType === "percentage" ? Number(partner.commissionValue).toFixed(2) + "%" : cashPaymentMoney(partner.commissionValue, "USD");
+      return '<tr>' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(partner.user.name) || "A") + '</span><div><strong>' + escapeDashboardHtml(partner.user.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(partner.user.email) + '</div></div></div></td>' +
+        '<td><span class="affiliate-code-pill">' + escapeDashboardHtml(partner.referralCode) + '</span></td>' +
+        '<td><div class="affiliate-rule-cell"><strong>' + escapeDashboardHtml(commission) + '</strong><span>' + escapeDashboardHtml(transactionTypeLabel(partner.commissionType)) + '</span></div></td>' +
+        '<td><div class="affiliate-conversion-cell"><strong>' + formatDashboardNumber(partner.qualified) + ' qualified</strong><span>' + formatDashboardNumber(partner.referrals) + ' total referrals</span></div></td>' +
+        '<td><div class="affiliate-rule-cell"><strong>' + escapeDashboardHtml(transactionTypeLabel(partner.paymentMethod)) + '</strong><span>' + escapeDashboardHtml(partner.payoutDetails || "No account label") + '</span></div></td>' +
+        '<td><span class="status-badge ' + (partner.status === "active" ? "active" : "inactive") + '">' + escapeDashboardHtml(transactionTypeLabel(partner.status)) + '</span></td>' +
+        '<td><div class="user-row-actions"><button class="user-action-btn edit" type="button" data-live-affiliate-partner-action="edit" data-affiliate-id="' + partner.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-affiliate-partner-action="delete" data-affiliate-id="' + partner.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function renderAffiliateReferrals(referrals) {
+    if (!affiliateReferralBody) return;
+    superAdminAffiliateReferralsById = {};
+    if (affiliateReferralCount) affiliateReferralCount.textContent = formatDashboardNumber(referrals.length) + (referrals.length === 1 ? " referral" : " referrals");
+    if (!referrals.length) {
+      affiliateReferralBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>No referred users found</strong><span>Connect a registered user to an affiliate partner.</span></div></td></tr>';
+      return;
+    }
+    affiliateReferralBody.innerHTML = referrals.map(function (referral) {
+      superAdminAffiliateReferralsById[String(referral.id)] = referral;
+      var quick = referral.status === "pending" ? '<button class="user-action-btn approve" type="button" data-live-affiliate-referral-action="qualified" data-referral-id="' + referral.id + '">Qualify</button><button class="user-action-btn reject" type="button" data-live-affiliate-referral-action="rejected" data-referral-id="' + referral.id + '">Reject</button>' : "";
+      return '<tr>' +
+        '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(referral.affiliate.name) || "A") + '</span><div><strong>' + escapeDashboardHtml(referral.affiliate.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(referral.affiliate.email) + '</div></div></div></td>' +
+        '<td><div class="table-user"><span class="mini-avatar referral-avatar">' + escapeDashboardHtml(avatarInitials(referral.user.name) || "U") + '</span><div><strong>' + escapeDashboardHtml(referral.user.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(referral.user.email) + '</div></div></div></td>' +
+        '<td><span class="affiliate-code-pill">' + escapeDashboardHtml(referral.affiliate.code) + '</span></td>' +
+        '<td>' + escapeDashboardHtml(cashPaymentDate(referral.joinedAt)) + '</td>' +
+        '<td><span class="status-badge ' + (referral.status === "qualified" ? "completed" : referral.status === "pending" ? "pending" : "inactive") + '">' + escapeDashboardHtml(transactionTypeLabel(referral.status)) + '</span></td>' +
+        '<td><div class="user-row-actions">' + quick + '<button class="user-action-btn edit" type="button" data-live-affiliate-referral-action="edit" data-referral-id="' + referral.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-affiliate-referral-action="delete" data-referral-id="' + referral.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function renderAffiliateCommissions(commissions) {
+    if (!affiliateCommissionBody) return;
+    superAdminAffiliateCommissionsById = {};
+    if (affiliateCommissionCount) affiliateCommissionCount.textContent = formatDashboardNumber(commissions.length) + (commissions.length === 1 ? " commission" : " commissions");
+    if (!commissions.length) {
+      affiliateCommissionBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>No commissions found</strong><span>Create an earning record for an affiliate partner.</span></div></td></tr>';
+      return;
+    }
+    affiliateCommissionBody.innerHTML = commissions.map(function (commission) {
+      superAdminAffiliateCommissionsById[String(commission.id)] = commission;
+      var quick = commission.status === "pending" ? '<button class="user-action-btn approve" type="button" data-live-affiliate-commission-action="approved" data-commission-id="' + commission.id + '">Approve</button><button class="user-action-btn reject" type="button" data-live-affiliate-commission-action="rejected" data-commission-id="' + commission.id + '">Reject</button>' : "";
+      return '<tr>' +
+        '<td><strong>' + escapeDashboardHtml(commission.affiliate.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(commission.affiliate.email) + '</div></td>' +
+        '<td>' + escapeDashboardHtml(commission.referredName || "General commission") + '</td>' +
+        '<td><strong class="affiliate-commission-amount">' + cashPaymentMoney(commission.amount, commission.currency) + '</strong></td>' +
+        '<td><div class="affiliate-description-cell"><strong>' + escapeDashboardHtml(commission.description || "Affiliate earning") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(commission.createdAt)) + '</span></div></td>' +
+        '<td><span class="status-badge ' + (commission.status === "approved" || commission.status === "paid" ? "completed" : commission.status === "pending" ? "pending" : "inactive") + '">' + escapeDashboardHtml(transactionTypeLabel(commission.status)) + '</span></td>' +
+        '<td><div class="affiliate-description-cell"><strong>' + escapeDashboardHtml(commission.approverName || "Not approved") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(commission.approvedAt, "Awaiting review")) + '</span></div></td>' +
+        '<td><div class="user-row-actions">' + quick + '<button class="user-action-btn edit" type="button" data-live-affiliate-commission-action="edit" data-commission-id="' + commission.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-affiliate-commission-action="delete" data-commission-id="' + commission.id + '">Delete</button></div></td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function populateAffiliateFormOptions(partners, referrals, users) {
+    superAdminAffiliateUsers = users;
+    var userOptions = users.map(function (user) { return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name + " — " + user.email) + '</option>'; }).join("");
+    var partnerOptions = partners.map(function (partner) { return '<option value="' + partner.id + '">' + escapeDashboardHtml(partner.user.name + " — " + partner.referralCode) + '</option>'; }).join("");
+    if (affiliatePartnerForm) { var currentPartnerUser = affiliatePartnerForm.elements.userId.value; affiliatePartnerForm.elements.userId.innerHTML = '<option value="">Select active user</option>' + userOptions; affiliatePartnerForm.elements.userId.value = currentPartnerUser; }
+    if (affiliateReferralForm) {
+      var currentAffiliate = affiliateReferralForm.elements.affiliateId.value; var currentUser = affiliateReferralForm.elements.userId.value;
+      affiliateReferralForm.elements.affiliateId.innerHTML = '<option value="">Select partner</option>' + partnerOptions;
+      affiliateReferralForm.elements.userId.innerHTML = '<option value="">Select registered user</option>' + userOptions;
+      affiliateReferralForm.elements.affiliateId.value = currentAffiliate; affiliateReferralForm.elements.userId.value = currentUser;
+    }
+    if (affiliateCommissionForm) {
+      var currentCommissionAffiliate = affiliateCommissionForm.elements.affiliateId.value;
+      affiliateCommissionForm.elements.affiliateId.innerHTML = '<option value="">Select partner</option>' + partnerOptions;
+      affiliateCommissionForm.elements.affiliateId.value = currentCommissionAffiliate;
+      filterAffiliateCommissionReferrals();
+    }
+  }
+
+  function filterAffiliateCommissionReferrals(selectedId) {
+    if (!affiliateCommissionForm) return;
+    var affiliateId = Number(affiliateCommissionForm.elements.affiliateId.value);
+    var select = affiliateCommissionForm.elements.referralId;
+    var desired = selectedId === undefined ? select.value : String(selectedId || "");
+    var referrals = Object.keys(superAdminAffiliateReferralsById).map(function (id) { return superAdminAffiliateReferralsById[id]; }).filter(function (referral) { return Number(referral.affiliateId) === affiliateId; });
+    select.innerHTML = '<option value="">No specific referral</option>' + referrals.map(function (referral) { return '<option value="' + referral.id + '">' + escapeDashboardHtml(referral.user.name + " — " + referral.status) + '</option>'; }).join("");
+    select.value = desired;
+  }
+
+  async function loadSuperAdminAffiliations() {
+    if (adminPageSlug !== "affiliations" || !affiliatePartnerBody) return;
+    var token = localStorage.getItem("token");
+    if (!token) {
+      affiliatePartnerBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage affiliates.</span></div></td></tr>';
+      if (affiliatePartnerCount) affiliatePartnerCount.textContent = "Sign in required";
+      updateAffiliationsPageSummary({}); return;
+    }
+    try {
+      var search = searchInput ? searchInput.value.trim() : "";
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/affiliations?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load affiliations");
+      renderAffiliatePartners(data.partners || []); renderAffiliateReferrals(data.referrals || []); renderAffiliateCommissions(data.commissions || []);
+      populateAffiliateFormOptions(data.partners || [], data.referrals || [], data.users || []); updateAffiliationsPageSummary(data.summary || {});
+    } catch (error) {
+      affiliatePartnerBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Affiliations unavailable</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      if (affiliatePartnerCount) affiliatePartnerCount.textContent = "Unavailable"; updateAffiliationsPageSummary({}); showToast("Could not load affiliations", error.message);
+    }
+  }
+
+  function setAffiliateModal(modal, form, titleElement, open, record, kind) {
+    if (!modal || !form) return;
+    if (!open) { modal.hidden = true; document.body.style.overflow = ""; return; }
+    form.reset();
+    if (kind === "partner") {
+      form.elements.affiliateId.value = record ? record.id : "";
+      if (record) { form.elements.userId.value=record.user.id; form.elements.referralCode.value=record.referralCode; form.elements.commissionType.value=record.commissionType; form.elements.commissionValue.value=record.commissionValue; form.elements.paymentMethod.value=record.paymentMethod; form.elements.payoutDetails.value=record.payoutDetails||""; form.elements.status.value=record.status; }
+      if (titleElement) titleElement.textContent = record ? "Edit Affiliate Partner" : "New Affiliate Partner";
+    } else if (kind === "referral") {
+      form.elements.referralId.value = record ? record.id : "";
+      if (record) { form.elements.affiliateId.value=record.affiliateId; form.elements.userId.value=record.user.id; form.elements.status.value=record.status; }
+      if (titleElement) titleElement.textContent = record ? "Edit Referred User" : "Add Referred User";
+    } else {
+      form.elements.commissionId.value = record ? record.id : "";
+      if (record) { form.elements.affiliateId.value=record.affiliateId; filterAffiliateCommissionReferrals(record.referralId); form.elements.amount.value=record.amount; form.elements.currency.value=record.currency; form.elements.status.value=record.status; form.elements.description.value=record.description||""; }
+      if (titleElement) titleElement.textContent = record ? "Edit Commission" : "New Commission";
+    }
+    var feedback = form.querySelector(".form-feedback"); if (feedback) { feedback.hidden=true; feedback.textContent=""; }
+    modal.hidden=false; document.body.style.overflow="hidden";
+  }
+
+  if (openAffiliatePartnerModalButton) openAffiliatePartnerModalButton.addEventListener("click", function(){setAffiliateModal(affiliatePartnerModal,affiliatePartnerForm,affiliatePartnerModalTitle,true,null,"partner");});
+  if (closeAffiliatePartnerModalButton) closeAffiliatePartnerModalButton.addEventListener("click", function(){setAffiliateModal(affiliatePartnerModal,affiliatePartnerForm,affiliatePartnerModalTitle,false);});
+  if (affiliatePartnerModalBackdrop) affiliatePartnerModalBackdrop.addEventListener("click", function(){setAffiliateModal(affiliatePartnerModal,affiliatePartnerForm,affiliatePartnerModalTitle,false);});
+  if (resetAffiliatePartnerFormButton) resetAffiliatePartnerFormButton.addEventListener("click", function(){setAffiliateModal(affiliatePartnerModal,affiliatePartnerForm,affiliatePartnerModalTitle,false);});
+  if (openAffiliateReferralModalButton) openAffiliateReferralModalButton.addEventListener("click", function(){setAffiliateModal(affiliateReferralModal,affiliateReferralForm,affiliateReferralModalTitle,true,null,"referral");});
+  if (closeAffiliateReferralModalButton) closeAffiliateReferralModalButton.addEventListener("click", function(){setAffiliateModal(affiliateReferralModal,affiliateReferralForm,affiliateReferralModalTitle,false);});
+  if (affiliateReferralModalBackdrop) affiliateReferralModalBackdrop.addEventListener("click", function(){setAffiliateModal(affiliateReferralModal,affiliateReferralForm,affiliateReferralModalTitle,false);});
+  if (resetAffiliateReferralFormButton) resetAffiliateReferralFormButton.addEventListener("click", function(){setAffiliateModal(affiliateReferralModal,affiliateReferralForm,affiliateReferralModalTitle,false);});
+  if (openAffiliateCommissionModalButton) openAffiliateCommissionModalButton.addEventListener("click", function(){setAffiliateModal(affiliateCommissionModal,affiliateCommissionForm,affiliateCommissionModalTitle,true,null,"commission");});
+  if (closeAffiliateCommissionModalButton) closeAffiliateCommissionModalButton.addEventListener("click", function(){setAffiliateModal(affiliateCommissionModal,affiliateCommissionForm,affiliateCommissionModalTitle,false);});
+  if (affiliateCommissionModalBackdrop) affiliateCommissionModalBackdrop.addEventListener("click", function(){setAffiliateModal(affiliateCommissionModal,affiliateCommissionForm,affiliateCommissionModalTitle,false);});
+  if (resetAffiliateCommissionFormButton) resetAffiliateCommissionFormButton.addEventListener("click", function(){setAffiliateModal(affiliateCommissionModal,affiliateCommissionForm,affiliateCommissionModalTitle,false);});
+  if (affiliateCommissionForm) affiliateCommissionForm.elements.affiliateId.addEventListener("change", function(){filterAffiliateCommissionReferrals();});
+
+  async function submitAffiliateForm(form, basePath, idField, modal, kind) {
+    if (!form.checkValidity()) { var invalidFeedback=form.querySelector(".form-feedback"); if(invalidFeedback){invalidFeedback.hidden=false;invalidFeedback.textContent="Complete all required fields with valid values.";} return; }
+    var fd=new FormData(form); var id=String(fd.get(idField)||""); var payload;
+    if(kind==="partner") payload={userId:Number(fd.get("userId")),referralCode:fd.get("referralCode").trim(),commissionType:fd.get("commissionType"),commissionValue:Number(fd.get("commissionValue")),paymentMethod:fd.get("paymentMethod"),payoutDetails:fd.get("payoutDetails").trim(),status:fd.get("status")};
+    if(kind==="referral") payload={affiliateId:Number(fd.get("affiliateId")),userId:Number(fd.get("userId")),status:fd.get("status")};
+    if(kind==="commission") payload={affiliateId:Number(fd.get("affiliateId")),referralId:fd.get("referralId")?Number(fd.get("referralId")):null,amount:Number(fd.get("amount")),currency:fd.get("currency"),status:fd.get("status"),description:fd.get("description").trim()};
+    var button=form.querySelector('[type="submit"]');
+    try { button.disabled=true;button.textContent="Saving...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/affiliations/"+basePath+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save record");setAffiliateModal(modal,form,null,false);await loadSuperAdminAffiliations();showToast(id?"Record updated":"Record created","The affiliate program data was saved to PostgreSQL."); }
+    catch(error){var feedback=form.querySelector(".form-feedback");if(feedback){feedback.hidden=false;feedback.textContent=error.message;}}
+    finally{button.disabled=false;button.textContent=kind==="partner"?"Save Partner":kind==="referral"?"Save Referral":"Save Commission";}
+  }
+
+  if(affiliatePartnerForm)affiliatePartnerForm.addEventListener("submit",function(event){event.preventDefault();submitAffiliateForm(affiliatePartnerForm,"partners","affiliateId",affiliatePartnerModal,"partner");});
+  if(affiliateReferralForm)affiliateReferralForm.addEventListener("submit",function(event){event.preventDefault();submitAffiliateForm(affiliateReferralForm,"referrals","referralId",affiliateReferralModal,"referral");});
+  if(affiliateCommissionForm)affiliateCommissionForm.addEventListener("submit",function(event){event.preventDefault();submitAffiliateForm(affiliateCommissionForm,"commissions","commissionId",affiliateCommissionModal,"commission");});
+
+  document.addEventListener("click",async function(event){
+    var partnerButton=event.target.closest("[data-live-affiliate-partner-action]");var referralButton=event.target.closest("[data-live-affiliate-referral-action]");var commissionButton=event.target.closest("[data-live-affiliate-commission-action]");
+    if(partnerButton){var affiliateId=partnerButton.getAttribute("data-affiliate-id");var partner=superAdminAffiliatePartnersById[String(affiliateId)];var partnerAction=partnerButton.getAttribute("data-live-affiliate-partner-action");if(partnerAction==="edit")setAffiliateModal(affiliatePartnerModal,affiliatePartnerForm,affiliatePartnerModalTitle,true,partner,"partner");if(partnerAction==="delete"&&window.confirm("Delete this affiliate partner? Referrals and commissions must be removed first."))await deleteAffiliateRecord("partners",affiliateId,partnerButton);}
+    if(referralButton){var referralId=referralButton.getAttribute("data-referral-id");var referral=superAdminAffiliateReferralsById[String(referralId)];var referralAction=referralButton.getAttribute("data-live-affiliate-referral-action");if(referralAction==="edit")setAffiliateModal(affiliateReferralModal,affiliateReferralForm,affiliateReferralModalTitle,true,referral,"referral");if(["qualified","rejected"].indexOf(referralAction)!==-1)await quickUpdateAffiliateRecord("referrals",referralId,{affiliateId:referral.affiliateId,userId:referral.user.id,status:referralAction},referralButton);if(referralAction==="delete"&&window.confirm("Delete this referral attribution?"))await deleteAffiliateRecord("referrals",referralId,referralButton);}
+    if(commissionButton){var commissionId=commissionButton.getAttribute("data-commission-id");var commission=superAdminAffiliateCommissionsById[String(commissionId)];var commissionAction=commissionButton.getAttribute("data-live-affiliate-commission-action");if(commissionAction==="edit")setAffiliateModal(affiliateCommissionModal,affiliateCommissionForm,affiliateCommissionModalTitle,true,commission,"commission");if(["approved","rejected"].indexOf(commissionAction)!==-1)await quickUpdateAffiliateRecord("commissions",commissionId,{affiliateId:commission.affiliateId,referralId:commission.referralId,amount:commission.amount,currency:commission.currency,status:commissionAction,description:commission.description||""},commissionButton);if(commissionAction==="delete"&&window.confirm("Delete this commission record?"))await deleteAffiliateRecord("commissions",commissionId,commissionButton);}
+  });
+
+  async function quickUpdateAffiliateRecord(path,id,payload,button){var original=button.textContent;try{button.disabled=true;button.textContent="Saving...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/affiliations/"+path+"/"+encodeURIComponent(id),{method:"PATCH",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update record");await loadSuperAdminAffiliations();showToast("Record updated","The affiliate status was saved.");}catch(error){button.disabled=false;button.textContent=original;showToast("Update failed",error.message);}}
+  async function deleteAffiliateRecord(path,id,button){try{button.disabled=true;button.textContent="Deleting...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/affiliations/"+path+"/"+encodeURIComponent(id),{method:"DELETE",headers:{Authorization:"Bearer "+localStorage.getItem("token")}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to delete record");await loadSuperAdminAffiliations();showToast("Record deleted","The affiliate record was removed.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}
+
+  function couponMoney(value, currency) { return cashPaymentMoney(Number(value || 0), currency || "USD"); }
+  function couponDate(value) { return value ? cashPaymentDate(value) : "No limit"; }
+  function updateCouponsPageSummary(summary) {
+    var cards=document.querySelectorAll(".admin-page-coupon-codes .admin-page-stats article");if(cards.length<3)return;
+    var discounts=payoutPrimaryVolume(summary.discountsByCurrency);
+    cards[0].querySelector("span").textContent="Active coupons";cards[0].querySelector("strong").textContent=formatDashboardNumber(summary.active_coupons);cards[0].querySelector("small").textContent=formatDashboardNumber(summary.ending_soon)+" ending within 7 days";
+    cards[1].querySelector("span").textContent="Redemptions";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.total_redemptions);cards[1].querySelector("small").textContent="Verified promotion uses";
+    cards[2].querySelector("span").textContent="Discounts granted";cards[2].querySelector("strong").textContent=couponMoney(discounts.amount,discounts.currency);cards[2].querySelector("small").textContent="This month";
+  }
+  function couponStatusClass(status){return status==="active"?"active":status==="scheduled"?"pending":status==="exhausted"?"inactive":status==="expired"?"inactive":"inactive";}
+  function renderSuperAdminCoupons(coupons){
+    if(!couponAdminBody)return;superAdminCouponsById={};if(couponAdminCount)couponAdminCount.textContent=formatDashboardNumber(coupons.length)+(coupons.length===1?" coupon":" coupons");
+    if(!coupons.length){couponAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>No coupons found</strong><span>Create a promotion or try another search.</span></div></td></tr>';return;}
+    couponAdminBody.innerHTML=coupons.map(function(c){superAdminCouponsById[String(c.id)]=c;var discount=c.discountType==="percentage"?Number(c.discountValue).toFixed(2)+"%":couponMoney(c.discountValue,c.currency);var usage=formatDashboardNumber(c.usedCount)+(c.usageLimit===null?" used · unlimited":" / "+formatDashboardNumber(c.usageLimit));var minimum=Number(c.minimumAmount)>0?"Min. "+couponMoney(c.minimumAmount,c.currency):"No minimum";var windowText=(c.startsAt?couponDate(c.startsAt):"Immediately")+" → "+(c.expiresAt?couponDate(c.expiresAt):"No expiry");return '<tr><td><div class="coupon-identity"><span>'+escapeDashboardHtml(c.code)+'</span><div><strong>'+escapeDashboardHtml(c.name)+'</strong><small>#'+c.id+'</small></div></div></td><td><strong class="coupon-discount">'+escapeDashboardHtml(discount)+'</strong><div class="subtle-handle">'+escapeDashboardHtml(transactionTypeLabel(c.discountType))+'</div></td><td><strong>'+escapeDashboardHtml(c.planName||"All plans")+'</strong><div class="subtle-handle">'+escapeDashboardHtml(minimum)+'</div></td><td><strong>'+escapeDashboardHtml(usage)+'</strong><div class="coupon-usage-track"><i style="width:'+(c.usageLimit?Math.min(100,c.usedCount/c.usageLimit*100):0)+'%"></i></div><div class="subtle-handle">'+c.perUserLimit+' per customer</div></td><td><div class="coupon-window">'+escapeDashboardHtml(windowText)+'</div></td><td><span class="status-badge '+couponStatusClass(c.effectiveStatus)+'">'+escapeDashboardHtml(transactionTypeLabel(c.effectiveStatus))+'</span></td><td><div class="user-row-actions"><button class="user-action-btn edit" type="button" data-live-coupon-action="edit" data-coupon-id="'+c.id+'">Edit</button><button class="user-action-btn '+(c.status==="active"?"reject":"approve")+'" type="button" data-live-coupon-action="toggle" data-coupon-id="'+c.id+'">'+(c.status==="active"?"Pause":"Activate")+'</button><button class="user-action-btn delete" type="button" data-live-coupon-action="delete" data-coupon-id="'+c.id+'">Delete</button></div></td></tr>';}).join("");
+  }
+  function renderCouponRedemptions(redemptions){
+    if(!couponRedemptionBody)return;if(couponRedemptionCount)couponRedemptionCount.textContent=formatDashboardNumber(redemptions.length)+(redemptions.length===1?" redemption":" redemptions");
+    if(!redemptions.length){couponRedemptionBody.innerHTML='<tr><td colspan="8"><div class="admin-data-empty"><strong>No redemptions found</strong><span>Applied coupons will appear here with their calculated totals.</span></div></td></tr>';return;}
+    couponRedemptionBody.innerHTML=redemptions.map(function(r){var user=r.user||{name:"Deleted user",email:"Account unavailable"};return '<tr><td><div class="table-user"><span class="mini-avatar">'+escapeDashboardHtml(avatarInitials(user.name)||"U")+'</span><div><strong>'+escapeDashboardHtml(user.name)+'</strong><div class="subtle-handle">'+escapeDashboardHtml(user.email)+'</div></div></div></td><td><span class="coupon-code-pill">'+escapeDashboardHtml(r.coupon.code)+'</span><div class="subtle-handle">'+escapeDashboardHtml(r.coupon.name)+'</div></td><td>'+escapeDashboardHtml(r.planName||"No plan")+'</td><td>'+couponMoney(r.originalAmount,r.currency)+'</td><td><strong class="coupon-discount">−'+couponMoney(r.discountAmount,r.currency)+'</strong></td><td><strong>'+couponMoney(r.finalAmount,r.currency)+'</strong></td><td>'+escapeDashboardHtml(couponDate(r.redeemedAt))+'</td><td><button class="user-action-btn delete" type="button" data-live-redemption-action="delete" data-redemption-id="'+r.id+'">Remove</button></td></tr>';}).join("");
+  }
+  function populateCouponOptions(coupons,plans,users){
+    superAdminCouponPlans=plans;superAdminCouponUsers=users;var planOptions=plans.map(function(p){return '<option value="'+p.id+'">'+escapeDashboardHtml(p.name)+'</option>';}).join("");var userOptions=users.map(function(u){return '<option value="'+u.id+'">'+escapeDashboardHtml(u.name+" — "+u.email)+'</option>';}).join("");
+    if(couponAdminForm){var selected=couponAdminForm.elements.planId.value;couponAdminForm.elements.planId.innerHTML='<option value="">All plans</option>'+planOptions;couponAdminForm.elements.planId.value=selected;}
+    if(couponRedemptionForm){couponRedemptionForm.elements.couponId.innerHTML='<option value="">Select available coupon</option>'+coupons.filter(function(c){return c.effectiveStatus==="active";}).map(function(c){return '<option value="'+c.id+'">'+escapeDashboardHtml(c.code+" — "+c.name)+'</option>';}).join("");couponRedemptionForm.elements.userId.innerHTML='<option value="">Select active user</option>'+userOptions;couponRedemptionForm.elements.planId.innerHTML='<option value="">No plan</option>'+planOptions;}
+  }
+  async function loadSuperAdminCoupons(){
+    if(adminPageSlug!=="coupon-codes"||!couponAdminBody)return;var token=localStorage.getItem("token");if(!token){couponAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage coupon codes.</span></div></td></tr>';updateCouponsPageSummary({});return;}
+    try{var search=searchInput?searchInput.value.trim():"";var response=await fetch("http://127.0.0.1:5000/api/super-admin/coupons?search="+encodeURIComponent(search),{headers:{Authorization:"Bearer "+token}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load coupons");renderSuperAdminCoupons(data.coupons||[]);renderCouponRedemptions(data.redemptions||[]);populateCouponOptions(data.coupons||[],data.plans||[],data.users||[]);updateCouponsPageSummary(data.summary||{});}catch(error){couponAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Coupons unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';if(couponAdminCount)couponAdminCount.textContent="Unavailable";updateCouponsPageSummary({});showToast("Could not load coupons",error.message);}
+  }
+  function setCouponModal(open,coupon){if(!couponAdminModal||!couponAdminForm)return;if(!open){couponAdminModal.hidden=true;document.body.style.overflow="";return;}couponAdminForm.reset();couponAdminForm.elements.couponId.value=coupon?coupon.id:"";if(coupon){couponAdminForm.elements.name.value=coupon.name;couponAdminForm.elements.code.value=coupon.code;couponAdminForm.elements.discountType.value=coupon.discountType;couponAdminForm.elements.discountValue.value=coupon.discountValue;couponAdminForm.elements.currency.value=coupon.currency;couponAdminForm.elements.usageLimit.value=coupon.usageLimit===null?"":coupon.usageLimit;couponAdminForm.elements.perUserLimit.value=coupon.perUserLimit;couponAdminForm.elements.minimumAmount.value=coupon.minimumAmount;couponAdminForm.elements.planId.value=coupon.planId||"";couponAdminForm.elements.startsAt.value=payoutDatetimeInput(coupon.startsAt);couponAdminForm.elements.expiresAt.value=payoutDatetimeInput(coupon.expiresAt);couponAdminForm.elements.status.value=coupon.status;}if(couponAdminModalTitle)couponAdminModalTitle.textContent=coupon?"Edit Coupon":"New Coupon";var feedback=couponAdminForm.querySelector(".form-feedback");if(feedback)feedback.hidden=true;couponAdminModal.hidden=false;document.body.style.overflow="hidden";}
+  function setCouponRedemptionModal(open){if(!couponRedemptionModal||!couponRedemptionForm)return;if(!open){couponRedemptionModal.hidden=true;document.body.style.overflow="";return;}couponRedemptionForm.reset();var feedback=couponRedemptionForm.querySelector(".form-feedback");if(feedback)feedback.hidden=true;couponRedemptionModal.hidden=false;document.body.style.overflow="hidden";}
+  [document.getElementById("openCouponAdminModal")].forEach(function(b){if(b)b.addEventListener("click",function(){setCouponModal(true,null);});});
+  [document.getElementById("closeCouponAdminModal"),document.getElementById("resetCouponAdminForm"),document.getElementById("couponAdminModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setCouponModal(false);});});
+  [document.getElementById("openCouponRedemptionModal")].forEach(function(b){if(b)b.addEventListener("click",function(){setCouponRedemptionModal(true);});});
+  [document.getElementById("closeCouponRedemptionModal"),document.getElementById("resetCouponRedemptionForm"),document.getElementById("couponRedemptionModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setCouponRedemptionModal(false);});});
+  function couponPayload(c,statusOverride){return {code:c.code,name:c.name,discountType:c.discountType,discountValue:c.discountValue,currency:c.currency,usageLimit:c.usageLimit,perUserLimit:c.perUserLimit,minimumAmount:c.minimumAmount,planId:c.planId,startsAt:c.startsAt,expiresAt:c.expiresAt,status:statusOverride||c.status};}
+  if(couponAdminForm)couponAdminForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=couponAdminForm.querySelector(".form-feedback");if(!couponAdminForm.checkValidity()){feedback.hidden=false;feedback.textContent="Complete all required fields with valid values.";return;}var fd=new FormData(couponAdminForm),id=fd.get("couponId"),button=couponAdminForm.querySelector('[type="submit"]'),payload={name:fd.get("name").trim(),code:fd.get("code").trim(),discountType:fd.get("discountType"),discountValue:Number(fd.get("discountValue")),currency:fd.get("currency"),usageLimit:fd.get("usageLimit")?Number(fd.get("usageLimit")):null,perUserLimit:Number(fd.get("perUserLimit")),minimumAmount:Number(fd.get("minimumAmount")||0),planId:fd.get("planId")?Number(fd.get("planId")):null,startsAt:fd.get("startsAt")||null,expiresAt:fd.get("expiresAt")||null,status:fd.get("status")};try{button.disabled=true;button.textContent="Saving...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/coupons"+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save coupon");setCouponModal(false);await loadSuperAdminCoupons();showToast(id?"Coupon updated":"Coupon created","Promotion rules were saved to PostgreSQL.");}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Save Coupon";}});
+  if(couponRedemptionForm)couponRedemptionForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=couponRedemptionForm.querySelector(".form-feedback");if(!couponRedemptionForm.checkValidity()){feedback.hidden=false;feedback.textContent="Select a coupon and customer, then enter an amount.";return;}var fd=new FormData(couponRedemptionForm),button=couponRedemptionForm.querySelector('[type="submit"]'),selectedCoupon=superAdminCouponsById[String(fd.get("couponId"))],currency=selectedCoupon?selectedCoupon.currency:"USD";try{button.disabled=true;button.textContent="Calculating...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/coupon-redemptions",{method:"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({couponId:Number(fd.get("couponId")),userId:Number(fd.get("userId")),planId:fd.get("planId")?Number(fd.get("planId")):null,originalAmount:Number(fd.get("originalAmount"))})});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to apply coupon");setCouponRedemptionModal(false);await loadSuperAdminCoupons();showToast("Coupon applied","Discount: "+couponMoney(data.redemption.discountAmount,currency)+" · Final: "+couponMoney(data.redemption.finalAmount,currency));}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Apply & Record";}});
+  document.addEventListener("click",async function(event){var button=event.target.closest("[data-live-coupon-action]");var redemptionButton=event.target.closest("[data-live-redemption-action]");if(button){var id=button.getAttribute("data-coupon-id"),coupon=superAdminCouponsById[String(id)],action=button.getAttribute("data-live-coupon-action");if(action==="edit")setCouponModal(true,coupon);if(action==="toggle"&&coupon){try{button.disabled=true;button.textContent="Saving...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/coupons/"+encodeURIComponent(id),{method:"PATCH",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(couponPayload(coupon,coupon.status==="active"?"inactive":"active"))});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update coupon");await loadSuperAdminCoupons();showToast("Coupon updated","Availability was changed.");}catch(error){button.disabled=false;button.textContent="Retry";showToast("Update failed",error.message);}}if(action==="delete"&&window.confirm("Delete this unused coupon? Coupons with redemption history should be deactivated instead.")){await deleteCouponRecord("coupons",id,button);}}if(redemptionButton&&window.confirm("Remove this redemption record? This is intended only for correcting administrative entries.")){await deleteCouponRecord("coupon-redemptions",redemptionButton.getAttribute("data-redemption-id"),redemptionButton);}});
+  async function deleteCouponRecord(path,id,button){try{button.disabled=true;button.textContent="Deleting...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/"+path+"/"+encodeURIComponent(id),{method:"DELETE",headers:{Authorization:"Bearer "+localStorage.getItem("token")}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to delete record");await loadSuperAdminCoupons();showToast("Record removed","The database record was deleted.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}
+
+  function updateAnalyticsPageSummary(metrics) {
+    var cards=document.querySelectorAll(".admin-page-analytics .admin-page-stats article"),items=[{label:"Profile views",metric:metrics.pageViews},{label:"Engaged clicks",metric:metrics.clicks},{label:"Contact requests",metric:metrics.contactRequests}];if(cards.length<3)return;
+    items.forEach(function(item,index){var metric=item.metric||{};cards[index].querySelector("span").textContent=item.label;cards[index].querySelector("strong").textContent=formatDashboardNumber(metric.value);cards[index].querySelector("small").textContent=(Number(metric.change)>0?"+":"")+Number(metric.change||0).toFixed(1)+"% vs prior period";});
+  }
+  function renderAnalyticsChart(series){var canvas=document.getElementById("analyticsLiveChart");if(!canvas||typeof Chart==="undefined")return;if(chartRefs.analyticsLive)chartRefs.analyticsLive.destroy();chartRefs.analyticsLive=new Chart(canvas,{type:"line",data:{labels:series.map(function(p){return new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric"}).format(new Date(p.date));}),datasets:[{label:"Views",data:series.map(function(p){return p.pageViews;}),borderColor:"#ff5968",backgroundColor:"rgba(255,89,104,.12)",fill:true,tension:.35,borderWidth:2,pointRadius:0},{label:"Clicks",data:series.map(function(p){return p.clicks;}),borderColor:"#8ebcff",backgroundColor:"transparent",tension:.35,borderWidth:2,pointRadius:0},{label:"Contacts",data:series.map(function(p){return p.contacts;}),borderColor:"#55daa3",backgroundColor:"transparent",tension:.35,borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:"#aab3c7",usePointStyle:true,boxWidth:8}},tooltip:{backgroundColor:"#151820",borderColor:"rgba(255,255,255,.1)",borderWidth:1}},scales:{x:{grid:{display:false},ticks:{color:"#707a90",maxTicksLimit:10}},y:{beginAtZero:true,grid:{color:"rgba(255,255,255,.045)"},ticks:{color:"#707a90"}}}}});}
+  function renderAnalyticsSources(sources){if(!analyticsSourceList)return;var total=sources.reduce(function(sum,item){return sum+Number(item.count||0);},0);if(!sources.length){analyticsSourceList.innerHTML='<div class="admin-data-empty"><strong>No contact sources yet</strong><span>Contact submissions in this period will be grouped here.</span></div>';return;}analyticsSourceList.innerHTML=sources.map(function(item,index){var percent=total?item.count/total*100:0;return '<div><span class="analytics-source-rank">'+(index+1)+'</span><div><strong>'+escapeDashboardHtml(item.source)+'</strong><i><b style="width:'+percent.toFixed(1)+'%"></b></i></div><span>'+formatDashboardNumber(item.count)+'</span></div>';}).join("");}
+  function renderAnalyticsCards(cards){if(!analyticsCardsBody)return;var count=document.getElementById("analyticsCardCount");if(count)count.textContent=formatDashboardNumber(cards.length)+" ranked";if(!cards.length){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>No card analytics found</strong><span>Daily business-card analytics will appear here once collected.</span></div></td></tr>';return;}analyticsCardsBody.innerHTML=cards.map(function(card){var rate=card.views?card.contacts/card.views*100:0;return '<tr><td><div class="analytics-card-name"><span>'+escapeDashboardHtml(avatarInitials(card.title)||"BC")+'</span><div><strong>'+escapeDashboardHtml(card.title)+'</strong><small>Card #'+card.id+'</small></div></div></td><td>'+escapeDashboardHtml(card.owner)+'</td><td><strong>'+formatDashboardNumber(card.views)+'</strong></td><td>'+formatDashboardNumber(card.clicks)+'</td><td>'+formatDashboardNumber(card.contacts)+'</td><td><span class="analytics-rate-pill">'+rate.toFixed(1)+'%</span></td></tr>';}).join("");}
+  function renderAnalyticsHealth(data){var metrics=data.metrics||{},clickRate=Number(metrics.clickRate||0),contactRate=Number(metrics.contactRate||0),clickNode=document.getElementById("analyticsClickRate"),contactNode=document.getElementById("analyticsContactRate"),clickBar=document.getElementById("analyticsClickRateBar"),contactBar=document.getElementById("analyticsContactRateBar");if(clickNode)clickNode.textContent=clickRate.toFixed(1)+"%";if(contactNode)contactNode.textContent=contactRate.toFixed(1)+"%";if(clickBar)clickBar.style.width=Math.min(100,clickRate)+"%";if(contactBar)contactBar.style.width=Math.min(100,contactRate)+"%";var p=data.platform||{},list=document.getElementById("analyticsPlatformList");if(list)list.innerHTML='<div><strong>'+formatDashboardNumber(p.new_users)+'</strong><span>New users</span></div><div><strong>'+formatDashboardNumber(p.new_vcards)+'</strong><span>New VCards</span></div><div><strong>'+formatDashboardNumber(p.contacts)+'</strong><span>Saved contacts</span></div><div><strong>'+formatDashboardNumber(p.qr_codes_created)+'</strong><span>QR codes created</span></div>';}
+  async function loadSuperAdminAnalytics(){if(adminPageSlug!=="analytics"||!analyticsCardsBody)return;var token=localStorage.getItem("token");if(!token){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to view analytics.</span></div></td></tr>';return;}try{var days=analyticsRange?analyticsRange.value:"30",response=await fetch("http://127.0.0.1:5000/api/super-admin/analytics?days="+encodeURIComponent(days),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load analytics");updateAnalyticsPageSummary(data.metrics||{});renderAnalyticsChart(data.series||[]);renderAnalyticsSources(data.sources||[]);renderAnalyticsCards(data.topCards||[]);renderAnalyticsHealth(data);var updated=document.getElementById("analyticsUpdatedAt");if(updated)updated.textContent="Updated "+new Date(data.generatedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}catch(error){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Analytics unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load analytics",error.message);}}
+  if(analyticsRange)analyticsRange.addEventListener("change",loadSuperAdminAnalytics);var refreshAnalytics=document.getElementById("refreshAnalytics");if(refreshAnalytics)refreshAnalytics.addEventListener("click",loadSuperAdminAnalytics);
+
+  function updateReportsPageSummary(summary){var cards=document.querySelectorAll(".admin-page-reports .admin-page-stats article");if(cards.length<3)return;cards[0].querySelector("span").textContent="Saved reports";cards[0].querySelector("strong").textContent=formatDashboardNumber(summary.saved_reports);cards[0].querySelector("small").textContent=formatDashboardNumber(summary.active_reports)+" active definitions";cards[1].querySelector("span").textContent="Exports this month";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.exports_this_month);cards[1].querySelector("small").textContent="Database snapshots";cards[2].querySelector("span").textContent="Last export";cards[2].querySelector("strong").textContent=summary.last_export_at?cashPaymentDate(summary.last_export_at):"Never";cards[2].querySelector("small").textContent=summary.last_export_at?"Most recent generation":"Generate your first report";}
+  function reportTypeLabel(type){var labels={revenue:"Revenue ledger",subscriptions:"Subscriptions",platform:"Platform activity",coupons:"Coupon performance",affiliates:"Affiliate performance"};return labels[type]||transactionTypeLabel(type);}
+  function renderSavedReports(reports){if(!reportAdminBody)return;superAdminReportsById={};if(reportAdminCount)reportAdminCount.textContent=formatDashboardNumber(reports.length)+(reports.length===1?" report":" reports");if(!reports.length){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>No saved reports found</strong><span>Create a report definition to generate a reusable CSV export.</span></div></td></tr>';return;}reportAdminBody.innerHTML=reports.map(function(report){superAdminReportsById[String(report.id)]=report;return '<tr><td><div class="report-name-cell"><span>'+escapeDashboardHtml(reportTypeLabel(report.reportType).slice(0,2).toUpperCase())+'</span><div><strong>'+escapeDashboardHtml(report.name)+'</strong><small>Report #'+report.id+'</small></div></div></td><td><span class="report-type-pill">'+escapeDashboardHtml(reportTypeLabel(report.reportType))+'</span></td><td>Last '+formatDashboardNumber(report.dateRangeDays)+' days</td><td><strong>'+formatDashboardNumber(report.runCount)+'</strong></td><td>'+escapeDashboardHtml(report.lastRunAt?cashPaymentDate(report.lastRunAt):"Not generated")+'</td><td><span class="status-badge '+(report.status==="active"?"active":"inactive")+'">'+escapeDashboardHtml(transactionTypeLabel(report.status))+'</span></td><td><div class="user-row-actions"><button class="user-action-btn approve" type="button" data-live-report-action="run" data-report-id="'+report.id+'" '+(report.status!=="active"?"disabled":"")+'>Export CSV</button><button class="user-action-btn edit" type="button" data-live-report-action="edit" data-report-id="'+report.id+'">Edit</button><button class="user-action-btn delete" type="button" data-live-report-action="delete" data-report-id="'+report.id+'">Delete</button></div></td></tr>';}).join("");}
+  function renderReportRuns(runs){if(!reportRunBody)return;if(reportRunCount)reportRunCount.textContent=formatDashboardNumber(runs.length)+(runs.length===1?" export":" exports");if(!runs.length){reportRunBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>No export history</strong><span>Generate a saved report to store its first snapshot.</span></div></td></tr>';return;}reportRunBody.innerHTML=runs.map(function(run){return '<tr><td><strong>'+escapeDashboardHtml(run.reportName)+'</strong><div class="subtle-handle">Run #'+run.id+'</div></td><td>'+escapeDashboardHtml(reportTypeLabel(run.reportType))+'</td><td>'+formatDashboardNumber(run.rowCount)+'</td><td><span class="report-format-pill">'+escapeDashboardHtml(run.format.toUpperCase())+'</span></td><td>'+escapeDashboardHtml(run.generatedBy)+'</td><td>'+escapeDashboardHtml(cashPaymentDate(run.generatedAt))+'</td><td><button class="user-action-btn edit" type="button" data-report-run-download="'+run.id+'" data-report-name="'+escapeDashboardHtml(run.reportName)+'">Download</button></td></tr>';}).join("");}
+  async function loadSuperAdminReports(){if(adminPageSlug!=="reports"||!reportAdminBody)return;var token=localStorage.getItem("token");if(!token){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to manage reports.</span></div></td></tr>';return;}try{var search=searchInput?searchInput.value.trim():"",response=await fetch("http://127.0.0.1:5000/api/super-admin/reports?search="+encodeURIComponent(search),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load reports");renderSavedReports(data.reports||[]);renderReportRuns(data.runs||[]);updateReportsPageSummary(data.summary||{});}catch(error){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Reports unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load reports",error.message);}}
+  function setReportModal(open,report){if(!reportAdminModal||!reportAdminForm)return;if(!open){reportAdminModal.hidden=true;document.body.style.overflow="";return;}reportAdminForm.reset();reportAdminForm.elements.reportId.value=report?report.id:"";if(report){reportAdminForm.elements.name.value=report.name;reportAdminForm.elements.reportType.value=report.reportType;reportAdminForm.elements.dateRangeDays.value=String(report.dateRangeDays);reportAdminForm.elements.status.value=report.status;}if(reportAdminModalTitle)reportAdminModalTitle.textContent=report?"Edit Report":"New Report";var feedback=reportAdminForm.querySelector(".form-feedback");if(feedback)feedback.hidden=true;reportAdminModal.hidden=false;document.body.style.overflow="hidden";}
+  [document.getElementById("openReportAdminModal")].forEach(function(b){if(b)b.addEventListener("click",function(){setReportModal(true,null);});});[document.getElementById("closeReportAdminModal"),document.getElementById("resetReportAdminForm"),document.getElementById("reportAdminModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setReportModal(false);});});
+  if(reportAdminForm)reportAdminForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=reportAdminForm.querySelector(".form-feedback");if(!reportAdminForm.checkValidity()){feedback.hidden=false;feedback.textContent="Enter a valid report name and reporting period.";return;}var fd=new FormData(reportAdminForm),id=fd.get("reportId"),button=reportAdminForm.querySelector('[type="submit"]');try{button.disabled=true;button.textContent="Saving...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/reports"+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({name:fd.get("name").trim(),reportType:fd.get("reportType"),dateRangeDays:Number(fd.get("dateRangeDays")),status:fd.get("status")})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save report");setReportModal(false);await loadSuperAdminReports();showToast(id?"Report updated":"Report created","The reusable report definition was saved.");}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Save Report";}});
+  async function downloadReportRun(id,name){try{var response=await fetch("http://127.0.0.1:5000/api/super-admin/report-runs/"+encodeURIComponent(id)+"/download",{headers:{Authorization:"Bearer "+localStorage.getItem("token")}});if(!response.ok){var errorData=await response.json().catch(function(){return{};});throw new Error(errorData.message||"Unable to download report");}var blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement("a"),disposition=response.headers.get("content-disposition")||"",match=disposition.match(/filename="?([^";]+)"?/i);link.href=url;link.download=match?match[1]:String(name||"report").replace(/[^a-z0-9_-]+/gi,"-")+".csv";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);showToast("Report downloaded","The stored CSV snapshot is ready.");}catch(error){showToast("Download failed",error.message);}}
+  document.addEventListener("click",async function(event){var button=event.target.closest("[data-live-report-action]"),download=event.target.closest("[data-report-run-download]");if(download)downloadReportRun(download.getAttribute("data-report-run-download"),download.getAttribute("data-report-name"));if(!button)return;var id=button.getAttribute("data-report-id"),report=superAdminReportsById[String(id)],action=button.getAttribute("data-live-report-action");if(action==="edit")setReportModal(true,report);if(action==="run"){try{button.disabled=true;button.textContent="Generating...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/reports/"+encodeURIComponent(id)+"/run",{method:"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token")}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to generate report");await loadSuperAdminReports();await downloadReportRun(data.run.id,report.name);}catch(error){button.disabled=false;button.textContent="Export CSV";showToast("Export failed",error.message);}}if(action==="delete"&&window.confirm("Delete this saved report and all of its export history?")){try{button.disabled=true;button.textContent="Deleting...";var deleteResponse=await fetch("http://127.0.0.1:5000/api/super-admin/reports/"+encodeURIComponent(id),{method:"DELETE",headers:{Authorization:"Bearer "+localStorage.getItem("token")}}),deleteData=await deleteResponse.json().catch(function(){return{};});if(!deleteResponse.ok)throw new Error(deleteData.message||"Unable to delete report");await loadSuperAdminReports();showToast("Report deleted","The definition and its snapshots were removed.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}});
+  if(reportTabButtons.length)reportTabButtons.forEach(function(button){button.addEventListener("click",function(){var id=button.getAttribute("data-report-tab-target");reportTabButtons.forEach(function(item){item.classList.remove("active");item.setAttribute("aria-selected","false");});Array.from(document.querySelectorAll("#savedReportsPanel,#reportRunsPanel")).forEach(function(panel){panel.classList.remove("active");});button.classList.add("active");button.setAttribute("aria-selected","true");var panel=document.getElementById(id);if(panel)panel.classList.add("active");});});
+
+  function updateSettingsPageSummary(summary,settings){var cards=document.querySelectorAll(".admin-page-settings .admin-page-stats article");if(cards.length<3)return;var maintenance=(settings||[]).find(function(item){return item.key==="maintenance_mode";}),last=summary.last_updated?new Date(summary.last_updated):null;cards[0].querySelector("span").textContent="System status";cards[0].querySelector("strong").textContent=maintenance&&maintenance.value==="true"?"Maintenance":"Operational";cards[0].querySelector("small").textContent=maintenance&&maintenance.value==="true"?"Public access restricted":"Platform access enabled";cards[1].querySelector("span").textContent="Stored settings";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.stored_settings);cards[1].querySelector("small").textContent="Validated database values";cards[2].querySelector("span").textContent="Last updated";cards[2].querySelector("strong").textContent=last?cashPaymentDate(last):"Defaults";cards[2].querySelector("small").textContent=last?"Latest persisted change":"Using application defaults";}
+  function fillPlatformSettings(settings){if(!platformSettingsForm)return;settings.forEach(function(setting){var field=platformSettingsForm.elements[setting.key];if(!field)return;if(field.type==="checkbox")field.checked=setting.value==="true";else field.value=setting.value;});}
+  function renderRolePermissions(roles){if(!rolePermissionGrid)return;var count=document.getElementById("settingsRoleCount");if(count)count.textContent=formatDashboardNumber(roles.length)+" roles";if(!roles.length){rolePermissionGrid.innerHTML='<div class="admin-data-empty"><strong>No roles configured</strong><span>Seed roles and permissions to manage access.</span></div>';return;}rolePermissionGrid.innerHTML=roles.map(function(role){return '<article class="role-permission-card" data-role-id="'+role.id+'"><div class="role-permission-header"><div><span>'+escapeDashboardHtml(role.name.split("_").map(function(p){return p.charAt(0).toUpperCase();}).join(""))+'</span><div><strong>'+escapeDashboardHtml(transactionTypeLabel(role.name))+'</strong><small>'+escapeDashboardHtml(role.description||"Platform role")+'</small></div></div><span class="status-badge '+(role.locked?"completed":"active")+'">'+(role.locked?"Always enabled":"Editable")+'</span></div><div class="role-permission-options">'+role.permissions.map(function(permission){return '<label><input type="checkbox" value="'+permission.id+'" '+(permission.granted?"checked":"")+' '+(role.locked?"disabled":"")+' /><span><strong>'+escapeDashboardHtml(permission.name)+'</strong><small>'+escapeDashboardHtml(permission.description||permission.key)+'</small></span></label>';}).join("")+'</div>'+(role.locked?'<p class="role-lock-note">Super administrators retain every capability.</p>':'<button class="btn-preview" type="button" data-save-role-permissions="'+role.id+'">Save '+escapeDashboardHtml(transactionTypeLabel(role.name))+'</button>')+'</article>';}).join("");}
+  async function loadSuperAdminSettings(){if(adminPageSlug!=="settings"||!platformSettingsForm)return;var token=localStorage.getItem("token"),state=document.getElementById("settingsSaveState");if(!token){if(state)state.textContent="Sign in required";return;}try{var response=await fetch("http://127.0.0.1:5000/api/super-admin/settings",{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load settings");fillPlatformSettings(data.settings||[]);renderRolePermissions(data.roles||[]);updateSettingsPageSummary(data.summary||{},data.settings||[]);if(state)state.textContent="Synced with PostgreSQL";}catch(error){if(state)state.textContent="Settings unavailable";showToast("Could not load settings",error.message);}}
+  var savePlatformSettingsButton=document.getElementById("savePlatformSettings");if(savePlatformSettingsButton)savePlatformSettingsButton.addEventListener("click",async function(){if(!platformSettingsForm.checkValidity()){platformSettingsForm.reportValidity();return;}var settings={};Array.from(platformSettingsForm.elements).forEach(function(field){if(!field.name)return;settings[field.name]=field.type==="checkbox"?String(field.checked):String(field.value).trim();});var state=document.getElementById("settingsSaveState");try{savePlatformSettingsButton.disabled=true;savePlatformSettingsButton.textContent="Saving...";if(state)state.textContent="Validating changes...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/settings",{method:"PUT",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({settings:settings})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save settings");await loadSuperAdminSettings();showToast("Settings saved","Platform controls were updated in PostgreSQL.");}catch(error){if(state)state.textContent="Save failed";showToast("Settings not saved",error.message);}finally{savePlatformSettingsButton.disabled=false;savePlatformSettingsButton.textContent="Save Changes";}});
+  document.addEventListener("click",async function(event){var button=event.target.closest("[data-save-role-permissions]");if(!button)return;var roleId=button.getAttribute("data-save-role-permissions"),card=button.closest("[data-role-id]"),permissionIds=Array.from(card.querySelectorAll('input[type="checkbox"]:checked')).map(function(input){return Number(input.value);});try{button.disabled=true;button.textContent="Saving...";var response=await fetch("http://127.0.0.1:5000/api/super-admin/settings/roles/"+encodeURIComponent(roleId)+"/permissions",{method:"PUT",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({permissionIds:permissionIds})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update permissions");await loadSuperAdminSettings();showToast("Permissions updated","Role capabilities were saved to the database.");}catch(error){button.disabled=false;button.textContent="Retry save";showToast("Update failed",error.message);}});
+
+  function updateSystemLogsSummary(summary){var cards=document.querySelectorAll(".admin-page-system-logs .admin-page-stats article");if(cards.length<3)return;cards[0].querySelector("span").textContent="Total events";cards[0].querySelector("strong").textContent=formatDashboardNumber(summary.total);cards[0].querySelector("small").textContent=formatDashboardNumber(summary.actors)+" recorded actors";cards[1].querySelector("span").textContent="Events today";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.today);cards[1].querySelector("small").textContent="Since local database midnight";cards[2].querySelector("span").textContent="Needs attention";cards[2].querySelector("strong").textContent=formatDashboardNumber(summary.attention);cards[2].querySelector("small").textContent="Failed, rejected, or deleted events";}
+  function logActionLabel(action){return String(action||"event").split(".").map(function(part){return transactionTypeLabel(part);}).join(" · ");}
+  function renderSystemLogs(logs,pagination){if(!systemLogBody)return;superAdminSystemLogsById={};var count=document.getElementById("systemLogCount"),label=document.getElementById("systemLogPageLabel"),previous=document.getElementById("systemLogPrevious"),next=document.getElementById("systemLogNext");systemLogPage=pagination.page||1;systemLogPages=pagination.pages||1;if(count)count.textContent=formatDashboardNumber(pagination.total)+(pagination.total===1?" event":" events");if(label)label.textContent="Page "+systemLogPage+" of "+systemLogPages;if(previous)previous.disabled=systemLogPage<=1;if(next)next.disabled=systemLogPage>=systemLogPages;if(!logs.length){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>No audit events found</strong><span>Adjust the search or date filters.</span></div></td></tr>';return;}systemLogBody.innerHTML=logs.map(function(log){superAdminSystemLogsById[String(log.id)]=log;var actor=log.actor||{name:"System",email:"Automated or deleted actor"};return '<tr><td><div class="log-event-cell"><span class="log-severity '+log.severity+'"></span><div><strong>'+escapeDashboardHtml(logActionLabel(log.action))+'</strong><small>Event #'+log.id+'</small></div></div></td><td><strong>'+escapeDashboardHtml(actor.name)+'</strong><div class="subtle-handle">'+escapeDashboardHtml(actor.email)+'</div></td><td><span class="log-resource-pill">'+escapeDashboardHtml(log.resourceType||"system")+'</span><div class="subtle-handle">'+(log.resourceId?"ID "+log.resourceId:"No resource ID")+'</div></td><td><span>'+escapeDashboardHtml(log.ipAddress||"Not captured")+'</span><div class="subtle-handle log-agent">'+escapeDashboardHtml(log.userAgent||"No user agent")+'</div></td><td>'+escapeDashboardHtml(cashPaymentDate(log.createdAt))+'</td><td><button class="user-action-btn edit" type="button" data-system-log-detail="'+log.id+'">Inspect</button></td></tr>';}).join("");}
+  function populateSystemLogFilters(actors,types){if(systemLogActor){var current=systemLogActor.value;systemLogActor.innerHTML='<option value="">All actors</option>'+actors.map(function(actor){return '<option value="'+actor.id+'">'+escapeDashboardHtml(actor.name+" — "+actor.email)+'</option>';}).join("");systemLogActor.value=current;}if(systemLogResource){var selected=systemLogResource.value;systemLogResource.innerHTML='<option value="">All resources</option>'+types.map(function(type){return '<option value="'+escapeDashboardHtml(type)+'">'+escapeDashboardHtml(transactionTypeLabel(type))+'</option>';}).join("");systemLogResource.value=selected;}}
+  async function loadSuperAdminSystemLogs(){if(adminPageSlug!=="system-logs"||!systemLogBody)return;var token=localStorage.getItem("token");if(!token){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to review audit activity.</span></div></td></tr>';return;}try{var params=new URLSearchParams({page:String(systemLogPage),limit:"25"});if(searchInput&&searchInput.value.trim())params.set("search",searchInput.value.trim());if(systemLogResource&&systemLogResource.value)params.set("resourceType",systemLogResource.value);if(systemLogActor&&systemLogActor.value)params.set("actorId",systemLogActor.value);var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from&&from.value)params.set("from",from.value);if(to&&to.value)params.set("to",to.value);var response=await fetch("http://127.0.0.1:5000/api/super-admin/system-logs?"+params.toString(),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load system logs");renderSystemLogs(data.logs||[],data.pagination||{});populateSystemLogFilters(data.actors||[],data.resourceTypes||[]);updateSystemLogsSummary(data.summary||{});}catch(error){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Audit logs unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load logs",error.message);}}
+  function setSystemLogModal(open,log){var modal=document.getElementById("systemLogModal"),detail=document.getElementById("systemLogDetail"),title=document.getElementById("systemLogModalTitle");if(!modal)return;if(!open){modal.hidden=true;document.body.style.overflow="";return;}var actor=log.actor||{name:"System",email:"Automated or deleted actor"};if(title)title.textContent=logActionLabel(log.action);if(detail)detail.innerHTML='<dl><div><dt>Event ID</dt><dd>#'+log.id+'</dd></div><div><dt>Timestamp</dt><dd>'+escapeDashboardHtml(cashPaymentDate(log.createdAt))+'</dd></div><div><dt>Actor</dt><dd>'+escapeDashboardHtml(actor.name+" · "+actor.email)+'</dd></div><div><dt>Resource</dt><dd>'+escapeDashboardHtml((log.resourceType||"system")+(log.resourceId?" #"+log.resourceId:""))+'</dd></div><div><dt>IP address</dt><dd>'+escapeDashboardHtml(log.ipAddress||"Not captured")+'</dd></div><div><dt>User agent</dt><dd>'+escapeDashboardHtml(log.userAgent||"Not captured")+'</dd></div></dl><div class="log-metadata-block"><span>Metadata</span><pre>'+escapeDashboardHtml(JSON.stringify(log.metadata||{},null,2))+'</pre></div>';modal.hidden=false;document.body.style.overflow="hidden";}
+  document.addEventListener("click",function(event){var detailButton=event.target.closest("[data-system-log-detail]");if(detailButton)setSystemLogModal(true,superAdminSystemLogsById[String(detailButton.getAttribute("data-system-log-detail"))]);});[document.getElementById("closeSystemLogModal"),document.getElementById("systemLogModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setSystemLogModal(false);});});var applyLogs=document.getElementById("applySystemLogFilters"),clearLogs=document.getElementById("clearSystemLogFilters"),refreshLogs=document.getElementById("refreshSystemLogs"),previousLogs=document.getElementById("systemLogPrevious"),nextLogs=document.getElementById("systemLogNext");if(applyLogs)applyLogs.addEventListener("click",function(){systemLogPage=1;loadSuperAdminSystemLogs();});if(refreshLogs)refreshLogs.addEventListener("click",loadSuperAdminSystemLogs);if(clearLogs)clearLogs.addEventListener("click",function(){if(systemLogResource)systemLogResource.value="";if(systemLogActor)systemLogActor.value="";var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from)from.value="";if(to)to.value="";if(searchInput)searchInput.value="";systemLogPage=1;loadSuperAdminSystemLogs();});if(previousLogs)previousLogs.addEventListener("click",function(){if(systemLogPage>1){systemLogPage-=1;loadSuperAdminSystemLogs();}});if(nextLogs)nextLogs.addEventListener("click",function(){if(systemLogPage<systemLogPages){systemLogPage+=1;loadSuperAdminSystemLogs();}});
+
   if (nfcOrderSearch) {
     nfcOrderSearch.addEventListener("input", applyNfcOrdersFilter);
   }
@@ -3093,7 +4109,7 @@ document.addEventListener("DOMContentLoaded", function () {
           item.setAttribute("aria-selected", "false");
         });
 
-        Array.from(document.querySelectorAll("#affiliateUsersPanel, #affiliateTransactionsPanel")).forEach(function (panel) {
+        Array.from(document.querySelectorAll("#affiliateUsersPanel, #affiliateTransactionsPanel, #affiliateCommissionsPanel")).forEach(function (panel) {
           panel.classList.remove("active");
         });
 
@@ -3959,10 +4975,30 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (logoutButton) {
-    logoutButton.addEventListener("click", function () {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "../auth/login.html";
+    logoutButton.addEventListener("click", async function () {
+      var token = localStorage.getItem("token");
+      logoutButton.disabled = true;
+      logoutButton.classList.add("is-signing-out");
+      logoutButton.innerHTML = '<span class="admin-logout-spinner" aria-hidden="true"></span> Signing out...';
+      try {
+        if (token) {
+          var response = await fetch("http://127.0.0.1:5000/api/auth/logout", {
+            method: "POST",
+            headers: { Authorization: "Bearer " + token }
+          });
+          if (!response.ok && response.status !== 401) {
+            var data = await response.json().catch(function () { return {}; });
+            throw new Error(data.message || "The server could not close this session");
+          }
+        }
+      } catch (error) {
+        console.error("Server logout failed:", error);
+      } finally {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        sessionStorage.clear();
+        window.location.replace("../auth/login.html?loggedOut=1");
+      }
     });
   }
 
@@ -4144,4 +5180,13 @@ document.addEventListener("DOMContentLoaded", function () {
   loadSuperAdminNfc();
   loadSuperAdminSubscriptions();
   loadSuperAdminCashPayments();
+  loadSuperAdminTransactions();
+  loadSuperAdminPayouts();
+  loadSuperAdminWithdrawals();
+  loadSuperAdminAffiliations();
+  loadSuperAdminCoupons();
+  loadSuperAdminAnalytics();
+  loadSuperAdminReports();
+  loadSuperAdminSettings();
+  loadSuperAdminSystemLogs();
 });

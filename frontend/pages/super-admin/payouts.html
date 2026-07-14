@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -9,6 +9,62 @@
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
 </head>
 <body>
-  <div class="dashboard-wrapper"><aside class="sidebar"><div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div><nav class="sidebar-nav"><a href="dashboard.html" class="nav-item">Dashboard</a><div class="sidebar-section-label">Management</div><a href="users.html" class="nav-item">Users</a><a href="vcards.html" class="nav-item">VCards</a><a href="nfc-orders.html" class="nav-item">NFC Cards</a><a href="subscriptions.html" class="nav-item">Subscriptions</a><a href="cash-payments.html" class="nav-item">Cash Payments</a><a href="transactions.html" class="nav-item">Transactions</a><a href="payouts.html" class="nav-item active">Payouts</a><a href="affiliations.html" class="nav-item">Affiliations</a><a href="withdrawals.html" class="nav-item">Withdrawals</a><a href="coupon-codes.html" class="nav-item">Coupon Codes</a><div class="sidebar-section-label">Analytics</div><a href="analytics.html" class="nav-item">Analytics</a><a href="reports.html" class="nav-item">Reports</a><div class="sidebar-section-label">Settings</div><a href="settings.html" class="nav-item">Settings</a><a href="system-logs.html" class="nav-item">System Logs</a></nav></aside><div class="main-content"><header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search payouts..." /></label></header><main class="page-content"><div class="page-header"><div><h1>Payouts</h1><p>Review pending and completed payouts to platform partners and vendors.</p></div></div><div class="metric-list"><article class="admin-card metric-row searchable-item" data-search="acme pending payout"><span><strong>Acme Partner Program</strong><span class="muted-inline">Due May 22, 2025</span></span><span class="status-badge pending">$580 Pending</span></article><article class="admin-card metric-row searchable-item" data-search="northwind completed payout"><span><strong>Northwind Reseller</strong><span class="muted-inline">Completed May 18, 2025</span></span><span class="status-badge completed">$1,240 Paid</span></article><article class="admin-card metric-row searchable-item" data-search="bright summit pending payout"><span><strong>Bright Summit Campaign</strong><span class="muted-inline">Scheduled May 25, 2025</span></span><span class="status-badge pending">$890 Pending</span></article></div><div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another payout search term.</p></div></main></div></div><div class="toast-stack" id="toastStack"></div><script src="../../public/assets/js/dashboard.js"></script></body>
-</html>
+  <div class="dashboard-wrapper">
+    <aside class="sidebar"><div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div><nav class="sidebar-nav"></nav></aside>
+    <div class="main-content">
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search payee, reference, user, or notes..." /></label></header>
+      <main class="page-content">
+        <div class="page-header">
+          <div><h1>Payouts</h1><p>Schedule, review, and reconcile partner or vendor payouts with the financial ledger.</p></div>
+          <div class="header-actions"><button class="btn-share" type="button" id="openPayoutAdminModal">New Payout</button></div>
+        </div>
 
+        <section class="admin-card payout-live-card">
+          <div class="admin-card-header payout-live-header">
+            <div><h3>Payout Queue</h3><p>Pending payouts appear first. Paid records automatically synchronize with Transactions.</p></div>
+            <div class="payout-live-tools"><select id="payoutStatusFilter" aria-label="Filter payouts by status"><option value="">All statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select><span class="tiny-pill success" id="payoutAdminCount">Loading...</span></div>
+          </div>
+          <div class="payout-live-table-wrap">
+            <table class="admin-table payout-live-table">
+              <thead><tr><th>Payee</th><th>Method</th><th>Amount</th><th>Schedule</th><th>Status</th><th>Reviewer</th><th>Ledger</th><th>Actions</th></tr></thead>
+              <tbody id="payoutAdminBody"><tr><td colspan="8" class="payout-live-state">Loading payouts from PostgreSQL...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="user-modal" id="payoutAdminModal" hidden>
+    <div class="user-modal-backdrop" id="payoutAdminModalBackdrop"></div>
+    <div class="user-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="payoutAdminModalTitle">
+      <div class="user-modal-header">
+        <div><span class="admin-page-eyebrow">Partner finance</span><h2 id="payoutAdminModalTitle">New Payout</h2></div>
+        <button class="user-modal-close" type="button" id="closePayoutAdminModal">Back</button>
+      </div>
+      <div class="user-modal-body">
+        <form id="payoutAdminForm" class="admin-form-grid admin-form-grid-modal" novalidate>
+          <input type="hidden" name="payoutId" />
+          <div class="form-field"><label for="payoutAdminUser">Linked platform user:</label><select id="payoutAdminUser" name="userId"><option value="">External vendor / no user</option></select></div>
+          <div class="form-field"><label for="payoutAdminPayee">Payee name:<span class="required-mark">*</span></label><input id="payoutAdminPayee" name="payeeName" type="text" maxlength="150" required placeholder="Partner or vendor name" /></div>
+          <div class="form-field"><label for="payoutAdminEmail">Payee email:</label><input id="payoutAdminEmail" name="payeeEmail" type="email" maxlength="255" placeholder="accounts@example.com" /></div>
+          <div class="form-field"><label for="payoutAdminAccount">Account details:</label><input id="payoutAdminAccount" name="accountName" type="text" maxlength="500" placeholder="Bank/account label (avoid sensitive credentials)" /></div>
+          <div class="form-field"><label for="payoutAdminAmount">Amount:<span class="required-mark">*</span></label><input id="payoutAdminAmount" name="amount" type="number" min="0.01" max="9999999999.99" step="0.01" required /></div>
+          <div class="form-field"><label for="payoutAdminCurrency">Currency:</label><select id="payoutAdminCurrency" name="currency"><option value="USD">USD</option><option value="LKR">LKR</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+          <div class="form-field"><label for="payoutAdminMethod">Payment method:</label><select id="payoutAdminMethod" name="method"><option value="bank_transfer">Bank transfer</option><option value="paypal">PayPal</option><option value="cash">Cash</option><option value="other">Other</option></select></div>
+          <div class="form-field"><label for="payoutAdminStatus">Status:</label><select id="payoutAdminStatus" name="status"><option value="pending">Pending</option><option value="processing">Processing</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select></div>
+          <div class="form-field"><label for="payoutAdminSchedule">Scheduled date:</label><input id="payoutAdminSchedule" name="scheduledAt" type="datetime-local" /></div>
+          <div class="form-field"><label for="payoutAdminReference">Payment reference:</label><input id="payoutAdminReference" name="reference" type="text" maxlength="255" placeholder="e.g. PAY-2026-001" /></div>
+          <div class="form-field form-field-wide"><label for="payoutAdminNotes">Internal notes:</label><textarea id="payoutAdminNotes" name="notes" rows="4" maxlength="3000" placeholder="Purpose, approval context, or processing notes"></textarea></div>
+          <div class="payout-ledger-note form-field-wide"><strong>Automatic reconciliation</strong><span>A payout creates a linked negative transaction. Marking it paid completes that ledger entry.</span></div>
+          <div class="form-actions form-field-wide"><button class="btn-share" type="submit">Save Payout</button><button class="btn-preview" type="button" id="resetPayoutAdminForm">Discard</button></div>
+          <p class="form-feedback form-field-wide" id="payoutAdminFeedback" hidden></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/dashboard.js"></script>
+</body>
+</html>

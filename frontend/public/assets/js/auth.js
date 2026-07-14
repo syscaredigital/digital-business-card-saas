@@ -270,6 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (res.ok) {
           const data = await res.json();
           if (data.token) localStorage.setItem("token", data.token);
+          if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
           window.location.href = "../user/dashboard.html";
         } else {
           const err = await res.json().catch(() => ({}));

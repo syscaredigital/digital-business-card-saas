@@ -9388,3 +9388,701 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Live super-admin financial ledger */
+.admin-page-transactions .transaction-live-card {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(145deg, rgba(17, 19, 25, 0.98), rgba(10, 12, 17, 0.98));
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.22);
+}
+
+.admin-page-transactions .transaction-live-header,
+.admin-page-transactions .transaction-live-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-page-transactions .transaction-live-header {
+  justify-content: space-between;
+}
+
+.admin-page-transactions .transaction-live-tools select {
+  min-width: 135px;
+  padding: 9px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  outline: none;
+  color: #cbd5e1;
+  background: #11141b;
+}
+
+.admin-page-transactions .transaction-live-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-page-transactions .transaction-live-table {
+  min-width: 1110px;
+  margin: 0;
+}
+
+.admin-page-transactions .transaction-live-table th {
+  color: #7f8aa3;
+  font-size: 0.69rem;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-page-transactions .transaction-live-table td {
+  color: #dce3ef;
+  vertical-align: middle;
+}
+
+.admin-page-transactions .transaction-live-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.admin-page-transactions .transaction-live-table tbody tr:hover {
+  background: rgba(255, 89, 104, 0.045);
+}
+
+.admin-page-transactions .transaction-live-state {
+  padding: 44px 24px !important;
+  color: #8792a8 !important;
+  text-align: center;
+}
+
+.admin-page-transactions .transaction-id-cell,
+.admin-page-transactions .transaction-source-cell,
+.admin-page-transactions .transaction-date-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-page-transactions .transaction-id-cell strong {
+  color: #f2f5fa;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.admin-page-transactions .transaction-id-cell span,
+.admin-page-transactions .transaction-source-cell span,
+.admin-page-transactions .transaction-date-cell span {
+  max-width: 175px;
+  overflow: hidden;
+  color: #7f8aa3;
+  font-size: 0.71rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-page-transactions .transaction-type-pill {
+  display: inline-flex;
+  padding: 6px 9px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+  color: #bea6ff;
+  background: rgba(139, 92, 246, 0.08);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.admin-page-transactions .transaction-type-pill.type-cash_payment,
+.admin-page-transactions .transaction-type-pill.type-subscription {
+  border-color: rgba(59, 130, 246, 0.2);
+  color: #82b8ff;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.admin-page-transactions .transaction-type-pill.type-refund {
+  border-color: rgba(251, 191, 36, 0.2);
+  color: #f1ca64;
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.admin-page-transactions .transaction-amount {
+  font-size: 0.94rem;
+}
+
+.admin-page-transactions .transaction-amount.positive {
+  color: #55daa3;
+}
+
+.admin-page-transactions .transaction-amount.negative {
+  color: #fb8791;
+}
+
+.admin-page-transactions .transaction-locked-action {
+  display: inline-flex;
+  padding: 6px 9px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 8px;
+  color: #7f8aa3;
+  background: rgba(148, 163, 184, 0.06);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.admin-page-transactions .transaction-integrity-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(96, 165, 250, 0.17);
+  border-radius: 12px;
+  color: #9ca9bc;
+  background: rgba(59, 130, 246, 0.055);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.admin-page-transactions .transaction-integrity-note strong {
+  flex: 0 0 auto;
+  color: #7eb7ff;
+}
+
+@media (max-width: 760px) {
+  .admin-page-transactions .transaction-live-header,
+  .admin-page-transactions .transaction-live-tools,
+  .admin-page-transactions .transaction-integrity-note {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+/* Live super-admin payout queue */
+.admin-page-payouts .payout-live-card {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(145deg, rgba(17, 19, 25, 0.98), rgba(10, 12, 17, 0.98));
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.22);
+}
+
+.admin-page-payouts .payout-live-header,
+.admin-page-payouts .payout-live-tools {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.admin-page-payouts .payout-live-header {
+  justify-content: space-between;
+}
+
+.admin-page-payouts .payout-live-tools select {
+  min-width: 145px;
+  padding: 9px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  outline: none;
+  color: #cbd5e1;
+  background: #11141b;
+}
+
+.admin-page-payouts .payout-live-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-page-payouts .payout-live-table {
+  min-width: 1190px;
+  margin: 0;
+}
+
+.admin-page-payouts .payout-live-table th {
+  color: #7f8aa3;
+  font-size: 0.69rem;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-page-payouts .payout-live-table td {
+  color: #dce3ef;
+  vertical-align: middle;
+}
+
+.admin-page-payouts .payout-live-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.admin-page-payouts .payout-live-table tbody tr:hover {
+  background: rgba(255, 89, 104, 0.045);
+}
+
+.admin-page-payouts .payout-live-state {
+  padding: 44px 24px !important;
+  color: #8792a8 !important;
+  text-align: center;
+}
+
+.admin-page-payouts .payout-method-cell,
+.admin-page-payouts .payout-schedule-cell,
+.admin-page-payouts .payout-reviewer-cell,
+.admin-page-payouts .payout-ledger-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-page-payouts .payout-method-cell span,
+.admin-page-payouts .payout-schedule-cell span,
+.admin-page-payouts .payout-reviewer-cell span,
+.admin-page-payouts .payout-ledger-cell span {
+  max-width: 180px;
+  overflow: hidden;
+  color: #7f8aa3;
+  font-size: 0.71rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-page-payouts .payout-ledger-cell strong {
+  color: #a99af4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+}
+
+.admin-page-payouts .payout-amount {
+  color: #f8fafc;
+  font-size: 0.98rem;
+}
+
+.admin-page-payouts .payout-row-actions {
+  min-width: 220px;
+}
+
+.admin-page-payouts .payout-ledger-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-radius: 12px;
+  color: #9ca9bc;
+  background: rgba(139, 92, 246, 0.055);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.admin-page-payouts .payout-ledger-note strong {
+  flex: 0 0 auto;
+  color: #bba6ff;
+}
+
+@media (max-width: 760px) {
+  .admin-page-payouts .payout-live-header,
+  .admin-page-payouts .payout-live-tools,
+  .admin-page-payouts .payout-ledger-note {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+/* Live super-admin withdrawal review */
+.admin-page-withdrawals .withdrawal-live-card {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(145deg, rgba(17, 19, 25, 0.98), rgba(10, 12, 17, 0.98));
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.22);
+}
+
+.admin-page-withdrawals .withdrawal-live-header,
+.admin-page-withdrawals .withdrawal-live-tools {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.admin-page-withdrawals .withdrawal-live-header {
+  justify-content: space-between;
+}
+
+.admin-page-withdrawals .withdrawal-live-tools select {
+  min-width: 145px;
+  padding: 9px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  outline: none;
+  color: #cbd5e1;
+  background: #11141b;
+}
+
+.admin-page-withdrawals .withdrawal-live-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-page-withdrawals .withdrawal-live-table {
+  min-width: 1220px;
+  margin: 0;
+}
+
+.admin-page-withdrawals .withdrawal-live-table th {
+  color: #7f8aa3;
+  font-size: 0.69rem;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-page-withdrawals .withdrawal-live-table td {
+  color: #dce3ef;
+  vertical-align: middle;
+}
+
+.admin-page-withdrawals .withdrawal-live-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.admin-page-withdrawals .withdrawal-live-table tbody tr:hover {
+  background: rgba(255, 89, 104, 0.045);
+}
+
+.admin-page-withdrawals .withdrawal-live-state {
+  padding: 44px 24px !important;
+  color: #8792a8 !important;
+  text-align: center;
+}
+
+.admin-page-withdrawals .withdrawal-method-cell,
+.admin-page-withdrawals .withdrawal-date-cell,
+.admin-page-withdrawals .withdrawal-reviewer-cell,
+.admin-page-withdrawals .withdrawal-finance-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-page-withdrawals .withdrawal-method-cell span,
+.admin-page-withdrawals .withdrawal-date-cell span,
+.admin-page-withdrawals .withdrawal-reviewer-cell span,
+.admin-page-withdrawals .withdrawal-finance-cell span {
+  max-width: 185px;
+  overflow: hidden;
+  color: #7f8aa3;
+  font-size: 0.71rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-page-withdrawals .withdrawal-amount {
+  color: #f8fafc;
+  font-size: 0.98rem;
+}
+
+.admin-page-withdrawals .withdrawal-finance-cell a {
+  color: #a99af4;
+  font-size: 0.75rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.admin-page-withdrawals .withdrawal-awaiting-link {
+  color: #7f8aa3;
+  font-size: 0.7rem;
+}
+
+.admin-page-withdrawals .withdrawal-row-actions {
+  min-width: 230px;
+}
+
+.admin-page-withdrawals .withdrawal-flow-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(52, 211, 153, 0.17);
+  border-radius: 12px;
+  color: #9ca9bc;
+  background: rgba(52, 211, 153, 0.05);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.admin-page-withdrawals .withdrawal-flow-note strong {
+  flex: 0 0 auto;
+  color: #55daa3;
+}
+
+@media (max-width: 760px) {
+  .admin-page-withdrawals .withdrawal-live-header,
+  .admin-page-withdrawals .withdrawal-live-tools,
+  .admin-page-withdrawals .withdrawal-flow-note {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+/* Live super-admin affiliate program */
+.admin-page-affiliations .affiliations-live-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-page-affiliations .affiliation-live-card {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(145deg, rgba(17, 19, 25, 0.98), rgba(10, 12, 17, 0.98));
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.22);
+}
+
+.admin-page-affiliations .affiliation-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-page-affiliations .affiliation-live-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-page-affiliations .affiliation-live-table {
+  min-width: 1020px;
+  margin: 0;
+}
+
+.admin-page-affiliations .affiliation-live-table th {
+  color: #7f8aa3;
+  font-size: 0.69rem;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.admin-page-affiliations .affiliation-live-table td {
+  color: #dce3ef;
+  vertical-align: middle;
+}
+
+.admin-page-affiliations .affiliation-live-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.admin-page-affiliations .affiliation-live-table tbody tr:hover {
+  background: rgba(255, 89, 104, 0.045);
+}
+
+.admin-page-affiliations .affiliation-live-state {
+  padding: 44px 24px !important;
+  color: #8792a8 !important;
+  text-align: center;
+}
+
+.admin-page-affiliations .affiliate-code-pill {
+  display: inline-flex;
+  padding: 6px 9px;
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  border-radius: 8px;
+  color: #bba6ff;
+  background: rgba(139, 92, 246, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.admin-page-affiliations .affiliate-rule-cell,
+.admin-page-affiliations .affiliate-conversion-cell,
+.admin-page-affiliations .affiliate-description-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-page-affiliations .affiliate-rule-cell span,
+.admin-page-affiliations .affiliate-conversion-cell span,
+.admin-page-affiliations .affiliate-description-cell span {
+  max-width: 190px;
+  overflow: hidden;
+  color: #7f8aa3;
+  font-size: 0.71rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-page-affiliations .affiliate-commission-amount {
+  color: #55daa3;
+  font-size: 0.96rem;
+}
+
+.admin-page-affiliations .referral-avatar {
+  color: #8ebcff;
+  background: rgba(59, 130, 246, 0.13);
+}
+
+@media (max-width: 760px) {
+  .admin-page-affiliations .affiliation-header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+/* Live coupon management */
+.admin-page-coupon-codes .coupon-live-shell { display: grid; gap: 18px; }
+.admin-page-coupon-codes .coupon-live-card { overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(145deg,rgba(18,20,27,.98),rgba(10,12,17,.98)); box-shadow: 0 22px 55px rgba(0,0,0,.25); }
+.admin-page-coupon-codes .coupon-header-actions { display: flex; align-items: center; gap: 12px; }
+.admin-page-coupon-codes .coupon-live-table-wrap { overflow-x: auto; border-top: 1px solid rgba(255,255,255,.07); }
+.admin-page-coupon-codes .coupon-live-table { min-width: 1120px; }
+.admin-page-coupon-codes .coupon-live-table th { padding: 13px 16px; color: #778199; background: rgba(255,255,255,.018); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.admin-page-coupon-codes .coupon-live-table td { padding: 16px; border-top: 1px solid rgba(255,255,255,.055); color: #d9deeb; vertical-align: middle; }
+.admin-page-coupon-codes .coupon-live-table tbody tr { transition: background .18s ease, transform .18s ease; }
+.admin-page-coupon-codes .coupon-live-table tbody tr:hover { background: rgba(255,89,104,.035); }
+.admin-page-coupon-codes .coupon-live-state { padding: 42px !important; color: #7f8aa3 !important; text-align: center; }
+.admin-page-coupon-codes .coupon-identity { display: flex; align-items: center; gap: 12px; }
+.admin-page-coupon-codes .coupon-identity > span,
+.admin-page-coupon-codes .coupon-code-pill { display: inline-flex; padding: 7px 10px; border: 1px solid rgba(255,89,104,.25); border-radius: 9px; color: #ff8590; background: rgba(255,89,104,.09); font-weight: 750; letter-spacing: .045em; }
+.admin-page-coupon-codes .coupon-identity div { display: grid; gap: 3px; }
+.admin-page-coupon-codes .coupon-identity small { color: #6f788d; font-size: .69rem; }
+.admin-page-coupon-codes .coupon-discount { color: #55daa3; }
+.admin-page-coupon-codes .coupon-window { max-width: 175px; color: #aab3c7; font-size: .76rem; line-height: 1.5; }
+.admin-page-coupon-codes .coupon-usage-track { width: 110px; height: 4px; margin: 7px 0; overflow: hidden; border-radius: 10px; background: rgba(255,255,255,.08); }
+.admin-page-coupon-codes .coupon-usage-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ff5968,#ff9c67); }
+.admin-page-coupon-codes .coupon-calculation-note { margin: 0; padding: 13px 15px; border: 1px solid rgba(85,218,163,.18); border-radius: 11px; color: #a9b6c8; background: rgba(85,218,163,.055); line-height: 1.55; }
+
+@media (max-width: 760px) {
+  .admin-page-coupon-codes .coupon-header-actions { align-items: stretch; flex-direction: column; }
+}
+
+/* Live analytics and report exports */
+.admin-page-analytics .analytics-controls { display: flex; gap: 10px; }
+.admin-page-analytics .analytics-controls select { min-width: 150px; padding: 10px 13px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; color: #dce2ef; background: #14171e; }
+.admin-page-analytics .analytics-live-grid { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(300px,.75fr); gap: 18px; }
+.admin-page-analytics .analytics-trend-card,
+.admin-page-analytics .analytics-conversion-card,
+.admin-page-analytics .analytics-source-card,
+.admin-page-analytics .analytics-cards-card { overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(145deg,rgba(18,20,27,.98),rgba(10,12,17,.98)); box-shadow: 0 22px 55px rgba(0,0,0,.22); }
+.admin-page-analytics .analytics-chart-wrap { height: 350px; padding: 4px 20px 20px; }
+.admin-page-analytics .analytics-rate-grid { display: grid; gap: 20px; padding: 20px; }
+.admin-page-analytics .analytics-rate-grid > div { display: grid; grid-template-columns: 1fr auto; gap: 9px; }
+.admin-page-analytics .analytics-rate-grid span { color: #8c96aa; font-size: .78rem; }
+.admin-page-analytics .analytics-rate-grid strong { color: #f7f9fd; font-size: 1.15rem; }
+.admin-page-analytics .analytics-rate-grid i,
+.admin-page-analytics .analytics-source-list i { grid-column: 1/-1; height: 6px; overflow: hidden; border-radius: 12px; background: rgba(255,255,255,.07); }
+.admin-page-analytics .analytics-rate-grid b,
+.admin-page-analytics .analytics-source-list b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ff5968,#ff9c67); }
+.admin-page-analytics .analytics-platform-list { display: grid; grid-template-columns: repeat(2,1fr); gap: 1px; margin: 0 20px 20px; overflow: hidden; border: 1px solid rgba(255,255,255,.07); border-radius: 13px; background: rgba(255,255,255,.07); }
+.admin-page-analytics .analytics-platform-list > div { display: grid; gap: 4px; padding: 15px; background: #11141a; }
+.admin-page-analytics .analytics-platform-list strong { font-size: 1.04rem; }
+.admin-page-analytics .analytics-platform-list span { color: #778197; font-size: .71rem; }
+.admin-page-analytics .analytics-source-list { display: grid; gap: 14px; padding: 18px 20px 24px; }
+.admin-page-analytics .analytics-source-list > div:not(.admin-data-empty) { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; }
+.admin-page-analytics .analytics-source-list > div > div { display: grid; grid-template-columns: 1fr; gap: 7px; }
+.admin-page-analytics .analytics-source-list strong { font-size: .79rem; }
+.admin-page-analytics .analytics-source-list > div > span:last-child { color: #9ea8bc; font-size: .76rem; }
+.admin-page-analytics .analytics-source-rank { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 8px; color: #ff7e89; background: rgba(255,89,104,.09); font-size: .68rem; font-weight: 700; }
+.admin-page-analytics .analytics-cards-card { grid-column: 1/-1; }
+.admin-page-analytics .analytics-live-table-wrap { overflow-x: auto; border-top: 1px solid rgba(255,255,255,.07); }
+.admin-page-analytics .analytics-live-table { min-width: 760px; }
+.admin-page-analytics .analytics-live-table th { padding: 13px 16px; color: #778199; background: rgba(255,255,255,.018); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.admin-page-analytics .analytics-live-table td { padding: 15px 16px; border-top: 1px solid rgba(255,255,255,.055); color: #d9deeb; }
+.admin-page-analytics .analytics-live-state { padding: 38px !important; color: #7f8aa3 !important; text-align: center; }
+.admin-page-analytics .analytics-card-name { display: flex; align-items: center; gap: 11px; }
+.admin-page-analytics .analytics-card-name > span { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; color: #ff8993; background: rgba(255,89,104,.1); font-size: .7rem; font-weight: 750; }
+.admin-page-analytics .analytics-card-name div { display: grid; gap: 3px; }
+.admin-page-analytics .analytics-card-name small { color: #707b90; }
+.admin-page-analytics .analytics-rate-pill { color: #55daa3; font-weight: 700; }
+
+.admin-page-reports .reports-live-shell { display: grid; gap: 18px; }
+.admin-page-reports .reports-live-card { overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(145deg,rgba(18,20,27,.98),rgba(10,12,17,.98)); box-shadow: 0 22px 55px rgba(0,0,0,.22); }
+.admin-page-reports .reports-live-table-wrap { overflow-x: auto; border-top: 1px solid rgba(255,255,255,.07); }
+.admin-page-reports .reports-live-table { min-width: 1040px; }
+.admin-page-reports .reports-live-table th { padding: 13px 16px; color: #778199; background: rgba(255,255,255,.018); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.admin-page-reports .reports-live-table td { padding: 16px; border-top: 1px solid rgba(255,255,255,.055); color: #d9deeb; vertical-align: middle; }
+.admin-page-reports .reports-live-table tbody tr:hover { background: rgba(142,188,255,.035); }
+.admin-page-reports .reports-live-state { padding: 42px !important; color: #7f8aa3 !important; text-align: center; }
+.admin-page-reports .report-name-cell { display: flex; align-items: center; gap: 11px; }
+.admin-page-reports .report-name-cell > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; color: #8ebcff; background: rgba(59,130,246,.11); font-size: .68rem; font-weight: 800; }
+.admin-page-reports .report-name-cell div { display: grid; gap: 3px; }
+.admin-page-reports .report-name-cell small { color: #707b90; }
+.admin-page-reports .report-type-pill,
+.admin-page-reports .report-format-pill { display: inline-flex; padding: 6px 9px; border: 1px solid rgba(142,188,255,.18); border-radius: 8px; color: #a8caff; background: rgba(59,130,246,.07); font-size: .71rem; font-weight: 650; }
+.admin-page-reports .report-format-pill { color: #55daa3; border-color: rgba(85,218,163,.18); background: rgba(85,218,163,.07); }
+.admin-page-reports .report-snapshot-note { margin: 0; padding: 13px 15px; border: 1px solid rgba(142,188,255,.18); border-radius: 11px; color: #a9b6c8; background: rgba(59,130,246,.055); line-height: 1.55; }
+
+@media (max-width: 900px) {
+  .admin-page-analytics .analytics-live-grid { grid-template-columns: 1fr; }
+  .admin-page-analytics .analytics-cards-card { grid-column: auto; }
+}
+@media (max-width: 620px) {
+  .admin-page-analytics .analytics-controls { align-items: stretch; flex-direction: column; }
+}
+
+/* Live platform settings and audit logs */
+.admin-page-settings .settings-save-state { color: #7f8aa3; font-size: .76rem; }
+.admin-profile-card .admin-logout-btn { display: flex; width: 100%; margin-top: 14px; padding: 10px 12px; border: 1px solid rgba(255,89,104,.18); border-radius: 10px; align-items: center; justify-content: center; gap: 8px; color: #ff8993; background: rgba(255,89,104,.055); font: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; transition: border-color .18s ease,background .18s ease,color .18s ease; }
+.admin-profile-card .admin-logout-btn:hover,
+.admin-profile-card .admin-logout-btn:focus-visible { border-color: rgba(255,89,104,.38); color: #fff; background: rgba(255,89,104,.13); outline: 0; }
+.admin-profile-card .admin-logout-btn:disabled { cursor: wait; opacity: .72; }
+.admin-logout-spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.25); border-top-color: #fff; border-radius: 50%; animation: admin-logout-spin .7s linear infinite; }
+@keyframes admin-logout-spin { to { transform: rotate(360deg); } }
+.admin-page-settings .settings-live-shell { display: grid; gap: 18px; }
+.admin-page-settings .settings-live-card { overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(145deg,rgba(18,20,27,.98),rgba(10,12,17,.98)); box-shadow: 0 22px 55px rgba(0,0,0,.22); }
+.admin-page-settings .settings-section-mark { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(255,89,104,.17); border-radius: 12px; color: #ff7c88; background: rgba(255,89,104,.06); font-size: .72rem; font-weight: 800; }
+.admin-page-settings .settings-field-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; padding: 22px; border-top: 1px solid rgba(255,255,255,.06); }
+.admin-page-settings .settings-toggle-list { display: grid; border-top: 1px solid rgba(255,255,255,.06); }
+.admin-page-settings .settings-toggle-row,
+.admin-page-settings .settings-timeout-row { display: flex; align-items: center; justify-content: space-between; gap: 22px; padding: 20px 22px; border-top: 1px solid rgba(255,255,255,.055); }
+.admin-page-settings .settings-toggle-row:first-child { border-top: 0; }
+.admin-page-settings .settings-toggle-row > span:first-child,
+.admin-page-settings .settings-timeout-row > span { display: grid; gap: 5px; }
+.admin-page-settings .settings-toggle-row strong,
+.admin-page-settings .settings-timeout-row strong { color: #edf1f8; font-size: .88rem; }
+.admin-page-settings .settings-toggle-row small,
+.admin-page-settings .settings-timeout-row small { color: #778197; line-height: 1.45; }
+.admin-page-settings .settings-timeout-row label { display: flex; align-items: center; gap: 8px; }
+.admin-page-settings .settings-timeout-row input { width: 90px; padding: 9px 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; color: #fff; background: #11141a; }
+.admin-page-settings .settings-timeout-row em { color: #778197; font-size: .72rem; font-style: normal; }
+.admin-page-settings .role-permission-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; padding: 20px; border-top: 1px solid rgba(255,255,255,.06); }
+.admin-page-settings .role-permission-card { display: flex; min-height: 100%; padding: 17px; border: 1px solid rgba(255,255,255,.075); border-radius: 15px; flex-direction: column; gap: 16px; background: rgba(255,255,255,.018); }
+.admin-page-settings .role-permission-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.admin-page-settings .role-permission-header > div { display: flex; align-items: center; gap: 10px; }
+.admin-page-settings .role-permission-header > div > span { display: grid; width: 37px; height: 37px; place-items: center; border-radius: 11px; color: #8ebcff; background: rgba(59,130,246,.11); font-size: .7rem; font-weight: 800; }
+.admin-page-settings .role-permission-header div div { display: grid; gap: 3px; }
+.admin-page-settings .role-permission-header small { max-width: 155px; overflow: hidden; color: #707a90; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-page-settings .role-permission-options { display: grid; gap: 8px; }
+.admin-page-settings .role-permission-options label { display: flex; align-items: flex-start; gap: 9px; padding: 9px; border-radius: 10px; background: rgba(255,255,255,.025); cursor: pointer; }
+.admin-page-settings .role-permission-options input { margin-top: 3px; accent-color: #ff5968; }
+.admin-page-settings .role-permission-options span { display: grid; gap: 3px; }
+.admin-page-settings .role-permission-options strong { color: #cbd2df; font-size: .76rem; }
+.admin-page-settings .role-permission-options small { color: #697389; font-size: .66rem; line-height: 1.4; }
+.admin-page-settings .role-lock-note { margin: auto 0 0; color: #717b8e; font-size: .7rem; }
+
+.admin-page-system-logs .system-logs-live-shell { display: grid; gap: 18px; }
+.admin-page-system-logs .log-filter-card,
+.admin-page-system-logs .system-log-card { overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(145deg,rgba(18,20,27,.98),rgba(10,12,17,.98)); box-shadow: 0 22px 55px rgba(0,0,0,.22); }
+.admin-page-system-logs .log-filter-grid { display: grid; grid-template-columns: repeat(4,minmax(135px,1fr)) auto; align-items: end; gap: 13px; padding: 17px; }
+.admin-page-system-logs .log-filter-actions { display: flex; gap: 8px; padding-bottom: 1px; }
+.admin-page-system-logs .system-log-table-wrap { overflow-x: auto; border-top: 1px solid rgba(255,255,255,.07); }
+.admin-page-system-logs .system-log-table { min-width: 1080px; }
+.admin-page-system-logs .system-log-table th { padding: 13px 16px; color: #778199; background: rgba(255,255,255,.018); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.admin-page-system-logs .system-log-table td { padding: 15px 16px; border-top: 1px solid rgba(255,255,255,.055); color: #d9deeb; vertical-align: middle; }
+.admin-page-system-logs .system-log-table tbody tr:hover { background: rgba(255,255,255,.025); }
+.admin-page-system-logs .system-log-state { padding: 42px !important; color: #7f8aa3 !important; text-align: center; }
+.admin-page-system-logs .log-event-cell { display: flex; align-items: center; gap: 11px; }
+.admin-page-system-logs .log-event-cell > div { display: grid; gap: 4px; }
+.admin-page-system-logs .log-event-cell small { color: #707a90; }
+.admin-page-system-logs .log-severity { width: 9px; height: 34px; border-radius: 7px; background: #55daa3; box-shadow: 0 0 13px rgba(85,218,163,.18); }
+.admin-page-system-logs .log-severity.warning { background: #f5b85c; box-shadow: 0 0 13px rgba(245,184,92,.18); }
+.admin-page-system-logs .log-severity.danger { background: #ff6674; box-shadow: 0 0 13px rgba(255,102,116,.2); }
+.admin-page-system-logs .log-resource-pill { display: inline-flex; padding: 5px 8px; border: 1px solid rgba(142,188,255,.17); border-radius: 8px; color: #a8caff; background: rgba(59,130,246,.07); font-size: .69rem; }
+.admin-page-system-logs .log-agent { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-page-system-logs .system-log-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 17px; border-top: 1px solid rgba(255,255,255,.06); color: #7f8aa3; font-size: .75rem; }
+.admin-page-system-logs .system-log-pagination > div { display: flex; gap: 8px; }
+.admin-page-system-logs .system-log-detail { display: grid; gap: 18px; }
+.admin-page-system-logs .system-log-detail dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin: 0; }
+.admin-page-system-logs .system-log-detail dl div { display: grid; gap: 5px; padding: 12px; border: 1px solid rgba(255,255,255,.07); border-radius: 10px; background: rgba(255,255,255,.018); }
+.admin-page-system-logs .system-log-detail dt,
+.admin-page-system-logs .log-metadata-block > span { color: #717c91; font-size: .65rem; letter-spacing: .07em; text-transform: uppercase; }
+.admin-page-system-logs .system-log-detail dd { margin: 0; color: #dce2ee; overflow-wrap: anywhere; }
+.admin-page-system-logs .log-metadata-block { display: grid; gap: 8px; }
+.admin-page-system-logs .log-metadata-block pre { max-height: 300px; margin: 0; padding: 14px; overflow: auto; border: 1px solid rgba(255,255,255,.07); border-radius: 11px; color: #9fc0ee; background: #0c0f14; font: .72rem/1.55 Consolas,monospace; white-space: pre-wrap; }
+
+@media (max-width: 1000px) {
+  .admin-page-settings .role-permission-grid { grid-template-columns: 1fr; }
+  .admin-page-system-logs .log-filter-grid { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 620px) {
+  .admin-page-settings .settings-field-grid,
+  .admin-page-system-logs .log-filter-grid,
+  .admin-page-system-logs .system-log-detail dl { grid-template-columns: 1fr; }
+  .admin-page-settings .settings-toggle-row,
+  .admin-page-settings .settings-timeout-row { align-items: flex-start; }
+  .admin-page-system-logs .log-filter-actions { flex-direction: column; }
+}

@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const pool = require("../config/database.config");
 
 module.exports = async function authenticate(req, res, next) {
@@ -9,10 +10,19 @@ module.exports = async function authenticate(req, res, next) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
+    const rawToken = match[1];
     const payload = jwt.verify(
-      match[1],
+      rawToken,
       process.env.JWT_SECRET || "devsecret"
     );
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const revoked = await pool.query(
+      "SELECT id FROM auth_sessions WHERE token_hash = $1 AND revoked_at IS NOT NULL LIMIT 1",
+      [tokenHash]
+    );
+    if (revoked.rowCount) {
+      return res.status(401).json({ message: "Session has been signed out" });
+    }
     const parsedId = Number(payload.id);
     const hasPostgresIntegerId =
       Number.isSafeInteger(parsedId) && parsedId > 0 && parsedId <= 2147483647;
@@ -49,6 +59,9 @@ module.exports = async function authenticate(req, res, next) {
     }
 
     req.user = user;
+    req.authToken = rawToken;
+    req.authTokenHash = tokenHash;
+    req.authPayload = payload;
     next();
   } catch (error) {
     if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {

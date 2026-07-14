@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -10,239 +10,62 @@
 </head>
 <body>
   <div class="dashboard-wrapper">
-    <aside class="sidebar">
-      <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div>
-      <nav class="sidebar-nav">
-        <a href="dashboard.html" class="nav-item">Dashboard</a>
-        <div class="sidebar-section-label">Management</div>
-        <a href="users.html" class="nav-item">Users</a>
-        <a href="vcards.html" class="nav-item">VCards</a>
-        <a href="nfc-orders.html" class="nav-item">NFC Cards</a>
-        <a href="subscriptions.html" class="nav-item">Subscriptions</a>
-        <a href="cash-payments.html" class="nav-item">Cash Payments</a>
-        <a href="transactions.html" class="nav-item">Transactions</a>
-        <a href="payouts.html" class="nav-item">Payouts</a>
-        <a href="affiliations.html" class="nav-item">Affiliations</a>
-        <a href="withdrawals.html" class="nav-item">Withdrawals</a>
-        <a href="coupon-codes.html" class="nav-item active">Coupon Codes</a>
-        <div class="sidebar-section-label">Analytics</div>
-        <a href="analytics.html" class="nav-item">Analytics</a>
-        <a href="reports.html" class="nav-item">Reports</a>
-        <div class="sidebar-section-label">Settings</div>
-        <a href="settings.html" class="nav-item">Settings</a>
-        <a href="system-logs.html" class="nav-item">System Logs</a>
-        </nav>
-    </aside>
-
+    <aside class="sidebar"><div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">SYNC CARD</span></div><nav class="sidebar-nav"></nav></aside>
     <div class="main-content">
-      <header class="topbar coupon-page-topbar">
-        <div class="coupon-subtabbar" role="tablist" aria-label="Coupon code tabs">
-          <button class="coupon-subtab-btn active" type="button" role="tab" aria-selected="true" data-coupon-tab-target="couponCodeListPanel">Coupon Codes</button>
-          <button class="coupon-subtab-btn" type="button" role="tab" aria-selected="false" data-coupon-tab-target="usedCouponCodeListPanel">Used Coupon Codes</button>
-        </div>
-      </header>
-
+      <header class="topbar"><label class="search-bar" for="dashboardSearch"><input id="dashboardSearch" type="text" placeholder="Search coupon, plan, user, or status..." /></label></header>
       <main class="page-content">
-        <section class="affiliate-panel-shell searchable-item" data-search="coupon codes used coupon codes discounts promotional codes">
+        <div class="page-header"><div><h1>Coupon Codes</h1><p>Create targeted offers, control redemption rules, and review every discount.</p></div><div class="header-actions"><button class="btn-share" type="button" id="openCouponAdminModal">New Coupon</button></div></div>
+
+        <section class="coupon-live-shell">
+          <div class="subscriptions-tabbar" role="tablist" aria-label="Coupon management views">
+            <button class="subscriptions-tab-btn active" type="button" role="tab" aria-selected="true" data-coupon-tab-target="couponCodeListPanel">Promotions</button>
+            <button class="subscriptions-tab-btn" type="button" role="tab" aria-selected="false" data-coupon-tab-target="usedCouponCodeListPanel">Redemption Ledger</button>
+          </div>
           <section class="tab-panel active" id="couponCodeListPanel">
-            <div class="affiliate-toolbar">
-              <label class="nfc-search affiliate-search" for="couponCodeSearch">
-                <span class="nfc-search-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
-                    <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                  </svg>
-                </span>
-                <input id="couponCodeSearch" type="text" placeholder="Search" />
-              </label>
-
-              <button class="btn-share plans-new-btn" type="button" id="openCouponModal">Add Coupon Code</button>
-            </div>
-
-            <div class="light-admin-table-wrap">
-              <table class="admin-table light-admin-table">
-                <thead>
-                  <tr>
-                    <th>COUPON NAME</th>
-                    <th>COUPON TYPE</th>
-                    <th>COUPON DISCOUNT</th>
-                    <th>COUPON LIMIT LEFT</th>
-                    <th>EXPIRE AT</th>
-                    <th>STATUS</th>
-                    <th>ACTION</th>
-                  </tr>
-                </thead>
-                <tbody id="couponCodesTableBody">
-                  <tr class="searchable-item coupon-code-row" data-search="dd percentage 30 0 31 mar 2026 inactive">
-                    <td>DD</td>
-                    <td><span class="plan-duration-pill monthly">Percentage</span></td>
-                    <td>30%</td>
-                    <td>0</td>
-                    <td><span class="expiry-pill">31 Mar 2026</span></td>
-                    <td>
-                      <label class="switch coupon-status-switch" aria-label="Status for DD coupon">
-                        <input type="checkbox" />
-                        <span class="switch-slider"></span>
-                      </label>
-                    </td>
-                    <td>
-                      <div class="subscription-action-cell">
-                        <button class="subscription-icon-btn edit" type="button" data-coupon-action="edit" data-coupon-name="DD" aria-label="Edit DD coupon">
-                          <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M12 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                            <path d="M16.5 3.5A2.12 2.12 0 0 1 19.5 6.5L8 18L4 19L5 15L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
-                          </svg>
-                        </button>
-                        <button class="subscription-icon-btn delete" type="button" data-coupon-action="delete" data-coupon-name="DD" aria-label="Delete DD coupon">
-                          <svg viewBox="0 0 24 24" fill="none">
-                            <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                            <path d="M8 6V4.5C8 3.67 8.67 3 9.5 3H14.5C15.33 3 16 3.67 16 4.5V6" stroke="currentColor" stroke-width="2"></path>
-                            <path d="M19 6L18.13 18.14C18.05 19.27 17.11 20.14 15.98 20.14H8.02C6.89 20.14 5.95 19.27 5.87 18.14L5 6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
-                            <path d="M10 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                            <path d="M14 10V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="subscriptions-footer">
-              <div class="subscriptions-footer-left">
-                <span>Show</span>
-                <select class="subscriptions-limit-select" aria-label="Coupon rows per page">
-                  <option selected>10</option>
-                  <option>25</option>
-                  <option>50</option>
-                </select>
-              </div>
-              <p class="subscriptions-results" id="couponCodesResults">Showing 1 results</p>
-            </div>
+            <article class="admin-card coupon-live-card">
+              <div class="admin-card-header"><div><h3>Promotion Library</h3><p>Live coupon rules, availability windows, audiences, and usage.</p></div><span class="tiny-pill success" id="couponAdminCount">Loading...</span></div>
+              <div class="coupon-live-table-wrap"><table class="admin-table coupon-live-table"><thead><tr><th>Coupon</th><th>Discount</th><th>Eligibility</th><th>Usage</th><th>Availability</th><th>Status</th><th>Actions</th></tr></thead><tbody id="couponAdminBody"><tr><td colspan="7" class="coupon-live-state">Loading coupons from PostgreSQL...</td></tr></tbody></table></div>
+            </article>
           </section>
-
           <section class="tab-panel" id="usedCouponCodeListPanel">
-            <div class="affiliate-toolbar">
-              <label class="nfc-search affiliate-search" for="usedCouponCodeSearch">
-                <span class="nfc-search-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
-                    <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                  </svg>
-                </span>
-                <input id="usedCouponCodeSearch" type="text" placeholder="Search" />
-              </label>
-            </div>
-
-            <div class="light-admin-table-wrap">
-              <table class="admin-table light-admin-table">
-                <thead>
-                  <tr>
-                    <th>USER NAME</th>
-                    <th>USED AT</th>
-                    <th>PLAN NAME</th>
-                    <th>TOTAL AMOUNT</th>
-                    <th>COUPON NAME</th>
-                  </tr>
-                </thead>
-                <tbody id="usedCouponCodesTableBody">
-                  <tr>
-                    <td class="light-empty-cell" colspan="5">No Data Available</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="subscriptions-footer">
-              <div class="subscriptions-footer-left">
-                <span>Show</span>
-                <select class="subscriptions-limit-select" aria-label="Used coupon rows per page">
-                  <option selected>10</option>
-                  <option>25</option>
-                  <option>50</option>
-                </select>
-              </div>
-              <p class="subscriptions-results" id="usedCouponCodesResults">Showing 0 results</p>
-            </div>
+            <article class="admin-card coupon-live-card">
+              <div class="admin-card-header"><div><h3>Redemption Ledger</h3><p>An auditable record of each discount calculated by the server.</p></div><div class="coupon-header-actions"><span class="tiny-pill" id="couponRedemptionCount">Loading...</span><button class="btn-share" type="button" id="openCouponRedemptionModal">Record Redemption</button></div></div>
+              <div class="coupon-live-table-wrap"><table class="admin-table coupon-live-table"><thead><tr><th>Customer</th><th>Coupon</th><th>Plan</th><th>Original</th><th>Discount</th><th>Final</th><th>Redeemed</th><th>Actions</th></tr></thead><tbody id="couponRedemptionBody"><tr><td colspan="8" class="coupon-live-state">Loading redemptions from PostgreSQL...</td></tr></tbody></table></div>
+            </article>
           </section>
         </section>
-
-        <div class="empty-search-state" id="emptySearchState" hidden>
-          <h3>No matches found</h3>
-          <p>Try another coupon search term.</p>
-        </div>
       </main>
     </div>
   </div>
 
-  <div class="user-modal coupon-modal" id="couponModal" hidden>
-    <div class="user-modal-backdrop" id="couponModalBackdrop"></div>
-    <div class="user-modal-dialog nfc-modal-dialog">
-      <div class="user-modal-header nfc-modal-header">
-        <h2 id="couponModalTitle">Add Coupon Code</h2>
-        <button class="nfc-modal-close" type="button" id="closeCouponModal" aria-label="Close coupon modal">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-          </svg>
-        </button>
-      </div>
+  <div class="user-modal" id="couponAdminModal" hidden><div class="user-modal-backdrop" id="couponAdminModalBackdrop"></div><div class="user-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="couponAdminModalTitle"><div class="user-modal-header"><div><span class="admin-page-eyebrow">Promotion rules</span><h2 id="couponAdminModalTitle">New Coupon</h2></div><button class="user-modal-close" type="button" id="closeCouponAdminModal">Back</button></div><div class="user-modal-body">
+    <form id="couponAdminForm" class="admin-form-grid admin-form-grid-modal" novalidate><input type="hidden" name="couponId" />
+      <div class="form-field"><label for="couponAdminName">Display name:<span class="required-mark">*</span></label><input id="couponAdminName" name="name" type="text" maxlength="150" required placeholder="Summer campaign" /></div>
+      <div class="form-field"><label for="couponAdminCode">Coupon code:<span class="required-mark">*</span></label><input id="couponAdminCode" name="code" type="text" minlength="3" maxlength="80" pattern="[A-Za-z0-9_-]+" required placeholder="SUMMER25" /></div>
+      <div class="form-field"><label for="couponAdminDiscountType">Discount type:</label><select id="couponAdminDiscountType" name="discountType"><option value="percentage">Percentage</option><option value="fixed">Fixed amount</option></select></div>
+      <div class="form-field"><label for="couponAdminDiscountValue">Discount value:<span class="required-mark">*</span></label><input id="couponAdminDiscountValue" name="discountValue" type="number" min="0.01" max="9999999999.99" step="0.01" required /></div>
+      <div class="form-field"><label for="couponAdminCurrency">Currency:</label><select id="couponAdminCurrency" name="currency"><option value="USD">USD</option><option value="LKR">LKR</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+      <div class="form-field"><label for="couponAdminPlan">Applicable plan:</label><select id="couponAdminPlan" name="planId"><option value="">All plans</option></select></div>
+      <div class="form-field"><label for="couponAdminUsageLimit">Total usage limit:</label><input id="couponAdminUsageLimit" name="usageLimit" type="number" min="1" max="2147483647" placeholder="Unlimited" /></div>
+      <div class="form-field"><label for="couponAdminPerUserLimit">Limit per customer:</label><input id="couponAdminPerUserLimit" name="perUserLimit" type="number" min="1" max="2147483647" value="1" required /></div>
+      <div class="form-field"><label for="couponAdminMinimum">Minimum amount:</label><input id="couponAdminMinimum" name="minimumAmount" type="number" min="0" max="9999999999.99" step="0.01" value="0" /></div>
+      <div class="form-field"><label for="couponAdminStatus">Administrative status:</label><select id="couponAdminStatus" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="expired">Expired</option></select></div>
+      <div class="form-field"><label for="couponAdminStartsAt">Starts at:</label><input id="couponAdminStartsAt" name="startsAt" type="datetime-local" /></div>
+      <div class="form-field"><label for="couponAdminExpiresAt">Expires at:</label><input id="couponAdminExpiresAt" name="expiresAt" type="datetime-local" /></div>
+      <div class="form-actions form-field-wide"><button class="btn-share" type="submit">Save Coupon</button><button class="btn-preview" type="button" id="resetCouponAdminForm">Discard</button></div><p class="form-feedback form-field-wide" id="couponAdminFeedback" hidden></p>
+    </form></div></div></div>
 
-      <div class="user-modal-body nfc-modal-body">
-        <form class="admin-form-grid admin-form-grid-modal" id="couponForm">
-          <input id="couponEditRowIndex" name="rowIndex" type="hidden" value="-1" />
-
-          <div class="form-field form-field-wide">
-            <label for="couponName">Coupon Name:<span class="required-mark">*</span></label>
-            <input id="couponName" name="couponName" type="text" placeholder="Enter coupon name" required />
-          </div>
-
-          <div class="form-field">
-            <label for="couponType">Coupon Type:<span class="required-mark">*</span></label>
-            <select id="couponType" name="couponType" required>
-              <option value="Percentage" selected>Percentage</option>
-              <option value="Flat">Flat</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label for="couponDiscount">Coupon Discount:<span class="required-mark">*</span></label>
-            <input id="couponDiscount" name="couponDiscount" type="number" min="0" step="0.01" placeholder="30" required />
-          </div>
-
-          <div class="form-field">
-            <label for="couponLimitLeft">Coupon Limit Left:<span class="required-mark">*</span></label>
-            <input id="couponLimitLeft" name="couponLimitLeft" type="number" min="0" placeholder="0" required />
-          </div>
-
-          <div class="form-field">
-            <label for="couponExpireAt">Expire At:<span class="required-mark">*</span></label>
-            <input id="couponExpireAt" name="couponExpireAt" type="date" required />
-          </div>
-
-          <div class="form-field form-field-wide">
-            <label class="checkbox-row">
-              <input id="couponActive" name="couponActive" type="checkbox" />
-              <span>Active</span>
-            </label>
-          </div>
-
-          <div class="form-field form-field-wide">
-            <p class="form-feedback" id="couponFormFeedback" hidden></p>
-          </div>
-
-          <div class="form-actions form-field-wide nfc-form-actions">
-            <button class="btn-share" type="submit" id="couponSubmitButton">Save</button>
-            <button class="btn-preview" type="button" id="resetCouponForm">Discard</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  <div class="user-modal" id="couponRedemptionModal" hidden><div class="user-modal-backdrop" id="couponRedemptionModalBackdrop"></div><div class="user-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="couponRedemptionModalTitle"><div class="user-modal-header"><div><span class="admin-page-eyebrow">Discount calculator</span><h2 id="couponRedemptionModalTitle">Record Redemption</h2></div><button class="user-modal-close" type="button" id="closeCouponRedemptionModal">Back</button></div><div class="user-modal-body">
+    <form id="couponRedemptionForm" class="admin-form-grid admin-form-grid-modal" novalidate>
+      <div class="form-field"><label for="couponRedemptionCoupon">Available coupon:<span class="required-mark">*</span></label><select id="couponRedemptionCoupon" name="couponId" required><option value="">Select coupon</option></select></div>
+      <div class="form-field"><label for="couponRedemptionUser">Customer:<span class="required-mark">*</span></label><select id="couponRedemptionUser" name="userId" required><option value="">Select active user</option></select></div>
+      <div class="form-field"><label for="couponRedemptionPlan">Plan:</label><select id="couponRedemptionPlan" name="planId"><option value="">No plan</option></select></div>
+      <div class="form-field"><label for="couponRedemptionAmount">Original amount:<span class="required-mark">*</span></label><input id="couponRedemptionAmount" name="originalAmount" type="number" min="0.01" max="9999999999.99" step="0.01" required /></div>
+      <div class="form-field form-field-wide"><p class="coupon-calculation-note">The backend verifies dates, limits, customer eligibility, plan restrictions, and calculates the final amount.</p></div>
+      <div class="form-actions form-field-wide"><button class="btn-share" type="submit">Apply &amp; Record</button><button class="btn-preview" type="button" id="resetCouponRedemptionForm">Discard</button></div><p class="form-feedback form-field-wide" id="couponRedemptionFeedback" hidden></p>
+    </form></div></div></div>
 
   <div class="toast-stack" id="toastStack"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
 </body>
 </html>
-
