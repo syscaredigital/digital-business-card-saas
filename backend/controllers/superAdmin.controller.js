@@ -608,7 +608,7 @@ exports.listVCards = async (req, res, next) => {
         ORDER BY u.name, u.email
       `),
       pool.query(`
-        SELECT id, name, description, preview_url, is_public
+        SELECT id, name, description, preview_url, template_json, is_public
         FROM vcard_templates
         ORDER BY is_public DESC, name
       `),
@@ -623,6 +623,7 @@ exports.listVCards = async (req, res, next) => {
         name: template.name,
         description: template.description || null,
         previewUrl: template.preview_url || null,
+        config: template.template_json || {},
         isPublic: Boolean(template.is_public),
       })),
     });

@@ -2,11 +2,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const header = document.querySelector(".site-header");
   const contactForms = document.querySelectorAll(".contact-form, .newsletter-form");
   const counters = document.querySelectorAll(".count-up");
-  const featuredVcardsRow = document.querySelector("[data-featured-vcards]");
+  const featuredVcardsRow = document.querySelector("[data-featured-templates]");
   const templatePreviousButton = document.querySelector("[data-template-prev]");
   const templateNextButton = document.querySelector("[data-template-next]");
   const templateCount = document.querySelector("[data-template-count]");
   const templateProgress = document.querySelector(".gallery-progress span");
+  const publicTemplateGrid = document.querySelector("[data-public-template-grid]");
+  const publicTemplateFilters = document.querySelector("[data-template-filters]");
 
   const updateHeader = () => {
     if (!header) return;
@@ -98,27 +100,60 @@ document.addEventListener("DOMContentLoaded", () => {
     return ["red-template", "light-template", "blue-template active", "violet-template", "light-template", "teal-template"][index % 6];
   };
 
+  const escapeMarkup = (value) => String(value == null ? "" : value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
+  const safePreviewUrl = (value) => {
+    try { const url = new URL(String(value || ""), window.location.href); return /^(https?:|file:)$/.test(url.protocol) ? url.href : ""; }
+    catch (_) { return ""; }
+  };
+  const templateGroup = (template) => {
+    const value = `${template.name || ""} ${template.description || ""}`.toLowerCase();
+    if (/creative|media|event|entertainment/.test(value)) return "creative";
+    if (/technology|\bit\b|automotive|construction|engineering/.test(value)) return "technology";
+    if (/health|wellness|hospitality|food|personal|lifestyle|travel|tourism|sustainability/.test(value)) return "lifestyle";
+    if (/finance|legal|education|training|real estate|property/.test(value)) return "services";
+    return "business";
+  };
+  const renderPublicTemplates = (templates, filter = "all") => {
+    if (!publicTemplateGrid) return;
+    const visible = templates.filter((template) => filter === "all" || templateGroup(template) === filter);
+    publicTemplateGrid.innerHTML = visible.length ? visible.map((template) => {
+      const preview = safePreviewUrl(template.previewUrl);
+      const category = template.config && template.config.category || "VCard design";
+      return `<article class="industry-template-tile" data-template-group="${templateGroup(template)}"><div class="industry-template-frame">${preview ? `<iframe src="${escapeMarkup(preview)}" title="${escapeMarkup(template.name)} preview" loading="lazy" tabindex="-1"></iframe>` : ""}</div><div class="industry-template-info"><span>${escapeMarkup(category)}</span><h3>${escapeMarkup(template.name)}</h3><p>${escapeMarkup(template.description || "Modern digital business card template.")}</p><a href="${escapeMarkup(preview || "../auth/register.html")}" target="${preview ? "_blank" : "_self"}" rel="noopener noreferrer">Preview design <b>↗</b></a></div></article>`;
+    }).join("") : '<div class="template-catalog-state">No templates found in this category.</div>';
+  };
+
+  if (publicTemplateGrid) {
+    fetch(`${getApiBaseUrl()}/api/public/vcard-templates`)
+      .then((response) => { if (!response.ok) throw new Error("Unable to load templates"); return response.json(); })
+      .then((data) => {
+        const templates = data.data || [];
+        renderPublicTemplates(templates);
+        if (publicTemplateFilters) publicTemplateFilters.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-template-filter]");
+          if (!button) return;
+          publicTemplateFilters.querySelectorAll("button").forEach((item) => item.classList.toggle("active", item === button));
+          renderPublicTemplates(templates, button.dataset.templateFilter);
+        });
+      })
+      .catch(() => { publicTemplateGrid.innerHTML = '<div class="template-catalog-state">Templates will appear when the API is available.</div>'; });
+  }
+
   const getStaticFeaturedVcards = () => ([
     {
-      name: "Michael Carter",
-      title: "Retail & E-Commerce Consultant",
-      company: "Carter & Morgan Retail Solutions",
-      website_url: "../public-vcard/template-one.html",
-      preview_url: "../public-vcard/template-one.html",
+      name: "Corporate & Business",
+      description: "Executive and professional template",
+      previewUrl: "../public-vcard/industry-template.html?category=corporate-business",
     },
     {
-      name: "Michael Carter",
-      title: "Real Estate Consultant",
-      company: "Carter & Morgan Realty",
-      website_url: "../public-vcard/template-two.html",
-      preview_url: "../public-vcard/template-two.html",
+      name: "Creative & Media",
+      description: "Portfolio-focused creative template",
+      previewUrl: "../public-vcard/industry-template.html?category=creative-media",
     },
     {
-      name: "Michael Carter",
-      title: "Healthcare & Wellness Consultant",
-      company: "Carter & Morgan Health Solutions",
-      website_url: "../public-vcard/template-three.html",
-      preview_url: "../public-vcard/template-three.html",
+      name: "Technology & IT",
+      description: "Modern technology professional template",
+      previewUrl: "../public-vcard/industry-template.html?category=technology-it",
     },
   ]);
 
@@ -126,11 +161,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const article = document.createElement("article");
     article.className = `vcard-template ${getTemplateClass(index)}`;
 
-    if (card.preview_url) {
+    const previewUrl = card.previewUrl || card.preview_url || "";
+    if (previewUrl) {
       article.className = "vcard-template vcard-live-preview";
 
       const frame = document.createElement("iframe");
-      frame.src = card.preview_url;
+      frame.src = previewUrl;
       frame.title = `${card.title || card.name || "VCard"} preview`;
       frame.loading = "lazy";
       frame.tabIndex = -1;
@@ -168,10 +204,10 @@ document.addEventListener("DOMContentLoaded", () => {
       article.append(avatar, title, meta, icons);
     }
 
-    if (card.website_url) {
-      article.dataset.url = card.website_url;
+    if (previewUrl) {
+      article.dataset.url = previewUrl;
       article.addEventListener("click", () => {
-        window.open(card.website_url, "_blank", "noopener,noreferrer");
+        window.open(previewUrl, "_blank", "noopener,noreferrer");
       });
     }
 
@@ -201,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!featuredVcardsRow) return;
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/public/vcards/featured?limit=24`);
+      const response = await fetch(`${getApiBaseUrl()}/api/public/vcard-templates`);
       if (!response.ok) return;
 
       const payload = await response.json();

@@ -8603,6 +8603,8 @@
   border-radius: 16px;
   overflow: hidden;
 }
+.vcard-template-visual:has(iframe){display:block;height:260px;min-height:260px;padding:0}.vcard-template-visual iframe{width:860px;height:900px;border:0;transform:scale(.3);transform-origin:top left;pointer-events:none}
+.vcard-template-category{display:block;margin-bottom:5px;color:#ef6070;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 
 .vcard-template-visual.tone-1 { background: radial-gradient(circle at 85% 15%, rgba(160,107,241,.45), transparent 32%), linear-gradient(145deg, #252035, #14151d); }
 .vcard-template-visual.tone-2 { background: radial-gradient(circle at 85% 15%, rgba(75,198,202,.38), transparent 32%), linear-gradient(145deg, #173035, #12191d); }

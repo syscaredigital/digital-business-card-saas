@@ -44,21 +44,16 @@
 
     <section class="section-block">
       <div class="container">
-        <div class="template-filter-row wide" aria-label="Template categories">
-          <span class="active">All styles</span>
-          <span>Minimal</span>
-          <span>Corporate</span>
-          <span>Creative</span>
-          <span>Dark</span>
-          <span>Light</span>
+        <div class="template-filter-row wide" aria-label="Template categories" data-template-filters>
+          <button class="active" type="button" data-template-filter="all">All industries</button>
+          <button type="button" data-template-filter="business">Business</button>
+          <button type="button" data-template-filter="creative">Creative</button>
+          <button type="button" data-template-filter="technology">Technology</button>
+          <button type="button" data-template-filter="lifestyle">Lifestyle</button>
+          <button type="button" data-template-filter="services">Professional services</button>
         </div>
-        <div class="template-row">
-          <article class="vcard-template red-template"><div class="avatar avatar-man">JA</div><h3>James Anderson</h3><p>Marketing Director<br>Acme Corporation</p><div class="vcard-icons"><span></span><span></span><span></span><span></span></div></article>
-          <article class="vcard-template light-template"><div class="avatar avatar-woman">SP</div><h3>Samantha Patel</h3><p>Product Designer<br>Studio X</p><div class="vcard-icons"><span></span><span></span><span></span><span></span></div></article>
-          <article class="vcard-template blue-template active"><div class="avatar avatar-man gray">MJ</div><h3>Michael Johnson</h3><p>CEO & Founder<br>Innovate Labs</p><div class="vcard-icons"><span></span><span></span><span></span><span></span></div></article>
-          <article class="vcard-template violet-template"><div class="avatar avatar-woman">PS</div><h3>Priya Sharma</h3><p>UX/UI Designer<br>DesignCraft</p><div class="vcard-icons"><span></span><span></span><span></span><span></span></div></article>
-          <article class="vcard-template light-template"><div class="avatar avatar-woman">DB</div><h3>David Brown</h3><p>Sales Manager<br>Global Solutions</p><div class="vcard-icons"><span></span><span></span><span></span><span></span></div></article>
-          <article class="vcard-template teal-template"><div class="avatar avatar-woman">ED</div><h3>Emily Davis</h3><p>Business Consultant<br>Growth Advisors</p><div class="vcard-icons"><span></span><span></span><span></span><span></span></div></article>
+        <div class="industry-template-catalog" data-public-template-grid>
+          <div class="template-catalog-state">Loading industry templates...</div>
         </div>
       </div>
     </section>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Industry VCard | Sync E-Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/vcard-navigation.css" />
+  <link rel="stylesheet" href="../../public/assets/css/vcard-features.css" />
+  <link rel="stylesheet" href="../../public/assets/css/industry-vcard.css" />
+</head>
+<body>
+  <header class="vcard-navigation"><nav class="vcard-navbar" aria-label="Main navigation"><a class="vcard-nav-brand" href="../website/home.html" aria-label="Sync E-Card home"><img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></a><button class="vcard-menu-toggle" type="button" data-vcard-menu aria-expanded="false" aria-controls="vcardMainNav" aria-label="Toggle navigation"><span></span><span></span><span></span></button><div class="vcard-menu" id="vcardMainNav" data-vcard-menu-panel><a href="../website/home.html">Home</a><a href="../website/templates.html">Templates</a><a href="../website/pricing.html">Pricing</a><div class="vcard-nav-actions"><a href="../auth/login.html" class="vcard-login">Login</a><a href="../auth/register.html" class="vcard-register">Register</a></div></div></nav></header>
+
+  <main class="vcard-shell industry-card" data-industry-card>
+    <section class="industry-hero">
+      <div class="industry-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="industry-hero-copy"><span class="industry-kicker" data-industry-label>Industry professional</span><h1 class="profile-name">Alex Morgan</h1><p class="profile-role">Independent Professional</p><p class="profile-company">Sync E-Card Studio</p><div class="industry-hero-actions"><a href="#contact">Let&rsquo;s connect</a><button type="button" data-share-card>Share profile</button></div></div>
+      <div class="industry-portrait-wrap"><div class="industry-symbol" data-industry-symbol aria-hidden="true">◆</div><div class="profile-avatar"><span>AM</span></div><span class="industry-availability">Available</span></div>
+    </section>
+
+    <section class="industry-intro"><div><span>About</span><h2 data-industry-statement>Ideas, experience and service—presented with clarity.</h2></div><p class="intro-copy">I help people move from a good idea to a confident result through thoughtful advice, reliable service, and a personal approach.</p></section>
+
+    <section id="contact" class="industry-contact-grid"><a href="mailto:alex@example.com"><span>Email</span><strong class="contact-value">alex@example.com</strong></a><a href="tel:+94112345678"><span>Phone</span><strong class="contact-value">+94 11 234 5678</strong></a><a href="#"><span>Website</span><strong class="contact-value">www.example.com</strong></a><div><span>Location</span><strong class="contact-value">Colombo, Sri Lanka</strong></div></section>
+
+    <section class="industry-showcase"><div class="industry-section-heading"><span>01</span><div><small data-industry-label>Expertise</small><h2>What I can help you with</h2></div></div><div class="industry-service-grid" data-industry-services></div></section>
+
+    <section class="industry-feature-panel"><div><span class="industry-panel-number">02 / Selected work</span><h2 data-industry-feature-title>A focused way to discover my work.</h2><p data-industry-feature-copy>Explore recent work, useful resources, and the services people ask for most.</p><a href="#message">Start a conversation <span>&rarr;</span></a></div><div class="industry-feature-art" aria-hidden="true"><span></span><span></span><span></span></div></section>
+
+    <section class="industry-hours"><div class="industry-section-heading"><span>03</span><div><small>Availability</small><h2>Business hours</h2></div></div><div class="hours-grid"><div><strong>Monday — Friday</strong><span>09:00 — 18:00</span></div><div><strong>Saturday</strong><span>By appointment</span></div><div><strong>Sunday</strong><span>Closed</span></div></div></section>
+
+    <section id="message" class="message-panel"><span class="industry-panel-number">04 / Contact</span><h2>Have a project in mind?</h2><p>Send a short message and I&rsquo;ll get back to you.</p><div class="message-grid"><input class="field" type="text" placeholder="Your name" /><input class="field" type="email" placeholder="Email address" /><textarea class="message-area" placeholder="Tell me a little about your project"></textarea></div><button class="submit-button" type="button">Send message <span>&rarr;</span></button></section>
+
+    <div class="action-grid"><a class="action-button" href="#">＋ Add to contacts</a><button class="action-button" type="button" data-share-card>↗ Share profile</button></div>
+  </main>
+  <script src="../../public/assets/js/vcard-navigation.js"></script>
+  <script src="../../public/assets/js/industry-vcard-template.js"></script>
+  <script src="../../public/assets/js/vcard-feature-renderer.js"></script>
+  <script src="../../public/assets/js/vcard-template-runtime.js"></script>
+</body>
+</html>

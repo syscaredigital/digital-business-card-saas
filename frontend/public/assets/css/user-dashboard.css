@@ -60,6 +60,8 @@ body.user-workspace { background: var(--user-bg); color: var(--user-text); }
 .vcard-feature-heading { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .vcard-feature-heading span { padding: 5px 9px; border-radius: 999px; background: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 700; }
 .vcard-feature-field { display: grid; gap: 7px; }
+.vcard-feature-guide { color:#718096; font-size:12px; line-height:1.45; }
+.vcard-template-choice-copy em{display:block;margin-bottom:5px;overflow:hidden;color:#ef6070;font-size:8px;font-style:normal;font-weight:800;letter-spacing:.08em;text-overflow:ellipsis;text-transform:uppercase;white-space:nowrap}
 .vcard-feature-field textarea { min-height: 110px; resize: vertical; }
 @media (max-width: 760px) { .vcard-feature-editor { grid-template-columns: 1fr; } }
 

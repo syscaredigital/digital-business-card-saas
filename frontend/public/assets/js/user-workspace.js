@@ -53,6 +53,34 @@
   function setText(id, value) { var node = document.getElementById(id); if (node) node.textContent = value; }
   function money(value) { return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(Number(value || 0)); }
 
+  var vcardFeatureGuides = {
+    "business-hours": ["One day per line", "Monday | 9:00 AM - 5:00 PM"],
+    services: ["One service per line: name | description | optional image URL", "Property valuation | Accurate local market valuation | https://example.com/image.jpg"],
+    products: ["One product per line: name | price | description | optional image URL", "Modern family home | $350,000 | Three bedrooms with garden | https://example.com/home.jpg"],
+    galleries: ["One image per line: caption | image URL", "Recent project | https://example.com/project.jpg"],
+    "instagram-embed": ["One post image per line: caption | image URL", "Behind the scenes | https://example.com/post.jpg"],
+    blogs: ["One article per line: title | summary | image or article URL", "Buying your first home | Five useful steps | https://example.com/article"],
+    testimonials: ["One review per line: quote | customer name | role | optional avatar URL", "Wonderful service from start to finish | Alex Morgan | Customer | https://example.com/alex.jpg"],
+    appointments: ["Title | duration or availability | booking URL", "Book a consultation | 30 minutes | https://example.com/book"],
+    "social-links": ["One link per line: network name | full URL", "LinkedIn | https://linkedin.com/in/your-name"],
+    "custom-links": ["One link per line: link name | full URL", "View my portfolio | https://example.com/portfolio"],
+    banners: ["Add an image URL, or title | image URL", "Summer offer | https://example.com/banner.jpg"],
+    iframes: ["Add a title and full content URL", "Watch my introduction | https://example.com/video"],
+    "qrcode-customize": ["Add the destination or QR image URL", "https://example.com/contact"],
+    advanced: ["Add each important detail on a new line", "Languages: English, Sinhala"],
+    "privacy-policy": ["Add readable policy text, using a new line for each paragraph", "Your privacy policy"],
+    "term-condition": ["Add readable terms, using a new line for each paragraph", "Your terms and conditions"],
+    "manage-section": ["Add each extra detail on a new line", "Additional information"]
+  };
+
+  function vcardFeatureField(feature, savedValue, createMode) {
+    var guide = vcardFeatureGuides[feature.key] || ["Add the content to show in this section", "Add section content"];
+    var dataName = createMode ? "data-create-vcard-section" : "data-vcard-section";
+    var idPrefix = createMode ? "create-vcard-section-" : "vcard-section-";
+    return '<section class="vcard-feature-field"><label for="' + idPrefix + escapeHtml(feature.key) + '">' + escapeHtml(feature.label) + '</label>' +
+      '<small class="vcard-feature-guide">' + escapeHtml(guide[0]) + '</small><textarea id="' + idPrefix + escapeHtml(feature.key) + '" ' + dataName + '="' + escapeHtml(feature.key) + '" rows="4" placeholder="' + escapeHtml(guide[1]) + '">' + escapeHtml(savedValue || "") + '</textarea></section>';
+  }
+
   function renderDashboard(data) {
     var profile = data.user || {}, plan = data.subscription || {}, metrics = data.metrics || {};
     var displayName = profile.name || name || "there";
@@ -120,13 +148,15 @@
     if (createTemplate) {
       var availableTemplates = entitlements.templates || [];
       createTemplate.innerHTML = availableTemplates.length ? availableTemplates.map(function (template) {
-        return '<option value="' + template.id + '">' + escapeHtml(template.name) + '</option>';
+        var category = template.templateJson && template.templateJson.category;
+        return '<option value="' + template.id + '">' + escapeHtml(category ? category + " — " + template.name : template.name) + '</option>';
       }).join("") : '<option value="">No templates are included in this plan</option>';
       createTemplate.disabled = !availableTemplates.length;
       if (createTemplateGallery) {
         createTemplateGallery.innerHTML = availableTemplates.map(function (template, index) {
           var preview = template.previewUrl || "";
-          return '<button class="vcard-template-choice' + (index === 0 ? ' is-selected' : '') + '" type="button" data-template-choice="' + template.id + '"><span class="vcard-template-choice-preview">' + (preview ? '<iframe src="' + escapeHtml(preview) + '" title="" tabindex="-1" loading="lazy"></iframe>' : '<i>' + escapeHtml(template.name.charAt(0)) + '</i>') + '</span><span class="vcard-template-choice-copy"><strong>' + escapeHtml(template.name) + '</strong><small>' + escapeHtml(template.description || "Professional VCard design") + '</small></span><b>✓</b></button>';
+          var category = template.templateJson && template.templateJson.category ? template.templateJson.category : "General VCard";
+          return '<button class="vcard-template-choice' + (index === 0 ? ' is-selected' : '') + '" type="button" data-template-choice="' + template.id + '"><span class="vcard-template-choice-preview">' + (preview ? '<iframe src="' + escapeHtml(preview) + '" title="" tabindex="-1" loading="lazy"></iframe>' : '<i>' + escapeHtml(template.name.charAt(0)) + '</i>') + '</span><span class="vcard-template-choice-copy"><em>' + escapeHtml(category) + '</em><strong>' + escapeHtml(template.name) + '</strong><small>' + escapeHtml(template.description || "Professional VCard design") + '</small></span><b>✓</b></button>';
         }).join("");
         createTemplateGallery.querySelectorAll("[data-template-choice]").forEach(function (choice) {
           choice.addEventListener("click", function () {
@@ -143,7 +173,7 @@
       escapeHtml((entitlements.features || []).map(function (feature) { return feature.label; }).join(" · ") || "Basic card creation") + '</small>';
     if (createFeatureEditor) createFeatureEditor.innerHTML = '<div class="vcard-feature-heading"><strong>Included VCard sections</strong><span>' + escapeHtml(entitlements.planName || "Current plan") + '</span></div>' +
       (entitlements.features || []).filter(function (feature) { return feature.key !== "basic-details"; }).map(function (feature) {
-        return '<section class="vcard-feature-field"><label for="create-vcard-section-' + escapeHtml(feature.key) + '">' + escapeHtml(feature.label) + '</label><textarea id="create-vcard-section-' + escapeHtml(feature.key) + '" data-create-vcard-section="' + escapeHtml(feature.key) + '" rows="4" placeholder="Add the content to show in this section"></textarea></section>';
+        return vcardFeatureField(feature, "", true);
       }).join("") || '<p>Basic details are the only editable feature in this plan.</p>';
     if (createAllowance) {
       createAllowance.textContent = limitReached ? "Plan limit reached" : (cardLimit - usedCards) + " slot" + (cardLimit - usedCards === 1 ? "" : "s") + " left";
@@ -261,14 +291,15 @@
         editor.elements.occupation.value = card.settings && card.settings.sections ? (card.settings.sections["basic-details"] || "") : "";
         editor.elements.isActive.checked = Boolean(card.is_active);
         editor.elements.templateId.innerHTML = (entitlements.templates || []).map(function (template) {
-          return '<option value="' + template.id + '">' + escapeHtml(template.name) + '</option>';
+          var category = template.templateJson && template.templateJson.category;
+          return '<option value="' + template.id + '">' + escapeHtml(category ? category + " — " + template.name : template.name) + '</option>';
         }).join("");
         editor.elements.templateId.value = String(card.template_id || entitlements.templates?.[0]?.id || "");
         var featureEditor = document.getElementById("vcardFeatureEditor");
         var savedSections = card.settings && card.settings.sections ? card.settings.sections : {};
         if (featureEditor) featureEditor.innerHTML = '<div class="vcard-feature-heading"><strong>Plan-enabled card sections</strong><span>' + escapeHtml(entitlements.planName || "Current plan") + '</span></div>' +
           (entitlements.features || []).filter(function (feature) { return feature.key !== "basic-details"; }).map(function (feature) {
-            return '<section class="vcard-feature-field"><label for="vcard-section-' + escapeHtml(feature.key) + '">' + escapeHtml(feature.label) + '</label><textarea id="vcard-section-' + escapeHtml(feature.key) + '" data-vcard-section="' + escapeHtml(feature.key) + '" rows="4" placeholder="Add the content to show in this section">' + escapeHtml(savedSections[feature.key] || "") + '</textarea></section>';
+            return vcardFeatureField(feature, savedSections[feature.key], false);
           }).join("") || '<p>Basic details are the only editable feature in this plan.</p>';
         editorStatus.textContent = "Loaded from your account";
       }).catch(function (error) { editorStatus.textContent = error.message; });

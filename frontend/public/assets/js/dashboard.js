@@ -1863,9 +1863,11 @@ document.addEventListener("DOMContentLoaded", function () {
       var preview = template.previewUrl
         ? '<a class="btn-preview" href="' + escapeDashboardHtml(template.previewUrl) + '" target="_blank" rel="noopener noreferrer">Preview</a>'
         : '<span class="vcard-preview-unavailable">Preview not configured</span>';
+      var visual = template.previewUrl ? '<iframe src="' + escapeDashboardHtml(template.previewUrl) + '" title="" loading="lazy" tabindex="-1"></iframe>' : '<span>Template ' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeDashboardHtml(template.name) + '</strong>';
+      var category = template.config && template.config.category ? template.config.category : "General VCard";
       return '<article class="admin-card vcard-template-card">' +
-        '<div class="vcard-template-visual tone-' + (index % 3 + 1) + '"><span>Template ' + String(index + 1).padStart(2, "0") + '</span><strong>' + escapeDashboardHtml(template.name) + '</strong></div>' +
-        '<div class="admin-card-header"><div><h3>' + escapeDashboardHtml(template.name) + '</h3><p>' + escapeDashboardHtml(template.description || "Reusable digital card layout") + '</p></div><span class="status-badge ' + (template.isPublic ? "active" : "pending") + '">' + (template.isPublic ? "Public" : "Private") + '</span></div>' +
+        '<div class="vcard-template-visual tone-' + (index % 3 + 1) + '">' + visual + '</div>' +
+        '<div class="admin-card-header"><div><small class="vcard-template-category">' + escapeDashboardHtml(category) + '</small><h3>' + escapeDashboardHtml(template.name) + '</h3><p>' + escapeDashboardHtml(template.description || "Reusable digital card layout") + '</p></div><span class="status-badge ' + (template.isPublic ? "active" : "pending") + '">' + (template.isPublic ? "Public" : "Private") + '</span></div>' +
         '<div class="template-actions">' + preview + '<button class="btn-share" type="button" data-vcard-admin-action="assign-template" data-template-id="' + template.id + '">Assign</button></div>' +
       '</article>';
     }).join("");
@@ -1879,7 +1881,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return '<option value="' + user.id + '">' + escapeDashboardHtml(user.name || user.email) + ' · ' + escapeDashboardHtml(user.email) + '</option>';
     }).join("");
     templateSelect.innerHTML = '<option value="">No template</option>' + templates.map(function (template) {
-      return '<option value="' + template.id + '">' + escapeDashboardHtml(template.name) + '</option>';
+      var category = template.config && template.config.category;
+      return '<option value="' + template.id + '">' + escapeDashboardHtml(category ? category + " — " + template.name : template.name) + '</option>';
     }).join("");
   }
 
