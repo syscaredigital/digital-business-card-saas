@@ -167,6 +167,23 @@
     } else renderText(body, content);
   }
 
+  function renderQr(body, content) {
+    var url = findUrl(parts(lines(content)[0] || content));
+    if (!url) { renderText(body, content); return; }
+    var panel = el("div", "vfeature-qr-panel");
+    var qr = el("img", "vfeature-qr-image");
+    var apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
+      ? "http://localhost:5000" : window.location.origin;
+    qr.src = apiOrigin + "/api/public/qrcode?data=" + encodeURIComponent(url);
+    qr.alt = "QR code";
+    qr.loading = "lazy";
+    var copy = el("div", "");
+    copy.append(el("strong", "", "Scan to open"), el("p", "", url.replace(/^https?:\/\/(?:www\.)?/i, "")));
+    var action = link(url, "Open link", "vfeature-button");
+    if (action) copy.appendChild(action);
+    panel.append(qr, copy); body.appendChild(panel);
+  }
+
   function renderText(body, content) {
     var copy = el("div", "vfeature-rich-text");
     lines(content).forEach(function (line) { copy.appendChild(el("p", "", line)); });
@@ -185,7 +202,8 @@
     else if (key === "testimonials") renderTestimonials(body, content);
     else if (key === "social-links" || key === "custom-links") renderLinks(body, content);
     else if (key === "appointments") renderAppointment(body, content);
-    else if (key === "banners" || key === "iframes" || key === "qrcode-customize") renderMedia(body, content);
+    else if (key === "qrcode-customize") renderQr(body, content);
+    else if (key === "banners" || key === "iframes") renderMedia(body, content);
     else renderText(body, content);
     section.appendChild(body);
     return section;

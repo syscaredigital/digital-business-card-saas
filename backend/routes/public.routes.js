@@ -1,4 +1,5 @@
 const express = require("express");
+const QRCode = require("qrcode");
 const pool = require("../config/database.config");
 const { normalizePlanFeatures } = require("../config/vcard-features");
 
@@ -65,6 +66,15 @@ router.get("/vcard-templates", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.get("/qrcode", async (req, res, next) => {
+  const data = String(req.query.data || "").trim();
+  if (!data || data.length > 2048) return res.status(400).json({ message: "A valid QR destination is required" });
+  try {
+    const svg = await QRCode.toString(data, { type: "svg", margin: 1, width: 320, color: { dark: "#111827", light: "#ffffff" } });
+    res.type("image/svg+xml").send(svg);
+  } catch (error) { next(error); }
+});
+
 router.get("/vcards/featured", async (req, res, next) => {
   const requestedLimit = Number.parseInt(req.query.limit, 10);
   const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 12) : 6;
@@ -115,6 +125,28 @@ router.get("/vcards/:id", async (req, res, next) => {
       enabledFeatures: Array.from(allowedFeatures),
       companyName: card.company_name, template: { id: card.template_id, name: card.template_name, previewUrl: card.preview_url || null, config: card.template_json || {} },
     } });
+  } catch (error) { next(error); }
+});
+
+router.post("/vcards/:id/enquiries", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
+  const name = String(req.body?.name || "").trim().slice(0, 150);
+  const email = String(req.body?.email || "").trim().slice(0, 255);
+  const phone = String(req.body?.phone || "").trim().slice(0, 50);
+  const company = String(req.body?.company || "").trim().slice(0, 255);
+  const message = String(req.body?.message || "").trim().slice(0, 5000);
+  if (!name || (!email && !phone) || !message) return res.status(400).json({ message: "Name, message, and an email or phone number are required" });
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: "Enter a valid email address" });
+  try {
+    const card = await pool.query("SELECT id FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
+    await pool.query(
+      `INSERT INTO contacts (vcard_id, name, email, phone, company, message, source)
+       VALUES ($1,$2,$3,$4,$5,$6,'Public VCard enquiry')`,
+      [id, name, email || null, phone || null, company || null, message]
+    );
+    res.status(201).json({ message: "Your enquiry has been sent successfully" });
   } catch (error) { next(error); }
 });
 

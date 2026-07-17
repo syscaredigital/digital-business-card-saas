@@ -70,8 +70,10 @@ exports.dashboard = async (req, res, next) => {
       ),
       pool.query(
         `SELECT COUNT(*)::int AS total
-         FROM contacts ct JOIN business_cards bc ON bc.id = ct.business_card_id
-         WHERE bc.user_id = $1`, [userId]
+         FROM contacts ct
+         LEFT JOIN business_cards bc ON bc.id = ct.business_card_id
+         LEFT JOIN vcards v ON v.id = ct.vcard_id
+         WHERE COALESCE(bc.user_id, v.user_id) = $1`, [userId]
       ),
       pool.query(
         `SELECT COALESCE(SUM(a.page_views), 0)::int AS views,
@@ -135,10 +137,13 @@ exports.dashboard = async (req, res, next) => {
 exports.enquiries = async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT ct.id, bc.title AS vcard_name, ct.name, ct.email, ct.phone,
+      `SELECT ct.id, COALESCE(bc.title, v.title) AS vcard_name, ct.name, ct.email, ct.phone,
               ct.company, ct.message, ct.source, ct.contacted_at
-       FROM contacts ct JOIN business_cards bc ON bc.id = ct.business_card_id
-       WHERE bc.user_id = $1 ORDER BY ct.contacted_at DESC`, [req.user.id]
+       FROM contacts ct
+       LEFT JOIN business_cards bc ON bc.id = ct.business_card_id
+       LEFT JOIN vcards v ON v.id = ct.vcard_id
+       WHERE COALESCE(bc.user_id, v.user_id) = $1
+       ORDER BY ct.contacted_at DESC`, [req.user.id]
     );
     res.json({ enquiries: result.rows });
   } catch (error) { next(error); }
