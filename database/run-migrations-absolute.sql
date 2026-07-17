@@ -35,3 +35,6 @@
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/033_create_auth_sessions_table.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/034_create_appointments_table.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/035_add_category_to_nfc_products.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/036_link_contacts_to_vcards.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/037_configure_manual_subscription_payments.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/038_complete_affiliate_workflow.sql

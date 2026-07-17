@@ -1,5 +1,6 @@
 const pool = require("../config/database.config");
 const bcrypt = require("bcrypt");
+const path = require("path");
 const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
 
 function number(value) {
@@ -775,6 +776,7 @@ function positiveIntegerParam(req) {
 
 const nfcCardStatuses = ["inactive", "active", "assigned", "disabled"];
 const nfcOrderStatuses = ["pending", "processing", "shipped", "completed", "cancelled"];
+const nfcPaymentStatuses = ["pending", "approved", "rejected"];
 
 function mapAdminNfcCard(card) {
   return {
@@ -824,11 +826,14 @@ exports.listNfcManagement = async (req, res, next) => {
         values
       ),
       pool.query(
-        `SELECT o.id, o.user_id, o.quantity, o.amount, o.status, o.shipping_address,
-                o.tracking_number, o.ordered_at, o.updated_at,
-                ou.name AS user_name, ou.email AS user_email
+        `SELECT o.id,o.user_id,o.nfc_product_id,o.vcard_id,o.quantity,o.amount,o.currency,o.status,o.shipping_address,
+                o.tracking_number,o.payment_method,o.payment_status,o.transaction_number,o.proof_url,o.admin_note,
+                o.payment_reviewed_at,o.ordered_at,o.updated_at,ou.name AS user_name,ou.email AS user_email,
+                p.name AS product_name,v.title AS vcard_title
          FROM nfc_orders o
          LEFT JOIN users ou ON ou.id = o.user_id
+         LEFT JOIN nfc_products p ON p.id=o.nfc_product_id
+         LEFT JOIN vcards v ON v.id=o.vcard_id
          ${orderSearch}
          ORDER BY o.ordered_at DESC
          LIMIT 100`,
@@ -879,7 +884,16 @@ exports.listNfcManagement = async (req, res, next) => {
         userEmail: order.user_email || null,
         quantity: number(order.quantity),
         amount: number(order.amount),
+        currency: order.currency || "LKR",
         status: order.status,
+        productName: order.product_name || "NFC card",
+        vcardTitle: order.vcard_title || null,
+        paymentMethod: order.payment_method || "bank_transfer",
+        paymentStatus: order.payment_status || "pending",
+        transactionNumber: order.transaction_number || null,
+        hasProof: Boolean(order.proof_url),
+        adminNote: order.admin_note || null,
+        paymentReviewedAt: order.payment_reviewed_at || null,
         shippingAddress: order.shipping_address || null,
         trackingNumber: order.tracking_number || null,
         orderedAt: order.ordered_at,
@@ -1154,38 +1168,80 @@ exports.deleteNfcCard = async (req, res, next) => {
 
 exports.updateNfcOrder = async (req, res, next) => {
   const orderId = positiveIntegerParam(req);
-  const status = String(req.body.status || "").toLowerCase();
+  const requestedStatus = req.body.status == null ? null : String(req.body.status).toLowerCase();
+  const requestedPaymentStatus = req.body.paymentStatus == null ? null : String(req.body.paymentStatus).toLowerCase();
   const trackingNumber = String(req.body.trackingNumber || "").trim() || null;
+  const adminNote = String(req.body.adminNote || "").trim() || null;
   if (!orderId) return res.status(400).json({ message: "Invalid NFC order ID" });
-  if (!nfcOrderStatuses.includes(status)) return res.status(400).json({ message: "Invalid NFC order status" });
+  if (requestedStatus && !nfcOrderStatuses.includes(requestedStatus)) return res.status(400).json({ message: "Invalid NFC order status" });
+  if (requestedPaymentStatus && !nfcPaymentStatuses.includes(requestedPaymentStatus)) return res.status(400).json({ message: "Invalid NFC payment status" });
   if (trackingNumber && trackingNumber.length > 255) return res.status(400).json({ message: "Tracking number is too long" });
+  if (adminNote && adminNote.length > 3000) return res.status(400).json({ message: "Admin note is too long" });
 
   let client;
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    const result = await client.query(
-      `UPDATE nfc_orders SET status = $1, tracking_number = $2, updated_at = NOW()
-       WHERE id = $3 RETURNING id, status, tracking_number`,
-      [status, trackingNumber, orderId]
-    );
-    if (!result.rowCount) {
+    const existingResult = await client.query(`SELECT id,user_id,amount,currency,status,payment_status,transaction_number
+      FROM nfc_orders WHERE id=$1 FOR UPDATE`, [orderId]);
+    if (!existingResult.rowCount) {
       await client.query("ROLLBACK");
       return res.status(404).json({ message: "NFC order not found" });
+    }
+    const existing = existingResult.rows[0];
+    const paymentStatus = requestedPaymentStatus || existing.payment_status || "pending";
+    let status = requestedStatus || existing.status;
+    if (requestedPaymentStatus === "approved" && ["pending","cancelled"].includes(existing.status)) status = "processing";
+    if (requestedPaymentStatus === "rejected") status = "cancelled";
+    if (paymentStatus !== "approved" && ["processing","shipped","completed"].includes(status)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "Approve the NFC payment before fulfilment" });
+    }
+    const result = await client.query(`UPDATE nfc_orders SET status=$1,tracking_number=$2,payment_status=$3,
+      payment_reviewed_by=CASE WHEN $4::boolean THEN $5 ELSE payment_reviewed_by END,
+      payment_reviewed_at=CASE WHEN $4::boolean THEN NOW() ELSE payment_reviewed_at END,
+      admin_note=$6,updated_at=NOW() WHERE id=$7
+      RETURNING id,status,tracking_number,payment_status,payment_reviewed_at`,
+      [status,trackingNumber,paymentStatus,Boolean(requestedPaymentStatus),req.user.id,adminNote,orderId]);
+    if (requestedPaymentStatus === "approved") {
+      await client.query(`INSERT INTO transactions(user_id,transaction_type,amount,currency,reference,gateway,status,metadata)
+        SELECT $1,'nfc_order',$2,$3,$4,'manual','completed',$5::jsonb
+        WHERE NOT EXISTS(SELECT 1 FROM transactions WHERE transaction_type='nfc_order' AND metadata @> $5::jsonb)`,
+        [existing.user_id,existing.amount,existing.currency || "LKR",existing.transaction_number,JSON.stringify({ orderId })]);
+    }
+    if (requestedPaymentStatus) {
+      await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,$2,$3,'billing')`,
+        [existing.user_id,requestedPaymentStatus === "approved" ? "NFC payment approved" : "NFC payment rejected",
+          requestedPaymentStatus === "approved" ? `Payment for NFC order #${orderId} was approved. Production can now begin.` : `Payment for NFC order #${orderId} was rejected.${adminNote ? " " + adminNote : ""}`]);
     }
     await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'nfc_order.updated', 'nfc_order', $2, $3::jsonb, $4, $5)`,
-      [req.user.id, orderId, JSON.stringify({ status, trackingNumber }), req.ip || null, req.get("user-agent") || null]
+      [req.user.id, orderId, JSON.stringify({ status, paymentStatus, trackingNumber, adminNote }), req.ip || null, req.get("user-agent") || null]
     );
     await client.query("COMMIT");
-    res.json({ order: result.rows[0] });
+    res.json({ order: result.rows[0], message: requestedPaymentStatus ? `NFC payment ${requestedPaymentStatus}` : "NFC order updated" });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});
     next(error);
   } finally {
     if (client) client.release();
   }
+};
+
+exports.downloadNfcOrderProof = async (req, res, next) => {
+  const orderId = positiveIntegerParam(req);
+  if (!orderId) return res.status(400).json({ message: "Invalid NFC order ID" });
+  try {
+    const result = await pool.query("SELECT proof_url FROM nfc_orders WHERE id=$1", [orderId]);
+    if (!result.rowCount || !result.rows[0].proof_url) return res.status(404).json({ message: "NFC payment proof not found" });
+    const proofUrl = result.rows[0].proof_url;
+    if (!/^\/uploads\/payment-slips\/[A-Za-z0-9._-]+$/.test(proofUrl)) return res.status(400).json({ message: "Invalid NFC proof path" });
+    const uploadRoot = path.resolve(__dirname, "..", "uploads", "payment-slips");
+    const filePath = path.resolve(uploadRoot, path.basename(proofUrl));
+    if (!filePath.startsWith(uploadRoot + path.sep)) return res.status(400).json({ message: "Invalid NFC proof path" });
+    res.download(filePath);
+  } catch (error) { next(error); }
 };
 
 const subscriptionStatuses = ["active", "pending", "trial", "cancelled", "expired"];
@@ -1536,7 +1592,7 @@ function cashPaymentValidationMessage(payment) {
   if (!/^[A-Z]{3,10}$/.test(payment.currency)) return "Currency must contain 3 to 10 letters";
   if (!cashPaymentStatuses.includes(payment.status)) return "Invalid cash payment status";
   if (payment.reference && payment.reference.length > 255) return "Payment reference must not exceed 255 characters";
-  if (payment.proofUrl && (payment.proofUrl.length > 2000 || !/^https?:\/\//i.test(payment.proofUrl))) return "Proof attachment must be a valid HTTP or HTTPS URL";
+  if (payment.proofUrl && (payment.proofUrl.length > 2000 || !(/^(https?:\/\/)/i.test(payment.proofUrl) || /^\/uploads\/payment-slips\/[A-Za-z0-9._-]+$/.test(payment.proofUrl)))) return "Proof attachment must be a valid URL or uploaded payment slip";
   if (payment.notes && payment.notes.length > 3000) return "Notes must not exceed 3,000 characters";
   return null;
 }
@@ -1578,11 +1634,28 @@ async function syncCashPaymentTransaction(client, payment) {
       [payment.id, payment.userId, payment.amount, payment.currency, payment.reference, transactionStatus, JSON.stringify({ subscriptionId: payment.subscriptionId })]
     );
   }
-  if (payment.status === "approved" && payment.subscriptionId) {
-    await client.query(
-      "UPDATE subscriptions SET status = 'active', updated_at = NOW() WHERE id = $1",
-      [payment.subscriptionId]
+  if (payment.subscriptionId && payment.status === "approved") {
+    const subscription = await client.query(
+      `SELECT s.id,s.user_id,p.name,p.billing_interval FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
+       WHERE s.id=$1 FOR UPDATE OF s`, [payment.subscriptionId]
     );
+    if (subscription.rowCount) {
+      const selected = subscription.rows[0];
+      await client.query(`UPDATE subscriptions SET status='cancelled',cancel_reason='Replaced by approved subscription',updated_at=NOW()
+        WHERE user_id=$1 AND status='active' AND id<>$2`, [selected.user_id, payment.subscriptionId]);
+      await client.query(`UPDATE subscriptions SET status='active',start_date=CURRENT_DATE,
+        end_date=CASE WHEN LOWER(COALESCE($2,'')) IN ('year','yearly','annual') THEN (CURRENT_DATE + INTERVAL '1 year')::date
+                      ELSE (CURRENT_DATE + INTERVAL '1 month')::date END,
+        auto_renew=FALSE,cancel_reason=NULL,updated_at=NOW() WHERE id=$1`, [payment.subscriptionId, selected.billing_interval]);
+      await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,'Subscription activated',$2,'billing')`,
+        [selected.user_id, `Your ${selected.name || "paid"} plan payment was approved and the plan is now active.`]);
+      await createAffiliateCommissionForPayment(client, payment.id);
+    }
+  } else if (payment.subscriptionId && payment.status === "rejected") {
+    const rejected = await client.query(`UPDATE subscriptions SET status='cancelled',cancel_reason='Manual payment rejected',updated_at=NOW()
+      WHERE id=$1 AND status='pending' RETURNING user_id`, [payment.subscriptionId]);
+    if (rejected.rowCount) await client.query(`INSERT INTO notifications(user_id,title,message,type)
+      VALUES($1,'Payment needs attention','Your manual subscription payment was rejected. Please submit a new payment slip.','billing')`, [rejected.rows[0].user_id]);
   }
 }
 
@@ -1658,6 +1731,26 @@ exports.listCashPayments = async (req, res, next) => {
         endDate: subscription.end_date || null, status: subscription.status,
       })),
       summary: summaryResult.rows[0],
+    });
+  } catch (error) { next(error); }
+};
+
+exports.downloadCashPaymentProof = async (req, res, next) => {
+  const paymentId = positiveIntegerParam(req);
+  if (!paymentId) return res.status(400).json({ message: "Invalid cash payment ID" });
+  try {
+    const result = await pool.query(
+      `SELECT proof_url FROM payments WHERE id=$1 AND LOWER(COALESCE(method,''))=ANY($2::text[])`,
+      [paymentId, cashPaymentMethods]
+    );
+    if (!result.rowCount || !result.rows[0].proof_url) return res.status(404).json({ message: "Payment proof not found" });
+    const proofUrl = result.rows[0].proof_url;
+    if (!/^\/uploads\/payment-slips\/[A-Za-z0-9._-]+$/.test(proofUrl)) return res.status(400).json({ message: "This payment uses an external proof link" });
+    const uploadRoot = path.resolve(__dirname, "..", "uploads", "payment-slips");
+    const filePath = path.resolve(uploadRoot, path.basename(proofUrl));
+    if (!filePath.startsWith(uploadRoot + path.sep)) return res.status(400).json({ message: "Invalid payment proof path" });
+    return res.sendFile(filePath, { dotfiles: "deny" }, (error) => {
+      if (error && !res.headersSent) next(Object.assign(error, { status: error.status || 404 }));
     });
   } catch (error) { next(error); }
 };
@@ -2199,6 +2292,12 @@ exports.deletePayout = async (req, res, next) => {
 };
 
 const withdrawalStatuses = ["pending", "approved", "processing", "completed", "rejected", "cancelled"];
+const withdrawalTransitions = {
+  pending: ["approved", "rejected", "cancelled"],
+  approved: ["processing", "completed", "rejected", "cancelled"],
+  processing: ["completed", "rejected", "cancelled"],
+  completed: [], rejected: [], cancelled: [],
+};
 
 function normalizeWithdrawalPayload(body) {
   return {
@@ -2222,7 +2321,22 @@ function withdrawalValidationMessage(withdrawal) {
   if (withdrawal.accountName && withdrawal.accountName.length > 500) return "Account details must not exceed 500 characters";
   if (withdrawal.requestNote && withdrawal.requestNote.length > 3000) return "Request note must not exceed 3,000 characters";
   if (withdrawal.adminNote && withdrawal.adminNote.length > 3000) return "Admin note must not exceed 3,000 characters";
+  if (withdrawal.method !== "cash" && ["approved", "processing", "completed"].includes(withdrawal.status) && !withdrawal.accountName) return "Account details are required before approving this withdrawal";
+  if (["rejected", "cancelled"].includes(withdrawal.status) && !withdrawal.adminNote) return "Add an admin note explaining why this withdrawal was declined";
   return null;
+}
+
+function withdrawalNotification(status, amount, currency) {
+  const value = `${currency} ${Number(amount).toFixed(2)}`;
+  const messages = {
+    pending: `Your withdrawal request for ${value} was recorded and is awaiting review.`,
+    approved: `Your withdrawal request for ${value} was approved and is ready for processing.`,
+    processing: `Your withdrawal of ${value} is now being processed.`,
+    completed: `Your withdrawal of ${value} has been completed.`,
+    rejected: `Your withdrawal request for ${value} was rejected. Review the administrator note for details.`,
+    cancelled: `Your withdrawal request for ${value} was cancelled.`,
+  };
+  return messages[status] || `Your withdrawal status changed to ${status}.`;
 }
 
 function withdrawalPayoutStatus(status) {
@@ -2336,6 +2450,7 @@ exports.listWithdrawals = async (req, res, next) => {
 
 exports.createWithdrawal = async (req, res, next) => {
   const withdrawal = normalizeWithdrawalPayload(req.body);
+  if (withdrawal.status !== "pending") return res.status(400).json({ message: "New withdrawal requests must start as pending" });
   const validation = withdrawalValidationMessage(withdrawal);
   if (validation) return res.status(400).json({ message: validation });
   let client;
@@ -2357,6 +2472,8 @@ exports.createWithdrawal = async (req, res, next) => {
     withdrawal.payoutId = null;
     await client.query("UPDATE withdrawals SET affiliate_id = (SELECT id FROM affiliate_profiles WHERE user_id = $1) WHERE id = $2", [withdrawal.userId, withdrawal.id]);
     const payoutId = await syncWithdrawalPayout(client, withdrawal, req.user.id);
+    await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,'Withdrawal request received',$2,'withdrawal')`,
+      [withdrawal.userId, withdrawalNotification("pending", withdrawal.amount, withdrawal.currency)]);
     await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'withdrawal.created', 'withdrawal', $2, $3::jsonb, $4, $5)`,
@@ -2380,6 +2497,24 @@ exports.updateWithdrawal = async (req, res, next) => {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
+    const existing = await client.query(`SELECT id,user_id,payout_id,amount,currency,method,status,account_details
+      FROM withdrawals WHERE id=$1 FOR UPDATE`, [withdrawalId]);
+    if (!existing.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Withdrawal not found" }); }
+    const previous = existing.rows[0];
+    if (withdrawal.status !== previous.status && !(withdrawalTransitions[previous.status] || []).includes(withdrawal.status)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: `A ${previous.status} withdrawal cannot move to ${withdrawal.status}` });
+    }
+    if (["completed", "rejected", "cancelled"].includes(previous.status)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: `This ${previous.status} withdrawal is final and cannot be edited` });
+    }
+    const financialDetailsChanged = Number(previous.user_id) !== withdrawal.userId || number(previous.amount) !== withdrawal.amount ||
+      previous.currency !== withdrawal.currency || previous.method !== withdrawal.method;
+    if (previous.status !== "pending" && financialDetailsChanged) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "User, amount, currency, and method cannot change after approval" });
+    }
     if (!(await validateTransactionUser(client, withdrawal.userId))) { await client.query("ROLLBACK"); return res.status(400).json({ message: "Selected user was not found" }); }
     const result = await client.query(
       `UPDATE withdrawals SET user_id = $1, amount = $2, currency = $3, method = $4,
@@ -2390,11 +2525,14 @@ exports.updateWithdrawal = async (req, res, next) => {
        updated_at = NOW() WHERE id = $10 RETURNING id, payout_id`,
       [withdrawal.userId, withdrawal.amount, withdrawal.currency, withdrawal.method, withdrawal.status, JSON.stringify({ accountName: withdrawal.accountName }), withdrawal.requestNote, withdrawal.adminNote, req.user.id, withdrawalId]
     );
-    if (!result.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Withdrawal not found" }); }
     withdrawal.id = withdrawalId;
     withdrawal.payoutId = result.rows[0].payout_id;
     await client.query("UPDATE withdrawals SET affiliate_id = (SELECT id FROM affiliate_profiles WHERE user_id = $1) WHERE id = $2", [withdrawal.userId, withdrawalId]);
     const payoutId = await syncWithdrawalPayout(client, withdrawal, req.user.id);
+    if (withdrawal.status !== previous.status) await client.query(
+      `INSERT INTO notifications(user_id,title,message,type) VALUES($1,$2,$3,'withdrawal')`,
+      [withdrawal.userId, `Withdrawal ${withdrawal.status}`, withdrawalNotification(withdrawal.status, withdrawal.amount, withdrawal.currency)]
+    );
     await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'withdrawal.updated', 'withdrawal', $2, $3::jsonb, $4, $5)`,
@@ -2417,10 +2555,13 @@ exports.deleteWithdrawal = async (req, res, next) => {
     await client.query("BEGIN");
     const existing = await client.query("SELECT id, payout_id, user_id, amount, currency, status FROM withdrawals WHERE id = $1 FOR UPDATE", [withdrawalId]);
     if (!existing.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Withdrawal not found" }); }
+    if (!["pending", "rejected", "cancelled"].includes(existing.rows[0].status)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "Approved, processing, or completed withdrawals cannot be deleted" });
+    }
     if (existing.rows[0].payout_id) {
-      const payout = await client.query("SELECT transaction_id FROM payouts WHERE id = $1", [existing.rows[0].payout_id]);
-      if (payout.rowCount && payout.rows[0].transaction_id) await client.query("DELETE FROM transactions WHERE id = $1", [payout.rows[0].transaction_id]);
-      await client.query("DELETE FROM payouts WHERE id = $1", [existing.rows[0].payout_id]);
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "This withdrawal has a payout ledger record and must be retained for audit history" });
     }
     await client.query("DELETE FROM withdrawals WHERE id = $1", [withdrawalId]);
     await client.query(
@@ -2436,10 +2577,47 @@ exports.deleteWithdrawal = async (req, res, next) => {
   } finally { if (client) client.release(); }
 };
 
-const affiliateProfileStatuses = ["active", "inactive", "suspended"];
+const affiliateProfileStatuses = ["pending", "active", "inactive", "suspended"];
 const affiliateCommissionTypes = ["percentage", "fixed"];
 const affiliateReferralStatuses = ["pending", "qualified", "rejected"];
-const affiliateCommissionStatuses = ["pending", "approved", "rejected", "paid"];
+const affiliateCommissionStatuses = ["pending", "approved", "rejected"];
+
+async function createAffiliateCommissionForPayment(client, paymentId) {
+  // An approved paid subscription is the qualifying conversion. Qualify the
+  // captured referral before calculating its commission in the same transaction.
+  await client.query(
+    `UPDATE affiliate_referrals ar SET status='qualified',updated_at=NOW()
+     FROM payments pay
+     WHERE pay.id=$1 AND pay.status='approved' AND pay.subscription_id IS NOT NULL
+       AND ar.referred_user_id=pay.user_id AND ar.status='pending'`,
+    [paymentId]
+  );
+  const result = await client.query(
+    `INSERT INTO affiliate_commissions(affiliate_id,referral_id,payment_id,amount,currency,status,description)
+     SELECT ap.id,ar.id,pay.id,
+       CASE WHEN ap.commission_type='percentage' THEN ROUND(pay.amount * ap.commission_value / 100.0,2)
+            ELSE ap.commission_value END,
+       pay.currency,'pending','Commission from approved subscription payment #' || pay.id
+     FROM payments pay JOIN affiliate_referrals ar ON ar.referred_user_id=pay.user_id AND ar.status='qualified'
+     JOIN affiliate_profiles ap ON ap.id=ar.affiliate_id AND ap.status='active'
+     WHERE pay.id=$1 AND pay.status='approved' AND pay.amount>0
+       AND CASE WHEN ap.commission_type='percentage' THEN ROUND(pay.amount * ap.commission_value / 100.0,2) ELSE ap.commission_value END > 0
+     ON CONFLICT (affiliate_id,payment_id) WHERE payment_id IS NOT NULL DO NOTHING
+     RETURNING id,affiliate_id,amount,currency`, [paymentId]
+  );
+  for (const commission of result.rows) {
+    await client.query(`INSERT INTO notifications(user_id,title,message,type)
+      SELECT user_id,'New affiliate commission',$1,'affiliate' FROM affiliate_profiles WHERE id=$2`,
+      [`${commission.currency} ${number(commission.amount).toFixed(2)} is pending super-admin approval.`, commission.affiliate_id]);
+  }
+  return result.rows;
+}
+
+async function backfillAffiliateCommissionsForReferral(client, referralId) {
+  const payments = await client.query(`SELECT pay.id FROM affiliate_referrals ar JOIN payments pay ON pay.user_id=ar.referred_user_id
+    WHERE ar.id=$1 AND ar.status='qualified' AND pay.status='approved' ORDER BY pay.id`, [referralId]);
+  for (const payment of payments.rows) await createAffiliateCommissionForPayment(client, payment.id);
+}
 
 function normalizeAffiliateProfilePayload(body) {
   return {
@@ -2484,7 +2662,8 @@ exports.listAffiliations = async (req, res, next) => {
       pool.query(
         `SELECT ar.id, ar.affiliate_id, ar.referred_user_id, ar.status, ar.joined_at, ar.updated_at,
                 owner.name AS affiliate_name, owner.email AS affiliate_email, ap.referral_code,
-                referred.name AS referred_name, referred.email AS referred_email
+                referred.name AS referred_name, referred.email AS referred_email,
+                (SELECT COUNT(*) FROM affiliate_commissions ac WHERE ac.referral_id=ar.id)::int commission_count
          FROM affiliate_referrals ar JOIN affiliate_profiles ap ON ap.id = ar.affiliate_id
          JOIN users owner ON owner.id = ap.user_id JOIN users referred ON referred.id = ar.referred_user_id
          WHERE ($1::text IS NULL OR owner.name ILIKE $1 OR owner.email ILIKE $1 OR referred.name ILIKE $1 OR referred.email ILIKE $1 OR ap.referral_code ILIKE $1 OR ar.status ILIKE $1)
@@ -2510,7 +2689,9 @@ exports.listAffiliations = async (req, res, next) => {
       pool.query(`SELECT (SELECT COUNT(*) FROM affiliate_profiles WHERE status = 'active')::int AS active_partners,
                          (SELECT COUNT(*) FROM affiliate_referrals WHERE status = 'qualified')::int AS qualified_conversions,
                          (SELECT COUNT(*) FROM affiliate_commissions WHERE status = 'pending')::int AS pending_commissions`),
-      pool.query(`SELECT currency, COALESCE(SUM(amount), 0) AS amount FROM affiliate_commissions WHERE status = 'approved' GROUP BY currency ORDER BY currency`),
+      pool.query(`WITH earned AS (SELECT currency,SUM(amount) amount FROM affiliate_commissions WHERE status IN ('approved','paid') GROUP BY currency),
+        reserved AS (SELECT currency,SUM(amount) amount FROM withdrawals WHERE affiliate_id IS NOT NULL AND status NOT IN ('rejected','cancelled') GROUP BY currency)
+        SELECT e.currency,GREATEST(e.amount-COALESCE(r.amount,0),0) amount FROM earned e LEFT JOIN reserved r USING(currency) ORDER BY e.currency`),
     ]);
     res.json({
       partners: profilesResult.rows.map((profile) => ({
@@ -2525,7 +2706,7 @@ exports.listAffiliations = async (req, res, next) => {
         id: referral.id, affiliateId: referral.affiliate_id,
         affiliate: { name: referral.affiliate_name, email: referral.affiliate_email, code: referral.referral_code },
         user: { id: referral.referred_user_id, name: referral.referred_name, email: referral.referred_email },
-        status: referral.status, joinedAt: referral.joined_at, updatedAt: referral.updated_at,
+        status: referral.status, commissions: referral.commission_count, joinedAt: referral.joined_at, updatedAt: referral.updated_at,
       })),
       commissions: commissionsResult.rows.map((commission) => ({
         id: commission.id, affiliateId: commission.affiliate_id, referralId: commission.referral_id || null,
@@ -2556,6 +2737,8 @@ exports.createAffiliatePartner = async (req, res, next) => {
       [profile.userId, profile.referralCode, profile.commissionType, profile.commissionValue, profile.paymentMethod, JSON.stringify({ label: profile.payoutDetails }), profile.status]
     );
     await client.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1, 'affiliate.created', 'affiliate', $2, $3::jsonb)`, [req.user.id, result.rows[0].id, JSON.stringify({ userId: profile.userId, referralCode: profile.referralCode })]);
+    await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,$2,$3,'affiliate')`,
+      [profile.userId, profile.status === "active" ? "Affiliate account activated" : "Affiliate application updated", profile.status === "active" ? "Your affiliate account is active. You can now share your referral link." : `Your affiliate account status is ${profile.status}.`]);
     await client.query("COMMIT"); res.status(201).json({ partner: result.rows[0] });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});
@@ -2574,12 +2757,16 @@ exports.updateAffiliatePartner = async (req, res, next) => {
   try {
     client = await pool.connect(); await client.query("BEGIN");
     if (!(await validateTransactionUser(client, profile.userId))) { await client.query("ROLLBACK"); return res.status(400).json({ message: "Selected user was not found" }); }
+    const previous = await client.query("SELECT status FROM affiliate_profiles WHERE id=$1 FOR UPDATE", [affiliateId]);
+    if (!previous.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Affiliate partner not found" }); }
     const result = await client.query(
       `UPDATE affiliate_profiles SET user_id=$1, referral_code=$2, commission_type=$3, commission_value=$4,
        payment_method=$5, payout_details=$6::jsonb, status=$7, updated_at=NOW() WHERE id=$8 RETURNING id, referral_code, status`,
       [profile.userId, profile.referralCode, profile.commissionType, profile.commissionValue, profile.paymentMethod, JSON.stringify({ label: profile.payoutDetails }), profile.status, affiliateId]
     );
-    if (!result.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Affiliate partner not found" }); }
+    if (profile.status !== previous.rows[0].status) await client.query(`INSERT INTO notifications(user_id,title,message,type)
+      VALUES($1,$2,$3,'affiliate')`, [profile.userId, profile.status === "active" ? "Affiliate application approved" : "Affiliate account updated",
+      profile.status === "active" ? "Your affiliate account is active. Start sharing your referral link." : `Your affiliate account status changed to ${profile.status}.`]);
     await client.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1, 'affiliate.updated', 'affiliate', $2, $3::jsonb)`, [req.user.id, affiliateId, JSON.stringify({ userId: profile.userId, referralCode: profile.referralCode, status: profile.status })]);
     await client.query("COMMIT"); res.json({ partner: result.rows[0] });
   } catch (error) {
@@ -2621,6 +2808,7 @@ exports.createAffiliateReferral = async (req, res, next) => {
     if (!relations.rowCount || !relations.rows[0].user_exists) { await client.query("ROLLBACK"); return res.status(400).json({ message: "Affiliate or referred user was not found" }); }
     if (Number(relations.rows[0].owner_id) === referral.userId) { await client.query("ROLLBACK"); return res.status(400).json({ message: "An affiliate cannot refer their own account" }); }
     const result = await client.query(`INSERT INTO affiliate_referrals (affiliate_id,referred_user_id,status) VALUES($1,$2,$3) RETURNING id,status`, [referral.affiliateId, referral.userId, referral.status]);
+    if (referral.status === "qualified") await backfillAffiliateCommissionsForReferral(client, result.rows[0].id);
     await client.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1,'affiliate_referral.created','affiliate_referral',$2,$3::jsonb)`, [req.user.id, result.rows[0].id, JSON.stringify(referral)]);
     await client.query("COMMIT"); res.status(201).json({ referral: result.rows[0] });
   } catch (error) {
@@ -2635,18 +2823,27 @@ exports.updateAffiliateReferral = async (req, res, next) => {
   if (!referralId) return res.status(400).json({ message: "Invalid referral ID" });
   const referral = normalizeAffiliateReferralPayload(req.body);
   if (!Number.isInteger(referral.affiliateId) || referral.affiliateId < 1 || !Number.isInteger(referral.userId) || referral.userId < 1 || !affiliateReferralStatuses.includes(referral.status)) return res.status(400).json({ message: "Enter a valid affiliate, user, and status" });
+  let client;
   try {
-    const result = await pool.query(`UPDATE affiliate_referrals ar SET affiliate_id=$1,referred_user_id=$2,status=$3,updated_at=NOW() WHERE id=$4 AND $2<>(SELECT user_id FROM affiliate_profiles WHERE id=$1) RETURNING id,status`, [referral.affiliateId, referral.userId, referral.status, referralId]);
-    if (!result.rowCount) return res.status(404).json({ message: "Referral not found or relation is invalid" });
-    await pool.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1,'affiliate_referral.updated','affiliate_referral',$2,$3::jsonb)`, [req.user.id, referralId, JSON.stringify(referral)]);
-    res.json({ referral: result.rows[0] });
-  } catch (error) { if (error.code === "23505") return res.status(409).json({ message: "This user is already assigned to an affiliate" }); next(error); }
+    client=await pool.connect();await client.query("BEGIN");
+    const result = await client.query(`UPDATE affiliate_referrals ar SET affiliate_id=$1,referred_user_id=$2,status=$3,updated_at=NOW() WHERE id=$4 AND $2<>(SELECT user_id FROM affiliate_profiles WHERE id=$1) RETURNING id,status`, [referral.affiliateId, referral.userId, referral.status, referralId]);
+    if (!result.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Referral not found or relation is invalid" }); }
+    if (referral.status === "qualified") await backfillAffiliateCommissionsForReferral(client, referralId);
+    await client.query(`INSERT INTO notifications(user_id,title,message,type)
+      SELECT ap.user_id,$1,$2,'affiliate' FROM affiliate_profiles ap WHERE ap.id=$3`,
+      [referral.status === "qualified" ? "Referral qualified" : "Referral status updated", `A referral is now ${referral.status}.`, referral.affiliateId]);
+    await client.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1,'affiliate_referral.updated','affiliate_referral',$2,$3::jsonb)`, [req.user.id, referralId, JSON.stringify(referral)]);
+    await client.query("COMMIT");res.json({ referral: result.rows[0] });
+  } catch (error) { if(client)await client.query("ROLLBACK").catch(()=>{});if (error.code === "23505") return res.status(409).json({ message: "This user is already assigned to an affiliate" }); next(error); }
+  finally{if(client)client.release();}
 };
 
 exports.deleteAffiliateReferral = async (req, res, next) => {
   const referralId = positiveIntegerParam(req);
   if (!referralId) return res.status(400).json({ message: "Invalid referral ID" });
   try {
+    const commissions = await pool.query("SELECT COUNT(*)::int count FROM affiliate_commissions WHERE referral_id=$1", [referralId]);
+    if (commissions.rows[0].count) return res.status(409).json({ message: "This referral has commission history and must be retained" });
     const result = await pool.query("DELETE FROM affiliate_referrals WHERE id=$1 RETURNING id,affiliate_id,referred_user_id", [referralId]);
     if (!result.rowCount) return res.status(404).json({ message: "Referral not found" });
     await pool.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1,'affiliate_referral.deleted','affiliate_referral',$2,$3::jsonb)`, [req.user.id, referralId, JSON.stringify(result.rows[0])]);
@@ -2670,18 +2867,33 @@ function affiliateCommissionValidationMessage(commission) {
 
 async function saveAffiliateCommission(req, res, next, commissionId) {
   const commission = normalizeAffiliateCommissionPayload(req.body);
+  if (!commissionId && commission.status !== "pending") return res.status(400).json({ message: "New commissions must start as pending" });
   const validation = affiliateCommissionValidationMessage(commission);
   if (validation) return res.status(400).json({ message: validation });
   let client;
   try {
     client = await pool.connect(); await client.query("BEGIN");
+    let previous = null;
+    if (commissionId) {
+      const previousResult = await client.query(`SELECT id,affiliate_id,amount,currency,status FROM affiliate_commissions WHERE id=$1 FOR UPDATE`, [commissionId]);
+      if (!previousResult.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Commission not found" }); }
+      previous = previousResult.rows[0];
+      if (previous.status === "rejected") { await client.query("ROLLBACK"); return res.status(409).json({ message: "Rejected commissions are final" }); }
+      if (previous.status === "approved" && (commission.status !== "approved" || Number(previous.affiliate_id) !== commission.affiliateId || number(previous.amount) !== commission.amount || previous.currency !== commission.currency)) {
+        await client.query("ROLLBACK"); return res.status(409).json({ message: "Approved commission financial details are locked" });
+      }
+      if (previous.status === "pending" && !["pending","approved","rejected"].includes(commission.status)) { await client.query("ROLLBACK"); return res.status(409).json({ message: "Invalid commission status transition" }); }
+    }
     const relation = await client.query(`SELECT EXISTS(SELECT 1 FROM affiliate_profiles WHERE id=$1) AS affiliate_exists, CASE WHEN $2::integer IS NULL THEN TRUE ELSE EXISTS(SELECT 1 FROM affiliate_referrals WHERE id=$2 AND affiliate_id=$1) END AS referral_valid`, [commission.affiliateId, commission.referralId]);
     if (!relation.rows[0].affiliate_exists || !relation.rows[0].referral_valid) { await client.query("ROLLBACK"); return res.status(400).json({ message: "Affiliate or referral relation is invalid" }); }
     const values = [commission.affiliateId, commission.referralId, commission.amount, commission.currency, commission.status, commission.description, req.user.id];
     const result = commissionId
-      ? await client.query(`UPDATE affiliate_commissions SET affiliate_id=$1,referral_id=$2,amount=$3,currency=$4,status=$5::varchar,description=$6,approved_by=CASE WHEN $5::varchar IN ('approved','paid') THEN $7::integer ELSE NULL END,approved_at=CASE WHEN $5::varchar IN ('approved','paid') THEN NOW() ELSE NULL END,updated_at=NOW() WHERE id=$8 RETURNING id,status`, [...values, commissionId])
-      : await client.query(`INSERT INTO affiliate_commissions (affiliate_id,referral_id,amount,currency,status,description,approved_by,approved_at) VALUES($1,$2,$3,$4,$5::varchar,$6,CASE WHEN $5::varchar IN ('approved','paid') THEN $7::integer ELSE NULL END,CASE WHEN $5::varchar IN ('approved','paid') THEN NOW() ELSE NULL END) RETURNING id,status`, values);
+      ? await client.query(`UPDATE affiliate_commissions SET affiliate_id=$1,referral_id=$2,amount=$3,currency=$4,status=$5::varchar,description=$6,approved_by=CASE WHEN $5::varchar='approved' THEN $7::integer ELSE NULL END,approved_at=CASE WHEN $5::varchar='approved' THEN NOW() ELSE NULL END,updated_at=NOW() WHERE id=$8 RETURNING id,status`, [...values, commissionId])
+      : await client.query(`INSERT INTO affiliate_commissions (affiliate_id,referral_id,amount,currency,status,description,approved_by,approved_at) VALUES($1,$2,$3,$4,$5::varchar,$6,CASE WHEN $5::varchar='approved' THEN $7::integer ELSE NULL END,CASE WHEN $5::varchar='approved' THEN NOW() ELSE NULL END) RETURNING id,status`, values);
     if (!result.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Commission not found" }); }
+    if (["approved","rejected"].includes(commission.status)) await client.query(`INSERT INTO notifications(user_id,title,message,type)
+      SELECT user_id,$1,$2,'affiliate' FROM affiliate_profiles WHERE id=$3`,
+      [commission.status === "approved" ? "Commission approved" : "Commission rejected", commission.status === "approved" ? `${commission.currency} ${commission.amount.toFixed(2)} is now available for withdrawal.` : "A pending affiliate commission was rejected.", commission.affiliateId]);
     await client.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1,$2,'affiliate_commission',$3,$4::jsonb)`, [req.user.id, commissionId ? "affiliate_commission.updated" : "affiliate_commission.created", result.rows[0].id, JSON.stringify(commission)]);
     await client.query("COMMIT"); res.status(commissionId ? 200 : 201).json({ commission: result.rows[0] });
   } catch (error) { if (client) await client.query("ROLLBACK").catch(() => {}); next(error); }
@@ -2699,7 +2911,10 @@ exports.deleteAffiliateCommission = async (req, res, next) => {
   const commissionId = positiveIntegerParam(req);
   if (!commissionId) return res.status(400).json({ message: "Invalid commission ID" });
   try {
-    const result = await pool.query("DELETE FROM affiliate_commissions WHERE id=$1 RETURNING id,affiliate_id,amount,currency,status", [commissionId]);
+    const existing = await pool.query("SELECT status FROM affiliate_commissions WHERE id=$1", [commissionId]);
+    if (!existing.rowCount) return res.status(404).json({ message: "Commission not found" });
+    if (existing.rows[0].status === "approved") return res.status(409).json({ message: "Approved commissions are retained for financial audit" });
+    const result = await pool.query("DELETE FROM affiliate_commissions WHERE id=$1 AND status IN ('pending','rejected') RETURNING id,affiliate_id,amount,currency,status", [commissionId]);
     if (!result.rowCount) return res.status(404).json({ message: "Commission not found" });
     await pool.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1,'affiliate_commission.deleted','affiliate_commission',$2,$3::jsonb)`, [req.user.id, commissionId, JSON.stringify(result.rows[0])]);
     res.json({ message: "Commission deleted successfully" });
@@ -2917,6 +3132,12 @@ const platformSettingDefinitions = {
   site_name: { category:"general",description:"Application name displayed in the admin interface",defaultValue:"Sync E-Card",type:"text",maxLength:100 },
   site_email: { category:"general",description:"Support email address",defaultValue:"info@syncecard.lk",type:"email",maxLength:255 },
   default_currency: { category:"billing",description:"Default display and billing currency",defaultValue:"USD",type:"currency",maxLength:10 },
+  bank_name: { category:"billing",description:"Bank receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
+  bank_account_name: { category:"billing",description:"Account holder receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
+  bank_account_number: { category:"billing",description:"Account number receiving manual subscription payments",defaultValue:"",type:"text",maxLength:100 },
+  bank_branch: { category:"billing",description:"Bank branch receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
+  bank_swift_code: { category:"billing",description:"Optional SWIFT or routing code for manual payments",defaultValue:"",type:"text",maxLength:50,optional:true },
+  affiliate_minimum_withdrawal: { category:"billing",description:"Minimum approved balance required for affiliate withdrawals",defaultValue:"10",type:"decimal",min:0.01,max:9999999999.99 },
   default_timezone: { category:"general",description:"Default timezone for new accounts",defaultValue:"Asia/Colombo",type:"timezone",maxLength:80 },
   maintenance_mode: { category:"access",description:"Temporarily restrict public platform access",defaultValue:"false",type:"boolean" },
   manual_signup_review: { category:"access",description:"Require administrator approval for new accounts",defaultValue:"false",type:"boolean" },
@@ -2927,7 +3148,7 @@ const platformSettingDefinitions = {
   security_alerts: { category:"notifications",description:"Notify administrators about security events",defaultValue:"true",type:"boolean" },
 };
 
-function validatePlatformSetting(key,value){const definition=platformSettingDefinitions[key];if(!definition)return"Unknown platform setting";const text=String(value===null||value===undefined?"":value).trim();if(definition.type==="boolean"&&!['true','false'].includes(text))return`${key} must be true or false`;if(definition.type==="integer"&&(!/^\d+$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))return"Enter a valid support email";if(definition.type==="currency"&&!/^[A-Z]{3,10}$/.test(text.toUpperCase()))return"Currency must contain 3 to 10 letters";if(!text&&!["boolean"].includes(definition.type))return`${key} cannot be empty`;if(definition.maxLength&&text.length>definition.maxLength)return`${key} is too long`;return null;}
+function validatePlatformSetting(key,value){const definition=platformSettingDefinitions[key];if(!definition)return"Unknown platform setting";const text=String(value===null||value===undefined?"":value).trim();if(definition.type==="boolean"&&!['true','false'].includes(text))return`${key} must be true or false`;if(definition.type==="integer"&&(!/^\d+$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="decimal"&&(!/^\d+(\.\d{1,2})?$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))return"Enter a valid support email";if(definition.type==="currency"&&!/^[A-Z]{3,10}$/.test(text.toUpperCase()))return"Currency must contain 3 to 10 letters";if(!text&&!definition.optional&&!["boolean"].includes(definition.type))return`${key} cannot be empty`;if(definition.maxLength&&text.length>definition.maxLength)return`${key} is too long`;return null;}
 
 exports.getSettings=async(req,res,next)=>{try{const keys=Object.keys(platformSettingDefinitions);const[settingsResult,rolesResult,permissionsResult,summaryResult]=await Promise.all([
   pool.query("SELECT key,value,category,description,updated_at FROM settings WHERE key=ANY($1::text[]) ORDER BY category,key",[keys]),

@@ -30,6 +30,9 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
+  if (err.name === "MulterError") {
+    return res.status(400).json({ message: err.code === "LIMIT_FILE_SIZE" ? "Payment slip must be 5 MB or smaller" : "Unable to upload the payment slip" });
+  }
   res.status(err.status || 500).json({ message: err.message || "Internal Server Error" });
 });
 

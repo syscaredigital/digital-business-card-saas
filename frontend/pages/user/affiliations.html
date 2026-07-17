@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
   <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
 </head>
-<body>
+<body class="user-affiliations-page">
   <div class="bg-orb bg-orb-1"></div>
   <div class="bg-orb bg-orb-2"></div>
 
@@ -81,64 +81,97 @@
       </header>
 
       <main class="page-content">
-        <div class="page-header">
-          <div>
-            <span class="eyebrow">Affiliate dashboard</span>
-            <h1>Affiliations</h1>
-            <p>Track referral earnings, manage your affiliate users, and review commission history in one place.</p>
+        <div class="affiliate-page-hero">
+          <div class="affiliate-page-hero-copy">
+            <span class="affiliate-page-kicker"><i></i> Partner workspace</span>
+            <h1>Grow your network.<br /><em>Earn together.</em></h1>
+            <p>Share one referral link, follow every conversion, and manage your earnings from a single workspace.</p>
+            <div class="affiliate-page-hero-actions"><button type="button" id="affiliateHeroGuideButton">How it works</button><a href="#affiliateActivity">View activity <span>↓</span></a></div>
           </div>
-          <a class="btn-customize" href="manage-subscription.html">Subscription</a>
+          <div class="affiliate-page-journey" aria-label="Affiliate workflow">
+            <span>01</span><div><strong>Invite</strong><small>Share your personal link</small></div>
+            <span>02</span><div><strong>Convert</strong><small>Referrals join and subscribe</small></div>
+            <span>03</span><div><strong>Earn</strong><small>Withdraw approved rewards</small></div>
+          </div>
         </div>
 
-        <section class="client-dashboard-grid">
-          <article class="admin-card searchable-item" data-search="referral link commission earned pending payouts">
+        <section class="affiliate-enrollment-panel" id="affiliateEnrollmentPanel" hidden>
+          <div><span class="affiliate-page-kicker"><i></i> Join the program</span><h2>Turn your network into rewards.</h2><p>Choose a memorable referral code and tell us where you would like to receive payouts. Your workspace becomes active after review.</p><div class="affiliate-application-points"><span>Personal referral link</span><span>Transparent commission tracking</span><span>Secure withdrawal review</span></div></div>
+          <form id="affiliateApplicationForm">
+            <label>Preferred referral code<input name="referralCode" minlength="3" maxlength="80" pattern="[A-Za-z0-9_-]+" required placeholder="YOURCODE" /></label>
+            <label>Payment method<select name="paymentMethod"><option value="bank_transfer">Bank transfer</option><option value="paypal">PayPal</option><option value="cash">Cash</option><option value="other">Other</option></select></label>
+            <label class="affiliate-form-wide">Payout account details<input name="payoutDetails" maxlength="500" placeholder="Account holder, bank and account number" /></label>
+            <button type="submit">Submit application</button><p id="affiliateApplicationFeedback" aria-live="polite"></p>
+          </form>
+        </section>
+        <p class="affiliate-account-notice" id="affiliateAccountNotice" hidden></p>
+        <form class="affiliate-payout-settings" id="affiliatePayoutForm" hidden><div class="affiliate-payout-heading"><span>PD</span><div><strong>Payout destination</strong><small>Keep your payment details current</small></div></div><label><small>Method</small><select name="paymentMethod"><option value="bank_transfer">Bank transfer</option><option value="paypal">PayPal</option><option value="cash">Cash</option><option value="other">Other</option></select></label><label><small>Account details</small><input name="payoutDetails" maxlength="500" required placeholder="Payout account details" /></label><button type="submit">Save details</button><span id="affiliatePayoutFeedback" aria-live="polite"></span></form>
+
+        <section class="client-dashboard-grid" id="affiliateDashboardContent" hidden>
+          <article class="affiliate-profile-strip" aria-label="Affiliate account details">
+            <div><small>Referral code</small><strong id="affiliateProfileCode">—</strong></div>
+            <div><small>Program status</small><strong id="affiliateProfileStatus">—</strong></div>
+            <div><small>Commission plan</small><strong id="affiliateProfileCommission">—</strong></div>
+            <div><small>Payout method</small><strong id="affiliateProfilePayout">—</strong></div>
+            <div><small>Partner since</small><strong id="affiliateProfileSince">—</strong></div>
+          </article>
+          <article class="admin-card searchable-item affiliate-referral-hero" data-search="referral link commission earned pending payouts">
             <div class="admin-card-header">
               <div>
-                <h3>Your referral link</h3>
-                <p>Share this link to start earning commissions from new signups.</p>
+                <span class="affiliate-card-kicker">Your growth link</span><h3>One link. Every introduction tracked.</h3>
+                <p>Share it with your network. New accounts created through this link appear in your referral activity automatically.</p>
               </div>
             </div>
             <div class="affiliate-link-card">
               <div class="affiliate-link">
-                <input type="text" readonly value="https://sync-card.app/ref/ACME123" />
-                <button class="btn-share" type="button" data-action="copy-link">Copy</button>
+                <input id="affiliateReferralLink" type="text" readonly value="Loading referral link..." />
+                <a class="affiliate-open-link" id="affiliateOpenReferralLink" href="#" target="_blank" rel="noopener">Open</a>
+                <button class="btn-share" type="button" data-action="copy-link"><span>Copy link</span></button>
               </div>
             </div>
           </article>
 
-          <article class="admin-card searchable-item" data-search="total commissions active referrals earned">
+          <article class="admin-card searchable-item affiliate-metric-card affiliate-commission-card" data-search="total commissions active referrals earned">
             <div class="admin-card-header">
               <div>
-                <h3>Total commission</h3>
+                <span class="affiliate-metric-icon">TC</span><h3>Total commission</h3>
                 <p>Lifetime rewards from affiliate referrals.</p>
               </div>
             </div>
             <div class="client-affiliate-summary">
-              <strong>$420.00</strong>
+              <strong id="affiliateTotalCommission">—</strong>
               <span>Earned so far</span>
-              <small>7 active referrals</small>
+              <small id="affiliateReferralSummary">Loading referrals...</small>
             </div>
           </article>
 
-          <article class="admin-card searchable-item" data-search="pending payout approved payout status">
+          <article class="admin-card searchable-item affiliate-balance-card" data-search="pending payout approved payout status">
             <div class="admin-card-header">
               <div>
-                <h3>Pending payout</h3>
-                <p>Ready for withdrawal once the referral is approved.</p>
+                <span class="affiliate-metric-icon">AB</span><h3>Available balance</h3>
+                <p>Approved earnings available to withdraw.</p>
               </div>
             </div>
             <div class="client-affiliate-summary">
-              <strong>$120.00</strong>
-              <span>Pending approval</span>
-              <small>3 referrals under review</small>
+              <strong id="affiliateAvailableBalance">—</strong>
+              <span id="affiliateBalanceCurrency">Available now</span>
+              <small id="affiliateMinimumWithdrawal">Loading withdrawal rules...</small>
             </div>
+            <form class="affiliate-withdrawal-form" id="affiliateWithdrawalForm"><span class="affiliate-withdrawal-label">Request a payout</span>
+              <input name="amount" type="number" min="0.01" step="0.01" required placeholder="Amount" />
+              <select name="currency" id="affiliateWithdrawalCurrency" required></select>
+              <input name="note" maxlength="3000" placeholder="Optional note" />
+              <button type="submit">Request withdrawal</button><p id="affiliateWithdrawalFeedback" aria-live="polite"></p>
+            </form>
           </article>
         </section>
 
-        <section class="affiliations-section-shell searchable-item" data-search="affiliations affiliate users transactions referrals">
+        <section class="affiliations-section-shell searchable-item" id="affiliateActivity" data-search="affiliations affiliate users transactions referrals">
+          <div class="affiliate-activity-heading"><div><span class="affiliate-card-kicker">Live records</span><h2>Affiliate activity</h2><p>Everything connected to your referral code, organized by stage.</p></div><span class="affiliate-live-indicator"><i></i> Synced live</span></div>
           <div class="subscriptions-tabbar" role="tablist" aria-label="Affiliations tabs">
-            <button class="subscriptions-tab-btn active" type="button" role="tab" aria-selected="true" data-affiliations-tab-target="affiliateUsersPanel">Affiliate Users</button>
-            <button class="subscriptions-tab-btn" type="button" role="tab" aria-selected="false" data-affiliations-tab-target="affiliateTransactionsPanel">Affiliation Transactions</button>
+            <button class="subscriptions-tab-btn active" type="button" role="tab" aria-selected="true" data-affiliations-tab-target="affiliateUsersPanel">Referrals</button>
+            <button class="subscriptions-tab-btn" type="button" role="tab" aria-selected="false" data-affiliations-tab-target="affiliateTransactionsPanel">Commissions</button>
+            <button class="subscriptions-tab-btn" type="button" role="tab" aria-selected="false" data-affiliations-tab-target="affiliateWithdrawalsPanel">Withdrawals</button>
           </div>
 
           <section class="tab-panel active" id="affiliateUsersPanel">
@@ -153,43 +186,17 @@
                   </span>
                   <input id="affiliateUsersSearch" type="text" placeholder="Search affiliate users" />
                 </label>
-                <button class="nfc-toolbar-btn nfc-help-btn" type="button" id="openAffiliateGuideModal">How It works?</button>
+                <button class="nfc-toolbar-btn nfc-help-btn" type="button" id="openAffiliateGuideModal">Program guide</button>
               </div>
 
               <div class="light-admin-table-wrap">
                 <table class="admin-table light-admin-table">
                   <thead>
                     <tr>
-                      <th>AFFILIATED BY</th>
-                      <th>USER</th>
-                      <th>COMMISSION</th>
-                      <th>DATE</th>
+                      <th>REFERRAL CODE</th><th>REFERRED MEMBER</th><th>EARNED</th><th>JOINED</th>
                     </tr>
                   </thead>
-                  <tbody id="affiliateUsersTableBody">
-                    <tr class="searchable-item affiliate-user-row" data-search="acme solutions acme user john@acme.com $10.00 23 feb 2026">
-                      <td>
-                        <div class="affiliate-brand-cell">
-                          <div class="affiliate-logo-chip">AC</div>
-                          <div>
-                            <strong>Acme Solutions</strong>
-                            <span>john@acme.com</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="affiliate-user-cell">
-                          <div class="affiliate-avatar"></div>
-                          <div>
-                            <strong>Jane Doe</strong>
-                            <span>jane.doe@acme.com</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td><span class="affiliate-amount-pill">$10.00</span></td>
-                      <td><span class="date-pill">23 Feb 2026</span></td>
-                    </tr>
-                  </tbody>
+                  <tbody id="affiliateUsersTableBody"><tr><td class="light-empty-cell" colspan="4">Loading referrals...</td></tr></tbody>
                 </table>
               </div>
 
@@ -205,6 +212,10 @@
                 <p class="subscriptions-results" id="affiliateUsersResults">Showing 1 results</p>
               </div>
             </div>
+          </section>
+
+          <section class="tab-panel" id="affiliateWithdrawalsPanel">
+            <div class="affiliate-panel-shell"><div class="light-admin-table-wrap"><table class="admin-table light-admin-table"><thead><tr><th>AMOUNT</th><th>METHOD</th><th>STATUS</th><th>REQUESTED</th><th>ADMIN NOTE</th></tr></thead><tbody id="affiliateWithdrawalsTableBody"><tr><td colspan="5" class="light-empty-cell">Loading withdrawals...</td></tr></tbody></table></div></div>
           </section>
 
           <section class="tab-panel" id="affiliateTransactionsPanel">
@@ -229,7 +240,7 @@
                       <th>AMOUNT</th>
                       <th>STATUS</th>
                       <th>DATE</th>
-                      <th>ACTION</th>
+                      <th>DESCRIPTION</th>
                     </tr>
                   </thead>
                   <tbody id="affiliateTransactionsTableBody">

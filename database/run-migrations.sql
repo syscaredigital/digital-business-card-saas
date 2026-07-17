@@ -36,3 +36,7 @@
 \i migrations/034_create_appointments_table.sql
 \i migrations/035_add_category_to_nfc_products.sql
 \i migrations/036_link_contacts_to_vcards.sql
+\i migrations/037_configure_manual_subscription_payments.sql
+\i migrations/038_complete_affiliate_workflow.sql
+\i migrations/039_credit_approved_affiliate_subscriptions.sql
+\i migrations/040_add_nfc_order_payments.sql

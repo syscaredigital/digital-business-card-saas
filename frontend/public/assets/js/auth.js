@@ -213,6 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (registerForm) {
+    const referralCode = new URLSearchParams(window.location.search).get("ref") || sessionStorage.getItem("affiliate_referral_code") || "";
+    if (referralCode) sessionStorage.setItem("affiliate_referral_code", referralCode);
     registerForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
@@ -257,6 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
         password: password.value,
         phoneNumber: phoneNumber ? phoneNumber.value.trim() : undefined,
         companyName: companyName ? companyName.value.trim() : undefined,
+        referralCode: referralCode || undefined,
       };
 
       try {
@@ -271,6 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const data = await res.json();
           if (data.token) localStorage.setItem("token", data.token);
           if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+          sessionStorage.removeItem("affiliate_referral_code");
           window.location.href = "../user/dashboard.html";
         } else {
           const err = await res.json().catch(() => ({}));

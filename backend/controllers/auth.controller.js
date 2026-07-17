@@ -54,6 +54,7 @@ exports.register = async (req, res, next) => {
 
   try {
     const { firstName, lastName, email, password, phoneNumber, companyName } = req.body;
+    const referralCode = String(req.body.referralCode || "").trim().toUpperCase();
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -118,6 +119,22 @@ exports.register = async (req, res, next) => {
       [result.rows[0].id, freePlan.rows[0].id]
     );
 
+    let referral = null;
+    if (referralCode) {
+      const affiliate = await client.query(
+        `SELECT ap.id,ap.user_id,u.name FROM affiliate_profiles ap JOIN users u ON u.id=ap.user_id
+         WHERE UPPER(ap.referral_code)=UPPER($1) AND ap.status='active' FOR SHARE`, [referralCode]
+      );
+      if (!affiliate.rowCount) { await client.query("ROLLBACK"); return res.status(400).json({ message: "This referral link is invalid or no longer active" }); }
+      const referralResult = await client.query(
+        `INSERT INTO affiliate_referrals(affiliate_id,referred_user_id,status) VALUES($1,$2,'pending') RETURNING id,status`,
+        [affiliate.rows[0].id, result.rows[0].id]
+      );
+      referral = referralResult.rows[0];
+      await client.query(`INSERT INTO notifications(user_id,title,message,type)
+        VALUES($1,'New affiliate referral',$2,'affiliate')`, [affiliate.rows[0].user_id, `${fullName} registered using your referral link.`]);
+    }
+
     await client.query("COMMIT");
 
     const user = toSafeUser({
@@ -125,7 +142,7 @@ exports.register = async (req, res, next) => {
       company_name: companyName ? String(companyName).trim() : null,
       role: "user",
     });
-    res.status(201).json({ user, subscription: { name: freePlan.rows[0].name, status: "active" }, token: createToken(user) });
+    res.status(201).json({ user, subscription: { name: freePlan.rows[0].name, status: "active" }, referral, token: createToken(user) });
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     if (err.code === "23505") {

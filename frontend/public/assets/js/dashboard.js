@@ -21,7 +21,6 @@ document.addEventListener("DOMContentLoaded", function () {
     ["Subscriptions", "subscriptions.html", "SU", ""],
     ["Cash Payments", "cash-payments.html", "CP", "Finance"],
     ["Transactions", "transactions.html", "TR", ""],
-    ["Payouts", "payouts.html", "PO", ""],
     ["Withdrawals", "withdrawals.html", "WD", ""],
     ["Affiliations", "affiliations.html", "AF", "Growth"],
     ["Coupon Codes", "coupon-codes.html", "CO", ""],
@@ -2033,23 +2032,26 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderNfcOrders(orders) {
     if (!nfcOrdersLiveBody) return;
     if (!orders.length) {
-      nfcOrdersLiveBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>No NFC orders found</strong><span>Customer orders will appear here when submitted.</span></div></td></tr>';
+      nfcOrdersLiveBody.innerHTML = '<tr><td colspan="10"><div class="admin-data-empty"><strong>No NFC orders found</strong><span>Customer payment submissions will appear here.</span></div></td></tr>';
       if (nfcOrdersLiveCount) nfcOrdersLiveCount.textContent = "0 orders";
       return;
     }
     var statuses = ["pending", "processing", "shipped", "completed", "cancelled"];
     nfcOrdersLiveBody.innerHTML = orders.map(function (order) {
-      var ordered = order.orderedAt ? formatDate(new Date(order.orderedAt)) : "Not available";
       var options = statuses.map(function (status) { return '<option value="' + status + '"' + (status === order.status ? " selected" : "") + '>' + status.charAt(0).toUpperCase() + status.slice(1) + '</option>'; }).join("");
+      var paymentClass=order.paymentStatus==="approved"?"active":order.paymentStatus==="rejected"?"inactive":"pending";
+      var actions=order.paymentStatus==="pending"?'<button class="user-action-btn approve" type="button" data-nfc-payment-action="approved" data-nfc-order-id="' + order.id + '">Approve</button><button class="user-action-btn reject" type="button" data-nfc-payment-action="rejected" data-nfc-order-id="' + order.id + '">Reject</button>':'<span class="subtle-handle">Reviewed</span>';
       return '<tr class="nfc-live-row" data-nfc-order-id="' + order.id + '">' +
-        '<td><strong>#' + order.id + '</strong></td>' +
+        '<td><strong>#' + order.id + ' · ' + escapeDashboardHtml(order.productName) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(order.vcardTitle || "No VCard") + '</div></td>' +
         '<td><div class="nfc-owner-stack"><strong>' + escapeDashboardHtml(order.userName) + '</strong><span>' + escapeDashboardHtml(order.userEmail || "No email") + '</span></div></td>' +
-        '<td><span class="nfc-quantity-pill">' + formatDashboardNumber(order.quantity) + '</span></td>' +
-        '<td><strong>' + escapeDashboardHtml(formatNfcMoney(order.amount)) + '</strong></td>' +
+        '<td><span class="nfc-quantity-pill">' + formatDashboardNumber(order.quantity) + '</span><div class="subtle-handle">' + escapeDashboardHtml(formatNfcMoney(order.amount)) + '</div></td>' +
+        '<td><strong>' + escapeDashboardHtml(order.transactionNumber || "Not provided") + '</strong></td>' +
+        '<td>' + (order.hasProof?'<button class="user-action-btn edit" type="button" data-nfc-proof-id="' + order.id + '">View slip</button>':'—') + '</td>' +
+        '<td><span class="status-badge ' + paymentClass + '">' + escapeDashboardHtml(order.paymentStatus) + '</span>' + (order.adminNote?'<div class="subtle-handle">' + escapeDashboardHtml(order.adminNote) + '</div>':'') + '</td>' +
         '<td><span class="nfc-shipping-copy">' + escapeDashboardHtml(order.shippingAddress || "Not provided") + '</span></td>' +
-        '<td><input class="nfc-tracking-input" type="text" maxlength="255" value="' + escapeDashboardHtml(order.trackingNumber || "") + '" placeholder="Add tracking" data-nfc-order-field="tracking" data-nfc-order-id="' + order.id + '" /></td>' +
-        '<td><select class="nfc-order-status-select" data-nfc-order-field="status" data-nfc-order-id="' + order.id + '">' + options + '</select></td>' +
-        '<td><span class="date-pill">' + escapeDashboardHtml(ordered) + '</span></td>' +
+        '<td><input class="nfc-tracking-input" type="text" maxlength="255" value="' + escapeDashboardHtml(order.trackingNumber || "") + '" placeholder="Add tracking" data-nfc-order-field="tracking" data-nfc-order-id="' + order.id + '"' + (order.paymentStatus!=="approved"?' disabled':'') + ' /></td>' +
+        '<td><select class="nfc-order-status-select" data-nfc-order-field="status" data-nfc-order-id="' + order.id + '"' + (order.paymentStatus!=="approved"?' disabled':'') + '>' + options + '</select></td>' +
+        '<td><div class="user-row-actions">' + actions + '</div></td>' +
       '</tr>';
     }).join("");
     if (nfcOrdersLiveCount) nfcOrdersLiveCount.textContent = formatDashboardNumber(orders.length) + (orders.length === 1 ? " order" : " orders");
@@ -2198,7 +2200,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  async function updateSuperAdminNfcOrder(orderId, row) {
+  async function updateSuperAdminNfcOrder(orderId, row, paymentStatus) {
     var statusSelect = row.querySelector('[data-nfc-order-field="status"]');
     var trackingInput = row.querySelector('[data-nfc-order-field="tracking"]');
     try {
@@ -2207,17 +2209,26 @@ document.addEventListener("DOMContentLoaded", function () {
       var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/orders/" + encodeURIComponent(orderId), {
         method: "PATCH",
         headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-        body: JSON.stringify({ status: statusSelect.value, trackingNumber: trackingInput.value.trim() })
+        body: JSON.stringify({ status: statusSelect.value, trackingNumber: trackingInput.value.trim(), paymentStatus: paymentStatus || undefined, adminNote: paymentStatus === "rejected" ? (window.prompt("Reason for rejecting this payment:", "Payment evidence could not be verified") || "Payment evidence could not be verified") : undefined })
       });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to update NFC order");
       await loadSuperAdminNfc();
-      showToast("Order updated", "Fulfilment status and tracking were saved.");
+       showToast(paymentStatus ? "Payment " + paymentStatus : "Order updated", data.message || "NFC order was saved.");
     } catch (error) {
       statusSelect.disabled = false;
       trackingInput.disabled = false;
       showToast("Order update failed", error.message);
     }
+  }
+
+  async function openNfcOrderProof(orderId, button) {
+    try {
+      if(button){button.disabled=true;button.textContent="Opening...";}
+      var response=await fetch("http://127.0.0.1:5000/api/super-admin/nfc/orders/"+encodeURIComponent(orderId)+"/proof",{headers:{Authorization:"Bearer "+localStorage.getItem("token")}});
+      if(!response.ok){var data=await response.json().catch(function(){return {};});throw new Error(data.message||"Unable to open payment slip");}
+      var url=URL.createObjectURL(await response.blob());window.open(url,"_blank","noopener");window.setTimeout(function(){URL.revokeObjectURL(url);},60000);
+    }catch(error){showToast("Payment slip unavailable",error.message);}finally{if(button){button.disabled=false;button.textContent="View slip";}}
   }
 
   function closeUserModal() {
@@ -2998,7 +3009,10 @@ document.addEventListener("DOMContentLoaded", function () {
       var status = String(payment.status || "pending").toLowerCase();
       var statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
       var plan = payment.plan;
-      var evidence = payment.proofUrl && /^https?:\/\//i.test(payment.proofUrl)
+      var localProof = payment.proofUrl && /^\/uploads\/payment-slips\//.test(payment.proofUrl);
+      var evidence = localProof
+        ? '<button class="cash-proof-link" type="button" data-payment-proof-id="' + payment.id + '">Open proof</button>'
+        : payment.proofUrl && /^https?:\/\//i.test(payment.proofUrl)
         ? '<a class="cash-proof-link" href="' + escapeDashboardHtml(payment.proofUrl) + '" target="_blank" rel="noopener noreferrer">Open proof</a>'
         : '<span class="cash-proof-missing">No attachment</span>';
       var quickActions = status === "pending"
@@ -3166,6 +3180,19 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   document.addEventListener("click", async function (event) {
+    var proofButton = event.target.closest("[data-payment-proof-id]");
+    if (proofButton) {
+      try {
+        proofButton.disabled = true;
+        var proofResponse = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments/" + encodeURIComponent(proofButton.dataset.paymentProofId) + "/proof", { headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        if (!proofResponse.ok) { var proofError = await proofResponse.json().catch(function () { return {}; }); throw new Error(proofError.message || "Unable to open payment proof"); }
+        var proofObjectUrl = URL.createObjectURL(await proofResponse.blob());
+        window.open(proofObjectUrl, "_blank", "noopener,noreferrer");
+        setTimeout(function () { URL.revokeObjectURL(proofObjectUrl); }, 60000);
+      } catch (error) { showToast("Proof unavailable", error.message); }
+      finally { proofButton.disabled = false; }
+      return;
+    }
     var button = event.target.closest("[data-live-cash-action]");
     if (!button) return;
     var paymentId = button.getAttribute("data-payment-id");
@@ -3619,12 +3646,14 @@ document.addEventListener("DOMContentLoaded", function () {
       superAdminWithdrawalsById[String(withdrawal.id)] = withdrawal;
       var status = String(withdrawal.status || "pending").toLowerCase();
       var quickActions = "";
-      if (status === "pending") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="approved" data-withdrawal-id="' + withdrawal.id + '">Approve</button><button class="user-action-btn reject" type="button" data-live-withdrawal-action="rejected" data-withdrawal-id="' + withdrawal.id + '">Reject</button>';
-      if (status === "approved") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="processing" data-withdrawal-id="' + withdrawal.id + '">Process</button><button class="user-action-btn approve" type="button" data-live-withdrawal-action="completed" data-withdrawal-id="' + withdrawal.id + '">Complete</button>';
+      if (status === "pending") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="approved" data-withdrawal-id="' + withdrawal.id + '">Approve</button><button class="user-action-btn reject" type="button" data-live-withdrawal-action="rejected" data-withdrawal-id="' + withdrawal.id + '">Reject</button><button class="user-action-btn" type="button" data-live-withdrawal-action="cancelled" data-withdrawal-id="' + withdrawal.id + '">Cancel</button>';
+      if (status === "approved") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="processing" data-withdrawal-id="' + withdrawal.id + '">Process</button><button class="user-action-btn approve" type="button" data-live-withdrawal-action="completed" data-withdrawal-id="' + withdrawal.id + '">Complete</button><button class="user-action-btn" type="button" data-live-withdrawal-action="cancelled" data-withdrawal-id="' + withdrawal.id + '">Cancel</button>';
       if (status === "processing") quickActions = '<button class="user-action-btn approve" type="button" data-live-withdrawal-action="completed" data-withdrawal-id="' + withdrawal.id + '">Complete</button><button class="user-action-btn reject" type="button" data-live-withdrawal-action="rejected" data-withdrawal-id="' + withdrawal.id + '">Reject</button>';
       var financeLinks = withdrawal.payoutId
-        ? '<div class="withdrawal-finance-cell"><a href="payouts.html">Payout #' + withdrawal.payoutId + '</a><span>#TRX' + String(withdrawal.transactionId || 0).padStart(8, "0") + '</span></div>'
+        ? '<div class="withdrawal-finance-cell"><a href="transactions.html">Payout #' + withdrawal.payoutId + '</a><span>#TRX' + String(withdrawal.transactionId || 0).padStart(8, "0") + '</span></div>'
         : '<span class="withdrawal-awaiting-link">Created after approval</span>';
+      var editAction = ["completed", "rejected", "cancelled"].indexOf(status) === -1 ? '<button class="user-action-btn edit" type="button" data-live-withdrawal-action="edit" data-withdrawal-id="' + withdrawal.id + '">Edit</button>' : '';
+      var deleteAction = !withdrawal.payoutId && ["pending", "rejected", "cancelled"].indexOf(status) !== -1 ? '<button class="user-action-btn delete" type="button" data-live-withdrawal-action="delete" data-withdrawal-id="' + withdrawal.id + '">Delete</button>' : '';
       return '<tr>' +
         '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(withdrawal.user.name || "User") || "U") + '</span><div><strong>' + escapeDashboardHtml(withdrawal.user.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(withdrawal.user.email) + '</div></div></div></td>' +
         '<td><strong class="withdrawal-amount">' + cashPaymentMoney(withdrawal.amount, withdrawal.currency) + '</strong><div class="subtle-handle">Request #WDL' + String(withdrawal.id).padStart(8, "0") + '</div></td>' +
@@ -3633,7 +3662,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '<td><span class="status-badge ' + withdrawalStatusClass(status) + '">' + escapeDashboardHtml(transactionTypeLabel(status)) + '</span></td>' +
         '<td><div class="withdrawal-reviewer-cell"><strong>' + escapeDashboardHtml(withdrawal.reviewerName || "Not reviewed") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(withdrawal.reviewedAt, "Awaiting action")) + '</span></div></td>' +
         '<td>' + financeLinks + '</td>' +
-        '<td><div class="user-row-actions withdrawal-row-actions">' + quickActions + '<button class="user-action-btn edit" type="button" data-live-withdrawal-action="edit" data-withdrawal-id="' + withdrawal.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-withdrawal-action="delete" data-withdrawal-id="' + withdrawal.id + '">Delete</button></div></td>' +
+        '<td><div class="user-row-actions withdrawal-row-actions">' + quickActions + editAction + deleteAction + '</div></td>' +
       '</tr>';
     }).join("");
   }
@@ -3681,6 +3710,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     withdrawalAdminForm.reset();
     withdrawalAdminForm.elements.withdrawalId.value = withdrawal ? withdrawal.id : "";
+    withdrawalAdminForm.elements.status.innerHTML = '<option value="' + escapeDashboardHtml(withdrawal ? withdrawal.status : "pending") + '">' + escapeDashboardHtml(transactionTypeLabel(withdrawal ? withdrawal.status : "pending")) + '</option>';
     if (withdrawal) {
       withdrawalAdminForm.elements.userId.value = withdrawal.user.id;
       withdrawalAdminForm.elements.status.value = withdrawal.status;
@@ -3703,11 +3733,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function updateWithdrawalStatus(withdrawal, status, button) {
     if (!withdrawal) return;
+    var reviewNote = withdrawal.adminNote || "";
+    if (["rejected", "cancelled"].indexOf(status) !== -1) {
+      reviewNote = window.prompt("Enter the reason for " + status.slice(0, -2) + "ing this withdrawal:", reviewNote);
+      if (!reviewNote || !reviewNote.trim()) return;
+    }
+    if (status === "approved" && withdrawal.method !== "cash" && !withdrawal.accountName) {
+      showToast("Account details required", "Edit the withdrawal and add the destination account before approval."); return;
+    }
+    if (["approved", "completed"].indexOf(status) !== -1 && !window.confirm(status === "approved" ? "Approve this withdrawal and create its payout ledger entry?" : "Confirm that the funds were sent and complete this withdrawal?")) return;
     var originalLabel = button.textContent;
     try {
       button.disabled = true;
       button.textContent = "Saving...";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/withdrawals/" + encodeURIComponent(withdrawal.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(withdrawalPayload(withdrawal, status)) });
+      var payload = withdrawalPayload(withdrawal, status); payload.adminNote = reviewNote.trim();
+      var response = await fetch("http://127.0.0.1:5000/api/super-admin/withdrawals/" + encodeURIComponent(withdrawal.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to update withdrawal");
       await loadSuperAdminWithdrawals();
@@ -3764,7 +3804,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var withdrawal = superAdminWithdrawalsById[String(withdrawalId)];
     var action = button.getAttribute("data-live-withdrawal-action");
     if (action === "edit") setWithdrawalAdminModal(true, withdrawal);
-    if (["approved", "processing", "completed", "rejected"].indexOf(action) !== -1) updateWithdrawalStatus(withdrawal, action, button);
+    if (["approved", "processing", "completed", "rejected", "cancelled"].indexOf(action) !== -1) updateWithdrawalStatus(withdrawal, action, button);
     if (action === "delete" && window.confirm("Permanently delete this withdrawal and all linked payout and transaction records?")) {
       try {
         button.disabled = true;
@@ -3808,6 +3848,7 @@ document.addEventListener("DOMContentLoaded", function () {
     affiliatePartnerBody.innerHTML = partners.map(function (partner) {
       superAdminAffiliatePartnersById[String(partner.id)] = partner;
       var commission = partner.commissionType === "percentage" ? Number(partner.commissionValue).toFixed(2) + "%" : cashPaymentMoney(partner.commissionValue, "USD");
+      var partnerQuick = partner.status === "pending" ? '<button class="user-action-btn approve" type="button" data-live-affiliate-partner-action="activate" data-affiliate-id="' + partner.id + '">Approve</button><button class="user-action-btn reject" type="button" data-live-affiliate-partner-action="suspend" data-affiliate-id="' + partner.id + '">Reject</button>' : partner.status === "active" ? '<button class="user-action-btn reject" type="button" data-live-affiliate-partner-action="suspend" data-affiliate-id="' + partner.id + '">Suspend</button>' : '<button class="user-action-btn approve" type="button" data-live-affiliate-partner-action="activate" data-affiliate-id="' + partner.id + '">Activate</button>';
       return '<tr>' +
         '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(partner.user.name) || "A") + '</span><div><strong>' + escapeDashboardHtml(partner.user.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(partner.user.email) + '</div></div></div></td>' +
         '<td><span class="affiliate-code-pill">' + escapeDashboardHtml(partner.referralCode) + '</span></td>' +
@@ -3815,7 +3856,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '<td><div class="affiliate-conversion-cell"><strong>' + formatDashboardNumber(partner.qualified) + ' qualified</strong><span>' + formatDashboardNumber(partner.referrals) + ' total referrals</span></div></td>' +
         '<td><div class="affiliate-rule-cell"><strong>' + escapeDashboardHtml(transactionTypeLabel(partner.paymentMethod)) + '</strong><span>' + escapeDashboardHtml(partner.payoutDetails || "No account label") + '</span></div></td>' +
         '<td><span class="status-badge ' + (partner.status === "active" ? "active" : "inactive") + '">' + escapeDashboardHtml(transactionTypeLabel(partner.status)) + '</span></td>' +
-        '<td><div class="user-row-actions"><button class="user-action-btn edit" type="button" data-live-affiliate-partner-action="edit" data-affiliate-id="' + partner.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-affiliate-partner-action="delete" data-affiliate-id="' + partner.id + '">Delete</button></div></td>' +
+        '<td><div class="user-row-actions">' + partnerQuick + '<button class="user-action-btn edit" type="button" data-live-affiliate-partner-action="edit" data-affiliate-id="' + partner.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-affiliate-partner-action="delete" data-affiliate-id="' + partner.id + '">Delete</button></div></td>' +
       '</tr>';
     }).join("");
   }
@@ -3837,7 +3878,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '<td><span class="affiliate-code-pill">' + escapeDashboardHtml(referral.affiliate.code) + '</span></td>' +
         '<td>' + escapeDashboardHtml(cashPaymentDate(referral.joinedAt)) + '</td>' +
         '<td><span class="status-badge ' + (referral.status === "qualified" ? "completed" : referral.status === "pending" ? "pending" : "inactive") + '">' + escapeDashboardHtml(transactionTypeLabel(referral.status)) + '</span></td>' +
-        '<td><div class="user-row-actions">' + quick + '<button class="user-action-btn edit" type="button" data-live-affiliate-referral-action="edit" data-referral-id="' + referral.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-affiliate-referral-action="delete" data-referral-id="' + referral.id + '">Delete</button></div></td>' +
+        '<td><div class="user-row-actions">' + quick + '<button class="user-action-btn edit" type="button" data-live-affiliate-referral-action="edit" data-referral-id="' + referral.id + '">Edit</button>' + (!referral.commissions ? '<button class="user-action-btn delete" type="button" data-live-affiliate-referral-action="delete" data-referral-id="' + referral.id + '">Delete</button>' : '') + '</div></td>' +
       '</tr>';
     }).join("");
   }
@@ -3853,6 +3894,8 @@ document.addEventListener("DOMContentLoaded", function () {
     affiliateCommissionBody.innerHTML = commissions.map(function (commission) {
       superAdminAffiliateCommissionsById[String(commission.id)] = commission;
       var quick = commission.status === "pending" ? '<button class="user-action-btn approve" type="button" data-live-affiliate-commission-action="approved" data-commission-id="' + commission.id + '">Approve</button><button class="user-action-btn reject" type="button" data-live-affiliate-commission-action="rejected" data-commission-id="' + commission.id + '">Reject</button>' : "";
+      var commissionEdit = commission.status !== "rejected" ? '<button class="user-action-btn edit" type="button" data-live-affiliate-commission-action="edit" data-commission-id="' + commission.id + '">Edit</button>' : '';
+      var commissionDelete = commission.status !== "approved" ? '<button class="user-action-btn delete" type="button" data-live-affiliate-commission-action="delete" data-commission-id="' + commission.id + '">Delete</button>' : '';
       return '<tr>' +
         '<td><strong>' + escapeDashboardHtml(commission.affiliate.name) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(commission.affiliate.email) + '</div></td>' +
         '<td>' + escapeDashboardHtml(commission.referredName || "General commission") + '</td>' +
@@ -3860,7 +3903,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '<td><div class="affiliate-description-cell"><strong>' + escapeDashboardHtml(commission.description || "Affiliate earning") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(commission.createdAt)) + '</span></div></td>' +
         '<td><span class="status-badge ' + (commission.status === "approved" || commission.status === "paid" ? "completed" : commission.status === "pending" ? "pending" : "inactive") + '">' + escapeDashboardHtml(transactionTypeLabel(commission.status)) + '</span></td>' +
         '<td><div class="affiliate-description-cell"><strong>' + escapeDashboardHtml(commission.approverName || "Not approved") + '</strong><span>' + escapeDashboardHtml(cashPaymentDate(commission.approvedAt, "Awaiting review")) + '</span></div></td>' +
-        '<td><div class="user-row-actions">' + quick + '<button class="user-action-btn edit" type="button" data-live-affiliate-commission-action="edit" data-commission-id="' + commission.id + '">Edit</button><button class="user-action-btn delete" type="button" data-live-affiliate-commission-action="delete" data-commission-id="' + commission.id + '">Delete</button></div></td>' +
+        '<td><div class="user-row-actions">' + quick + commissionEdit + commissionDelete + '</div></td>' +
       '</tr>';
     }).join("");
   }
@@ -3929,6 +3972,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (titleElement) titleElement.textContent = record ? "Edit Referred User" : "Add Referred User";
     } else {
       form.elements.commissionId.value = record ? record.id : "";
+      form.elements.status.innerHTML = '<option value="' + escapeDashboardHtml(record ? record.status : "pending") + '">' + escapeDashboardHtml(transactionTypeLabel(record ? record.status : "pending")) + '</option>';
       if (record) { form.elements.affiliateId.value=record.affiliateId; filterAffiliateCommissionReferrals(record.referralId); form.elements.amount.value=record.amount; form.elements.currency.value=record.currency; form.elements.status.value=record.status; form.elements.description.value=record.description||""; }
       if (titleElement) titleElement.textContent = record ? "Edit Commission" : "New Commission";
     }
@@ -3968,7 +4012,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.addEventListener("click",async function(event){
     var partnerButton=event.target.closest("[data-live-affiliate-partner-action]");var referralButton=event.target.closest("[data-live-affiliate-referral-action]");var commissionButton=event.target.closest("[data-live-affiliate-commission-action]");
-    if(partnerButton){var affiliateId=partnerButton.getAttribute("data-affiliate-id");var partner=superAdminAffiliatePartnersById[String(affiliateId)];var partnerAction=partnerButton.getAttribute("data-live-affiliate-partner-action");if(partnerAction==="edit")setAffiliateModal(affiliatePartnerModal,affiliatePartnerForm,affiliatePartnerModalTitle,true,partner,"partner");if(partnerAction==="delete"&&window.confirm("Delete this affiliate partner? Referrals and commissions must be removed first."))await deleteAffiliateRecord("partners",affiliateId,partnerButton);}
+    if(partnerButton){var affiliateId=partnerButton.getAttribute("data-affiliate-id");var partner=superAdminAffiliatePartnersById[String(affiliateId)];var partnerAction=partnerButton.getAttribute("data-live-affiliate-partner-action");if(partnerAction==="edit")setAffiliateModal(affiliatePartnerModal,affiliatePartnerForm,affiliatePartnerModalTitle,true,partner,"partner");if(["activate","suspend"].indexOf(partnerAction)!==-1)await quickUpdateAffiliateRecord("partners",affiliateId,{userId:partner.user.id,referralCode:partner.referralCode,commissionType:partner.commissionType,commissionValue:partner.commissionValue,paymentMethod:partner.paymentMethod,payoutDetails:partner.payoutDetails||"",status:partnerAction==="activate"?"active":"suspended"},partnerButton);if(partnerAction==="delete"&&window.confirm("Delete this affiliate partner? Referrals and commissions must be removed first."))await deleteAffiliateRecord("partners",affiliateId,partnerButton);}
     if(referralButton){var referralId=referralButton.getAttribute("data-referral-id");var referral=superAdminAffiliateReferralsById[String(referralId)];var referralAction=referralButton.getAttribute("data-live-affiliate-referral-action");if(referralAction==="edit")setAffiliateModal(affiliateReferralModal,affiliateReferralForm,affiliateReferralModalTitle,true,referral,"referral");if(["qualified","rejected"].indexOf(referralAction)!==-1)await quickUpdateAffiliateRecord("referrals",referralId,{affiliateId:referral.affiliateId,userId:referral.user.id,status:referralAction},referralButton);if(referralAction==="delete"&&window.confirm("Delete this referral attribution?"))await deleteAffiliateRecord("referrals",referralId,referralButton);}
     if(commissionButton){var commissionId=commissionButton.getAttribute("data-commission-id");var commission=superAdminAffiliateCommissionsById[String(commissionId)];var commissionAction=commissionButton.getAttribute("data-live-affiliate-commission-action");if(commissionAction==="edit")setAffiliateModal(affiliateCommissionModal,affiliateCommissionForm,affiliateCommissionModalTitle,true,commission,"commission");if(["approved","rejected"].indexOf(commissionAction)!==-1)await quickUpdateAffiliateRecord("commissions",commissionId,{affiliateId:commission.affiliateId,referralId:commission.referralId,amount:commission.amount,currency:commission.currency,status:commissionAction,description:commission.description||""},commissionButton);if(commissionAction==="delete"&&window.confirm("Delete this commission record?"))await deleteAffiliateRecord("commissions",commissionId,commissionButton);}
   });
@@ -4139,7 +4183,7 @@ document.addEventListener("DOMContentLoaded", function () {
           item.setAttribute("aria-selected", "false");
         });
 
-        Array.from(document.querySelectorAll("#affiliateUsersPanel, #affiliateTransactionsPanel, #affiliateCommissionsPanel")).forEach(function (panel) {
+        Array.from(document.querySelectorAll("#affiliateUsersPanel, #affiliateTransactionsPanel, #affiliateCommissionsPanel, #affiliateWithdrawalsPanel")).forEach(function (panel) {
           panel.classList.remove("active");
         });
 
@@ -4424,7 +4468,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (nfcOrderForm) {
+  if (nfcOrderForm && !nfcOrderForm.hasAttribute("data-live-nfc-order")) {
     nfcOrderForm.addEventListener("submit", function (event) {
       event.preventDefault();
       showToast("NFC Order Placed", "Your NFC card order has been successfully submitted. You'll receive a confirmation email shortly.");
@@ -4726,6 +4770,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (action === "status") changeSuperAdminUserStatus(userId, userActionButton.getAttribute("data-user-status"), userActionButton);
       if (action === "delete") deleteSuperAdminUser(userId, userActionButton);
     }
+    var nfcPaymentButton=event.target.closest("[data-nfc-payment-action]");
+    if(nfcPaymentButton){var nfcPaymentRow=nfcPaymentButton.closest("[data-nfc-order-id]");if(nfcPaymentRow)updateSuperAdminNfcOrder(nfcPaymentButton.getAttribute("data-nfc-order-id"),nfcPaymentRow,nfcPaymentButton.getAttribute("data-nfc-payment-action"));}
+    var nfcProofButton=event.target.closest("[data-nfc-proof-id]");if(nfcProofButton)openNfcOrderProof(nfcProofButton.getAttribute("data-nfc-proof-id"),nfcProofButton);
   });
 
   if (addUserForm && userDirectoryBody) {

@@ -130,6 +130,12 @@ router.patch(
   authorize("super_admin"),
   superAdminController.updateNfcOrder
 );
+router.get(
+  "/nfc/orders/:id/proof",
+  authenticate,
+  authorize("super_admin"),
+  superAdminController.downloadNfcOrderProof
+);
 
 router.get("/subscriptions", authenticate, authorize("super_admin"), superAdminController.listSubscriptionManagement);
 router.post("/subscriptions", authenticate, authorize("super_admin"), superAdminController.createSubscription);
@@ -139,6 +145,7 @@ router.post("/plans", authenticate, authorize("super_admin"), superAdminControll
 router.patch("/plans/:id", authenticate, authorize("super_admin"), superAdminController.updatePlan);
 router.delete("/plans/:id", authenticate, authorize("super_admin"), superAdminController.deletePlan);
 router.get("/cash-payments", authenticate, authorize("super_admin"), superAdminController.listCashPayments);
+router.get("/cash-payments/:id/proof", authenticate, authorize("super_admin"), superAdminController.downloadCashPaymentProof);
 router.post("/cash-payments", authenticate, authorize("super_admin"), superAdminController.createCashPayment);
 router.patch("/cash-payments/:id", authenticate, authorize("super_admin"), superAdminController.updateCashPayment);
 router.delete("/cash-payments/:id", authenticate, authorize("super_admin"), superAdminController.deleteCashPayment);

@@ -82,13 +82,13 @@
           <section class="tab-panel" id="nfcOrdersPanel">
             <article class="admin-card nfc-live-card">
               <div class="admin-card-header">
-                <div><h3>NFC Orders</h3><p>Real quantities, order values, shipping details, tracking, and fulfilment state.</p></div>
+                <div><h3>NFC Orders &amp; Payments</h3><p>Review bank slips, approve payments, and manage production, tracking, and delivery.</p></div>
                 <span class="tiny-pill" id="nfcOrdersLiveCount">Loading...</span>
               </div>
               <div class="nfc-live-table-wrap">
                 <table class="admin-table nfc-live-table nfc-live-orders-table">
-                  <thead><tr><th>Order</th><th>Customer</th><th>Quantity</th><th>Amount</th><th>Shipping</th><th>Tracking</th><th>Status</th><th>Ordered</th></tr></thead>
-                  <tbody id="nfcOrdersLiveBody"><tr><td colspan="8"><div class="admin-data-empty"><strong>Loading NFC orders...</strong><span>Reading fulfilment records from PostgreSQL.</span></div></td></tr></tbody>
+                  <thead><tr><th>Order / Product</th><th>Customer</th><th>Qty / Amount</th><th>Transaction</th><th>Slip</th><th>Payment</th><th>Shipping</th><th>Tracking</th><th>Fulfilment</th><th>Actions</th></tr></thead>
+                  <tbody id="nfcOrdersLiveBody"><tr><td colspan="10"><div class="admin-data-empty"><strong>Loading NFC orders...</strong><span>Reading payment and fulfilment records from PostgreSQL.</span></div></td></tr></tbody>
                 </table>
               </div>
             </article>

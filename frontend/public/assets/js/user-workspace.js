@@ -183,7 +183,7 @@
     if (createSubmit) { createSubmit.disabled = limitReached || !(entitlements.templates || []).length; createSubmit.title = limitReached ? "Upgrade your plan to create another VCard" : ""; }
 
     var nfcTable = document.getElementById("nfcCardsTableBody");
-    if (nfcTable) {
+    if (nfcTable && !document.querySelector("[data-live-nfc-order]")) {
       var nfcRows = data.nfcCards || [];
       nfcTable.innerHTML = nfcRows.length ? nfcRows.map(function (card) {
         return '<tr class="nfc-card-row" data-search="' + escapeHtml([card.tag_identifier, card.serial_number, card.status].join(" ").toLowerCase()) + '"><td data-label="Card Type"><span class="user-card-mark">N</span></td><td data-label="Name">' + escapeHtml(card.tag_identifier) + '</td><td data-label="Serial">' + escapeHtml(card.serial_number || "—") + '</td><td data-label="Phone">—</td><td data-label="Assigned">' + escapeHtml(formatDate(card.assigned_at)) + '</td><td data-label="Status"><span class="user-status ' + (card.status === "active" ? "" : "inactive") + '">' + escapeHtml(card.status) + '</span></td><td data-label="Action">—</td></tr>';
@@ -202,26 +202,94 @@
     request("/user/dashboard").then(renderDashboard).catch(function () {});
   }
 
+  var liveNfcOrderForm = document.querySelector("[data-live-nfc-order]");
+  if (liveNfcOrderForm) {
+    var liveNfcData = { products: [], orders: [], vcards: [], currency: "LKR" };
+    var liveNfcProductSelect = document.getElementById("nfcCardType");
+    var liveNfcQuantity = document.getElementById("nfcQuantity");
+    function nfcMoney(value) {
+      try { return new Intl.NumberFormat("en-LK", { style:"currency", currency:liveNfcData.currency || "LKR" }).format(Number(value || 0)); }
+      catch (_) { return (liveNfcData.currency || "LKR") + " " + Number(value || 0).toFixed(2); }
+    }
+    function nfcBadge(status) { return '<span class="nfc-live-badge is-' + escapeHtml(status || "pending") + '">' + escapeHtml(String(status || "pending").replace(/_/g," ")) + '</span>'; }
+    function updateLiveNfcTotal() {
+      var product = liveNfcData.products.find(function(item){return Number(item.id)===Number(liveNfcProductSelect.value);});
+      setText("nfcOrderTotal", nfcMoney((product ? product.price : 0) * Math.max(1,Number(liveNfcQuantity.value || 1))));
+    }
+    function renderLiveNfc(data) {
+      liveNfcData = data;
+      var products = data.products || [], orders = data.orders || [], vcards = data.vcards || [];
+      var grid = document.getElementById("nfcUserProductGrid");
+      grid.innerHTML = products.length ? products.map(function(product){return '<article class="nfc-user-product-card"><div class="nfc-user-product-visual"><img src="' + escapeHtml(product.frontImage) + '" alt="' + escapeHtml(product.name) + '" /><span>' + escapeHtml(product.category) + '</span></div><div class="nfc-user-product-copy"><small>Sync NFC collection</small><h3>' + escapeHtml(product.name) + '</h3><p>' + escapeHtml(product.description || "Premium contactless business card.") + '</p><div><strong>' + escapeHtml(nfcMoney(product.price)) + '</strong><button type="button" data-user-nfc-product="' + product.id + '">Order this card</button></div></div></article>';}).join("") : '<div class="nfc-user-loading">No NFC card products are available right now.</div>';
+      setText("nfcCatalogCount", products.length + " design" + (products.length===1?"":"s"));
+      liveNfcProductSelect.innerHTML = '<option value="">Select card type</option>' + products.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.name) + ' — ' + escapeHtml(nfcMoney(item.price)) + '</option>';}).join("");
+      document.getElementById("nfcVCard").innerHTML = '<option value="">Select a VCard</option>' + vcards.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.title) + '</option>';}).join("");
+      setText("nfcBankName",data.bankDetails.bankName || "Not configured");setText("nfcBankAccountName",data.bankDetails.accountName || "Not configured");setText("nfcBankAccountNumber",data.bankDetails.accountNumber || "Not configured");setText("nfcBankBranch",data.bankDetails.branch || "Not configured");
+      setText("nfcMetricOrders",orders.length);setText("nfcMetricPending",orders.filter(function(item){return item.paymentStatus==="pending";}).length);setText("nfcMetricProduction",orders.filter(function(item){return ["processing","shipped"].includes(item.status);}).length);setText("nfcMetricDelivered",orders.filter(function(item){return item.status==="completed";}).length);
+      var body=document.getElementById("nfcCardsTableBody");
+      body.innerHTML=orders.length?orders.map(function(order){var search=[order.id,order.productName,order.vcardTitle,order.paymentStatus,order.status,order.transactionNumber].join(" ").toLowerCase();return '<tr class="nfc-card-row" data-search="' + escapeHtml(search) + '"><td data-label="Order"><strong>#' + order.id + '</strong><small>' + escapeHtml(order.transactionNumber || "No reference") + '</small></td><td data-label="Card / VCard"><div class="nfc-order-product">' + (order.productImage?'<img src="' + escapeHtml(order.productImage) + '" alt="" />':'<span>NFC</span>') + '<div><strong>' + escapeHtml(order.productName) + '</strong><small>' + escapeHtml(order.vcardTitle || "VCard not linked") + '</small></div></div></td><td data-label="Qty">' + order.quantity + '</td><td data-label="Total"><strong>' + escapeHtml(nfcMoney(order.amount)) + '</strong></td><td data-label="Payment">' + nfcBadge(order.paymentStatus) + (order.adminNote?'<small class="nfc-admin-note">' + escapeHtml(order.adminNote) + '</small>':'') + '</td><td data-label="Fulfilment">' + nfcBadge(order.status) + '</td><td data-label="Tracking">' + escapeHtml(order.trackingNumber || "Not assigned") + '</td><td data-label="Ordered">' + escapeHtml(formatDate(order.orderedAt)) + '</td></tr>';}).join(""):'<tr><td colspan="8" class="light-empty-cell">No NFC orders yet. Choose a card above to begin.</td></tr>';
+      setText("nfcCardsResults","Showing " + orders.length + " order" + (orders.length===1?"":"s"));updateLiveNfcTotal();
+    }
+    function loadLiveNfc(){return request("/user/nfc").then(renderLiveNfc).catch(function(error){document.getElementById("nfcUserProductGrid").innerHTML='<div class="nfc-user-loading">' + escapeHtml(error.message) + '</div>';});}
+    loadLiveNfc();window.setInterval(function(){if(document.getElementById("nfcOrderModal").hidden)loadLiveNfc();},30000);
+    liveNfcProductSelect.addEventListener("change",updateLiveNfcTotal);liveNfcQuantity.addEventListener("input",updateLiveNfcTotal);
+    document.addEventListener("click",function(event){var button=event.target.closest("[data-user-nfc-product]");if(!button)return;liveNfcProductSelect.value=button.dataset.userNfcProduct;updateLiveNfcTotal();document.getElementById("openNfcOrderModal").click();});
+    liveNfcOrderForm.addEventListener("submit",function(event){event.preventDefault();var submit=liveNfcOrderForm.querySelector('[type="submit"]'),feedback=document.getElementById("nfcOrderFeedback");submit.disabled=true;submit.textContent="Uploading payment...";feedback.textContent="Submitting your order securely...";request("/user/nfc/orders",{method:"POST",body:new FormData(liveNfcOrderForm)}).then(function(data){feedback.textContent=data.message;liveNfcOrderForm.reset();updateLiveNfcTotal();return loadLiveNfc();}).then(function(){setTimeout(function(){document.getElementById("closeNfcOrderModal").click();},800);}).catch(function(error){feedback.textContent=error.message;}).finally(function(){submit.disabled=false;submit.textContent="Submit payment & order";});});
+  }
+
   var billingPlansGrid = document.getElementById("billingPlansGrid");
   if (billingPlansGrid) {
     var billingFeedback = document.getElementById("billingPlanFeedback");
+    var paymentModal = document.getElementById("manualPaymentModal");
+    var paymentForm = document.getElementById("manualPaymentForm");
+    var paymentFeedback = document.getElementById("manualPaymentFeedback");
+    var billingData = null;
+    function billingMoney(value, currency) {
+      try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(Number(value || 0)); }
+      catch (_) { return (currency || "USD") + " " + Number(value || 0).toFixed(2); }
+    }
+    function closePaymentModal() { if (paymentModal) paymentModal.hidden = true; }
+    function openPaymentModal(plan) {
+      if (!billingData.bankConfigured) { billingFeedback.textContent = "Bank payment details are not configured yet. Please contact support."; return; }
+      setText("paymentPlanName", plan.name); setText("paymentPlanAmount", billingMoney(plan.price, billingData.currency));
+      setText("paymentBankName", billingData.bankDetails.bankName); setText("paymentAccountName", billingData.bankDetails.accountName);
+      setText("paymentAccountNumber", billingData.bankDetails.accountNumber); setText("paymentBankBranch", billingData.bankDetails.branch);
+      setText("paymentBankSwift", billingData.bankDetails.swiftCode || "Not required");
+      document.getElementById("paymentPlanId").value = plan.id;
+      paymentFeedback.textContent = ""; paymentModal.hidden = false;
+      paymentForm.elements.transactionNumber.focus();
+    }
     function renderBillingPlans(data) {
+      billingData = data;
       var pendingPlanId = data.pending ? Number(data.pending.planId) : null;
       billingPlansGrid.innerHTML = (data.plans || []).map(function (plan) {
-        var current = Number(data.currentPlanId) === Number(plan.id), pending = pendingPlanId === Number(plan.id);
+        var current = Number(data.currentPlanId) === Number(plan.id) || (!data.currentPlanId && Number(plan.price) === 0), pending = pendingPlanId === Number(plan.id), waiting = Boolean(data.pending) && !pending;
         var features = [plan.vcardLimit + " VCards", plan.nfcLimit + " NFC cards", plan.analyticsLimit + " analytics"].concat(plan.features || []);
-        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div><span>' + (current ? "Current plan" : pending ? "Approval pending" : "Available") + '</span><h4>' + escapeHtml(plan.name) + '</h4><strong>' + money(plan.price) + '<small> / ' + escapeHtml(plan.billingInterval) + '</small></strong></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (current || pending ? ' disabled' : '') + '>' + (current ? "Current plan" : pending ? "Pending approval" : "Request upgrade") + '</button></article>';
+        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div><span>' + (current ? "Current plan" : pending ? "Approval pending" : "Available") + '</span><h4>' + escapeHtml(plan.name) + '</h4><strong>' + billingMoney(plan.price, data.currency) + '<small> / ' + escapeHtml(plan.billingInterval) + '</small></strong></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (current || pending || waiting ? ' disabled' : '') + '>' + (current ? "Current plan" : pending ? "Pending approval" : waiting ? "Payment pending" : "Proceed to payment") + '</button></article>';
       }).join("");
+      var history = document.getElementById("billingPaymentHistory");
+      if (history) history.innerHTML = data.payments && data.payments.length ? data.payments.map(function (payment) {
+        return '<li><strong>' + escapeHtml(payment.planName) + '</strong> — ' + escapeHtml(billingMoney(payment.amount, payment.currency)) +
+          ' <span class="payment-history-status is-' + escapeHtml(payment.status) + '">' + escapeHtml(payment.status) + '</span><small>Transaction ' + escapeHtml(payment.transactionNumber || "—") + ' · ' + escapeHtml(formatDate(payment.createdAt)) + '</small></li>';
+      }).join("") : '<li>No manual payments submitted yet.</li>';
+      if (data.pending && billingFeedback) billingFeedback.textContent = "Your " + data.pending.planName + " payment is waiting for super-admin approval. Your current plan remains active.";
     }
     function loadBillingPlans() { request("/user/plans").then(renderBillingPlans).catch(function (error) { billingPlansGrid.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>'; }); }
     loadBillingPlans();
     billingPlansGrid.addEventListener("click", function (event) {
       var button = event.target.closest("[data-upgrade-plan-id]");
       if (!button || button.disabled) return;
-      button.disabled = true; button.textContent = "Submitting...";
-      request("/user/subscriptions/upgrade", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ planId: Number(button.dataset.upgradePlanId) }) })
-        .then(function (data) { if (billingFeedback) billingFeedback.textContent = data.message; loadBillingPlans(); })
-        .catch(function (error) { if (billingFeedback) billingFeedback.textContent = error.message; button.disabled = false; button.textContent = "Request upgrade"; });
+      var plan = (billingData.plans || []).find(function (item) { return Number(item.id) === Number(button.dataset.upgradePlanId); });
+      if (plan) openPaymentModal(plan);
+    });
+    if (paymentModal) paymentModal.querySelectorAll("[data-close-payment-modal]").forEach(function (button) { button.addEventListener("click", closePaymentModal); });
+    if (paymentForm) paymentForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var submit = paymentForm.querySelector('[type="submit"]'); submit.disabled = true; submit.textContent = "Uploading..."; paymentFeedback.textContent = "";
+      request("/user/subscriptions/manual-payment", { method: "POST", body: new FormData(paymentForm) })
+        .then(function (data) { paymentFeedback.textContent = data.message; paymentForm.reset(); setTimeout(function () { closePaymentModal(); loadBillingPlans(); }, 900); })
+        .catch(function (error) { paymentFeedback.textContent = error.message; })
+        .finally(function () { submit.disabled = false; submit.textContent = "Submit payment for review"; });
     });
     document.querySelectorAll('[data-action="upgrade-plan"]').forEach(function (button) {
       button.addEventListener("click", function (event) { event.stopImmediatePropagation(); document.getElementById("billingPlanCatalog").scrollIntoView({ behavior: "smooth" }); }, true);
@@ -230,6 +298,99 @@
 
   function formatDate(value) {
     return value ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
+  }
+
+  var affiliateApplicationForm = document.getElementById("affiliateApplicationForm");
+  if (affiliateApplicationForm) {
+    var affiliateData = null;
+    var affiliateDashboardContent = document.getElementById("affiliateDashboardContent");
+    var affiliateTables = document.querySelector(".affiliations-section-shell");
+    var affiliateEnrollment = document.getElementById("affiliateEnrollmentPanel");
+    var affiliateNotice = document.getElementById("affiliateAccountNotice");
+    var affiliatePayoutForm = document.getElementById("affiliatePayoutForm");
+    var affiliateHeroGuideButton = document.getElementById("affiliateHeroGuideButton");
+    if (affiliateHeroGuideButton) affiliateHeroGuideButton.addEventListener("click",function(){
+      var guideButton = document.getElementById("openAffiliateGuideModal");
+      if (guideButton) guideButton.click();
+    });
+    function affiliateMoney(value, currency) {
+      try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(Number(value || 0)); }
+      catch (_) { return (currency || "USD") + " " + Number(value || 0).toFixed(2); }
+    }
+    function affiliateStatus(status) { return '<span class="affiliate-live-status is-' + escapeHtml(status) + '">' + escapeHtml(status) + '</span>'; }
+    function renderUserAffiliations(data) {
+      affiliateData = data;
+      var profile = data.profile;
+      var referrals = Array.isArray(data.referrals) ? data.referrals : [];
+      var commissions = Array.isArray(data.commissions) ? data.commissions : [];
+      var withdrawals = Array.isArray(data.withdrawals) ? data.withdrawals : [];
+      var balances = Array.isArray(data.balances) ? data.balances : [];
+      affiliateEnrollment.hidden = Boolean(profile);
+      affiliateDashboardContent.hidden = !profile;
+      affiliateTables.hidden = !profile;
+      affiliatePayoutForm.hidden = !profile;
+      if (!profile) { affiliateNotice.hidden = true; return; }
+      affiliatePayoutForm.elements.paymentMethod.value = profile.paymentMethod;
+      affiliatePayoutForm.elements.payoutDetails.value = profile.payoutDetails || "";
+      affiliateNotice.hidden = profile.status === "active";
+      affiliateNotice.textContent = profile.status === "pending" ? "Your affiliate application is waiting for super-admin approval. Your referral link will become usable after approval." : "Your affiliate account is " + profile.status + ". Contact support if you need help.";
+      // Build from the page currently serving the dashboard so local development
+      // ports (for example :5500) and production origins are both preserved.
+      var registrationUrl = new URL("../auth/register.html", window.location.href);
+      registrationUrl.searchParams.set("ref", profile.referralCode);
+      document.getElementById("affiliateReferralLink").value = registrationUrl.href;
+      var openReferralLink = document.getElementById("affiliateOpenReferralLink");
+      openReferralLink.href = registrationUrl.href;
+      setText("affiliateProfileCode", profile.referralCode || "—");
+      setText("affiliateProfileStatus", String(profile.status || "pending").replace(/_/g, " "));
+      setText("affiliateProfileCommission", Number(profile.commissionValue || 0).toLocaleString() + (profile.commissionType === "percentage" ? "%" : " fixed"));
+      setText("affiliateProfilePayout", String(profile.paymentMethod || "not set").replace(/_/g, " "));
+      setText("affiliateProfileSince", profile.createdAt ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(profile.createdAt)) : "—");
+      var primary = balances[0] || { currency: "USD", earned: 0, available: 0 };
+      setText("affiliateTotalCommission", balances.length ? balances.map(function (item) { return affiliateMoney(Number(item.earned || 0) + Number(item.pending || 0), item.currency); }).join(" · ") : affiliateMoney(0, "USD"));
+      setText("affiliateAvailableBalance", balances.length ? balances.map(function (item) { return affiliateMoney(item.available, item.currency); }).join(" · ") : affiliateMoney(0, "USD"));
+      var pendingCommissionCount = commissions.filter(function (item) { return item.status === "pending"; }).length;
+      setText("affiliateReferralSummary", pendingCommissionCount + " pending review · " + referrals.filter(function (item) { return item.status === "qualified"; }).length + " qualified of " + referrals.length + " referrals");
+      setText("affiliateBalanceCurrency", profile.status === "active" ? "Available now" : "Account " + profile.status);
+      setText("affiliateMinimumWithdrawal", "Minimum withdrawal: " + affiliateMoney(data.minimumWithdrawal, primary.currency));
+      var currencySelect = document.getElementById("affiliateWithdrawalCurrency");
+      currencySelect.innerHTML = balances.length ? balances.map(function (item) { return '<option value="' + escapeHtml(item.currency) + '">' + escapeHtml(item.currency) + ' — ' + escapeHtml(affiliateMoney(item.available, item.currency)) + '</option>'; }).join("") : '<option value="USD">USD — no approved balance</option>';
+      document.getElementById("affiliateWithdrawalForm").querySelector('button[type="submit"]').disabled = profile.status !== "active" || !balances.some(function (item) { return item.available >= data.minimumWithdrawal; });
+
+      var referralsBody = document.getElementById("affiliateUsersTableBody");
+      referralsBody.innerHTML = referrals.length ? referrals.map(function (referral) {
+        return '<tr class="affiliate-user-row" data-search="' + escapeHtml([referral.user.name,referral.user.email,referral.status].join(" ").toLowerCase()) + '"><td><div class="affiliate-brand-cell"><div class="affiliate-logo-chip">' + escapeHtml(profile.referralCode.slice(0,2)) + '</div><div><strong>' + escapeHtml(profile.referralCode) + '</strong><span>' + affiliateStatus(referral.status) + '</span></div></div></td><td><div class="affiliate-user-cell"><div><strong>' + escapeHtml(referral.user.name) + '</strong><span>' + escapeHtml(referral.user.email) + '</span></div></div></td><td><span class="affiliate-amount-pill">' + escapeHtml(affiliateMoney(referral.commission,referral.currency)) + '</span></td><td><span class="date-pill">' + escapeHtml(formatDate(referral.joinedAt)) + '</span></td></tr>';
+      }).join("") : '<tr><td colspan="4" class="light-empty-cell">No one has registered with your referral link yet.</td></tr>';
+      setText("affiliateUsersResults", "Showing " + referrals.length + " result" + (referrals.length === 1 ? "" : "s"));
+
+      var commissionsBody = document.getElementById("affiliateTransactionsTableBody");
+      commissionsBody.innerHTML = commissions.length ? commissions.map(function (commission) {
+        return '<tr class="affiliate-transaction-row" data-search="' + escapeHtml([commission.referredName,commission.status,commission.description].join(" ").toLowerCase()) + '"><td>' + escapeHtml(commission.referredName) + '</td><td><strong>' + escapeHtml(affiliateMoney(commission.amount,commission.currency)) + '</strong></td><td>' + affiliateStatus(commission.status) + '</td><td>' + escapeHtml(formatDate(commission.createdAt)) + '</td><td>' + escapeHtml(commission.description || "—") + '</td></tr>';
+      }).join("") : '<tr><td colspan="5" class="light-empty-cell">No commission transactions yet.</td></tr>';
+      setText("affiliateTransactionsResults", "Showing " + commissions.length + " result" + (commissions.length === 1 ? "" : "s"));
+      var withdrawalsBody = document.getElementById("affiliateWithdrawalsTableBody");
+      withdrawalsBody.innerHTML = withdrawals.length ? withdrawals.map(function (withdrawal) {
+        return '<tr><td><strong>' + escapeHtml(affiliateMoney(withdrawal.amount,withdrawal.currency)) + '</strong></td><td>' + escapeHtml(withdrawal.method.replace(/_/g," ")) + '</td><td>' + affiliateStatus(withdrawal.status) + '</td><td>' + escapeHtml(formatDate(withdrawal.createdAt)) + '</td><td>' + escapeHtml(withdrawal.adminNote || "—") + '</td></tr>';
+      }).join("") : '<tr><td colspan="5" class="light-empty-cell">No withdrawal requests yet.</td></tr>';
+    }
+    function loadUserAffiliations() { request("/user/affiliations").then(renderUserAffiliations).catch(function (error) { affiliateNotice.hidden=false;affiliateNotice.textContent=error.message; }); }
+    loadUserAffiliations();
+    affiliateApplicationForm.addEventListener("submit", function (event) {
+      event.preventDefault(); var button=affiliateApplicationForm.querySelector('button[type="submit"]'),fd=new FormData(affiliateApplicationForm),feedback=document.getElementById("affiliateApplicationFeedback");
+      button.disabled=true;feedback.textContent="Submitting...";
+      request("/user/affiliations/apply",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({referralCode:fd.get("referralCode"),paymentMethod:fd.get("paymentMethod"),payoutDetails:fd.get("payoutDetails")})})
+        .then(function(data){feedback.textContent=data.message;loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;}).finally(function(){button.disabled=false;});
+    });
+    affiliatePayoutForm.addEventListener("submit",function(event){event.preventDefault();var button=affiliatePayoutForm.querySelector("button"),fd=new FormData(affiliatePayoutForm),feedback=document.getElementById("affiliatePayoutFeedback");button.disabled=true;request("/user/affiliations/payout",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentMethod:fd.get("paymentMethod"),payoutDetails:fd.get("payoutDetails")})}).then(function(data){feedback.textContent=data.message;loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;}).finally(function(){button.disabled=false;});});
+    document.getElementById("affiliateWithdrawalForm").addEventListener("submit",function(event){event.preventDefault();var form=event.currentTarget,button=form.querySelector("button"),fd=new FormData(form),feedback=document.getElementById("affiliateWithdrawalFeedback");button.disabled=true;feedback.textContent="Submitting...";request("/user/affiliations/withdrawals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:Number(fd.get("amount")),currency:fd.get("currency"),note:fd.get("note")})}).then(function(data){feedback.textContent=data.message;form.reset();loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;button.disabled=false;});});
+    document.addEventListener("click",function(event){
+      var copy=event.target.closest('[data-action="copy-link"]');
+      if(!copy)return;
+      event.stopImmediatePropagation();
+      var input=document.getElementById("affiliateReferralLink"),label=copy.querySelector("span"),copyText=function(){input.focus();input.select();document.execCommand("copy");return Promise.resolve();};
+      var operation=navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(input.value):copyText();
+      operation.then(function(){if(label)label.textContent="Copied";setTimeout(function(){if(label)label.textContent="Copy link";},1200);}).catch(function(){if(label)label.textContent="Select link";input.focus();input.select();});
+    },true);
   }
 
   var enquiriesBody = document.getElementById("enquiriesTableBody");
