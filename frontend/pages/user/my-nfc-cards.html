@@ -6,8 +6,8 @@
   <title>My NFC Cards - Sync Card</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
-  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
-  <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css?v=20260723-3" />
+  <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css?v=20260723-3" />
 </head>
 <body class="user-nfc-store-page">
   <div class="bg-orb bg-orb-1"></div>
@@ -110,11 +110,21 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input id="nfcTableSearch" type="text" placeholder="Search" />
+              <input id="nfcTableSearch" type="text" placeholder="Search orders, cards or tracking..." />
             </label>
             <div class="nfc-toolbar-actions">
-              <button class="nfc-toolbar-btn nfc-help-btn" type="button" id="openNfcGuideModal">Order guide</button>
-              <button class="nfc-toolbar-btn nfc-order-btn" type="button" id="orderNfcButton">New order</button>
+              <button class="nfc-toolbar-btn nfc-refresh-btn" type="button" id="refreshNfcOrders">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <span>Refresh</span>
+              </button>
+              <button class="nfc-toolbar-btn nfc-guide-btn" type="button" id="openNfcGuideModal">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4.5h10.5A3.5 3.5 0 0 1 19 8v11.5H8.5A3.5 3.5 0 0 1 5 16V4.5Zm0 11.5a3.5 3.5 0 0 1 3.5-3.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <span>Order guide</span>
+              </button>
+              <button class="nfc-toolbar-btn nfc-order-btn" type="button" id="orderNfcButton">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+                <span>New order</span>
+              </button>
             </div>
           </div>
 
@@ -181,9 +191,21 @@
   <!-- Order NFC Modal -->
   <div class="user-modal nfc-modal" id="nfcOrderModal" hidden>
     <div class="user-modal-backdrop" id="nfcOrderModalBackdrop"></div>
-    <div class="user-modal-dialog nfc-modal-dialog nfc-order-dialog">
+    <div class="user-modal-dialog nfc-modal-dialog nfc-order-dialog" role="dialog" aria-modal="true" aria-labelledby="nfcOrderModalTitle">
       <div class="user-modal-header nfc-modal-header">
-        <h2>Order NFC Cards</h2>
+        <div class="nfc-order-modal-title">
+          <span class="nfc-order-modal-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.7"></rect>
+              <path d="M15.5 9.2c1.45 1.45 1.45 3.8 0 5.25M13.1 10.8c.57.57.57 1.5 0 2.08" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+            </svg>
+          </span>
+          <div>
+            <span class="eyebrow">New physical card</span>
+            <h2 id="nfcOrderModalTitle">Order an NFC card</h2>
+            <p>Choose your card, confirm payment, and tell us where to deliver it.</p>
+          </div>
+        </div>
         <button class="nfc-modal-close" type="button" id="closeNfcOrderModal" aria-label="Close order modal">
           <svg viewBox="0 0 24 24" fill="none">
             <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
@@ -193,31 +215,69 @@
       </div>
       <div class="user-modal-body nfc-modal-body">
         <form class="nfc-order-form nfc-live-order-form" id="nfcOrderForm" data-live-nfc-order enctype="multipart/form-data">
-          <div class="form-group">
-            <label for="nfcCardType">Card Type</label>
-            <select id="nfcCardType" name="productId" required><option value="">Select card type</option></select>
-          </div>
+          <section class="nfc-order-section" aria-labelledby="nfcOrderCardHeading">
+            <div class="nfc-order-section-heading">
+              <span>01</span>
+              <div><h3 id="nfcOrderCardHeading">Card details</h3><p>Select the design, quantity, and digital profile to link.</p></div>
+            </div>
+            <div class="nfc-order-fields">
+              <div class="form-group nfc-field-card">
+                <label for="nfcCardType">Card design <span aria-hidden="true">*</span></label>
+                <select id="nfcCardType" name="productId" required><option value="">Select a card design</option></select>
+              </div>
+              <div class="form-group nfc-field-quantity">
+                <label for="nfcQuantity">Quantity <span aria-hidden="true">*</span></label>
+                <input type="number" id="nfcQuantity" name="quantity" min="1" max="100" step="1" value="1" required />
+              </div>
+              <div class="form-group nfc-field-vcard">
+                <label for="nfcVCard">Linked VCard <span aria-hidden="true">*</span></label>
+                <select id="nfcVCard" name="vcardId" required><option value="">Select the VCard people will open</option></select>
+                <small>This profile opens when someone taps the physical card.</small>
+              </div>
+            </div>
+            <div class="nfc-order-total"><span><small>Estimated total</small>Card price × quantity</span><strong id="nfcOrderTotal">LKR 0.00</strong></div>
+          </section>
 
-          <div class="form-group">
-            <label for="nfcQuantity">Quantity</label>
-            <input type="number" id="nfcQuantity" name="quantity" min="1" max="100" step="1" value="1" required />
-          </div>
+          <section class="nfc-order-section" aria-labelledby="nfcOrderPaymentHeading">
+            <div class="nfc-order-section-heading">
+              <span>02</span>
+              <div><h3 id="nfcOrderPaymentHeading">Payment details</h3><p>Transfer the total to this account, then attach your receipt.</p></div>
+            </div>
+            <div class="nfc-payment-bank">
+              <div><small>Bank</small><strong id="nfcBankName">—</strong></div>
+              <div><small>Account name</small><strong id="nfcBankAccountName">—</strong></div>
+              <div><small>Account number</small><strong id="nfcBankAccountNumber">—</strong></div>
+              <div><small>Branch</small><strong id="nfcBankBranch">—</strong></div>
+            </div>
+            <div class="nfc-order-fields nfc-payment-fields">
+              <div class="form-group">
+                <label for="nfcTransactionNumber">Transaction reference <span aria-hidden="true">*</span></label>
+                <input id="nfcTransactionNumber" name="transactionNumber" maxlength="255" required placeholder="Enter your bank transfer reference" />
+              </div>
+              <div class="form-group nfc-file-field">
+                <label for="nfcPaymentSlip">Payment receipt <span aria-hidden="true">*</span></label>
+                <input id="nfcPaymentSlip" name="slip" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" required />
+                <small>JPG, PNG, WebP, or PDF · maximum 5 MB</small>
+              </div>
+            </div>
+          </section>
 
-          <div class="form-group">
-            <label for="nfcVCard">Link to VCard</label>
-            <select id="nfcVCard" name="vcardId" required><option value="">Select a VCard</option></select>
-          </div>
+          <section class="nfc-order-section" aria-labelledby="nfcOrderDeliveryHeading">
+            <div class="nfc-order-section-heading">
+              <span>03</span>
+              <div><h3 id="nfcOrderDeliveryHeading">Delivery address</h3><p>Add enough detail for us to deliver your card without delay.</p></div>
+            </div>
+            <div class="form-group nfc-form-wide">
+              <label for="nfcShippingAddress">Shipping address <span aria-hidden="true">*</span></label>
+              <textarea id="nfcShippingAddress" name="shippingAddress" rows="3" minlength="10" maxlength="2000" required placeholder="Recipient name, street address, city, postal code, and phone number"></textarea>
+            </div>
+          </section>
 
-          <div class="nfc-order-total"><span>Order total</span><strong id="nfcOrderTotal">LKR 0.00</strong></div>
-          <div class="nfc-payment-bank"><span>Pay by bank transfer</span><div><small>Bank</small><strong id="nfcBankName">—</strong></div><div><small>Account name</small><strong id="nfcBankAccountName">—</strong></div><div><small>Account number</small><strong id="nfcBankAccountNumber">—</strong></div><div><small>Branch</small><strong id="nfcBankBranch">—</strong></div></div>
-          <div class="form-group"><label for="nfcTransactionNumber">Transaction number</label><input id="nfcTransactionNumber" name="transactionNumber" maxlength="255" required placeholder="Bank transfer reference" /></div>
-          <div class="form-group"><label for="nfcPaymentSlip">Payment slip</label><input id="nfcPaymentSlip" name="slip" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" required /><small>JPG, PNG, WebP or PDF up to 5 MB</small></div>
-          <div class="form-group nfc-form-wide"><label for="nfcShippingAddress">Shipping address</label><textarea id="nfcShippingAddress" name="shippingAddress" rows="3" minlength="10" maxlength="2000" required placeholder="Recipient, street, city, postal code and phone"></textarea></div>
           <p class="nfc-order-feedback" id="nfcOrderFeedback" aria-live="polite"></p>
 
           <div class="form-actions">
-            <button type="submit" class="btn-primary">Submit payment &amp; order</button>
             <button type="button" class="btn-secondary" id="cancelNfcOrder">Cancel</button>
+            <button type="submit" class="btn-primary">Submit payment &amp; order</button>
           </div>
         </form>
       </div>
@@ -225,7 +285,7 @@
   </div>
 
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
-  <script src="../../public/assets/js/dashboard.js"></script>
-  <script src="../../public/assets/js/user-workspace.js"></script>
+  <script src="../../public/assets/js/dashboard.js?v=20260723-3"></script>
+  <script src="../../public/assets/js/user-workspace.js?v=20260723-3"></script>
 </body>
 </html>

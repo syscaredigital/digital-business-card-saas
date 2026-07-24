@@ -179,6 +179,14 @@ document.addEventListener("DOMContentLoaded", function () {
   var nfcProductFrontPreview = document.getElementById("nfcProductFrontPreview");
   var nfcProductBackPreview = document.getElementById("nfcProductBackPreview");
   var superAdminNfcProductsById = {};
+  var nfcFulfilmentModal = document.getElementById("nfcFulfilmentModal");
+  var nfcFulfilmentModalBackdrop = document.getElementById("nfcFulfilmentModalBackdrop");
+  var closeNfcFulfilmentModalButton = document.getElementById("closeNfcFulfilmentModal");
+  var cancelNfcFulfilmentButton = document.getElementById("cancelNfcFulfilment");
+  var nfcFulfilmentForm = document.getElementById("nfcFulfilmentForm");
+  var nfcFulfilmentFeedback = document.getElementById("nfcFulfilmentFeedback");
+  var nfcFulfilmentOrderSummary = document.getElementById("nfcFulfilmentOrderSummary");
+  var superAdminNfcOrdersById = {};
   var nfcCatalogSearch = document.getElementById("nfcCatalogSearch");
   var vcardTabButtons = Array.from(document.querySelectorAll("[data-vcard-tab-target]"));
   var nfcTabButtons = Array.from(document.querySelectorAll("[data-nfc-tab-target]"));
@@ -2031,16 +2039,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function renderNfcOrders(orders) {
     if (!nfcOrdersLiveBody) return;
+    superAdminNfcOrdersById = {};
     if (!orders.length) {
       nfcOrdersLiveBody.innerHTML = '<tr><td colspan="10"><div class="admin-data-empty"><strong>No NFC orders found</strong><span>Customer payment submissions will appear here.</span></div></td></tr>';
       if (nfcOrdersLiveCount) nfcOrdersLiveCount.textContent = "0 orders";
       return;
     }
-    var statuses = ["pending", "processing", "shipped", "completed", "cancelled"];
     nfcOrdersLiveBody.innerHTML = orders.map(function (order) {
-      var options = statuses.map(function (status) { return '<option value="' + status + '"' + (status === order.status ? " selected" : "") + '>' + status.charAt(0).toUpperCase() + status.slice(1) + '</option>'; }).join("");
+      superAdminNfcOrdersById[String(order.id)] = order;
       var paymentClass=order.paymentStatus==="approved"?"active":order.paymentStatus==="rejected"?"inactive":"pending";
-      var actions=order.paymentStatus==="pending"?'<button class="user-action-btn approve" type="button" data-nfc-payment-action="approved" data-nfc-order-id="' + order.id + '">Approve</button><button class="user-action-btn reject" type="button" data-nfc-payment-action="rejected" data-nfc-order-id="' + order.id + '">Reject</button>':'<span class="subtle-handle">Reviewed</span>';
+      var approveDisabled=order.paymentStatus==="approved"?" disabled":"";
+      var rejectDisabled=order.paymentStatus==="rejected"?" disabled":"";
+      var actions='<button class="user-action-btn approve" type="button" data-nfc-payment-action="approved" data-nfc-order-id="' + order.id + '"' + approveDisabled + '>' + (approveDisabled ? "Approved" : "Approve") + '</button><button class="user-action-btn reject" type="button" data-nfc-payment-action="rejected" data-nfc-order-id="' + order.id + '"' + rejectDisabled + '>' + (rejectDisabled ? "Rejected" : "Reject") + '</button>';
+      var fulfilmentDisabled=order.paymentStatus!=="approved"?" disabled":"";
+      var trackingLabel=order.trackingNumber?escapeDashboardHtml(order.trackingNumber):"Not added";
+      var trackingAction=order.trackingNumber?"Edit tracking":"Add tracking";
       return '<tr class="nfc-live-row" data-nfc-order-id="' + order.id + '">' +
         '<td><strong>#' + order.id + ' · ' + escapeDashboardHtml(order.productName) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(order.vcardTitle || "No VCard") + '</div></td>' +
         '<td><div class="nfc-owner-stack"><strong>' + escapeDashboardHtml(order.userName) + '</strong><span>' + escapeDashboardHtml(order.userEmail || "No email") + '</span></div></td>' +
@@ -2049,8 +2062,8 @@ document.addEventListener("DOMContentLoaded", function () {
         '<td>' + (order.hasProof?'<button class="user-action-btn edit" type="button" data-nfc-proof-id="' + order.id + '">View slip</button>':'—') + '</td>' +
         '<td><span class="status-badge ' + paymentClass + '">' + escapeDashboardHtml(order.paymentStatus) + '</span>' + (order.adminNote?'<div class="subtle-handle">' + escapeDashboardHtml(order.adminNote) + '</div>':'') + '</td>' +
         '<td><span class="nfc-shipping-copy">' + escapeDashboardHtml(order.shippingAddress || "Not provided") + '</span></td>' +
-        '<td><input class="nfc-tracking-input" type="text" maxlength="255" value="' + escapeDashboardHtml(order.trackingNumber || "") + '" placeholder="Add tracking" data-nfc-order-field="tracking" data-nfc-order-id="' + order.id + '"' + (order.paymentStatus!=="approved"?' disabled':'') + ' /></td>' +
-        '<td><select class="nfc-order-status-select" data-nfc-order-field="status" data-nfc-order-id="' + order.id + '"' + (order.paymentStatus!=="approved"?' disabled':'') + '>' + options + '</select></td>' +
+        '<td><div class="nfc-admin-tracking"><strong>' + trackingLabel + '</strong><button class="nfc-order-save-btn" type="button" data-nfc-fulfilment-action data-nfc-order-id="' + order.id + '"' + fulfilmentDisabled + '>' + trackingAction + '</button>' + (fulfilmentDisabled?'<small>Approve payment first</small>':'') + '</div></td>' +
+        '<td><span class="status-badge ' + nfcStatusClass(order.status) + '">' + escapeDashboardHtml(order.status) + '</span></td>' +
         '<td><div class="user-row-actions">' + actions + '</div></td>' +
       '</tr>';
     }).join("");
@@ -2200,26 +2213,62 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  async function updateSuperAdminNfcOrder(orderId, row, paymentStatus) {
-    var statusSelect = row.querySelector('[data-nfc-order-field="status"]');
-    var trackingInput = row.querySelector('[data-nfc-order-field="tracking"]');
+  async function patchSuperAdminNfcOrder(orderId, payload, button, successTitle) {
+    var originalButtonText = button ? button.textContent : "";
     try {
-      statusSelect.disabled = true;
-      trackingInput.disabled = true;
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Saving...";
+      }
       var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/orders/" + encodeURIComponent(orderId), {
         method: "PATCH",
         headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-        body: JSON.stringify({ status: statusSelect.value, trackingNumber: trackingInput.value.trim(), paymentStatus: paymentStatus || undefined, adminNote: paymentStatus === "rejected" ? (window.prompt("Reason for rejecting this payment:", "Payment evidence could not be verified") || "Payment evidence could not be verified") : undefined })
+        body: JSON.stringify(payload)
       });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to update NFC order");
       await loadSuperAdminNfc();
-       showToast(paymentStatus ? "Payment " + paymentStatus : "Order updated", data.message || "NFC order was saved.");
+      showToast(successTitle || "Order updated", data.message || "NFC order was saved.");
+      return true;
     } catch (error) {
-      statusSelect.disabled = false;
-      trackingInput.disabled = false;
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalButtonText;
+      }
       showToast("Order update failed", error.message);
+      return false;
     }
+  }
+
+  async function reviewSuperAdminNfcPayment(orderId, paymentStatus, button) {
+    var payload = { paymentStatus: paymentStatus };
+    if (paymentStatus === "rejected") {
+      var reason = window.prompt("Reason for rejecting this payment:", "Payment evidence could not be verified");
+      if (reason === null) return;
+      payload.adminNote = reason.trim() || "Payment evidence could not be verified";
+    } else {
+      payload.adminNote = null;
+    }
+    var saved = await patchSuperAdminNfcOrder(orderId, payload, button, paymentStatus === "approved" ? "Payment approved" : "Payment rejected");
+    if (saved && paymentStatus === "approved") {
+      setNfcFulfilmentModal(true, superAdminNfcOrdersById[String(orderId)]);
+    }
+  }
+
+  function setNfcFulfilmentModal(open, order) {
+    if (!nfcFulfilmentModal || !nfcFulfilmentForm) return;
+    if (open && order) {
+      nfcFulfilmentForm.reset();
+      nfcFulfilmentForm.elements.orderId.value = order.id;
+      nfcFulfilmentForm.elements.trackingNumber.value = order.trackingNumber || "";
+      nfcFulfilmentForm.elements.status.value = ["processing","shipped","completed"].includes(order.status) ? order.status : "processing";
+      if (nfcFulfilmentFeedback) nfcFulfilmentFeedback.hidden = true;
+      if (nfcFulfilmentOrderSummary) {
+        nfcFulfilmentOrderSummary.innerHTML = '<span>Order #' + order.id + '</span><strong>' + escapeDashboardHtml(order.productName) + '</strong><small>' + escapeDashboardHtml(order.userName) + ' · ' + escapeDashboardHtml(order.userEmail || "No email") + '</small>';
+      }
+    }
+    nfcFulfilmentModal.hidden = !open;
+    document.body.style.overflow = open ? "hidden" : "";
   }
 
   async function openNfcOrderProof(orderId, button) {
@@ -2567,6 +2616,30 @@ document.addEventListener("DOMContentLoaded", function () {
   if (closeNfcProductModalButton) closeNfcProductModalButton.addEventListener("click", function () { setNfcProductModal(false); });
   if (nfcProductModalBackdrop) nfcProductModalBackdrop.addEventListener("click", function () { setNfcProductModal(false); });
   if (resetNfcProductFormButton) resetNfcProductFormButton.addEventListener("click", function () { resetNfcProductMode(); setNfcProductModal(false); });
+  if (closeNfcFulfilmentModalButton) closeNfcFulfilmentModalButton.addEventListener("click", function () { setNfcFulfilmentModal(false); });
+  if (cancelNfcFulfilmentButton) cancelNfcFulfilmentButton.addEventListener("click", function () { setNfcFulfilmentModal(false); });
+  if (nfcFulfilmentModalBackdrop) nfcFulfilmentModalBackdrop.addEventListener("click", function () { setNfcFulfilmentModal(false); });
+
+  if (nfcFulfilmentForm) {
+    nfcFulfilmentForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      var formData = new FormData(nfcFulfilmentForm);
+      var orderId = String(formData.get("orderId") || "");
+      var trackingNumber = String(formData.get("trackingNumber") || "").trim();
+      var status = String(formData.get("status") || "");
+      var submitButton = nfcFulfilmentForm.querySelector('[type="submit"]');
+      if (!orderId || !["processing","shipped","completed"].includes(status)) return;
+      if (["shipped","completed"].includes(status) && !trackingNumber) {
+        nfcFulfilmentFeedback.hidden = false;
+        nfcFulfilmentFeedback.textContent = "Add a tracking number before marking the order as shipped or completed.";
+        nfcFulfilmentForm.elements.trackingNumber.focus();
+        return;
+      }
+      if (nfcFulfilmentFeedback) nfcFulfilmentFeedback.hidden = true;
+      var saved = await patchSuperAdminNfcOrder(orderId, { trackingNumber: trackingNumber || null, status: status }, submitButton, "Fulfilment saved");
+      if (saved) setNfcFulfilmentModal(false);
+    });
+  }
 
   if (nfcProductForm) {
     nfcProductForm.elements.frontImage.addEventListener("change", function () {
@@ -2656,13 +2729,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (productButton.getAttribute("data-nfc-product-action") === "edit") setNfcProductModal(true, superAdminNfcProductsById[String(productId)]);
       if (productButton.getAttribute("data-nfc-product-action") === "delete") deleteNfcProduct(productId, productButton);
     }
-  });
-
-  document.addEventListener("change", function (event) {
-    var orderField = event.target.closest("[data-nfc-order-field]");
-    if (!orderField) return;
-    var row = orderField.closest("[data-nfc-order-id]");
-    if (row) updateSuperAdminNfcOrder(orderField.getAttribute("data-nfc-order-id"), row);
   });
 
   function subscriptionMoney(value) {
@@ -4771,7 +4837,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (action === "delete") deleteSuperAdminUser(userId, userActionButton);
     }
     var nfcPaymentButton=event.target.closest("[data-nfc-payment-action]");
-    if(nfcPaymentButton){var nfcPaymentRow=nfcPaymentButton.closest("[data-nfc-order-id]");if(nfcPaymentRow)updateSuperAdminNfcOrder(nfcPaymentButton.getAttribute("data-nfc-order-id"),nfcPaymentRow,nfcPaymentButton.getAttribute("data-nfc-payment-action"));}
+    if(nfcPaymentButton&&!nfcPaymentButton.disabled)reviewSuperAdminNfcPayment(nfcPaymentButton.getAttribute("data-nfc-order-id"),nfcPaymentButton.getAttribute("data-nfc-payment-action"),nfcPaymentButton);
+    var nfcFulfilmentButton=event.target.closest("[data-nfc-fulfilment-action]");
+    if(nfcFulfilmentButton&&!nfcFulfilmentButton.disabled)setNfcFulfilmentModal(true,superAdminNfcOrdersById[String(nfcFulfilmentButton.getAttribute("data-nfc-order-id"))]);
     var nfcProofButton=event.target.closest("[data-nfc-proof-id]");if(nfcProofButton)openNfcOrderProof(nfcProofButton.getAttribute("data-nfc-proof-id"),nfcProofButton);
   });
 

@@ -9,8 +9,33 @@
   <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
 </head>
 <body class="user-workspace">
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
   <div class="dashboard-wrapper">
-    <aside class="sidebar"><a class="sidebar-logo" href="dashboard.html"><img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" /></a><nav class="sidebar-nav"><a href="dashboard.html" class="nav-item">Overview</a><a href="vcards.html" class="nav-item active">My cards</a><a href="enquiries.html" class="nav-item">Enquiries</a><a href="appointments.html" class="nav-item">Appointments</a><a href="my-nfc-cards.html" class="nav-item">NFC cards</a><a href="settings.html" class="nav-item">Settings</a></nav></aside>
+    <aside class="sidebar">
+      <a class="sidebar-logo" href="dashboard.html" aria-label="Sync E-Card dashboard">
+        <img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" />
+      </a>
+      <nav class="sidebar-nav" aria-label="User workspace navigation">
+        <a href="dashboard.html" class="nav-item">Overview</a>
+        <a href="vcards.html" class="nav-item active">My cards</a>
+        <a href="enquiries.html" class="nav-item">Enquiries</a>
+        <a href="appointments.html" class="nav-item">Appointments</a>
+        <a href="product-orders.html" class="nav-item">Orders</a>
+        <a href="affiliations.html" class="nav-item">Affiliations</a>
+        <a href="my-nfc-cards.html" class="nav-item">NFC cards</a>
+        <a href="nfc-backgrounds.html" class="nav-item">Backgrounds</a>
+        <a href="storage.html" class="nav-item">Storage</a>
+        <a href="settings.html" class="nav-item">Settings</a>
+        <a href="payments.html" class="nav-item">Billing</a>
+      </nav>
+      <div class="sidebar-upgrade">
+        <div class="upgrade-dot"></div>
+        <div class="upgrade-title"><span class="user-plan">Your plan</span></div>
+        <div class="upgrade-desc">Keep your professional identity current and ready to share.</div>
+        <a href="payments.html" class="btn-upgrade">Manage billing</a>
+      </div>
+    </aside>
     <div class="main-content">
       <header class="topbar"><a class="user-secondary-btn" href="vcards.html">← Back to cards</a><div class="topbar-right"><button class="logout-btn" id="logoutButton" type="button">Sign out</button><div class="user-profile"><div class="user-avatar-placeholder">U</div><div class="user-info"><div class="user-name">My account</div><div class="user-plan">Card editor</div></div></div></div></header>
       <main class="page-content"><div class="page-header"><div><span class="user-kicker">Digital identity</span><h1>Edit your card</h1><p>Only the editor sections and templates included in your active billing plan are shown.</p></div></div>

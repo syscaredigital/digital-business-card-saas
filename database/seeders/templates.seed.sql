@@ -1,6 +1,7 @@
 INSERT INTO vcard_templates (name, description, preview_url, template_json, is_public, created_at, updated_at)
 SELECT seed.name, seed.description, seed.preview_url, seed.template_json::jsonb, TRUE, NOW(), NOW()
 FROM (VALUES
+  ('Corporate CEO', 'Executive digital card with a banner, prominent contact details, services, bookings, portfolio, products, testimonials, and business hours.', '../public-vcard/corporate-ceo.html', '{"industry":true,"category":"Corporate & Business Professionals","layout":"corporate-ceo","colors":{"primary":"#0d3841","accent":"#a5ff62"}}'),
   ('Retail E-Commerce', 'Commerce-focused profile for retail strategists, marketplace advisors, and growth consultants.', '../public-vcard/template-one.html', '{"layout":"retail","colors":{"primary":"#1f2937","accent":"#e63946"}}'),
   ('Luxury Realtor', 'Premium property profile for agencies, brokers, and real-estate advisors.', '../public-vcard/template-two.html', '{"layout":"realtor","colors":{"primary":"#17284d","accent":"#c6a15b"}}'),
   ('Healthcare Wellness', 'Healthcare consultant profile with services, expertise, programs, and contact sections.', '../public-vcard/template-three.html', '{"layout":"healthcare","colors":{"primary":"#075f66","accent":"#16a3a0"}}'),

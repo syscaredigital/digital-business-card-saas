@@ -9,6 +9,7 @@ router.use(authenticate);
 router.get("/dashboard", controller.dashboard);
 router.get("/enquiries", controller.enquiries);
 router.get("/appointments", controller.appointments);
+router.patch("/appointments/:id/status", controller.updateAppointmentStatus);
 router.get("/orders", controller.orders);
 router.get("/nfc", controller.nfcStore);
 router.post("/nfc/orders", paymentSlipUpload.single("slip"), controller.placeNfcOrder);

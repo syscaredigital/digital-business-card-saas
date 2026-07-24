@@ -1444,6 +1444,86 @@
   width: 150px;
 }
 
+.nfc-order-inline-editor {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nfc-order-save-btn {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid rgba(242, 158, 82, 0.25);
+  border-radius: 9px;
+  color: #ffc38d;
+  background: rgba(242, 158, 82, 0.09);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.nfc-order-save-btn:hover:not(:disabled) {
+  border-color: rgba(242, 158, 82, 0.5);
+  background: rgba(242, 158, 82, 0.16);
+}
+
+.nfc-order-save-btn:disabled,
+.admin-page-nfc-orders .user-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.nfc-admin-tracking {
+  display: grid;
+  min-width: 150px;
+  gap: 7px;
+}
+
+.nfc-admin-tracking strong {
+  overflow-wrap: anywhere;
+  color: #f1f3f7;
+  font-size: 0.76rem;
+}
+
+.nfc-admin-tracking .nfc-order-save-btn {
+  width: max-content;
+}
+
+.nfc-admin-tracking small {
+  color: #7f8796;
+  font-size: 0.66rem;
+}
+
+.nfc-fulfilment-dialog {
+  width: min(100%, 620px);
+}
+
+.nfc-fulfilment-order-summary {
+  display: grid;
+  gap: 5px;
+  padding: 16px 18px;
+  border: 1px solid rgba(242, 158, 82, 0.17);
+  border-radius: 13px;
+  background: rgba(242, 158, 82, 0.06);
+}
+
+.nfc-fulfilment-order-summary span {
+  color: #f5b77e;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.nfc-fulfilment-order-summary strong {
+  color: #17284d;
+}
+
+.nfc-fulfilment-order-summary small {
+  color: #7788a6;
+}
+
 .nfc-tracking-input:focus,
 .admin-page-nfc-orders .nfc-order-status-select:focus {
   outline: none;
@@ -6269,6 +6349,61 @@
 .client-appointment-delete svg {
   width: 23px;
   height: 23px;
+}
+
+.client-appointment-approve {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: #20b77a;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.client-appointment-approve:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.client-appointment-complete {
+  color: #3bd59a;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.appointment-status-pill.status-approved {
+  background: #20b77a;
+}
+
+.client-appointment-feedback {
+  min-height: 20px;
+  margin: -10px 0 14px;
+  color: #3bd59a;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.client-enquiries-table tr {
+  grid-template-columns:
+    minmax(0, 1.2fr)
+    minmax(0, 0.9fr)
+    minmax(0, 1.35fr)
+    minmax(0, 0.75fr)
+    minmax(180px, 1.8fr)
+    minmax(0, 0.9fr)
+    minmax(58px, 0.42fr);
+}
+
+.client-enquiry-message {
+  max-height: 180px;
+  overflow-y: auto;
+  color: #d7deea;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .client-appointments-footer {

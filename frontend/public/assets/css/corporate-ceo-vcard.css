@@ -1,0 +1,106 @@
+:root{--ceo-bg:#0d3841;--ceo-panel:#123f49;--ceo-panel-2:#174954;--ceo-accent:#a5ff62;--ceo-text:#f2f7f5;--ceo-muted:#9aafb2;--ceo-line:rgba(186,216,216,.24);--gold:var(--ceo-accent);--card-accent:var(--ceo-accent);--surface:var(--ceo-panel);--text:var(--ceo-text);--muted:var(--ceo-muted);--border:var(--ceo-line)}
+*{box-sizing:border-box}
+html{background:#061f25;scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 50% 0,#174c56 0,#061f25 52%,#03161b 100%);color:var(--ceo-text);font-family:Inter,Arial,sans-serif}
+button,input,textarea{font:inherit}
+.ceo-card{width:min(100%,760px);min-height:100vh;margin:0 auto;overflow:hidden;background:var(--ceo-bg);box-shadow:0 0 70px rgba(0,0,0,.36)}
+.ceo-hero{position:relative;padding-bottom:26px}
+.ceo-banner{position:relative;height:315px;overflow:hidden;background:linear-gradient(145deg,#dbe7e1,#809a95)}
+.ceo-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 62%,rgba(13,56,65,.3))}
+.ceo-banner img{width:100%;height:100%;object-fit:cover;display:block}
+.ceo-banner-placeholder{display:flex;align-items:end;justify-content:center;gap:16px;height:100%;padding:58px 12%;background:linear-gradient(135deg,#eff5f0,#b9c9c3)}
+.ceo-banner-placeholder span{display:block;width:20%;height:65%;border-radius:70px 70px 8px 8px;background:linear-gradient(#879b96,#526d68);transform-origin:bottom}
+.ceo-banner-placeholder span:nth-child(2){height:84%;background:linear-gradient(#b2c0bc,#657b77)}
+.ceo-banner-placeholder span:nth-child(3){height:73%;background:linear-gradient(#77908a,#405e59)}
+.ceo-banner-placeholder span:nth-child(4){height:90%;background:linear-gradient(#d5dfdb,#6d817d)}
+.ceo-wave{position:absolute;z-index:2;top:260px;left:-4%;width:108%;height:100px;background:var(--ceo-bg);border-top:16px solid var(--ceo-accent);border-radius:50% 48% 0 0/55% 52% 0 0;transform:rotate(-3deg)}
+.ceo-wave::before{content:"";position:absolute;left:0;right:0;top:-27px;height:11px;border-radius:50%;background:#eef2ef;opacity:.9}
+.ceo-identity{position:relative;z-index:3;display:flex;align-items:end;justify-content:space-between;gap:24px;padding:2px 38px 0}
+.ceo-name-block{min-width:0;padding-top:10px}
+.profile-name{margin:0;color:var(--ceo-accent);font:600 clamp(35px,7vw,51px)/.95 "Barlow Condensed",sans-serif;letter-spacing:.01em}
+.profile-role{margin:8px 0 0;color:#c1cdce;font:400 24px/1.1 "Barlow Condensed",sans-serif}
+.profile-company{margin:7px 0 0;color:var(--ceo-muted);font-size:12px}
+.profile-avatar{display:grid;place-items:center;width:172px;height:172px;flex:0 0 172px;overflow:hidden;border:2px solid var(--ceo-accent);border-radius:50%;background:#d8e3df;color:var(--ceo-bg);font:700 42px/1 "Barlow Condensed",sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.22)}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.ceo-socials{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:10px;padding:17px 38px 0}
+.ceo-social-link{display:grid;place-items:center;width:39px;height:39px;border:2px solid rgba(232,244,240,.78);border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.08);color:#fff;font:700 12px/1 Inter,sans-serif;text-decoration:none;transition:.2s ease}
+.ceo-social-link:hover{border-color:var(--ceo-accent);color:var(--ceo-accent);transform:translateY(-2px)}
+.ceo-contact,.ceo-feature-root,.message-panel{min-width:0;padding:22px 38px}
+.ceo-section-title,.ceo-feature-root .vfeature-heading{display:flex;align-items:center;gap:18px;margin:0 0 27px;color:var(--ceo-accent)}
+.ceo-section-title h2,.ceo-feature-root .vfeature-heading h2{flex:0 0 auto;margin:0;font:500 clamp(30px,6vw,39px)/1 "Barlow Condensed",sans-serif;letter-spacing:.01em}
+.ceo-section-title>span,.ceo-feature-root .vfeature-heading::after{height:1px;flex:1;background:var(--ceo-line)}
+.ceo-section-title>span::after{content:"";display:block;width:5px;height:5px;margin-left:auto;border-radius:50%;background:rgba(179,213,211,.36);transform:translateY(-2px)}
+.ceo-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:25px 42px}
+.ceo-contact-item{display:flex;align-items:center;gap:15px;min-width:0;color:inherit;text-decoration:none}
+.ceo-contact-icon{display:grid;place-items:center;width:52px;height:52px;flex:0 0 52px;border-radius:50%;background:var(--ceo-accent);color:var(--ceo-bg);font-size:24px;font-weight:800}
+.ceo-contact-item>span:last-child{display:grid;gap:5px;min-width:0}
+.ceo-contact-item small{color:#fff;font:500 15px/1.1 "Barlow Condensed",sans-serif}
+.ceo-contact-item strong{overflow:hidden;color:var(--ceo-muted);font:400 13px/1.35 Inter,sans-serif;text-overflow:ellipsis;white-space:nowrap}
+.ceo-feature-root{padding-top:26px}
+.ceo-feature-root .vfeature-sections,.ceo-feature-root .vfeature-section,.ceo-feature-root .vfeature-body{width:100%;min-width:0;max-width:100%}
+.ceo-feature-root .vfeature-sections{display:flex;flex-direction:column;gap:42px;margin:0}
+.ceo-feature-root .vfeature-section{order:20}
+.ceo-feature-root .vfeature-services{order:1}.ceo-feature-root .vfeature-appointments{order:2}.ceo-feature-root .vfeature-galleries{order:3}.ceo-feature-root .vfeature-products{order:4}.ceo-feature-root .vfeature-testimonials{order:5}.ceo-feature-root .vfeature-business-hours{order:6}
+.ceo-feature-root .vfeature-heading{gap:18px;margin-bottom:24px}
+.ceo-feature-root .vfeature-heading-icon{display:none}
+.ceo-feature-root .vfeature-heading h2{order:0;color:var(--ceo-accent)}
+.ceo-feature-root .vfeature-card-grid{grid-template-columns:1fr;gap:13px}
+.ceo-feature-root .vfeature-item-card{min-height:78px;padding:12px;border:0;border-radius:8px;background:var(--ceo-panel);box-shadow:none}
+.ceo-feature-root .vfeature-item-card:hover{box-shadow:none;transform:translateX(3px)}
+.ceo-feature-root .vfeature-item-image,.ceo-feature-root .vfeature-item-icon{width:58px;height:58px;flex-basis:58px;border-radius:7px;background:var(--ceo-accent);color:var(--ceo-bg)}
+.ceo-feature-root .vfeature-item-copy strong{color:#fff;font:500 18px/1.1 "Barlow Condensed",sans-serif}
+.ceo-feature-root .vfeature-item-copy small{color:var(--ceo-muted);font-size:11px}
+.ceo-feature-root .vfeature-gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.ceo-feature-root .vfeature-gallery-item{width:100%;min-width:0}
+.ceo-feature-root .vfeature-gallery-item,.ceo-feature-root .vfeature-gallery-item img{min-height:130px;border-radius:12px}
+.ceo-feature-root .vfeature-gallery-item span{font-size:10px}
+.ceo-feature-root .vfeature-products .vfeature-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.ceo-feature-root .vfeature-products .vfeature-item-card{display:block;width:100%;min-width:0;padding:0;overflow:hidden;background:transparent}
+.ceo-feature-root .vfeature-products .vfeature-item-image{width:100%;height:170px;border-radius:12px;object-fit:cover}
+.ceo-feature-root .vfeature-products .vfeature-item-copy{padding:10px 2px}
+.ceo-feature-root .vfeature-testimonials{width:100%;max-width:100%;padding:4px 0 8px;overflow:hidden}
+.ceo-feature-root .vfeature-quote{min-width:100%;padding:22px 11%;border:0;background:transparent;text-align:center}
+.ceo-feature-root .vfeature-quote-mark{color:var(--ceo-accent)}
+.ceo-feature-root .vfeature-quote p{color:#b9c7c8;font-size:13px}
+.ceo-feature-root .vfeature-quote footer{justify-content:center;text-align:left}
+.ceo-feature-root .vfeature-quote footer>img,.ceo-feature-root .vfeature-person-avatar{width:76px;height:76px;border:2px solid var(--ceo-accent)}
+.ceo-feature-root .vfeature-quote footer strong{font:500 21px/1 "Barlow Condensed",sans-serif}
+.ceo-feature-root .vfeature-hours{max-width:390px;margin:0 auto;border:0;border-radius:0;background:transparent}
+.ceo-feature-root .vfeature-hours>div{padding:8px 0;border:0;font-size:13px}
+.ceo-feature-root .vfeature-hours strong{font-weight:500}
+.ceo-feature-root .vfeature-hours span{min-width:140px;padding:4px 12px;background:var(--ceo-panel-2);color:#c0d0d0;text-align:center}
+.ceo-feature-root .vfeature-hours .is-closed{color:var(--ceo-muted)}
+.ceo-feature-root .vfeature-appointment{border:1px solid var(--ceo-line);background:var(--ceo-panel)}
+.ceo-feature-root .vfeature-appointment-icon{background:var(--ceo-accent);color:var(--ceo-bg)}
+.ceo-feature-root .vfeature-button{background:var(--ceo-accent);color:var(--ceo-bg)!important}
+.ceo-feature-root .vfeature-booking-input{border-color:rgba(173,211,210,.32);background:var(--ceo-bg);color:#fff}.ceo-feature-root .vfeature-booking-input::placeholder{color:#779095}.ceo-feature-root .vfeature-booking-status.is-success{color:var(--ceo-accent)!important}
+.message-panel{margin:3px 0 0;border:0;border-radius:0;background:transparent}
+.message-panel>p{margin:-6px 0 25px;color:var(--ceo-muted);font-size:12px;line-height:1.6}
+.ceo-enquiry-grid{display:grid;gap:13px}
+.ceo-enquiry-grid label{display:grid;grid-template-columns:125px 1fr;align-items:center;gap:16px}
+.ceo-enquiry-grid label>span{font:500 15px/1 "Barlow Condensed",sans-serif}
+.field,.message-area{width:100%;padding:12px 15px;border:1px solid rgba(173,211,210,.32);border-radius:6px;outline:0;background:transparent;color:#fff;font-size:12px}
+.field:focus,.message-area:focus{border-color:var(--ceo-accent)}
+.field::placeholder,.message-area::placeholder{color:#779095}
+.message-area{min-height:92px;resize:vertical}
+.ceo-message-field{align-items:start!important}
+.ceo-message-field>span{padding-top:12px}
+.submit-button{margin:16px 0 0 141px;padding:12px 20px;border:0;border-radius:6px;background:var(--ceo-accent);color:var(--ceo-bg);font-weight:800;cursor:pointer}
+.ceo-footer{margin-top:24px;padding:15px;background:var(--ceo-accent);color:var(--ceo-bg);font-size:11px;font-weight:700;text-align:center}
+.ceo-card.is-loading{min-height:100vh}
+.ceo-load-error{margin:25px 38px;padding:13px;border:1px solid #d77;border-radius:8px;color:#ffdada}
+@media(max-width:580px){
+  .ceo-banner{height:245px}.ceo-wave{top:205px;height:76px;border-top-width:11px}.ceo-wave::before{top:-20px;height:8px}
+  .ceo-identity{align-items:end;gap:10px;padding:0 20px}.ceo-name-block{flex:1}.profile-name{font-size:37px}.profile-role{font-size:20px}.profile-avatar{width:102px;height:102px;flex-basis:102px;font-size:30px}
+  .ceo-socials,.ceo-contact,.ceo-feature-root,.message-panel{padding-left:20px;padding-right:20px}.ceo-socials{padding-top:15px}
+  .ceo-contact-grid{gap:22px 13px}.ceo-contact-icon{width:42px;height:42px;flex-basis:42px;font-size:19px}.ceo-contact-item{gap:10px}.ceo-contact-item strong{font-size:10px}
+  .ceo-section-title,.ceo-feature-root .vfeature-heading{margin-bottom:22px}.ceo-section-title h2,.ceo-feature-root .vfeature-heading h2{font-size:32px}
+  .ceo-feature-root .vfeature-gallery-grid{gap:10px}.ceo-feature-root .vfeature-gallery-item,.ceo-feature-root .vfeature-gallery-item img{min-height:90px}
+  .ceo-feature-root .vfeature-products .vfeature-card-grid{gap:10px}.ceo-feature-root .vfeature-products .vfeature-item-image{height:125px}.ceo-feature-root .vfeature-products .vfeature-item-copy strong{font-size:15px}.ceo-feature-root .vfeature-products .vfeature-item-copy small{font-size:9px}
+  .ceo-feature-root .vfeature-appointment{align-items:center}.ceo-feature-root .vfeature-appointment .vfeature-button{margin-left:0}
+  .ceo-enquiry-grid label{grid-template-columns:92px 1fr;gap:10px}.submit-button{margin-left:102px}
+}
+@media(max-width:390px){
+  .ceo-contact-grid{grid-template-columns:1fr}.ceo-feature-root .vfeature-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ceo-feature-root .vfeature-products .vfeature-card-grid{grid-template-columns:1fr}.ceo-feature-root .vfeature-products .vfeature-item-card{display:flex}.ceo-feature-root .vfeature-products .vfeature-item-image{width:96px;height:90px;flex-basis:96px}
+}

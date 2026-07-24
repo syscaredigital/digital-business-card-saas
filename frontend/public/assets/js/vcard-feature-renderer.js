@@ -149,13 +149,44 @@
 
   function renderAppointment(body, content) {
     var value = parts(lines(content)[0] || content), url = findUrl(value);
-    var panel = el("div", "vfeature-appointment");
+    var durationMatch = value.slice(1).join(" ").match(/\b(\d{1,3})\b/);
+    var duration = durationMatch ? Math.min(Math.max(Number(durationMatch[1]), 15), 480) : 30;
+    var panel = el("form", "vfeature-appointment");
+    panel.dataset.vcardAppointmentForm = "";
+    panel.dataset.durationMinutes = String(duration);
     panel.appendChild(el("span", "vfeature-appointment-icon", "□"));
-    var copy = el("div", ""); copy.appendChild(el("strong", "", value[0] || "Choose a convenient time"));
-    var details = value.slice(1).filter(function (item) { return item !== url; }).join(" · ");
-    if (details) copy.appendChild(el("p", "", details));
+    var copy = el("div", "vfeature-appointment-copy");
+    copy.appendChild(el("strong", "", value[0] || "Choose a convenient time"));
+    copy.appendChild(el("p", "", duration + " minutes · Office or online"));
     panel.appendChild(copy);
-    var action = link(url, "Book now", "vfeature-button"); if (action) panel.appendChild(action);
+    var fields = el("div", "vfeature-booking-fields");
+    var name = el("input", "vfeature-booking-input");
+    name.type = "text"; name.name = "name"; name.placeholder = "Your name"; name.autocomplete = "name"; name.required = true;
+    var email = el("input", "vfeature-booking-input");
+    email.type = "email"; email.name = "email"; email.placeholder = "Email address"; email.autocomplete = "email"; email.required = true;
+    var phone = el("input", "vfeature-booking-input");
+    phone.type = "tel"; phone.name = "phone"; phone.placeholder = "Phone number"; phone.autocomplete = "tel";
+    var date = el("input", "vfeature-booking-input");
+    date.type = "date"; date.name = "date"; date.required = true;
+    var time = el("input", "vfeature-booking-input");
+    time.type = "time"; time.name = "time"; time.required = true;
+    var meetingMode = el("select", "vfeature-booking-input");
+    meetingMode.name = "meetingMode"; meetingMode.required = true;
+    var modePrompt = el("option", "", "Select meeting type");
+    modePrompt.value = ""; modePrompt.disabled = true; modePrompt.selected = true;
+    var officeOption = el("option", "", "Visit office"); officeOption.value = "office";
+    var onlineOption = el("option", "", "Online meeting"); onlineOption.value = "online";
+    meetingMode.append(modePrompt, officeOption, onlineOption);
+    var notes = el("textarea", "vfeature-booking-input vfeature-booking-notes");
+    notes.name = "notes"; notes.placeholder = "Notes (optional)"; notes.rows = 2;
+    fields.append(name, email, phone, date, time, meetingMode, notes);
+    panel.appendChild(fields);
+    var action = el("button", "vfeature-button", "Request appointment");
+    action.type = "submit";
+    panel.appendChild(action);
+    var status = el("p", "vfeature-booking-status");
+    status.setAttribute("role", "status");
+    panel.appendChild(status);
     body.appendChild(panel);
   }
 

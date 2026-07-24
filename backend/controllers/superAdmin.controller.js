@@ -1168,21 +1168,27 @@ exports.deleteNfcCard = async (req, res, next) => {
 
 exports.updateNfcOrder = async (req, res, next) => {
   const orderId = positiveIntegerParam(req);
-  const requestedStatus = req.body.status == null ? null : String(req.body.status).toLowerCase();
-  const requestedPaymentStatus = req.body.paymentStatus == null ? null : String(req.body.paymentStatus).toLowerCase();
-  const trackingNumber = String(req.body.trackingNumber || "").trim() || null;
-  const adminNote = String(req.body.adminNote || "").trim() || null;
+  const hasStatus = Object.prototype.hasOwnProperty.call(req.body, "status");
+  const hasPaymentStatus = Object.prototype.hasOwnProperty.call(req.body, "paymentStatus");
+  const hasTrackingNumber = Object.prototype.hasOwnProperty.call(req.body, "trackingNumber");
+  const hasAdminNote = Object.prototype.hasOwnProperty.call(req.body, "adminNote");
+  const requestedStatus = hasStatus ? String(req.body.status || "").trim().toLowerCase() : null;
+  const requestedPaymentStatus = hasPaymentStatus ? String(req.body.paymentStatus || "").trim().toLowerCase() : null;
+  const requestedTrackingNumber = hasTrackingNumber ? (String(req.body.trackingNumber || "").trim() || null) : undefined;
+  const requestedAdminNote = hasAdminNote ? (String(req.body.adminNote || "").trim() || null) : undefined;
   if (!orderId) return res.status(400).json({ message: "Invalid NFC order ID" });
-  if (requestedStatus && !nfcOrderStatuses.includes(requestedStatus)) return res.status(400).json({ message: "Invalid NFC order status" });
-  if (requestedPaymentStatus && !nfcPaymentStatuses.includes(requestedPaymentStatus)) return res.status(400).json({ message: "Invalid NFC payment status" });
-  if (trackingNumber && trackingNumber.length > 255) return res.status(400).json({ message: "Tracking number is too long" });
-  if (adminNote && adminNote.length > 3000) return res.status(400).json({ message: "Admin note is too long" });
+  if (!hasStatus && !hasPaymentStatus && !hasTrackingNumber && !hasAdminNote) return res.status(400).json({ message: "No NFC order changes were provided" });
+  if (hasStatus && !nfcOrderStatuses.includes(requestedStatus)) return res.status(400).json({ message: "Invalid NFC order status" });
+  if (hasPaymentStatus && !nfcPaymentStatuses.includes(requestedPaymentStatus)) return res.status(400).json({ message: "Invalid NFC payment status" });
+  if (requestedTrackingNumber && requestedTrackingNumber.length > 255) return res.status(400).json({ message: "Tracking number is too long" });
+  if (requestedAdminNote && requestedAdminNote.length > 3000) return res.status(400).json({ message: "Admin note is too long" });
 
   let client;
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    const existingResult = await client.query(`SELECT id,user_id,amount,currency,status,payment_status,transaction_number
+    const existingResult = await client.query(`SELECT id,user_id,amount,currency,status,payment_status,transaction_number,
+      tracking_number,admin_note
       FROM nfc_orders WHERE id=$1 FOR UPDATE`, [orderId]);
     if (!existingResult.rowCount) {
       await client.query("ROLLBACK");
@@ -1191,11 +1197,24 @@ exports.updateNfcOrder = async (req, res, next) => {
     const existing = existingResult.rows[0];
     const paymentStatus = requestedPaymentStatus || existing.payment_status || "pending";
     let status = requestedStatus || existing.status;
+    let trackingNumber = hasTrackingNumber ? requestedTrackingNumber : existing.tracking_number;
+    const adminNote = hasAdminNote ? requestedAdminNote : existing.admin_note;
     if (requestedPaymentStatus === "approved" && ["pending","cancelled"].includes(existing.status)) status = "processing";
-    if (requestedPaymentStatus === "rejected") status = "cancelled";
+    if (requestedPaymentStatus === "rejected") {
+      status = "cancelled";
+      trackingNumber = null;
+    }
     if (paymentStatus !== "approved" && ["processing","shipped","completed"].includes(status)) {
       await client.query("ROLLBACK");
       return res.status(409).json({ message: "Approve the NFC payment before fulfilment" });
+    }
+    if (paymentStatus !== "approved" && trackingNumber) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "Approve the NFC payment before adding tracking" });
+    }
+    if (["shipped","completed"].includes(status) && !trackingNumber) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "Add a tracking number before marking this order as shipped or completed" });
     }
     const result = await client.query(`UPDATE nfc_orders SET status=$1,tracking_number=$2,payment_status=$3,
       payment_reviewed_by=CASE WHEN $4::boolean THEN $5 ELSE payment_reviewed_by END,
@@ -1206,13 +1225,27 @@ exports.updateNfcOrder = async (req, res, next) => {
     if (requestedPaymentStatus === "approved") {
       await client.query(`INSERT INTO transactions(user_id,transaction_type,amount,currency,reference,gateway,status,metadata)
         SELECT $1,'nfc_order',$2,$3,$4,'manual','completed',$5::jsonb
-        WHERE NOT EXISTS(SELECT 1 FROM transactions WHERE transaction_type='nfc_order' AND metadata @> $5::jsonb)`,
+        WHERE NOT EXISTS(SELECT 1 FROM transactions WHERE transaction_type='nfc_order' AND metadata @> $5::jsonb)
+        ON CONFLICT ((metadata->>'orderId')) WHERE transaction_type='nfc_order' AND metadata ? 'orderId'
+        DO UPDATE SET user_id=EXCLUDED.user_id,amount=EXCLUDED.amount,currency=EXCLUDED.currency,
+          reference=EXCLUDED.reference,gateway=EXCLUDED.gateway,status='completed',updated_at=NOW()`,
         [existing.user_id,existing.amount,existing.currency || "LKR",existing.transaction_number,JSON.stringify({ orderId })]);
     }
-    if (requestedPaymentStatus) {
+    if (requestedPaymentStatus === "rejected") {
+      await client.query(`UPDATE transactions SET status='failed',updated_at=NOW()
+        WHERE transaction_type='nfc_order' AND metadata @> $1::jsonb`, [JSON.stringify({ orderId })]);
+    }
+    const paymentStatusChanged = Boolean(requestedPaymentStatus && requestedPaymentStatus !== existing.payment_status);
+    if (paymentStatusChanged && existing.user_id) {
       await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,$2,$3,'billing')`,
         [existing.user_id,requestedPaymentStatus === "approved" ? "NFC payment approved" : "NFC payment rejected",
           requestedPaymentStatus === "approved" ? `Payment for NFC order #${orderId} was approved. Production can now begin.` : `Payment for NFC order #${orderId} was rejected.${adminNote ? " " + adminNote : ""}`]);
+    }
+    const fulfilmentChanged = status !== existing.status || trackingNumber !== existing.tracking_number;
+    if (!paymentStatusChanged && fulfilmentChanged && existing.user_id) {
+      const trackingMessage = trackingNumber ? ` Tracking number: ${trackingNumber}.` : "";
+      await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,$2,$3,'order')`,
+        [existing.user_id, "NFC order updated", `NFC order #${orderId} is now ${status}.${trackingMessage}`]);
     }
     await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
@@ -1220,7 +1253,14 @@ exports.updateNfcOrder = async (req, res, next) => {
       [req.user.id, orderId, JSON.stringify({ status, paymentStatus, trackingNumber, adminNote }), req.ip || null, req.get("user-agent") || null]
     );
     await client.query("COMMIT");
-    res.json({ order: result.rows[0], message: requestedPaymentStatus ? `NFC payment ${requestedPaymentStatus}` : "NFC order updated" });
+    res.json({
+      order: result.rows[0],
+      message: requestedPaymentStatus
+        ? `NFC payment ${requestedPaymentStatus}`
+        : hasTrackingNumber
+          ? (trackingNumber ? "Tracking number saved" : "Tracking number removed")
+          : "NFC order status updated",
+    });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});
     next(error);

@@ -40,3 +40,5 @@
 \i migrations/038_complete_affiliate_workflow.sql
 \i migrations/039_credit_approved_affiliate_subscriptions.sql
 \i migrations/040_add_nfc_order_payments.sql
+\i migrations/041_harden_nfc_order_workflow.sql
+\i migrations/042_add_corporate_ceo_vcard_template.sql

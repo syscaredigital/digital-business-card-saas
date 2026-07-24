@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d3841" />
+  <title>Corporate CEO VCard | Sync E-Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../public/assets/css/vcard-features.css" />
+  <link rel="stylesheet" href="../../public/assets/css/corporate-ceo-vcard.css" />
+</head>
+<body>
+  <main class="ceo-card" data-ceo-card>
+    <header class="ceo-hero">
+      <div class="ceo-banner" data-ceo-banner>
+        <div class="ceo-banner-placeholder" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="ceo-wave" aria-hidden="true"></div>
+      <div class="ceo-identity">
+        <div class="ceo-name-block">
+          <h1 class="profile-name">John Wilson</h1>
+          <p class="profile-role">Corporate CEO</p>
+          <p class="profile-company">Sync E-Card</p>
+        </div>
+        <div class="profile-avatar" aria-label="Profile photo"><span>JW</span></div>
+      </div>
+      <div class="ceo-socials" data-ceo-socials aria-label="Social links"></div>
+    </header>
+
+    <section class="ceo-contact" aria-labelledby="contactTitle">
+      <div class="ceo-section-title"><h2 id="contactTitle">Contact</h2><span></span></div>
+      <div class="ceo-contact-grid">
+        <a class="ceo-contact-item" data-contact="email" href="mailto:john@example.com"><span class="ceo-contact-icon">@</span><span><small>E-mail Address</small><strong class="contact-value">john@example.com</strong></span></a>
+        <a class="ceo-contact-item" data-contact="phone" href="tel:+9476456898"><span class="ceo-contact-icon">☎</span><span><small>Mobile No</small><strong class="contact-value">+94 76 456 898</strong></span></a>
+        <a class="ceo-contact-item" data-contact="website" href="https://example.com"><span class="ceo-contact-icon">◎</span><span><small>Website</small><strong class="contact-value">www.example.com</strong></span></a>
+        <div class="ceo-contact-item" data-contact="address"><span class="ceo-contact-icon">●</span><span><small>Location</small><strong class="contact-value">Colombo, Sri Lanka</strong></span></div>
+      </div>
+    </section>
+
+    <div class="ceo-feature-root" data-ceo-features></div>
+
+    <section class="message-panel" id="enquiries">
+      <div class="ceo-section-title"><h2>Enquiries</h2><span></span></div>
+      <p>Send a message and I&rsquo;ll get back to you as soon as possible.</p>
+      <div class="ceo-enquiry-grid">
+        <label><span>Full Name</span><input class="field" type="text" placeholder="Enter your full name" /></label>
+        <label><span>Email</span><input class="field" type="email" placeholder="Enter your email address" /></label>
+        <label><span>Mobile Number</span><input class="field" type="tel" placeholder="Enter your phone number" /></label>
+        <label class="ceo-message-field"><span>Your Message</span><textarea class="message-area" placeholder="Type your enquiry here..."></textarea></label>
+      </div>
+      <button class="submit-button" type="button">Send Enquiry</button>
+    </section>
+
+    <footer class="ceo-footer">Powered by Sync E-Card</footer>
+  </main>
+  <script src="../../public/assets/js/vcard-feature-renderer.js"></script>
+  <script src="../../public/assets/js/corporate-ceo-template.js"></script>
+  <script src="../../public/assets/js/vcard-appointments.js"></script>
+  <script src="../../public/assets/js/vcard-enquiries.js"></script>
+</body>
+</html>

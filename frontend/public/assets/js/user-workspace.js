@@ -61,7 +61,7 @@
     "instagram-embed": ["One post image per line: caption | image URL", "Behind the scenes | https://example.com/post.jpg"],
     blogs: ["One article per line: title | summary | image or article URL", "Buying your first home | Five useful steps | https://example.com/article"],
     testimonials: ["One review per line: quote | customer name | role | optional avatar URL", "Wonderful service from start to finish | Alex Morgan | Customer | https://example.com/alex.jpg"],
-    appointments: ["Title | duration or availability | booking URL", "Book a consultation | 30 minutes | https://example.com/book"],
+    appointments: ["Title | duration in minutes; customers choose office or online", "Book a consultation | 30"],
     "social-links": ["One link per line: network name | full URL", "LinkedIn | https://linkedin.com/in/your-name"],
     "custom-links": ["One link per line: link name | full URL", "View my portfolio | https://example.com/portfolio"],
     banners: ["Add an image URL, or title | image URL", "Summer offer | https://example.com/banner.jpg"],
@@ -207,11 +207,18 @@
     var liveNfcData = { products: [], orders: [], vcards: [], currency: "LKR" };
     var liveNfcProductSelect = document.getElementById("nfcCardType");
     var liveNfcQuantity = document.getElementById("nfcQuantity");
+    var refreshNfcOrdersButton = document.getElementById("refreshNfcOrders");
+    var refreshNfcOrdersLabel = refreshNfcOrdersButton ? refreshNfcOrdersButton.querySelector("span") : null;
+    var liveNfcLoading = null;
     function nfcMoney(value) {
       try { return new Intl.NumberFormat("en-LK", { style:"currency", currency:liveNfcData.currency || "LKR" }).format(Number(value || 0)); }
       catch (_) { return (liveNfcData.currency || "LKR") + " " + Number(value || 0).toFixed(2); }
     }
     function nfcBadge(status) { return '<span class="nfc-live-badge is-' + escapeHtml(status || "pending") + '">' + escapeHtml(String(status || "pending").replace(/_/g," ")) + '</span>'; }
+    function nfcTracking(order) {
+      if (!order.trackingNumber) return '<span class="nfc-tracking-pending"><i></i>Awaiting dispatch</span>';
+      return '<button class="nfc-client-tracking" type="button" data-copy-text="' + escapeHtml(order.trackingNumber) + '" title="Copy tracking number"><span>Tracking number</span><strong>' + escapeHtml(order.trackingNumber) + '</strong><small>Click to copy</small></button>';
+    }
     function updateLiveNfcTotal() {
       var product = liveNfcData.products.find(function(item){return Number(item.id)===Number(liveNfcProductSelect.value);});
       setText("nfcOrderTotal", nfcMoney((product ? product.price : 0) * Math.max(1,Number(liveNfcQuantity.value || 1))));
@@ -222,17 +229,27 @@
       var grid = document.getElementById("nfcUserProductGrid");
       grid.innerHTML = products.length ? products.map(function(product){return '<article class="nfc-user-product-card"><div class="nfc-user-product-visual"><img src="' + escapeHtml(product.frontImage) + '" alt="' + escapeHtml(product.name) + '" /><span>' + escapeHtml(product.category) + '</span></div><div class="nfc-user-product-copy"><small>Sync NFC collection</small><h3>' + escapeHtml(product.name) + '</h3><p>' + escapeHtml(product.description || "Premium contactless business card.") + '</p><div><strong>' + escapeHtml(nfcMoney(product.price)) + '</strong><button type="button" data-user-nfc-product="' + product.id + '">Order this card</button></div></div></article>';}).join("") : '<div class="nfc-user-loading">No NFC card products are available right now.</div>';
       setText("nfcCatalogCount", products.length + " design" + (products.length===1?"":"s"));
-      liveNfcProductSelect.innerHTML = '<option value="">Select card type</option>' + products.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.name) + ' — ' + escapeHtml(nfcMoney(item.price)) + '</option>';}).join("");
-      document.getElementById("nfcVCard").innerHTML = '<option value="">Select a VCard</option>' + vcards.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.title) + '</option>';}).join("");
+      liveNfcProductSelect.innerHTML = '<option value="">Select a card design</option>' + products.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.name) + ' — ' + escapeHtml(nfcMoney(item.price)) + '</option>';}).join("");
+      document.getElementById("nfcVCard").innerHTML = '<option value="">Select the VCard people will open</option>' + vcards.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.title) + '</option>';}).join("");
       setText("nfcBankName",data.bankDetails.bankName || "Not configured");setText("nfcBankAccountName",data.bankDetails.accountName || "Not configured");setText("nfcBankAccountNumber",data.bankDetails.accountNumber || "Not configured");setText("nfcBankBranch",data.bankDetails.branch || "Not configured");
       setText("nfcMetricOrders",orders.length);setText("nfcMetricPending",orders.filter(function(item){return item.paymentStatus==="pending";}).length);setText("nfcMetricProduction",orders.filter(function(item){return ["processing","shipped"].includes(item.status);}).length);setText("nfcMetricDelivered",orders.filter(function(item){return item.status==="completed";}).length);
       var body=document.getElementById("nfcCardsTableBody");
-      body.innerHTML=orders.length?orders.map(function(order){var search=[order.id,order.productName,order.vcardTitle,order.paymentStatus,order.status,order.transactionNumber].join(" ").toLowerCase();return '<tr class="nfc-card-row" data-search="' + escapeHtml(search) + '"><td data-label="Order"><strong>#' + order.id + '</strong><small>' + escapeHtml(order.transactionNumber || "No reference") + '</small></td><td data-label="Card / VCard"><div class="nfc-order-product">' + (order.productImage?'<img src="' + escapeHtml(order.productImage) + '" alt="" />':'<span>NFC</span>') + '<div><strong>' + escapeHtml(order.productName) + '</strong><small>' + escapeHtml(order.vcardTitle || "VCard not linked") + '</small></div></div></td><td data-label="Qty">' + order.quantity + '</td><td data-label="Total"><strong>' + escapeHtml(nfcMoney(order.amount)) + '</strong></td><td data-label="Payment">' + nfcBadge(order.paymentStatus) + (order.adminNote?'<small class="nfc-admin-note">' + escapeHtml(order.adminNote) + '</small>':'') + '</td><td data-label="Fulfilment">' + nfcBadge(order.status) + '</td><td data-label="Tracking">' + escapeHtml(order.trackingNumber || "Not assigned") + '</td><td data-label="Ordered">' + escapeHtml(formatDate(order.orderedAt)) + '</td></tr>';}).join(""):'<tr><td colspan="8" class="light-empty-cell">No NFC orders yet. Choose a card above to begin.</td></tr>';
+      body.innerHTML=orders.length?orders.map(function(order){var search=[order.id,order.productName,order.vcardTitle,order.paymentStatus,order.status,order.transactionNumber,order.trackingNumber].join(" ").toLowerCase();return '<tr class="nfc-card-row" data-search="' + escapeHtml(search) + '"><td data-label="Order"><strong class="nfc-order-id">#' + order.id + '</strong><small class="nfc-order-ref">' + escapeHtml(order.transactionNumber || "No reference") + '</small></td><td data-label="Card / VCard"><div class="nfc-order-product">' + (order.productImage?'<img src="' + escapeHtml(order.productImage) + '" alt="" />':'<span>NFC</span>') + '<div><strong>' + escapeHtml(order.productName) + '</strong><small>' + escapeHtml(order.vcardTitle || "VCard not linked") + '</small></div></div></td><td data-label="Qty"><span class="nfc-client-quantity">' + order.quantity + '</span></td><td data-label="Total"><strong class="nfc-client-total">' + escapeHtml(nfcMoney(order.amount)) + '</strong></td><td data-label="Payment">' + nfcBadge(order.paymentStatus) + (order.adminNote?'<small class="nfc-admin-note">' + escapeHtml(order.adminNote) + '</small>':'') + '</td><td data-label="Fulfilment">' + nfcBadge(order.status) + '</td><td data-label="Tracking">' + nfcTracking(order) + '</td><td data-label="Ordered"><span class="nfc-client-date">' + escapeHtml(formatDate(order.orderedAt)) + '</span></td></tr>';}).join(""):'<tr><td colspan="8" class="light-empty-cell">No NFC orders yet. Choose a card above to begin.</td></tr>';
       setText("nfcCardsResults","Showing " + orders.length + " order" + (orders.length===1?"":"s"));updateLiveNfcTotal();
     }
-    function loadLiveNfc(){return request("/user/nfc").then(renderLiveNfc).catch(function(error){document.getElementById("nfcUserProductGrid").innerHTML='<div class="nfc-user-loading">' + escapeHtml(error.message) + '</div>';});}
-    loadLiveNfc();window.setInterval(function(){if(document.getElementById("nfcOrderModal").hidden)loadLiveNfc();},30000);
+    function loadLiveNfc(){
+      if(liveNfcLoading)return liveNfcLoading;
+      if(refreshNfcOrdersButton){refreshNfcOrdersButton.disabled=true;refreshNfcOrdersButton.classList.add("is-loading");if(refreshNfcOrdersLabel)refreshNfcOrdersLabel.textContent="Refreshing";}
+      liveNfcLoading=request("/user/nfc").then(renderLiveNfc).catch(function(error){document.getElementById("nfcUserProductGrid").innerHTML='<div class="nfc-user-loading">' + escapeHtml(error.message) + '</div>';}).finally(function(){liveNfcLoading=null;if(refreshNfcOrdersButton){refreshNfcOrdersButton.disabled=false;refreshNfcOrdersButton.classList.remove("is-loading");if(refreshNfcOrdersLabel)refreshNfcOrdersLabel.textContent="Refresh";}});
+      return liveNfcLoading;
+    }
+    loadLiveNfc();
+    window.setInterval(function(){if(document.getElementById("nfcOrderModal").hidden&&!document.hidden)loadLiveNfc();},15000);
+    window.addEventListener("focus",function(){if(document.getElementById("nfcOrderModal").hidden)loadLiveNfc();});
+    document.addEventListener("visibilitychange",function(){if(!document.hidden&&document.getElementById("nfcOrderModal").hidden)loadLiveNfc();});
+    if(refreshNfcOrdersButton)refreshNfcOrdersButton.addEventListener("click",loadLiveNfc);
     liveNfcProductSelect.addEventListener("change",updateLiveNfcTotal);liveNfcQuantity.addEventListener("input",updateLiveNfcTotal);
+    liveNfcOrderForm.addEventListener("reset",function(){window.setTimeout(updateLiveNfcTotal,0);});
     document.addEventListener("click",function(event){var button=event.target.closest("[data-user-nfc-product]");if(!button)return;liveNfcProductSelect.value=button.dataset.userNfcProduct;updateLiveNfcTotal();document.getElementById("openNfcOrderModal").click();});
     liveNfcOrderForm.addEventListener("submit",function(event){event.preventDefault();var submit=liveNfcOrderForm.querySelector('[type="submit"]'),feedback=document.getElementById("nfcOrderFeedback");submit.disabled=true;submit.textContent="Uploading payment...";feedback.textContent="Submitting your order securely...";request("/user/nfc/orders",{method:"POST",body:new FormData(liveNfcOrderForm)}).then(function(data){feedback.textContent=data.message;liveNfcOrderForm.reset();updateLiveNfcTotal();return loadLiveNfc();}).then(function(){setTimeout(function(){document.getElementById("closeNfcOrderModal").click();},800);}).catch(function(error){feedback.textContent=error.message;}).finally(function(){submit.disabled=false;submit.textContent="Submit payment & order";});});
   }
@@ -298,6 +315,23 @@
 
   function formatDate(value) {
     return value ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
+  }
+
+  function formatAppointmentRange(startsAt, endsAt) {
+    if (!startsAt) return "—";
+    var start = new Date(startsAt);
+    var startLabel = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(start);
+    if (!endsAt) return startLabel;
+    var endLabel = new Intl.DateTimeFormat(undefined, { timeStyle: "short" }).format(new Date(endsAt));
+    return startLabel + " – " + endLabel;
+  }
+
+  function formatMeetingMode(value) {
+    var normalized = String(value || "").toLowerCase();
+    if (normalized === "office") return "Visit office";
+    if (normalized === "online") return "Online meeting";
+    if (normalized.includes("online") && /visit|office/.test(normalized)) return "Office / online";
+    return value || "—";
   }
 
   var affiliateApplicationForm = document.getElementById("affiliateApplicationForm");
@@ -398,25 +432,109 @@
     enquiriesBody.innerHTML = '<tr><td colspan="7" class="light-empty-cell">Loading enquiries...</td></tr>';
     request("/user/enquiries").then(function (data) {
       var rows = data.enquiries || [];
+      var now = new Date();
+      var monthlyEnquiries = rows.filter(function (item) {
+        var created = new Date(item.contacted_at);
+        return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
+      }).length;
+      setText("enquiryMetricTotal", rows.length);
+      setText("enquiryMetricEmail", rows.filter(function (item) { return Boolean(item.email); }).length);
+      setText("enquiryMetricMonth", monthlyEnquiries);
       enquiriesBody.innerHTML = rows.length ? rows.map(function (item) {
-        var searchable = [item.vcard_name, item.name, item.email, item.phone, item.company].join(" ");
-        return '<tr class="enquiry-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name || "—") + '</td><td data-label="Email">' + (item.email ? '<a href="mailto:' + escapeHtml(item.email) + '">' + escapeHtml(item.email) + "</a>" : "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Message">' + escapeHtml(item.message || "No message") + '</td><td data-label="Created On">' + escapeHtml(formatDate(item.contacted_at)) + '</td><td data-label="Action"><a class="client-enquiry-action" href="mailto:' + escapeHtml(item.email || "") + '" aria-label="Reply to enquiry">↗</a></td></tr>';
+        var searchable = [item.vcard_name, item.name, item.email, item.phone, item.company, item.message].join(" ");
+        var message = item.message || "No message";
+        var reply = item.email ? '<a class="client-enquiry-action" href="mailto:' + escapeHtml(item.email) + '" aria-label="Reply to enquiry">↗</a>' : "—";
+        return '<tr class="enquiry-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name || "—") + '</td><td data-label="Email">' + (item.email ? '<a href="mailto:' + escapeHtml(item.email) + '">' + escapeHtml(item.email) + "</a>" : "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Message"><div class="client-enquiry-message">' + escapeHtml(message) + '</div></td><td data-label="Created On">' + escapeHtml(formatDate(item.contacted_at)) + '</td><td data-label="Action">' + reply + '</td></tr>';
       }).join("") : '<tr><td colspan="7" class="light-empty-cell">No enquiries yet. New contact requests will appear here.</td></tr>';
       setText("enquiriesResults", "Showing " + rows.length + " result" + (rows.length === 1 ? "" : "s"));
     }).catch(function (error) { enquiriesBody.innerHTML = '<tr><td colspan="7" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>"; });
   }
 
   var appointmentsBody = document.getElementById("appointmentsTableBody");
-  if (appointmentsBody) {
+  var appointmentsActionStatus = document.getElementById("appointmentsActionStatus");
+  var appointmentStatusFilter = document.getElementById("appointmentStatusFilter");
+  var appointmentCalendarToggle = document.getElementById("appointmentCalendarToggle");
+  var appointmentCalendarPanel = document.getElementById("appointmentCalendarPanel");
+  var appointmentDateFilter = document.getElementById("appointmentDateFilter");
+  var appointmentDateClear = document.getElementById("appointmentDateClear");
+  function appointmentQuery() {
+    var params = new URLSearchParams();
+    if (appointmentStatusFilter && appointmentStatusFilter.value) params.set("status", appointmentStatusFilter.value);
+    if (appointmentDateFilter && appointmentDateFilter.value) params.set("date", appointmentDateFilter.value);
+    return params.toString() ? "?" + params.toString() : "";
+  }
+  function appointmentFeedback(message, isError) {
+    if (!appointmentsActionStatus) return;
+    appointmentsActionStatus.textContent = message || "";
+    appointmentsActionStatus.classList.toggle("is-error", Boolean(isError));
+  }
+  function loadAppointments() {
+    if (!appointmentsBody) return;
     appointmentsBody.innerHTML = '<tr><td colspan="8" class="light-empty-cell">Loading appointments...</td></tr>';
-    request("/user/appointments").then(function (data) {
+    request("/user/appointments" + appointmentQuery()).then(function (data) {
       var rows = data.appointments || [];
+      var summary = data.summary || {};
+      setText("appointmentMetricTotal", summary.total == null ? rows.length : summary.total);
+      setText("appointmentMetricPending", summary.pending == null ? rows.filter(function (item) { return item.status === "pending"; }).length : summary.pending);
+      setText("appointmentMetricApproved", summary.approved == null ? rows.filter(function (item) { return item.status === "approved"; }).length : summary.approved);
+      setText("appointmentMetricOnline", summary.online == null ? rows.filter(function (item) { return item.appointment_type === "online"; }).length : summary.online);
       appointmentsBody.innerHTML = rows.length ? rows.map(function (item) {
-        var searchable = [item.vcard_name, item.name, item.email, item.phone, item.status].join(" ");
-        return '<tr class="appointment-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name) + '</td><td data-label="Email">' + escapeHtml(item.email || "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Appointment Time"><span class="appointment-time-pill">' + escapeHtml(formatDate(item.starts_at)) + '</span></td><td data-label="Status"><span class="appointment-status-pill">' + escapeHtml(item.status) + '</span></td><td data-label="Type"><span class="appointment-type-pill">' + escapeHtml(item.appointment_type) + '</span></td><td data-label="Action">—</td></tr>';
-      }).join("") : '<tr><td colspan="8" class="light-empty-cell">No appointments scheduled.</td></tr>';
+        var searchable = [item.vcard_name, item.name, item.email, item.phone, item.status, item.appointment_type].join(" ");
+        var action = item.status === "pending"
+          ? '<div class="client-appointment-actions"><button class="client-appointment-approve" type="button" data-appointment-status="approved" data-appointment-id="' + item.id + '"' + (item.email ? "" : " disabled title=\"Customer email is missing\"") + '>Approve</button><button class="client-appointment-reject" type="button" data-appointment-status="rejected" data-appointment-id="' + item.id + '">Reject</button></div>'
+          : '<span class="client-appointment-complete">✓ ' + escapeHtml(item.status) + '</span>';
+        return '<tr class="appointment-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name) + '</td><td data-label="Email">' + escapeHtml(item.email || "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Appointment Time"><span class="appointment-time-pill">' + escapeHtml(formatAppointmentRange(item.starts_at, item.ends_at)) + '</span></td><td data-label="Status"><span class="appointment-status-pill status-' + escapeHtml(item.status) + '">' + escapeHtml(item.status) + '</span></td><td data-label="Meeting Mode"><span class="appointment-type-pill">' + escapeHtml(formatMeetingMode(item.appointment_type)) + '</span></td><td data-label="Action">' + action + '</td></tr>';
+      }).join("") : '<tr><td colspan="8" class="light-empty-cell">No appointments match the selected filters.</td></tr>';
       setText("appointmentsResults", "Showing " + rows.length + " result" + (rows.length === 1 ? "" : "s"));
-    }).catch(function (error) { appointmentsBody.innerHTML = '<tr><td colspan="8" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>"; });
+    }).catch(function (error) {
+      appointmentsBody.innerHTML = '<tr><td colspan="8" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>";
+      appointmentFeedback(error.message, true);
+    });
+  }
+  if (appointmentsBody) {
+    loadAppointments();
+    appointmentsBody.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-appointment-status]");
+      if (!button || button.disabled) return;
+      var nextStatus = button.dataset.appointmentStatus;
+      var originalLabel = button.textContent;
+      button.disabled = true;
+      button.textContent = nextStatus === "approved" ? "Sending..." : "Updating...";
+      appointmentFeedback(nextStatus === "approved"
+        ? "Approving appointment and sending confirmation email..."
+        : "Rejecting appointment...", false);
+      request("/user/appointments/" + encodeURIComponent(button.dataset.appointmentId) + "/status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus })
+      }).then(function (data) {
+        appointmentFeedback(data.message, false);
+        loadAppointments();
+      }).catch(function (error) {
+        appointmentFeedback(error.message, true);
+        button.disabled = false;
+        button.textContent = originalLabel;
+      });
+    });
+    if (appointmentStatusFilter) appointmentStatusFilter.addEventListener("change", loadAppointments);
+    if (appointmentCalendarToggle && appointmentCalendarPanel) {
+      appointmentCalendarToggle.addEventListener("click", function () {
+        var opening = appointmentCalendarPanel.hidden;
+        appointmentCalendarPanel.hidden = !opening;
+        appointmentCalendarToggle.setAttribute("aria-expanded", String(opening));
+        appointmentCalendarToggle.classList.toggle("is-active", opening);
+        if (opening && appointmentDateFilter) appointmentDateFilter.focus();
+      });
+    }
+    if (appointmentDateFilter) appointmentDateFilter.addEventListener("change", function () {
+      loadAppointments();
+      appointmentFeedback(appointmentDateFilter.value ? "Showing appointments for the selected date." : "", false);
+    });
+    if (appointmentDateClear) appointmentDateClear.addEventListener("click", function () {
+      if (appointmentDateFilter) appointmentDateFilter.value = "";
+      loadAppointments();
+      appointmentFeedback("Calendar filter cleared.", false);
+    });
   }
 
   var ordersBody = document.getElementById("productOrdersTableBody");

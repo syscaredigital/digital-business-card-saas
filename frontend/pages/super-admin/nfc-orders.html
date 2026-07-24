@@ -6,7 +6,7 @@
   <title>NFC Cards - Super Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
-  <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../../public/assets/css/dashboard.css?v=20260723-2" />
 </head>
 <body>
   <div class="dashboard-wrapper">
@@ -201,7 +201,42 @@
     </div>
   </div>
 
+  <div class="user-modal nfc-modal" id="nfcFulfilmentModal" hidden>
+    <div class="user-modal-backdrop" id="nfcFulfilmentModalBackdrop"></div>
+    <div class="user-modal-dialog nfc-modal-dialog nfc-fulfilment-dialog" role="dialog" aria-modal="true" aria-labelledby="nfcFulfilmentModalTitle">
+      <div class="user-modal-header nfc-modal-header">
+        <div><span class="admin-page-eyebrow">Order fulfilment</span><h2 id="nfcFulfilmentModalTitle">Add tracking</h2></div>
+        <button class="user-modal-close" type="button" id="closeNfcFulfilmentModal">Back</button>
+      </div>
+      <div class="user-modal-body nfc-modal-body">
+        <form class="admin-form-grid admin-form-grid-modal" id="nfcFulfilmentForm" novalidate>
+          <input name="orderId" type="hidden" />
+          <div class="form-field form-field-wide nfc-fulfilment-order-summary" id="nfcFulfilmentOrderSummary"></div>
+          <div class="form-field form-field-wide">
+            <label for="nfcFulfilmentTracking">Tracking number:</label>
+            <input id="nfcFulfilmentTracking" name="trackingNumber" type="text" maxlength="255" placeholder="Courier tracking or shipment reference" />
+            <small>This reference will be shown immediately in the client dashboard.</small>
+          </div>
+          <div class="form-field form-field-wide">
+            <label for="nfcFulfilmentStatus">Fulfilment status:<span class="required-mark">*</span></label>
+            <select id="nfcFulfilmentStatus" name="status" required>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="completed">Completed</option>
+            </select>
+            <small>Shipped and completed orders must have a tracking number.</small>
+          </div>
+          <div class="form-actions form-field-wide">
+            <button class="btn-share" type="submit">Save tracking &amp; status</button>
+            <button class="btn-preview" type="button" id="cancelNfcFulfilment">Cancel</button>
+          </div>
+          <p class="form-feedback form-field-wide" id="nfcFulfilmentFeedback" hidden></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack"></div>
-  <script src="../../public/assets/js/dashboard.js"></script>
+  <script src="../../public/assets/js/dashboard.js?v=20260723-2"></script>
 </body>
 </html>

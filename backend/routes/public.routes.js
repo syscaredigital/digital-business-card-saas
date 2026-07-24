@@ -150,4 +150,80 @@ router.post("/vcards/:id/enquiries", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.post("/vcards/:id/appointments", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
+
+  const name = String(req.body?.name || "").trim().slice(0, 150);
+  const email = String(req.body?.email || "").trim().slice(0, 255);
+  const phone = String(req.body?.phone || "").trim().slice(0, 50);
+  const notes = String(req.body?.notes || "").trim().slice(0, 2000);
+  const appointmentType = String(req.body?.appointmentType || "").trim().toLowerCase();
+  const requestedDuration = Number.parseInt(req.body?.durationMinutes, 10);
+  const durationMinutes = Number.isInteger(requestedDuration)
+    ? Math.min(Math.max(requestedDuration, 15), 480)
+    : 30;
+  const startsAt = new Date(req.body?.startsAt);
+
+  if (!name || !email) {
+    return res.status(400).json({ message: "Name and email are required for appointment confirmation" });
+  }
+  if (!["office", "online"].includes(appointmentType)) {
+    return res.status(400).json({ message: "Choose either an office visit or an online meeting" });
+  }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: "Enter a valid email address" });
+  }
+  if (Number.isNaN(startsAt.getTime())) {
+    return res.status(400).json({ message: "Select a valid appointment date and time" });
+  }
+  if (startsAt.getTime() < Date.now() + 5 * 60 * 1000) {
+    return res.status(400).json({ message: "Appointments must be booked at least 5 minutes in advance" });
+  }
+  const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const cardResult = await client.query(
+      "SELECT id,user_id FROM vcards WHERE id=$1 AND is_active=TRUE FOR SHARE",
+      [id]
+    );
+    if (!cardResult.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "VCard not found" });
+    }
+    const card = cardResult.rows[0];
+    await client.query("SELECT pg_advisory_xact_lock($1)", [card.user_id]);
+    const conflict = await client.query(
+      `SELECT id FROM appointments
+       WHERE user_id=$1 AND status NOT IN ('cancelled','rejected')
+         AND starts_at < $3 AND COALESCE(ends_at, starts_at + INTERVAL '30 minutes') > $2
+       LIMIT 1`,
+      [card.user_id, startsAt.toISOString(), endsAt.toISOString()]
+    );
+    if (conflict.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "That time is no longer available. Please choose another time." });
+    }
+    const result = await client.query(
+      `INSERT INTO appointments
+        (user_id,vcard_id,name,email,phone,starts_at,ends_at,status,appointment_type,notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9)
+       RETURNING id,starts_at,ends_at,status`,
+      [card.user_id, id, name, email || null, phone || null, startsAt.toISOString(), endsAt.toISOString(), appointmentType, notes || null]
+    );
+    await client.query("COMMIT");
+    res.status(201).json({
+      message: "Your appointment request has been submitted",
+      appointment: result.rows[0],
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    next(error);
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;

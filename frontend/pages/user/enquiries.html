@@ -75,14 +75,37 @@
       </header>
 
       <main class="page-content client-enquiries-page">
-        <section class="client-enquiries-shell searchable-item" data-search="enquiries vcard name email phone attachment created action">
+        <section class="lead-workspace-hero lead-workspace-hero-enquiries">
+          <div class="lead-hero-copy">
+            <span class="lead-hero-kicker"><i></i> Customer inbox</span>
+            <h1>Enquiries</h1>
+            <p>Review every message sent through your published vCards and reply while the conversation is fresh.</p>
+          </div>
+          <div class="lead-hero-art" aria-hidden="true">
+            <span class="lead-hero-icon">✦</span>
+            <span class="lead-hero-ring"></span>
+          </div>
+          <a class="lead-hero-link" href="appointments.html">View appointments <span>→</span></a>
+        </section>
+
+        <section class="lead-metric-grid" aria-label="Enquiry overview">
+          <article class="lead-metric-card"><span class="lead-metric-icon is-violet">✉</span><div><small>Total enquiries</small><strong id="enquiryMetricTotal">0</strong><p>Across all vCards</p></div></article>
+          <article class="lead-metric-card"><span class="lead-metric-icon is-blue">@</span><div><small>Email contacts</small><strong id="enquiryMetricEmail">0</strong><p>Ready for a reply</p></div></article>
+          <article class="lead-metric-card"><span class="lead-metric-icon is-green">↗</span><div><small>This month</small><strong id="enquiryMetricMonth">0</strong><p>New conversations</p></div></article>
+        </section>
+
+        <section class="client-enquiries-shell searchable-item" data-search="enquiries vcard name email phone message created action">
+          <div class="lead-list-heading">
+            <div><span>Inbox</span><h2>Customer messages</h2><p>Messages are connected to the vCard that received them.</p></div>
+            <span class="lead-live-pill"><i></i> Live</span>
+          </div>
           <div class="client-enquiries-toolbar">
             <label class="search-bar client-enquiries-search" for="enquiriesSearch">
               <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input id="enquiriesSearch" type="search" placeholder="Search" />
+              <input id="enquiriesSearch" type="search" placeholder="Search name, card, email or message..." />
             </label>
           </div>
 
@@ -94,7 +117,7 @@
                   <th scope="col">Name &#8597;</th>
                   <th scope="col">Email &#8597;</th>
                   <th scope="col">Phone</th>
-                  <th scope="col">Attachment</th>
+                  <th scope="col">Message</th>
                   <th scope="col">Created On &#8597;</th>
                   <th scope="col">Action</th>
                 </tr>
@@ -105,7 +128,7 @@
                   <td data-label="Name">Roshan</td>
                   <td data-label="Email"><a href="mailto:tharindur@syscare.lk">tharindur@syscare.lk</a></td>
                   <td data-label="Phone">769956938</td>
-                  <td data-label="Attachment">N/A</td>
+                  <td data-label="Message">N/A</td>
                   <td data-label="Created On">06 Jun 2025</td>
                   <td data-label="Action">
                     <div class="client-enquiry-actions">
@@ -123,7 +146,7 @@
                   <td data-label="Name">Computer Accessories</td>
                   <td data-label="Email"><a href="mailto:tharinduroshan791@gmail.com">tharinduroshan791@gmail.com</a></td>
                   <td data-label="Phone">24555</td>
-                  <td data-label="Attachment">N/A</td>
+                  <td data-label="Message">N/A</td>
                   <td data-label="Created On">22 May 2025</td>
                   <td data-label="Action">
                     <div class="client-enquiry-actions">

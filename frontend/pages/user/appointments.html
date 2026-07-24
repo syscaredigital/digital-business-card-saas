@@ -75,25 +75,58 @@
       </header>
 
       <main class="page-content client-appointments-page">
+        <section class="lead-workspace-hero lead-workspace-hero-appointments">
+          <div class="lead-hero-copy">
+            <span class="lead-hero-kicker"><i></i> Booking centre</span>
+            <h1>Appointments</h1>
+            <p>Manage office visits and online meetings, approve customer requests, and send confirmations automatically.</p>
+          </div>
+          <div class="lead-hero-art" aria-hidden="true">
+            <span class="lead-hero-icon">◫</span>
+            <span class="lead-hero-ring"></span>
+          </div>
+          <a class="lead-hero-link" href="enquiries.html">Open enquiries <span>→</span></a>
+        </section>
+
+        <section class="lead-metric-grid lead-metric-grid-four" aria-label="Appointment overview">
+          <article class="lead-metric-card"><span class="lead-metric-icon is-violet">□</span><div><small>Total bookings</small><strong id="appointmentMetricTotal">0</strong><p>All requests</p></div></article>
+          <article class="lead-metric-card"><span class="lead-metric-icon is-amber">⌛</span><div><small>Pending</small><strong id="appointmentMetricPending">0</strong><p>Need your review</p></div></article>
+          <article class="lead-metric-card"><span class="lead-metric-icon is-green">✓</span><div><small>Approved</small><strong id="appointmentMetricApproved">0</strong><p>Confirmation sent</p></div></article>
+          <article class="lead-metric-card"><span class="lead-metric-icon is-blue">⌁</span><div><small>Online</small><strong id="appointmentMetricOnline">0</strong><p>Virtual meetings</p></div></article>
+        </section>
+
         <section class="client-appointments-shell searchable-item" data-search="appointments vcard name email phone appointment time status type action">
+          <div class="lead-list-heading">
+            <div><span>Schedule</span><h2>Booking requests</h2><p>Approve pending requests to email the customer automatically.</p></div>
+            <span class="lead-live-pill"><i></i> Synced</span>
+          </div>
           <div class="client-appointments-toolbar">
             <label class="search-bar client-appointments-search" for="appointmentsSearch">
               <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input id="appointmentsSearch" type="search" placeholder="Search" />
+              <input id="appointmentsSearch" type="search" placeholder="Search customer, card, status or mode..." />
             </label>
 
             <div class="client-appointments-toolbar-actions">
-              <button class="client-appointment-tool-btn" type="button" data-action="export-report" aria-label="Filter appointments">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Z" fill="currentColor"></path></svg>
-              </button>
-              <button class="client-appointment-tool-btn" type="button" data-action="export-report" aria-label="Open calendar">
+              <select class="appointment-status-filter" id="appointmentStatusFilter" aria-label="Filter appointments by status">
+                <option value="">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <button class="client-appointment-tool-btn" id="appointmentCalendarToggle" type="button" aria-label="Filter by appointment date" aria-expanded="false" aria-controls="appointmentCalendarPanel">
                 <svg viewBox="0 0 24 24" fill="none"><path d="M7 2v4M17 2v4M3.5 9h17M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><path d="M8 13h2v2H8zM14 13h2v2h-2zM8 17h2v2H8zM14 17h2v2h-2z" fill="currentColor"></path></svg>
               </button>
             </div>
           </div>
+          <div class="appointment-calendar-panel" id="appointmentCalendarPanel" hidden>
+            <div><span>Calendar filter</span><strong>Show bookings on a specific date</strong></div>
+            <input id="appointmentDateFilter" type="date" aria-label="Appointment date" />
+            <button id="appointmentDateClear" type="button">Clear date</button>
+          </div>
+          <p class="client-appointment-feedback" id="appointmentsActionStatus" role="status"></p>
 
           <div class="client-appointments-table-wrap">
             <table class="client-appointments-table" aria-label="Appointments">
@@ -105,28 +138,12 @@
                   <th scope="col">Phone &#8597;</th>
                   <th scope="col">Appointment Time &#8597;</th>
                   <th scope="col">Status &#8597;</th>
-                  <th scope="col">Type</th>
+                  <th scope="col">Meeting Mode</th>
                   <th scope="col">Action</th>
                 </tr>
               </thead>
               <tbody id="appointmentsTableBody">
-                <tr class="appointment-row" data-search="ishan rathnayaka roshan tharindur@syscare.lk 0769956938 10:00 am 03:00 pm 09 jun 2025 pending free">
-                  <td data-label="VCard Name">Ishan Rathnayaka</td>
-                  <td data-label="Name">Roshan</td>
-                  <td data-label="Email">tharindur@syscare.lk</td>
-                  <td data-label="Phone">0769956938</td>
-                  <td data-label="Appointment Time"><span class="appointment-time-pill">10:00 AM - 03:00 PM<br />09 Jun 2025</span></td>
-                  <td data-label="Status"><span class="appointment-status-pill">Pending <span aria-hidden="true">&#10003;</span></span></td>
-                  <td data-label="Type"><span class="appointment-type-pill">Free</span></td>
-                  <td data-label="Action">
-                    <button class="client-appointment-delete" type="button" data-action="delete-appointment" aria-label="Delete appointment">
-                      <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 10v7M14 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
-                    </button>
-                  </td>
-                </tr>
-                <tr hidden>
-                  <td class="light-empty-cell" colspan="8">No appointments found.</td>
-                </tr>
+                <tr><td class="light-empty-cell" colspan="8">Loading appointments...</td></tr>
               </tbody>
             </table>
           </div>
