@@ -77,12 +77,13 @@
       <main class="page-content client-storage-page">
         <section class="client-storage-grid searchable-item" data-search="storage overview used unused vcards products services testimonials social icon blogs gallery profile cover setting pwa avatar">
           <article class="client-storage-card">
-            <h1>Storage Overview</h1>
+            <div class="storage-live-heading"><div><span>Plan allocation</span><h1>Storage Overview</h1></div><strong id="storagePlanName">Loading plan…</strong></div>
             <div class="client-storage-divider"></div>
 
             <div class="storage-chart-wrap">
-              <div class="storage-pie" aria-label="36 MB used out of 10000 MB">
-                <span class="storage-tooltip"><i></i>Unused Storage : 100%</span>
+              <div class="storage-pie" id="storagePie" aria-label="Loading storage usage">
+                <span class="storage-pie-value"><strong id="storagePercent">0%</strong><small>used</small></span>
+                <span class="storage-tooltip"><i></i><span id="storageAvailable">Calculating available storage…</span></span>
               </div>
             </div>
 
@@ -91,30 +92,19 @@
               <div><span class="storage-swatch unused"></span><strong>Unused Storage</strong></div>
             </div>
 
-            <div class="storage-total">36 MB / 10000 MB</div>
-            <div class="storage-progress" aria-hidden="true"><span style="width: 0.36%"></span></div>
+            <div class="storage-total"><strong id="storageUsed">—</strong> used of <strong id="storageLimit">—</strong></div>
+            <div class="storage-progress" aria-hidden="true"><span id="storageProgress" style="width:0%"></span></div>
+            <p class="storage-plan-note">Your storage limit is controlled by your active subscription plan. Upgrading applies the new allocation automatically.</p>
           </article>
 
           <article class="client-storage-card client-storage-used-card">
-            <h2>Storage Used</h2>
+            <div class="storage-live-heading"><div><span>Database usage</span><h2>Storage Used</h2></div><button id="refreshStorage" type="button">Refresh</button></div>
             <div class="client-storage-divider"></div>
 
-            <div class="storage-used-section">
-              <h3>VCards</h3>
-              <div class="storage-used-row"><span>Products</span><span>0.00 MB</span><span>0.00%</span></div>
-              <div class="storage-used-row"><span>Services</span><span>10.39 MB</span><span>0.10%</span></div>
-              <div class="storage-used-row"><span>Testimonials</span><span>0.18 MB</span><span>0.00%</span></div>
-              <div class="storage-used-row"><span>Social Icon</span><span>0.00 MB</span><span>0.00%</span></div>
-              <div class="storage-used-row"><span>Blogs</span><span>0.00 MB</span><span>0.00%</span></div>
-              <div class="storage-used-row"><span>Gallery</span><span>5.36 MB</span><span>0.05%</span></div>
-              <div class="storage-used-row"><span>Profile And Cover</span><span>20.63 MB</span><span>0.21%</span></div>
+            <div class="storage-used-section" id="storageCategoryList" aria-live="polite">
+              <div class="storage-live-loading"><i></i><span>Calculating stored content…</span></div>
             </div>
-
-            <div class="storage-used-section storage-setting-section">
-              <h3>Setting</h3>
-              <div class="storage-used-row"><span>PWA</span><span>0.00 MB</span><span>0.00%</span></div>
-              <div class="storage-used-row"><span>Avatar</span><span>0.01 MB</span><span>0.00%</span></div>
-            </div>
+            <div class="storage-limit-warning" id="storageLimitWarning" hidden><strong>Storage limit reached</strong><span>Delete unused custom NFC previews or upgrade your plan before uploading more files.</span><a href="payments.html">View plans →</a></div>
           </article>
         </section>
 

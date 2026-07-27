@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const { requirePlatformAvailable } = require("./middlewares/platform-access.middleware");
 const app = express();
 
 app.use(helmet());
@@ -18,8 +19,9 @@ app.get("/health", (req, res) => {
 });
 
 // Register routes
+app.post("/api/auth/register", requirePlatformAvailable);
 app.use("/api/auth", require("./routes/auth.routes"));
-app.use("/api/public", require("./routes/public.routes"));
+app.use("/api/public", requirePlatformAvailable, require("./routes/public.routes"));
 app.use("/api/user", require("./routes/user.routes"));
 app.use("/api/super-admin", require("./routes/super-admin.routes"));
 

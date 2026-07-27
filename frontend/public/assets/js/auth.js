@@ -281,6 +281,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (res.ok) {
           const data = await res.json();
+          if (data.requiresReview) {
+            localStorage.removeItem("token");
+            alert(data.message || "Your account is waiting for administrator approval.");
+            window.location.href = "login.html?review=pending";
+            return;
+          }
           if (data.token) localStorage.setItem("token", data.token);
           if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
           localStorage.setItem("preferredCurrency", payload.currency);

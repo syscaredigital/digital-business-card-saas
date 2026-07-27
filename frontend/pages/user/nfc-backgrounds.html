@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Virtual Backgrounds - Sync Card</title>
+  <title>Virtual NFC Card Studio - Sync Card</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
@@ -49,7 +49,7 @@
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input id="dashboardSearch" type="text" placeholder="Search virtual backgrounds..." />
+          <input id="dashboardSearch" type="text" placeholder="Search NFC card designs..." />
         </label>
 
         <div class="topbar-right">
@@ -74,145 +74,147 @@
         </div>
       </header>
 
-      <main class="page-content virtual-backgrounds-page">
-        <section class="virtual-background-shell searchable-item" data-search="virtual backgrounds nfc card custom horizontal vertical download profile cover image">
-          <div class="vcard-tabbar virtual-background-tabbar" role="tablist" aria-label="Virtual background tabs">
-            <button class="vcard-tab-btn active" type="button" role="tab" aria-selected="true" data-vcard-tab-target="virtualBackgroundListPanel">Virtual Backgrounds</button>
-            <button class="vcard-tab-btn" type="button" role="tab" aria-selected="false" data-vcard-tab-target="virtualBackgroundFormPanel">Add Custom</button>
+      <main class="page-content virtual-backgrounds-page virtual-nfc-page">
+        <section class="virtual-nfc-hero searchable-item" data-search="virtual nfc card custom preview front back background logo">
+          <div class="virtual-nfc-hero-copy">
+            <span class="virtual-nfc-kicker"><i></i> Your custom NFC mockup</span>
+            <h1>Build your card.<br />Preview every detail.</h1>
+            <p>Upload your own front and back backgrounds, add your logo and contact details, then flip the card to see how the finished NFC card will look.</p>
+            <div class="virtual-nfc-hero-meta">
+              <span><strong id="virtualNfcCount">0</strong> saved previews</span>
+              <span><i></i> Private to your account</span>
+            </div>
           </div>
-
-          <section class="tab-panel active" id="virtualBackgroundListPanel">
-            <div class="virtual-background-list-head">
-              <p class="virtual-background-note"><strong>Note :</strong> Virtual Backgrounds will give you the business card images in which your logo, name, address, and phone will be written. We are exporting standard sizes of horizontal and vertical virtual backgrounds, which will be useful when you want to design your NFC card, you can directly give these images to NFC printing handlers. Also, you can share this with your friends too directly or set it as a profile/cover image.</p>
-              <button class="btn-share virtual-add-btn" type="button" data-vcard-tab-target="virtualBackgroundFormPanel">Add Custom +</button>
+          <div class="virtual-nfc-hero-art" aria-hidden="true">
+            <div class="virtual-nfc-orbit"></div>
+            <div class="virtual-nfc-demo-card">
+              <span>NFC</span>
+              <strong>SYNC</strong>
+              <i></i>
             </div>
+          </div>
+        </section>
 
-            <div class="virtual-background-grid">
-              <article class="virtual-template-card virtual-template-blue searchable-item" data-search="blue geometric logo horizontal nfc background">
-                <div class="virtual-logo-mark">A</div>
-                <div class="virtual-signal-mark" aria-hidden="true"></div>
-              </article>
-
-              <article class="virtual-template-card virtual-template-teal searchable-item" data-search="john powell qr teal horizontal card background">
-                <div class="virtual-card-qr" aria-hidden="true"></div>
-                <span class="virtual-card-divider"></span>
-                <div class="virtual-card-copy">
-                  <strong>John Powell</strong>
-                  <span>UI/UX Designer</span>
-                  <span>(270) 603-5964</span>
-                </div>
-                <div class="virtual-card-lines" aria-hidden="true"></div>
-              </article>
-
-              <article class="virtual-template-card virtual-template-dark searchable-item" data-search="black polygon logo horizontal nfc background">
-                <div class="virtual-logo-mark">A</div>
-                <div class="virtual-signal-mark" aria-hidden="true"></div>
-              </article>
-
-              <article class="virtual-template-card virtual-template-white searchable-item" data-search="john powell white qr blue vertical card background">
-                <div class="virtual-white-copy">
-                  <strong>John Powell</strong>
-                  <span>UI/UX Designer</span>
-                  <small>534, Berlin Street, 362050.</small>
-                </div>
-                <div class="virtual-white-swoop" aria-hidden="true"></div>
-                <div class="virtual-mini-qr" aria-hidden="true"></div>
-              </article>
-            </div>
-          </section>
-
-          <section class="tab-panel" id="virtualBackgroundFormPanel">
-            <div class="virtual-form-header">
-              <h1>Add Virtual Background</h1>
-              <button class="btn-preview virtual-back-btn" type="button" data-vcard-tab-target="virtualBackgroundListPanel">Back</button>
-            </div>
-
-            <div class="virtual-preview-row">
-              <div class="virtual-blank-preview" aria-label="Front virtual background preview"></div>
-              <div class="virtual-blank-preview" aria-label="Back virtual background preview"></div>
-            </div>
-
-            <form class="virtual-background-form">
-              <div class="form-field form-field-wide virtual-size-field">
-                <label for="virtualSize">Select Size<span class="required-mark">*</span></label>
-                <select id="virtualSize" required>
-                  <option>Horizontal</option>
-                  <option>Vertical</option>
-                </select>
+        <section class="virtual-nfc-workspace">
+          <aside class="virtual-nfc-catalog-panel">
+            <div class="virtual-nfc-section-head">
+              <div>
+                <span>Your workspace</span>
+                <h2>Saved previews</h2>
               </div>
+              <button id="newVirtualNfc" type="button" title="Create a new preview" aria-label="Create a new preview">+</button>
+            </div>
+            <div class="virtual-nfc-catalog" id="virtualNfcCatalog" aria-live="polite">
+              <div class="virtual-nfc-loading"><i></i><span>Loading your saved previews…</span></div>
+            </div>
+          </aside>
 
-              <div class="virtual-upload-group" aria-label="Virtual background images">
-                <label class="virtual-upload-field">
-                  <span>Add E-card:<span class="required-mark">*</span></span>
-                  <input type="file" accept="image/png,image/jpeg" required />
-                  <i></i>
-                </label>
-                <label class="virtual-upload-field">
-                  <span>Front Image:<span class="required-mark">*</span></span>
-                  <input type="file" accept="image/png,image/jpeg" required />
-                  <i></i>
-                </label>
-                <label class="virtual-upload-field">
-                  <span>Back Image:<span class="required-mark">*</span></span>
-                  <input type="file" accept="image/png,image/jpeg" required />
-                  <i></i>
+          <form class="virtual-nfc-preview-panel" id="virtualNfcBuilderForm">
+            <div class="virtual-nfc-preview-toolbar">
+              <div>
+                <span>Live card mockup</span>
+                <strong id="virtualNfcSideLabel">Front preview</strong>
+              </div>
+              <div class="virtual-nfc-side-switch" role="group" aria-label="Card side">
+                <button class="is-active" type="button" data-virtual-nfc-side="front" aria-pressed="true">Front</button>
+                <button type="button" data-virtual-nfc-side="back" aria-pressed="false">Back</button>
+              </div>
+            </div>
+
+            <div class="virtual-nfc-personalise">
+              <div class="virtual-nfc-personalise-head">
+                <div><span>Card content</span><strong>Upload artwork and enter your details</strong></div>
+                <label for="virtualNfcVcard">Saved VCard
+                  <select id="virtualNfcVcard">
+                    <option value="">Enter details manually</option>
+                  </select>
                 </label>
               </div>
-
-              <div class="form-field form-field-wide">
-                <label for="virtualVcard">VCard Name<span class="required-mark">*</span></label>
-                <select id="virtualVcard" required>
-                  <option value="">Select Vcard</option>
-                  <option value="john-powell">John Powell</option>
-                  <option value="syscare-it">SysCare IT Solutions</option>
-                  <option value="sc-staff-50">SC-staff-50</option>
-                </select>
+              <div class="virtual-nfc-upload-grid">
+                <label class="virtual-nfc-upload">
+                  <span>Front background *</span><strong id="virtualNfcFrontFileName">Choose PNG, JPG or WebP</strong>
+                  <input id="virtualNfcFrontFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                </label>
+                <label class="virtual-nfc-upload">
+                  <span>Back background *</span><strong id="virtualNfcBackFileName">Choose PNG, JPG or WebP</strong>
+                  <input id="virtualNfcBackFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                </label>
+                <label class="virtual-nfc-upload">
+                  <span>Logo</span><strong id="virtualNfcLogoFileName">Optional transparent logo</strong>
+                  <input id="virtualNfcLogoFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                </label>
               </div>
-
-              <div class="form-field">
-                <label for="virtualFirstName">First Name<span class="required-mark">*</span></label>
-                <input id="virtualFirstName" type="text" placeholder="Enter First Name" required />
+              <div class="virtual-nfc-detail-fields">
+                <label>Preview name<input id="virtualNfcDesignName" type="text" maxlength="120" placeholder="e.g. My black NFC card" required /></label>
+                <label>Name<input id="virtualNfcDetailName" type="text" maxlength="80" placeholder="Your name" /></label>
+                <label>Role / title<input id="virtualNfcDetailRole" type="text" maxlength="100" placeholder="Your role or company" /></label>
+                <label>Phone<input id="virtualNfcDetailPhone" type="text" maxlength="50" placeholder="+94 77 123 4567" /></label>
+                <label>Email<input id="virtualNfcDetailEmail" type="email" maxlength="120" placeholder="name@example.com" /></label>
+                <label>Website<input id="virtualNfcDetailWebsite" type="text" maxlength="160" placeholder="www.example.com" /></label>
+                <label>Address<input id="virtualNfcDetailAddress" type="text" maxlength="160" placeholder="City or business address" /></label>
+                <label>Text colour<input id="virtualNfcTextColor" type="color" value="#ffffff" /></label>
+                <label>Details position
+                  <select id="virtualNfcTextPosition">
+                    <option value="top-left">Top left</option>
+                    <option value="top-center">Top centre</option>
+                    <option value="top-right">Top right</option>
+                    <option value="middle-left">Middle left</option>
+                    <option value="middle-center">Middle centre</option>
+                    <option value="middle-right">Middle right</option>
+                    <option value="bottom-left" selected>Bottom left</option>
+                    <option value="bottom-center">Bottom centre</option>
+                    <option value="bottom-right">Bottom right</option>
+                  </select>
+                </label>
               </div>
+              <small>Recommended background ratio: 85.6 × 54 mm (1.586:1). Images must be smaller than 1.5 MB each.</small>
+            </div>
 
-              <div class="form-field">
-                <label for="virtualLastName">Last Name<span class="required-mark">*</span></label>
-                <input id="virtualLastName" type="text" placeholder="Enter Last Name" required />
-              </div>
-
-              <div class="form-field">
-                <label for="virtualEmail">Email<span class="required-mark">*</span></label>
-                <input id="virtualEmail" type="email" placeholder="Enter Email" required />
-              </div>
-
-              <div class="form-field">
-                <label for="virtualOccupation">Enter Occupation<span class="required-mark">*</span></label>
-                <input id="virtualOccupation" type="text" placeholder="Enter Occupation" required />
-              </div>
-
-              <div class="form-field">
-                <label for="virtualLocation">Location<span class="required-mark">*</span></label>
-                <input id="virtualLocation" type="text" placeholder="Enter Your Location" required />
-              </div>
-
-              <div class="form-field">
-                <label for="virtualPhone">Phone<span class="required-mark">*</span></label>
-                <div class="virtual-phone-field">
-                  <span>LK +61</span>
-                  <input id="virtualPhone" type="tel" placeholder="Enter Phone Number" required />
+            <div class="virtual-nfc-stage" id="virtualNfcStage">
+              <div class="virtual-nfc-card-shell" id="virtualNfcCardShell">
+                <div class="virtual-nfc-card-face virtual-nfc-card-front">
+                  <img id="virtualNfcFrontImage" alt="" />
+                  <img class="virtual-nfc-user-logo" id="virtualNfcFrontLogo" alt="Uploaded logo" hidden />
+                  <div class="virtual-nfc-card-identity">
+                    <small>Tap to connect</small>
+                    <strong id="virtualNfcCardName">Your name</strong>
+                    <span id="virtualNfcCardRole">Your role</span>
+                  </div>
+                </div>
+                <div class="virtual-nfc-card-face virtual-nfc-card-back">
+                  <img id="virtualNfcBackImage" alt="" />
+                  <img class="virtual-nfc-user-logo is-back" id="virtualNfcBackLogo" alt="" hidden />
+                  <div class="virtual-nfc-card-contact">
+                    <strong id="virtualNfcCardBackName">Your name</strong>
+                    <span id="virtualNfcCardPhone">Add your phone</span>
+                    <span id="virtualNfcCardEmail">Add your email</span>
+                    <span id="virtualNfcCardWebsite">Add your website</span>
+                    <span id="virtualNfcCardAddress">Add your address</span>
+                  </div>
                 </div>
               </div>
+              <button class="virtual-nfc-flip-button" id="virtualNfcFlip" type="button"><span>↻</span> Flip card</button>
+            </div>
 
-              <div class="form-field">
-                <label for="virtualWebsite">Website<span class="required-mark">*</span></label>
-                <input id="virtualWebsite" type="url" placeholder="Website URL" required />
+            <div class="virtual-nfc-builder-actions">
+              <div>
+                <strong id="virtualNfcSaveStatus">New unsaved preview</strong>
+                <span>Backgrounds, logo and details are stored securely in your account.</span>
               </div>
+              <div>
+                <button class="virtual-nfc-delete" id="deleteVirtualNfc" type="button" hidden>Delete</button>
+                <button class="virtual-nfc-reset" id="resetVirtualNfc" type="button">Reset</button>
+                <button class="virtual-nfc-save" id="saveVirtualNfc" type="submit">Save preview</button>
+              </div>
+            </div>
+            <p class="virtual-nfc-feedback" id="virtualNfcFeedback" aria-live="polite"></p>
+          </form>
+        </section>
 
-              <div class="form-actions form-field-wide">
-                <button class="btn-share" type="button" data-action="download-background">Download</button>
-                <button class="btn-preview" type="reset">Discard</button>
-              </div>
-            </form>
-          </section>
+        <section class="virtual-nfc-assurance" aria-label="Custom NFC preview process">
+          <article><span>01</span><div><strong>Upload your artwork</strong><p>Use separate front and back backgrounds in the correct card ratio.</p></div></article>
+          <article><span>02</span><div><strong>Add logo and details</strong><p>Load a saved VCard or enter the exact content you want displayed.</p></div></article>
+          <article><span>03</span><div><strong>Flip, review and save</strong><p>Check both sides and reopen your mockup whenever you need it.</p></div></article>
         </section>
 
         <div class="empty-search-state" id="emptySearchState" hidden>

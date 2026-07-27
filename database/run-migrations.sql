@@ -45,3 +45,7 @@
 \i migrations/043_add_user_currency_preference.sql
 \i migrations/044_complete_user_coupon_checkout.sql
 \i migrations/045_add_vcard_engagement_tracking.sql
+\i migrations/046_complete_vcard_analytics_pipeline.sql
+\i migrations/047_create_virtual_nfc_designs.sql
+\i migrations/048_add_plan_storage_limits.sql
+\i migrations/049_create_user_settings.sql

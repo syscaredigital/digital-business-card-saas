@@ -23,10 +23,11 @@ function vcfEscape(value) {
 
 router.get("/plans", async (req, res, next) => {
   try {
-    const result = await pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,features,updated_at FROM plans WHERE status='active' ORDER BY price,name`);
+    const result = await pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,storage_limit_mb,features,updated_at FROM plans WHERE status='active' ORDER BY price,name`);
     res.json({ data: result.rows.map((plan) => ({
       id: plan.id, name: plan.name, price: Number(plan.price), billingInterval: plan.billing_interval,
       vcardLimit: Number(plan.vcard_limit), nfcLimit: Number(plan.nfc_limit), analyticsLimit: Number(plan.analytics_limit),
+      storageLimitMb: Number(plan.storage_limit_mb),
       features: normalizePlanFeatures(plan.features).benefits, updatedAt: plan.updated_at,
     })) });
   } catch (error) { next(error); }
@@ -120,10 +121,12 @@ router.get("/vcards/:id", async (req, res, next) => {
     const result = await pool.query(`
       SELECT v.id,v.title,v.description,v.website_url,v.phone,v.email,v.address,v.social_links,v.settings,
              t.id AS template_id,t.name AS template_name,t.preview_url,t.template_json,
-             u.name AS owner_name,u.avatar_url,c.name AS company_name,p.features AS plan_features
+             u.name AS owner_name,u.avatar_url,c.name AS company_name,p.features AS plan_features,
+             COALESCE(us.contact_capture_required,TRUE) AS contact_capture_required
       FROM vcards v
       LEFT JOIN vcard_templates t ON t.id=v.template_id
       LEFT JOIN users u ON u.id=v.user_id
+      LEFT JOIN user_settings us ON us.user_id=v.user_id
       LEFT JOIN companies c ON c.id=COALESCE(v.company_id,u.company_id)
       LEFT JOIN LATERAL (
         SELECT plans.features FROM subscriptions s JOIN plans ON plans.id=s.plan_id
@@ -138,6 +141,7 @@ router.get("/vcards/:id", async (req, res, next) => {
       id: card.id, title: card.title, description: card.description, websiteUrl: card.website_url,
       phone: card.phone, email: card.email, address: card.address, socialLinks: card.social_links || [],
       sections: visibleSections, ownerName: card.owner_name, avatarUrl: card.avatar_url,
+      contactCaptureRequired: card.contact_capture_required,
       enabledFeatures: Array.from(allowedFeatures),
       companyName: card.company_name, template: { id: card.template_id, name: card.template_name, previewUrl: card.preview_url || null, config: card.template_json || {} },
     } });
@@ -149,7 +153,7 @@ router.post("/vcards/:id/events", async (req, res, next) => {
   const eventType = String(req.body?.eventType || "").trim();
   const source = String(req.body?.source || "direct").trim().slice(0, 80);
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
-  if (!["qr_scan", "vcard_view"].includes(eventType)) return res.status(400).json({ message: "Invalid event type" });
+  if (!["qr_scan", "vcard_view", "link_click", "share"].includes(eventType)) return res.status(400).json({ message: "Invalid event type" });
   try {
     const card = await pool.query("SELECT id FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
     if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
@@ -160,10 +164,10 @@ router.post("/vcards/:id/events", async (req, res, next) => {
        WHERE NOT EXISTS (
          SELECT 1 FROM vcard_events
          WHERE vcard_id=$1 AND event_type=$2 AND visitor_hash=$4
-           AND occurred_at > NOW() - INTERVAL '30 minutes'
+           AND occurred_at > NOW() - ($7::integer * INTERVAL '1 second')
        )
        RETURNING id`,
-      [id, eventType, source, hash, String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000)]
+      [id, eventType, source, hash, String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000), ["link_click", "share"].includes(eventType) ? 10 : 1800]
     );
     res.status(result.rowCount ? 201 : 200).json({ recorded: Boolean(result.rowCount) });
   } catch (error) { next(error); }
@@ -214,20 +218,24 @@ router.get("/vcards/:id/contact.vcf", async (req, res, next) => {
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
   try {
     const result = await pool.query(
-      `SELECT v.id,v.title,v.email,v.phone,v.website_url,v.address,u.name AS owner_name,c.name AS company_name
+      `SELECT v.id,v.title,v.email,v.phone,v.website_url,v.address,u.name AS owner_name,c.name AS company_name,
+              COALESCE(us.contact_capture_required,TRUE) AS contact_capture_required
        FROM vcards v
        LEFT JOIN users u ON u.id=v.user_id
+       LEFT JOIN user_settings us ON us.user_id=v.user_id
        LEFT JOIN companies c ON c.id=COALESCE(v.company_id,u.company_id)
        WHERE v.id=$1 AND v.is_active=TRUE`,
       [id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const card = result.rows[0];
-    if (!Number.isInteger(captureId) || captureId < 1) {
+    if (card.contact_capture_required && (!Number.isInteger(captureId) || captureId < 1)) {
       return res.status(403).json({ message: "Share your contact details before downloading this VCard" });
     }
-    const capture = await pool.query("SELECT id FROM contacts WHERE id=$1 AND vcard_id=$2", [captureId, id]);
-    if (!capture.rowCount) return res.status(403).json({ message: "Invalid contact download" });
+    if (card.contact_capture_required) {
+      const capture = await pool.query("SELECT id FROM contacts WHERE id=$1 AND vcard_id=$2", [captureId, id]);
+      if (!capture.rowCount) return res.status(403).json({ message: "Invalid contact download" });
+    }
     await pool.query(
       `INSERT INTO vcard_events (vcard_id,event_type,source,visitor_hash,user_agent,referrer)
        VALUES ($1,'contact_download','public_vcard',$2,$3,$4)`,

@@ -91,6 +91,104 @@
     });
   }
 
+  var accountProfileForm = document.getElementById("accountProfileForm");
+  if (accountProfileForm) {
+    var accountPreferencesForm=document.getElementById("accountPreferencesForm");
+    var accountPasswordForm=document.getElementById("accountPasswordForm");
+    var settingsEmailPasswordWrap=document.getElementById("settingsEmailPasswordWrap");
+    var settingsOriginalEmail="";
+    function settingsDate(value){
+      if(!value)return "Not available";
+      try{return new Intl.DateTimeFormat(undefined,{dateStyle:"medium"}).format(new Date(value));}
+      catch(_){return "Not available";}
+    }
+    function settingsBytes(value){
+      var bytes=Number(value || 0);
+      if(bytes<1024*1024)return (bytes/1024).toFixed(1)+" KB";
+      if(bytes<1024*1024*1024)return (bytes/(1024*1024)).toFixed(1)+" MB";
+      return (bytes/(1024*1024*1024)).toFixed(2)+" GB";
+    }
+    function settingsFeedback(id,message,isError){
+      var node=document.getElementById(id);node.textContent=message || "";
+      node.classList.toggle("is-error",Boolean(isError));node.classList.toggle("is-success",Boolean(message)&&!isError);
+    }
+    function settingsInitials(value){return String(value || "User").split(/\s+/).slice(0,2).map(function(part){return part.charAt(0);}).join("").toUpperCase();}
+    function loadAccountSettings(){
+      request("/user/account-settings").then(function(data){
+        var account=data.account || {},preferences=data.preferences || {},subscription=data.subscription || {},security=data.security || {},storage=data.storage || {};
+        accountProfileForm.elements.name.value=account.name || "";
+        accountProfileForm.elements.email.value=account.email || "";
+        accountProfileForm.elements.phone.value=account.phone || "";
+        settingsOriginalEmail=String(account.email || "").toLowerCase();
+        document.getElementById("settingsProfileInitials").textContent=settingsInitials(account.name);
+        setText("settingsMemberSince",settingsDate(account.createdAt));setText("settingsLastLogin",settingsDate(account.lastLogin));
+        setText("settingsPlanName",(subscription.name || "Free")+" plan");
+        setText("settingsStorageSummary",settingsBytes(storage.usedBytes)+" of "+settingsBytes(storage.limitBytes)+" used");
+        accountPreferencesForm.elements.currency.value=account.currency || "USD";
+        var timeInput=accountPreferencesForm.querySelector('input[name="timeFormat"][value="'+(preferences.timeFormat || "12")+'"]');
+        if(timeInput)timeInput.checked=true;
+        localStorage.setItem("timeFormat",preferences.timeFormat || "12");
+        accountPreferencesForm.elements.emailNotifications.checked=Boolean(preferences.emailNotifications);
+        accountPreferencesForm.elements.browserNotifications.checked=Boolean(preferences.browserNotifications);
+        accountPreferencesForm.elements.marketingEmails.checked=Boolean(preferences.marketingEmails);
+        accountPreferencesForm.elements.contactCaptureRequired.checked=Boolean(preferences.contactCaptureRequired);
+        setText("settingsActiveSessions",Number(security.active_sessions || 0));
+      }).catch(function(error){settingsFeedback("accountProfileFeedback",error.message,true);});
+    }
+    function updateEmailPasswordVisibility(){
+      var changed=accountProfileForm.elements.email.value.trim().toLowerCase()!==settingsOriginalEmail;
+      settingsEmailPasswordWrap.hidden=!changed;accountProfileForm.elements.currentPassword.required=changed;
+      if(!changed)accountProfileForm.elements.currentPassword.value="";
+    }
+    accountProfileForm.elements.email.addEventListener("input",updateEmailPasswordVisibility);
+    accountProfileForm.addEventListener("submit",function(event){
+      event.preventDefault();var button=accountProfileForm.querySelector('[type="submit"]');
+      button.disabled=true;button.textContent="Saving…";settingsFeedback("accountProfileFeedback","Saving your profile…");
+      request("/user/account-settings/profile",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        name:accountProfileForm.elements.name.value.trim(),email:accountProfileForm.elements.email.value.trim(),
+        phone:accountProfileForm.elements.phone.value.trim(),currentPassword:accountProfileForm.elements.currentPassword.value
+      })}).then(function(data){
+        settingsOriginalEmail=String(data.account.email || "").toLowerCase();updateEmailPasswordVisibility();
+        document.getElementById("settingsProfileInitials").textContent=settingsInitials(data.account.name);
+        document.querySelectorAll(".user-name").forEach(function(node){node.textContent=data.account.name;});
+        user=Object.assign({},user || {},{name:data.account.name,email:data.account.email,phoneNumber:data.account.phone});
+        localStorage.setItem("user",JSON.stringify(user));settingsFeedback("accountProfileFeedback",data.message);
+      }).catch(function(error){settingsFeedback("accountProfileFeedback",error.message,true);})
+        .finally(function(){button.disabled=false;button.textContent="Save profile";});
+    });
+    accountPreferencesForm.addEventListener("submit",function(event){
+      event.preventDefault();var button=accountPreferencesForm.querySelector('[type="submit"]');
+      button.disabled=true;button.textContent="Saving…";settingsFeedback("accountPreferencesFeedback","Saving preferences…");
+      request("/user/account-settings/preferences",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        currency:accountPreferencesForm.elements.currency.value,
+        timeFormat:accountPreferencesForm.elements.timeFormat.value,
+        emailNotifications:accountPreferencesForm.elements.emailNotifications.checked,
+        browserNotifications:accountPreferencesForm.elements.browserNotifications.checked,
+        marketingEmails:accountPreferencesForm.elements.marketingEmails.checked,
+        contactCaptureRequired:accountPreferencesForm.elements.contactCaptureRequired.checked
+      })}).then(function(data){
+        if(user){user.preferredCurrency=data.currency;localStorage.setItem("user",JSON.stringify(user));}
+        localStorage.setItem("preferredCurrency",data.currency);localStorage.setItem("timeFormat",accountPreferencesForm.elements.timeFormat.value);
+        window.dispatchEvent(new CustomEvent("sync:currency-change",{detail:{currency:data.currency}}));
+        settingsFeedback("accountPreferencesFeedback",data.message);
+      }).catch(function(error){settingsFeedback("accountPreferencesFeedback",error.message,true);})
+        .finally(function(){button.disabled=false;button.textContent="Save preferences";});
+    });
+    accountPasswordForm.addEventListener("submit",function(event){
+      event.preventDefault();var button=accountPasswordForm.querySelector('[type="submit"]');
+      if(accountPasswordForm.elements.newPassword.value!==accountPasswordForm.elements.confirmPassword.value){
+        settingsFeedback("accountPasswordFeedback","New passwords do not match.",true);return;
+      }
+      button.disabled=true;button.textContent="Updating…";settingsFeedback("accountPasswordFeedback","Updating your password…");
+      request("/user/account-settings/password",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        currentPassword:accountPasswordForm.elements.currentPassword.value,newPassword:accountPasswordForm.elements.newPassword.value
+      })}).then(function(data){accountPasswordForm.reset();setText("settingsActiveSessions","1");settingsFeedback("accountPasswordFeedback",data.message);})
+        .catch(function(error){settingsFeedback("accountPasswordFeedback",error.message,true);})
+        .finally(function(){button.disabled=false;button.textContent="Change password";});
+    });
+    loadAccountSettings();
+  }
+
   var vcardFeatureGuides = {
     "business-hours": ["One day per line", "Monday | 9:00 AM - 5:00 PM"],
     services: ["One service per line: name | description | optional image URL", "Property valuation | Accurate local market valuation | https://example.com/image.jpg"],
@@ -138,11 +236,13 @@
     var overviewProgress = document.getElementById("vcardOverviewProgress");
     if (overviewProgress) overviewProgress.style.width = Math.min(100, (Number(metrics.totalCards || 0) / Math.max(1, Number(plan.vcardLimit || 1))) * 100) + "%";
     setText("planUsageLabel", (metrics.activeCards || 0) + " of " + (plan.vcardLimit || 1) + " cards used");
-    setText("billingPlanName", plan.name || "Free");
-    setText("billingPlanDescription", (plan.name || "Free") + " subscription for your Sync E-Card workspace.");
-    setText("billingPlanStatus", plan.status || "inactive");
-    setText("billingRenewalDate", plan.endDate ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(plan.endDate)) : "No renewal");
-    setText("billingCardLimit", plan.vcardLimit || 1);
+    if (!document.getElementById("billingPlansGrid")) {
+      setText("billingPlanName", plan.name || "Free");
+      setText("billingPlanDescription", (plan.name || "Free") + " subscription for your Sync E-Card workspace.");
+      setText("billingPlanStatus", plan.status || "inactive");
+      setText("billingRenewalDate", plan.endDate ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(plan.endDate)) : "No renewal");
+      setText("billingCardLimit", plan.vcardLimit || 1);
+    }
     var fill = document.getElementById("planUsageFill");
     if (fill) fill.style.width = Math.min(100, ((metrics.activeCards || 0) / Math.max(1, plan.vcardLimit || 1)) * 100) + "%";
     document.querySelectorAll(".user-plan").forEach(function (node) { node.textContent = (plan.name || "Free") + " plan"; });
@@ -241,9 +341,340 @@
     request("/user/dashboard").then(renderDashboard).catch(function () {});
   }
 
+  var storageCategoryList = document.getElementById("storageCategoryList");
+  if (storageCategoryList) {
+    var refreshStorageButton = document.getElementById("refreshStorage");
+    function storageBytes(value) {
+      var bytes=Number(value || 0);
+      if(bytes<1024)return bytes+" B";
+      if(bytes<1024*1024)return (bytes/1024).toFixed(bytes<10240?1:0)+" KB";
+      if(bytes<1024*1024*1024)return (bytes/(1024*1024)).toFixed(bytes<10*1024*1024?2:1)+" MB";
+      return (bytes/(1024*1024*1024)).toFixed(2)+" GB";
+    }
+    function renderStorage(data) {
+      var percent=Math.max(0,Math.min(100,Number(data.percentage || 0)));
+      setText("storagePlanName",(data.plan && data.plan.name || "Free")+" plan");
+      setText("storagePercent",percent.toFixed(percent<1&&percent>0?2:0)+"%");
+      setText("storageUsed",storageBytes(data.usedBytes));
+      setText("storageLimit",storageBytes(data.limitBytes));
+      setText("storageAvailable",storageBytes(data.availableBytes)+" available");
+      var pie=document.getElementById("storagePie");
+      pie.style.background="conic-gradient(#8467ff 0 "+percent+"%,#262a36 "+percent+"% 100%)";
+      pie.setAttribute("aria-label",storageBytes(data.usedBytes)+" used out of "+storageBytes(data.limitBytes));
+      document.getElementById("storageProgress").style.width=percent+"%";
+      storageCategoryList.innerHTML=(data.categories || []).map(function(category){
+        var categoryPercent=data.limitBytes?Math.min(100,Number(category.bytes || 0)/Number(data.limitBytes)*100):0;
+        return '<div class="storage-live-category"><div><span class="storage-category-icon">'+escapeHtml(category.label.charAt(0))+'</span><strong>'+escapeHtml(category.label)+'</strong></div><div class="storage-category-value"><strong>'+escapeHtml(storageBytes(category.bytes))+'</strong><span>'+categoryPercent.toFixed(categoryPercent<1&&categoryPercent>0?2:1)+'%</span></div><div class="storage-category-track"><i style="width:'+categoryPercent+'%"></i></div></div>';
+      }).join("") || '<div class="storage-live-empty">No stored content is using your allocation yet.</div>';
+      document.getElementById("storageLimitWarning").hidden=percent<100;
+    }
+    function loadStorage() {
+      if(refreshStorageButton){refreshStorageButton.disabled=true;refreshStorageButton.textContent="Refreshing…";}
+      return request("/user/storage").then(renderStorage).catch(function(error){
+        storageCategoryList.innerHTML='<div class="storage-live-empty is-error">'+escapeHtml(error.message)+'</div>';
+      }).finally(function(){if(refreshStorageButton){refreshStorageButton.disabled=false;refreshStorageButton.textContent="Refresh";}});
+    }
+    if(refreshStorageButton)refreshStorageButton.addEventListener("click",loadStorage);
+    loadStorage();
+  }
+
+  var virtualNfcCatalog = document.getElementById("virtualNfcCatalog");
+  if (virtualNfcCatalog && document.getElementById("virtualNfcOrderLink")) {
+    var virtualNfcProducts = [];
+    var virtualNfcSelected = null;
+    var virtualNfcSide = "front";
+    var virtualNfcCurrency = "LKR";
+    var virtualNfcRefresh = document.getElementById("refreshVirtualNfc");
+    var virtualNfcCardShell = document.getElementById("virtualNfcCardShell");
+    var virtualNfcFrontImage = document.getElementById("virtualNfcFrontImage");
+    var virtualNfcBackImage = document.getElementById("virtualNfcBackImage");
+    var virtualNfcOrderLink = document.getElementById("virtualNfcOrderLink");
+    var virtualNfcVcards = [];
+    var virtualNfcVcardSelect = document.getElementById("virtualNfcVcard");
+    var virtualNfcDetailInputs = {
+      name: document.getElementById("virtualNfcDetailName"),
+      role: document.getElementById("virtualNfcDetailRole"),
+      phone: document.getElementById("virtualNfcDetailPhone"),
+      email: document.getElementById("virtualNfcDetailEmail"),
+      website: document.getElementById("virtualNfcDetailWebsite"),
+      address: document.getElementById("virtualNfcDetailAddress")
+    };
+
+    function virtualNfcMoney(value) {
+      try { return new Intl.NumberFormat(undefined, { style: "currency", currency: virtualNfcCurrency }).format(Number(value || 0)); }
+      catch (_) { return virtualNfcCurrency + " " + Number(value || 0).toFixed(2); }
+    }
+    function updateVirtualNfcOrderLink() {
+      if (!virtualNfcSelected) return;
+      var link = "my-nfc-cards.html?product=" + encodeURIComponent(virtualNfcSelected.id);
+      if (virtualNfcVcardSelect.value) link += "&vcard=" + encodeURIComponent(virtualNfcVcardSelect.value);
+      virtualNfcOrderLink.href = link;
+    }
+    function updateVirtualNfcDetails() {
+      setText("virtualNfcCardName", virtualNfcDetailInputs.name.value.trim() || "Your name");
+      setText("virtualNfcCardBackName", virtualNfcDetailInputs.name.value.trim() || "Your name");
+      setText("virtualNfcCardRole", virtualNfcDetailInputs.role.value.trim() || "Your role");
+      setText("virtualNfcCardPhone", virtualNfcDetailInputs.phone.value.trim() || "Add your phone");
+      setText("virtualNfcCardEmail", virtualNfcDetailInputs.email.value.trim() || "Add your email");
+      setText("virtualNfcCardWebsite", virtualNfcDetailInputs.website.value.trim() || "Add your website");
+      setText("virtualNfcCardAddress", virtualNfcDetailInputs.address.value.trim() || "Add your address");
+    }
+    function selectVirtualNfcVcard(vcardId) {
+      var vcard = virtualNfcVcards.find(function (item) { return Number(item.id) === Number(vcardId); });
+      if (vcard) {
+        virtualNfcDetailInputs.name.value = vcard.title || "";
+        virtualNfcDetailInputs.role.value = vcard.role || "";
+        virtualNfcDetailInputs.phone.value = vcard.phone || "";
+        virtualNfcDetailInputs.email.value = vcard.email || "";
+        virtualNfcDetailInputs.website.value = vcard.websiteUrl || "";
+        virtualNfcDetailInputs.address.value = vcard.address || "";
+      }
+      updateVirtualNfcDetails();
+      updateVirtualNfcOrderLink();
+    }
+    function setVirtualNfcSide(side) {
+      virtualNfcSide = side === "back" ? "back" : "front";
+      virtualNfcCardShell.classList.toggle("is-flipped", virtualNfcSide === "back");
+      setText("virtualNfcSideLabel", virtualNfcSide === "back" ? "Back artwork" : "Front artwork");
+      document.querySelectorAll("[data-virtual-nfc-side]").forEach(function (button) {
+        var active = button.dataset.virtualNfcSide === virtualNfcSide;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+    function selectVirtualNfcProduct(productId) {
+      var product = virtualNfcProducts.find(function (item) { return Number(item.id) === Number(productId); });
+      if (!product) return;
+      virtualNfcSelected = product;
+      virtualNfcCatalog.querySelectorAll("[data-virtual-nfc-product]").forEach(function (button) {
+        var active = Number(button.dataset.virtualNfcProduct) === Number(product.id);
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      virtualNfcFrontImage.src = product.frontImage || product.backImage || "";
+      virtualNfcBackImage.src = product.backImage || product.frontImage || "";
+      virtualNfcFrontImage.alt = product.name + " front artwork";
+      virtualNfcBackImage.alt = product.name + " back artwork";
+      setText("virtualNfcCategory", product.category || "NFC card");
+      setText("virtualNfcName", product.name);
+      setText("virtualNfcDescription", product.description || "Premium contactless business card ready to connect with your VCard.");
+      setText("virtualNfcPrice", virtualNfcMoney(product.price));
+      updateVirtualNfcOrderLink();
+      virtualNfcOrderLink.classList.remove("is-disabled");
+      virtualNfcOrderLink.removeAttribute("aria-disabled");
+      setVirtualNfcSide("front");
+    }
+    function renderVirtualNfc(data) {
+      virtualNfcProducts = data.products || [];
+      virtualNfcVcards = data.vcards || [];
+      virtualNfcCurrency = data.currency || "LKR";
+      virtualNfcVcardSelect.innerHTML = '<option value="">Enter details manually</option>' + virtualNfcVcards.map(function (vcard) {
+        return '<option value="' + vcard.id + '">' + escapeHtml(vcard.title) + '</option>';
+      }).join("");
+      var requestedVcardId = Number(new URLSearchParams(window.location.search).get("vcard"));
+      var initialVcard = virtualNfcVcards.find(function (item) { return Number(item.id) === requestedVcardId; }) || virtualNfcVcards[0];
+      if (initialVcard) {
+        virtualNfcVcardSelect.value = String(initialVcard.id);
+        selectVirtualNfcVcard(initialVcard.id);
+      } else {
+        updateVirtualNfcDetails();
+      }
+      setText("virtualNfcCount", virtualNfcProducts.length);
+      if (!virtualNfcProducts.length) {
+        virtualNfcCatalog.innerHTML = '<div class="virtual-nfc-empty"><strong>No designs available</strong><span>Active NFC products published by Super Admin will appear here.</span></div>';
+        virtualNfcCardShell.classList.add("is-empty");
+        virtualNfcOrderLink.classList.add("is-disabled");
+        virtualNfcOrderLink.setAttribute("aria-disabled", "true");
+        return;
+      }
+      virtualNfcCardShell.classList.remove("is-empty");
+      virtualNfcCatalog.innerHTML = virtualNfcProducts.map(function (product) {
+        return '<button class="virtual-nfc-catalog-card searchable-item" type="button" data-virtual-nfc-product="' + product.id + '" data-search="' + escapeHtml([product.name, product.category, product.description].join(" ").toLowerCase()) + '" aria-pressed="false">' +
+          '<span class="virtual-nfc-catalog-image"><img src="' + escapeHtml(product.frontImage || product.backImage || "") + '" alt="" /></span>' +
+          '<span class="virtual-nfc-catalog-copy"><small>' + escapeHtml(product.category || "NFC card") + '</small><strong>' + escapeHtml(product.name) + '</strong><em>' + escapeHtml(virtualNfcMoney(product.price)) + '</em></span><i>›</i></button>';
+      }).join("");
+      var requestedId = Number(new URLSearchParams(window.location.search).get("product"));
+      var initialProduct = virtualNfcProducts.find(function (item) { return Number(item.id) === requestedId; }) || virtualNfcProducts[0];
+      selectVirtualNfcProduct(initialProduct.id);
+    }
+    function loadVirtualNfc() {
+      if (virtualNfcRefresh) { virtualNfcRefresh.disabled = true; virtualNfcRefresh.classList.add("is-loading"); }
+      return request("/user/nfc").then(renderVirtualNfc).catch(function (error) {
+        virtualNfcCatalog.innerHTML = '<div class="virtual-nfc-empty is-error"><strong>Unable to load designs</strong><span>' + escapeHtml(error.message) + '</span></div>';
+      }).finally(function () {
+        if (virtualNfcRefresh) { virtualNfcRefresh.disabled = false; virtualNfcRefresh.classList.remove("is-loading"); }
+      });
+    }
+    virtualNfcCatalog.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-virtual-nfc-product]");
+      if (button) selectVirtualNfcProduct(button.dataset.virtualNfcProduct);
+    });
+    document.querySelectorAll("[data-virtual-nfc-side]").forEach(function (button) {
+      button.addEventListener("click", function () { setVirtualNfcSide(button.dataset.virtualNfcSide); });
+    });
+    document.getElementById("virtualNfcFlip").addEventListener("click", function () {
+      setVirtualNfcSide(virtualNfcSide === "front" ? "back" : "front");
+    });
+    if (virtualNfcRefresh) virtualNfcRefresh.addEventListener("click", loadVirtualNfc);
+    virtualNfcVcardSelect.addEventListener("change", function () { selectVirtualNfcVcard(virtualNfcVcardSelect.value); });
+    Object.keys(virtualNfcDetailInputs).forEach(function (key) {
+      virtualNfcDetailInputs[key].addEventListener("input", updateVirtualNfcDetails);
+    });
+    virtualNfcOrderLink.addEventListener("click", function (event) {
+      if (!virtualNfcSelected) event.preventDefault();
+    });
+    loadVirtualNfc();
+  }
+
+  var virtualNfcBuilderForm = document.getElementById("virtualNfcBuilderForm");
+  if (virtualNfcBuilderForm) {
+    var builderCatalog = document.getElementById("virtualNfcCatalog");
+    var builderDesigns = [];
+    var builderVcards = [];
+    var builderSelectedId = null;
+    var builderSide = "front";
+    var builderImages = { front: "", back: "", logo: "" };
+    var builderCardShell = document.getElementById("virtualNfcCardShell");
+    var builderVcardSelect = document.getElementById("virtualNfcVcard");
+    var builderFeedback = document.getElementById("virtualNfcFeedback");
+    var builderDelete = document.getElementById("deleteVirtualNfc");
+    var builderSave = document.getElementById("saveVirtualNfc");
+    var builderTextColor = document.getElementById("virtualNfcTextColor");
+    var builderTextPosition = document.getElementById("virtualNfcTextPosition");
+    var builderInputs = {
+      name:document.getElementById("virtualNfcDetailName"),role:document.getElementById("virtualNfcDetailRole"),
+      phone:document.getElementById("virtualNfcDetailPhone"),email:document.getElementById("virtualNfcDetailEmail"),
+      website:document.getElementById("virtualNfcDetailWebsite"),address:document.getElementById("virtualNfcDetailAddress")
+    };
+    function builderSetFeedback(message,isError) {
+      builderFeedback.textContent=message || "";
+      builderFeedback.classList.toggle("is-error",Boolean(isError));
+      builderFeedback.classList.toggle("is-success",Boolean(message) && !isError);
+    }
+    function builderSetSide(side) {
+      builderSide=side==="back"?"back":"front";
+      builderCardShell.classList.toggle("is-flipped",builderSide==="back");
+      setText("virtualNfcSideLabel",builderSide==="back"?"Back preview":"Front preview");
+      document.querySelectorAll("[data-virtual-nfc-side]").forEach(function(button){
+        var active=button.dataset.virtualNfcSide===builderSide;
+        button.classList.toggle("is-active",active);button.setAttribute("aria-pressed",active?"true":"false");
+      });
+    }
+    function builderRenderDetails() {
+      setText("virtualNfcCardName",builderInputs.name.value.trim() || "Your name");
+      setText("virtualNfcCardBackName",builderInputs.name.value.trim() || "Your name");
+      setText("virtualNfcCardRole",builderInputs.role.value.trim() || "Your role");
+      setText("virtualNfcCardPhone",builderInputs.phone.value.trim() || "Add your phone");
+      setText("virtualNfcCardEmail",builderInputs.email.value.trim() || "Add your email");
+      setText("virtualNfcCardWebsite",builderInputs.website.value.trim() || "Add your website");
+      setText("virtualNfcCardAddress",builderInputs.address.value.trim() || "Add your address");
+      builderCardShell.style.setProperty("--virtual-nfc-text-color",builderTextColor.value || "#ffffff");
+      builderCardShell.classList.remove("text-top-left","text-top-center","text-top-right",
+        "text-middle-left","text-middle-center","text-middle-right",
+        "text-bottom-left","text-bottom-center","text-bottom-right");
+      builderCardShell.classList.add("text-"+(builderTextPosition.value || "bottom-left"));
+    }
+    function builderRenderImages() {
+      var front=document.getElementById("virtualNfcFrontImage"),back=document.getElementById("virtualNfcBackImage");
+      var frontLogo=document.getElementById("virtualNfcFrontLogo"),backLogo=document.getElementById("virtualNfcBackLogo");
+      front.src=builderImages.front || "";back.src=builderImages.back || "";
+      front.hidden=!builderImages.front;back.hidden=!builderImages.back;
+      frontLogo.src=builderImages.logo || "";backLogo.src=builderImages.logo || "";
+      frontLogo.hidden=!builderImages.logo;backLogo.hidden=!builderImages.logo;
+      builderCardShell.classList.toggle("is-empty",!builderImages.front && !builderImages.back);
+    }
+    function builderApplyVcard(vcardId) {
+      var card=builderVcards.find(function(item){return Number(item.id)===Number(vcardId);});
+      if(!card)return;
+      builderInputs.name.value=card.title || "";builderInputs.role.value=card.role || "";
+      builderInputs.phone.value=card.phone || "";builderInputs.email.value=card.email || "";
+      builderInputs.website.value=card.websiteUrl || "";builderInputs.address.value=card.address || "";
+      builderRenderDetails();
+    }
+    function builderNew() {
+      builderSelectedId=null;virtualNfcBuilderForm.reset();builderImages={front:"",back:"",logo:""};
+      builderTextColor.value="#ffffff";builderTextPosition.value="bottom-left";
+      builderRenderImages();builderRenderDetails();builderSetSide("front");builderDelete.hidden=true;
+      setText("virtualNfcSaveStatus","New unsaved preview");builderSetFeedback("");
+      builderCatalog.querySelectorAll("[data-builder-design]").forEach(function(item){item.classList.remove("is-active");});
+    }
+    function builderOpen(designId) {
+      var design=builderDesigns.find(function(item){return Number(item.id)===Number(designId);});
+      if(!design)return;
+      builderSelectedId=design.id;document.getElementById("virtualNfcDesignName").value=design.name || "";
+      builderVcardSelect.value=design.vcardId ? String(design.vcardId) : "";
+      Object.keys(builderInputs).forEach(function(key){builderInputs[key].value=(design.details && design.details[key]) || "";});
+      builderTextColor.value=(design.details && design.details.textColor) || "#ffffff";
+      builderTextPosition.value=(design.details && design.details.position) || "bottom-left";
+      builderImages={front:design.frontImage || "",back:design.backImage || "",logo:design.logoImage || ""};
+      builderRenderImages();builderRenderDetails();builderSetSide("front");builderDelete.hidden=false;
+      setText("virtualNfcSaveStatus","Editing saved preview");
+      setText("virtualNfcFrontFileName","Front background saved");setText("virtualNfcBackFileName","Back background saved");
+      setText("virtualNfcLogoFileName",builderImages.logo?"Logo saved":"Optional transparent logo");
+      builderCatalog.querySelectorAll("[data-builder-design]").forEach(function(item){item.classList.toggle("is-active",Number(item.dataset.builderDesign)===Number(design.id));});
+      builderSetFeedback("");
+    }
+    function builderRenderLibrary(data) {
+      builderDesigns=data.designs || [];builderVcards=data.vcards || [];setText("virtualNfcCount",builderDesigns.length);
+      builderVcardSelect.innerHTML='<option value="">Enter details manually</option>'+builderVcards.map(function(card){return '<option value="'+card.id+'">'+escapeHtml(card.title)+'</option>';}).join("");
+      builderCatalog.innerHTML=builderDesigns.length?builderDesigns.map(function(design){
+        return '<button class="virtual-nfc-catalog-card" type="button" data-builder-design="'+design.id+'"><span class="virtual-nfc-catalog-image"><img src="'+escapeHtml(design.frontImage)+'" alt="" /></span><span class="virtual-nfc-catalog-copy"><small>Custom preview</small><strong>'+escapeHtml(design.name)+'</strong><em>'+escapeHtml(formatDate(design.updatedAt))+'</em></span><i>›</i></button>';
+      }).join(""):'<div class="virtual-nfc-empty"><strong>No saved previews</strong><span>Upload your own backgrounds and save your first NFC mockup.</span></div>';
+      if(builderSelectedId && builderDesigns.some(function(item){return Number(item.id)===Number(builderSelectedId);})){builderOpen(builderSelectedId);}
+    }
+    function builderLoad() {
+      return request("/user/virtual-nfc-designs").then(builderRenderLibrary).catch(function(error){
+        builderCatalog.innerHTML='<div class="virtual-nfc-empty is-error"><strong>Unable to load previews</strong><span>'+escapeHtml(error.message)+'</span></div>';
+      });
+    }
+    function builderReadFile(input,key,labelId) {
+      var file=input.files && input.files[0];if(!file)return;
+      if(!/^image\/(png|jpeg|webp)$/.test(file.type)){builderSetFeedback("Choose a PNG, JPG, or WebP image.",true);input.value="";return;}
+      if(file.size>1572864){builderSetFeedback("Each image must be smaller than 1.5 MB.",true);input.value="";return;}
+      var reader=new FileReader();
+      reader.onload=function(){builderImages[key]=String(reader.result || "");setText(labelId,file.name);builderRenderImages();builderSetFeedback("");};
+      reader.onerror=function(){builderSetFeedback("Unable to read that image.",true);};reader.readAsDataURL(file);
+    }
+    document.getElementById("virtualNfcFrontFile").addEventListener("change",function(){builderReadFile(this,"front","virtualNfcFrontFileName");});
+    document.getElementById("virtualNfcBackFile").addEventListener("change",function(){builderReadFile(this,"back","virtualNfcBackFileName");});
+    document.getElementById("virtualNfcLogoFile").addEventListener("change",function(){builderReadFile(this,"logo","virtualNfcLogoFileName");});
+    Object.keys(builderInputs).forEach(function(key){builderInputs[key].addEventListener("input",builderRenderDetails);});
+    builderTextColor.addEventListener("input",builderRenderDetails);
+    builderTextPosition.addEventListener("change",builderRenderDetails);
+    builderVcardSelect.addEventListener("change",function(){builderApplyVcard(this.value);});
+    document.querySelectorAll("[data-virtual-nfc-side]").forEach(function(button){button.addEventListener("click",function(){builderSetSide(button.dataset.virtualNfcSide);});});
+    document.getElementById("virtualNfcFlip").addEventListener("click",function(){builderSetSide(builderSide==="front"?"back":"front");});
+    document.getElementById("newVirtualNfc").addEventListener("click",builderNew);
+    document.getElementById("resetVirtualNfc").addEventListener("click",function(){if(builderSelectedId)builderOpen(builderSelectedId);else builderNew();});
+    builderCatalog.addEventListener("click",function(event){var button=event.target.closest("[data-builder-design]");if(button)builderOpen(button.dataset.builderDesign);});
+    virtualNfcBuilderForm.addEventListener("submit",function(event){
+      event.preventDefault();if(!builderImages.front || !builderImages.back){builderSetFeedback("Upload both front and back background images.",true);return;}
+      var payload={name:document.getElementById("virtualNfcDesignName").value.trim(),vcardId:builderVcardSelect.value || null,
+        frontImage:builderImages.front,backImage:builderImages.back,logoImage:builderImages.logo,details:{}};
+      Object.keys(builderInputs).forEach(function(key){payload.details[key]=builderInputs[key].value.trim();});
+      payload.details.textColor=builderTextColor.value;payload.details.position=builderTextPosition.value;
+      builderSave.disabled=true;builderSave.textContent="Saving…";builderSetFeedback("Saving your preview…");
+      request("/user/virtual-nfc-designs"+(builderSelectedId?"/"+builderSelectedId:""),{method:builderSelectedId?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+        .then(function(data){builderSelectedId=data.design.id;builderSetFeedback(data.message);return builderLoad();})
+        .catch(function(error){builderSetFeedback(error.message,true);})
+        .finally(function(){builderSave.disabled=false;builderSave.textContent="Save preview";});
+    });
+    builderDelete.addEventListener("click",function(){
+      if(!builderSelectedId || !window.confirm("Delete this saved NFC preview?"))return;
+      builderDelete.disabled=true;request("/user/virtual-nfc-designs/"+builderSelectedId,{method:"DELETE"})
+        .then(function(data){builderNew();builderSetFeedback(data.message);return builderLoad();})
+        .catch(function(error){builderSetFeedback(error.message,true);})
+        .finally(function(){builderDelete.disabled=false;});
+    });
+    builderNew();builderLoad();
+  }
+
   var liveNfcOrderForm = document.querySelector("[data-live-nfc-order]");
   if (liveNfcOrderForm) {
     var liveNfcData = { products: [], orders: [], vcards: [], currency: "LKR" };
+    var requestedNfcProductId = Number(new URLSearchParams(window.location.search).get("product"));
+    var requestedNfcVcardId = Number(new URLSearchParams(window.location.search).get("vcard"));
+    var requestedNfcProductApplied = false;
     var liveNfcProductSelect = document.getElementById("nfcCardType");
     var liveNfcQuantity = document.getElementById("nfcQuantity");
     var refreshNfcOrdersButton = document.getElementById("refreshNfcOrders");
@@ -269,7 +700,16 @@
       grid.innerHTML = products.length ? products.map(function(product){return '<article class="nfc-user-product-card"><div class="nfc-user-product-visual"><img src="' + escapeHtml(product.frontImage) + '" alt="' + escapeHtml(product.name) + '" /><span>' + escapeHtml(product.category) + '</span></div><div class="nfc-user-product-copy"><small>Sync NFC collection</small><h3>' + escapeHtml(product.name) + '</h3><p>' + escapeHtml(product.description || "Premium contactless business card.") + '</p><div><strong>' + escapeHtml(nfcMoney(product.price)) + '</strong><button type="button" data-user-nfc-product="' + product.id + '">Order this card</button></div></div></article>';}).join("") : '<div class="nfc-user-loading">No NFC card products are available right now.</div>';
       setText("nfcCatalogCount", products.length + " design" + (products.length===1?"":"s"));
       liveNfcProductSelect.innerHTML = '<option value="">Select a card design</option>' + products.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.name) + ' — ' + escapeHtml(nfcMoney(item.price)) + '</option>';}).join("");
+      if (!requestedNfcProductApplied && requestedNfcProductId && products.some(function (item) { return Number(item.id) === requestedNfcProductId; })) {
+        liveNfcProductSelect.value = String(requestedNfcProductId);
+        requestedNfcProductApplied = true;
+        var requestedNfcOrderButton = document.getElementById("openNfcOrderModal");
+        if (requestedNfcOrderButton) window.setTimeout(function () { requestedNfcOrderButton.click(); }, 0);
+      }
       document.getElementById("nfcVCard").innerHTML = '<option value="">Select the VCard people will open</option>' + vcards.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.title) + '</option>';}).join("");
+      if (requestedNfcVcardId && vcards.some(function (item) { return Number(item.id) === requestedNfcVcardId; })) {
+        document.getElementById("nfcVCard").value = String(requestedNfcVcardId);
+      }
       setText("nfcBankName",data.bankDetails.bankName || "Not configured");setText("nfcBankAccountName",data.bankDetails.accountName || "Not configured");setText("nfcBankAccountNumber",data.bankDetails.accountNumber || "Not configured");setText("nfcBankBranch",data.bankDetails.branch || "Not configured");
       setText("nfcMetricOrders",orders.length);setText("nfcMetricPending",orders.filter(function(item){return item.paymentStatus==="pending";}).length);setText("nfcMetricProduction",orders.filter(function(item){return ["processing","shipped"].includes(item.status);}).length);setText("nfcMetricDelivered",orders.filter(function(item){return item.status==="completed";}).length);
       var body=document.getElementById("nfcCardsTableBody");
@@ -304,9 +744,12 @@
     var couponRemoveButton = document.getElementById("removePaymentCoupon");
     var couponResult = document.getElementById("paymentCouponResult");
     var couponFeedback = document.getElementById("paymentCouponFeedback");
+    var refreshBillingButton = document.getElementById("refreshBilling");
+    var refreshBillingLabel = document.getElementById("refreshBillingLabel");
     var billingData = null;
     var selectedPaymentPlan = null;
     var couponPreview = null;
+    var billingLoading = null;
     function billingMoney(value, currency) {
       try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(Number(value || 0)); }
       catch (_) { return (currency || "USD") + " " + Number(value || 0).toFixed(2); }
@@ -344,25 +787,79 @@
       setText("paymentAccountNumber", billingData.bankDetails.accountNumber); setText("paymentBankBranch", billingData.bankDetails.branch);
       setText("paymentBankSwift", billingData.bankDetails.swiftCode || "Not required");
       document.getElementById("paymentPlanId").value = plan.id;
-      paymentFeedback.textContent = ""; paymentModal.hidden = false;
+      paymentFeedback.textContent = billingData.bankConfigured ? "" : "Bank transfer details are not configured. You can continue only with a coupon that covers the full price.";
+      paymentModal.hidden = false;
       couponInput.focus();
+    }
+    function billingDate(value, includeTime) {
+      if (!value) return "No renewal";
+      try { return new Intl.DateTimeFormat(undefined, includeTime ? { dateStyle: "medium", timeStyle: "short" } : { dateStyle: "medium" }).format(new Date(value)); }
+      catch (_) { return String(value); }
+    }
+    function billingStatusClass(value) {
+      return String(value || "pending").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    }
+    function renderCurrentBilling(data) {
+      var current = data.current;
+      setText("billingCurrency", String(data.currency || "USD") + " pricing");
+      if (!current) {
+        setText("billingPlanName", "No active plan"); setText("billingPlanDescription", "Choose a plan to activate your workspace.");
+        setText("billingPlanStatus", "Inactive"); setText("billingCurrentPrice", billingMoney(0, data.currency));
+        setText("billingCurrentInterval", "No billing interval"); setText("billingRenewalDate", "No renewal");
+        setText("billingRenewalNote", "No active subscription"); setText("billingCardLimit", "0 cards"); setText("billingStorageLimit", "0 MB");
+        return;
+      }
+      setText("billingPlanName", current.planName || "Current plan");
+      setText("billingPlanDescription", (current.planName || "Your") + " workspace subscription");
+      setText("billingPlanStatus", current.status || "active");
+      setText("billingCurrentPrice", billingMoney(current.price, data.currency));
+      setText("billingCurrentInterval", Number(current.price) > 0 ? "Billed " + String(current.billingInterval || "monthly") : "Free plan");
+      setText("billingRenewalDate", current.endDate ? billingDate(current.endDate, false) : "No renewal");
+      setText("billingRenewalNote", current.endDate ? (current.autoRenew ? "Automatic renewal enabled" : "Subscription end date") : "No scheduled charge");
+      setText("billingCardLimit", Number(current.vcardLimit || 0).toLocaleString() + " cards");
+      setText("billingStorageLimit", Number(current.storageLimitMb || 0).toLocaleString() + " MB");
+      document.querySelectorAll(".user-plan").forEach(function (node) { node.textContent = (current.planName || "Current") + " plan"; });
+    }
+    function renderPendingBilling(data) {
+      var notice = document.getElementById("billingPendingNotice");
+      if (!notice) return;
+      notice.hidden = !data.pending;
+      if (!data.pending) return;
+      setText("billingPendingTitle", data.pending.planName + " is awaiting approval");
+      setText("billingPendingCopy", "Submitted " + billingDate(data.pending.submittedAt, true) + (data.pending.transactionNumber ? " · Reference " + data.pending.transactionNumber : "") + ". Your current plan remains active.");
+      setText("billingPendingStatus", data.pending.paymentStatus || "pending");
+    }
+    function renderPaymentHistory(data) {
+      var history = document.getElementById("billingPaymentHistory");
+      var payments = Array.isArray(data.payments) ? data.payments : [];
+      setText("billingPaymentCount", payments.length + " record" + (payments.length === 1 ? "" : "s"));
+      if (!history) return;
+      history.innerHTML = payments.length ? payments.map(function (payment) {
+        var discount = payment.couponCode ? '<span>Coupon ' + escapeHtml(payment.couponCode) + ' saved ' + escapeHtml(billingMoney(payment.discountAmount, payment.currency)) + '</span>' : "";
+        var proofUrl = payment.proofUrl ? API.replace(/\/api$/, "") + payment.proofUrl : "";
+        var proof = proofUrl ? '<a href="' + escapeHtml(proofUrl) + '" target="_blank" rel="noopener">View receipt</a>' : "";
+        return '<li><div class="billing-history-icon">' + escapeHtml((payment.planName || "P").charAt(0).toUpperCase()) + '</div><div class="billing-history-main"><div><strong>' + escapeHtml(payment.planName) + '</strong><span class="payment-history-status is-' + billingStatusClass(payment.status) + '">' + escapeHtml(payment.status) + '</span></div><small>' + escapeHtml(billingDate(payment.createdAt, true)) + ' · Reference ' + escapeHtml(payment.transactionNumber || "Not required") + '</small><div class="billing-history-meta">' + discount + proof + '</div></div><strong class="billing-history-amount">' + escapeHtml(billingMoney(payment.amount, payment.currency)) + '</strong></li>';
+      }).join("") : '<li class="billing-history-empty"><strong>No payment activity yet</strong><span>Your bank transfer and coupon payments will appear here.</span></li>';
     }
     function renderBillingPlans(data) {
       billingData = data;
+      renderCurrentBilling(data);
+      renderPendingBilling(data);
+      renderPaymentHistory(data);
       var pendingPlanId = data.pending ? Number(data.pending.planId) : null;
       billingPlansGrid.innerHTML = (data.plans || []).map(function (plan) {
-        var current = Number(data.currentPlanId) === Number(plan.id) || (!data.currentPlanId && Number(plan.price) === 0), pending = pendingPlanId === Number(plan.id), waiting = Boolean(data.pending) && !pending;
-        var features = [plan.vcardLimit + " VCards", plan.nfcLimit + " NFC cards", plan.analyticsLimit + " analytics"].concat(plan.features || []);
-        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div><span>' + (current ? "Current plan" : pending ? "Approval pending" : "Available") + '</span><h4>' + escapeHtml(plan.name) + '</h4><strong>' + billingMoney(plan.price, data.currency) + '<small> / ' + escapeHtml(plan.billingInterval) + '</small></strong></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (current || pending || waiting ? ' disabled' : '') + '>' + (current ? "Current plan" : pending ? "Pending approval" : waiting ? "Payment pending" : "Proceed to payment") + '</button></article>';
-      }).join("");
-      var history = document.getElementById("billingPaymentHistory");
-      if (history) history.innerHTML = data.payments && data.payments.length ? data.payments.map(function (payment) {
-        return '<li><strong>' + escapeHtml(payment.planName) + '</strong> — ' + escapeHtml(billingMoney(payment.amount, payment.currency)) +
-          ' <span class="payment-history-status is-' + escapeHtml(payment.status) + '">' + escapeHtml(payment.status) + '</span><small>' +
-          (payment.couponCode ? 'Coupon ' + escapeHtml(payment.couponCode) + ' saved ' + escapeHtml(billingMoney(payment.discountAmount, payment.currency)) + ' · ' : '') +
-          'Transaction ' + escapeHtml(payment.transactionNumber || "—") + ' · ' + escapeHtml(formatDate(payment.createdAt)) + '</small></li>';
-      }).join("") : '<li>No manual payments submitted yet.</li>';
-      if (data.pending && billingFeedback) billingFeedback.textContent = "Your " + data.pending.planName + " payment is waiting for super-admin approval. Your current plan remains active.";
+        var current = Number(data.currentPlanId) === Number(plan.id);
+        var pending = pendingPlanId === Number(plan.id);
+        var waiting = Boolean(data.pending) && !pending;
+        var features = [plan.vcardLimit + " VCards", plan.nfcLimit + " NFC cards", plan.analyticsLimit + " analytics", plan.storageLimitMb + " MB storage"].concat(plan.features || []);
+        var label = current ? "Current plan" : pending ? "Approval pending" : "Available";
+        var action = current ? "Current plan" : pending ? "Pending approval" : waiting ? "Payment pending" : "Choose " + plan.name;
+        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div class="billing-plan-top"><span>' + escapeHtml(label) + '</span><h4>' + escapeHtml(plan.name) + '</h4><p><strong>' + escapeHtml(billingMoney(plan.price, data.currency)) + '</strong><small> / ' + escapeHtml(plan.billingInterval) + '</small></p></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (current || pending || waiting ? ' disabled' : '') + '>' + escapeHtml(action) + '</button></article>';
+      }).join("") || '<div class="user-empty">No active plans are available.</div>';
+      if (billingFeedback) {
+        billingFeedback.className = "billing-plan-feedback" + (!data.bankConfigured ? " is-error" : "");
+        billingFeedback.textContent = data.pending ? "Only one plan change can be reviewed at a time." : !data.bankConfigured ? "Bank transfer details are not configured. Please contact support before upgrading." : "";
+      }
       var requestedPlanId = Number(new URLSearchParams(window.location.search).get("plan"));
       if (requestedPlanId && !data.pending) {
         var requestedPlan = (data.plans || []).find(function (plan) { return Number(plan.id) === requestedPlanId && Number(plan.id) !== Number(data.currentPlanId); });
@@ -372,7 +869,20 @@
         }
       }
     }
-    function loadBillingPlans() { request("/user/plans").then(renderBillingPlans).catch(function (error) { billingPlansGrid.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>'; }); }
+    function loadBillingPlans() {
+      if (billingLoading) return billingLoading;
+      if (refreshBillingButton) { refreshBillingButton.disabled = true; refreshBillingButton.classList.add("is-loading"); }
+      if (refreshBillingLabel) refreshBillingLabel.textContent = "Refreshing...";
+      billingLoading = request("/user/plans").then(renderBillingPlans).catch(function (error) {
+        billingPlansGrid.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>';
+        if (billingFeedback) { billingFeedback.className = "billing-plan-feedback is-error"; billingFeedback.textContent = "Billing data could not be refreshed."; }
+      }).finally(function () {
+        billingLoading = null;
+        if (refreshBillingButton) { refreshBillingButton.disabled = false; refreshBillingButton.classList.remove("is-loading"); }
+        if (refreshBillingLabel) refreshBillingLabel.textContent = "Refresh billing";
+      });
+      return billingLoading;
+    }
     loadBillingPlans();
     billingPlansGrid.addEventListener("click", function (event) {
       var button = event.target.closest("[data-upgrade-plan-id]");
@@ -381,6 +891,8 @@
       if (plan) openPaymentModal(plan);
     });
     if (paymentModal) paymentModal.querySelectorAll("[data-close-payment-modal]").forEach(function (button) { button.addEventListener("click", closePaymentModal); });
+    if (refreshBillingButton) refreshBillingButton.addEventListener("click", loadBillingPlans);
+    document.addEventListener("keydown", function (event) { if (event.key === "Escape" && paymentModal && !paymentModal.hidden) closePaymentModal(); });
     if (couponButton) couponButton.addEventListener("click", function () {
       var code = couponInput.value.trim().toUpperCase();
       couponInput.value = code;
@@ -441,15 +953,15 @@
   }
 
   function formatDate(value) {
-    return value ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
+    return value ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", hour12: localStorage.getItem("timeFormat") !== "24" }).format(new Date(value)) : "—";
   }
 
   function formatAppointmentRange(startsAt, endsAt) {
     if (!startsAt) return "—";
     var start = new Date(startsAt);
-    var startLabel = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(start);
+    var startLabel = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", hour12: localStorage.getItem("timeFormat") !== "24" }).format(start);
     if (!endsAt) return startLabel;
-    var endLabel = new Intl.DateTimeFormat(undefined, { timeStyle: "short" }).format(new Date(endsAt));
+    var endLabel = new Intl.DateTimeFormat(undefined, { timeStyle: "short", hour12: localStorage.getItem("timeFormat") !== "24" }).format(new Date(endsAt));
     return startLabel + " – " + endLabel;
   }
 

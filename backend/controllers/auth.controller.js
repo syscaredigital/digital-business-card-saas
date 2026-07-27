@@ -97,10 +97,13 @@ exports.register = async (req, res, next) => {
       companyId = companyResult.rows[0].id;
     }
 
+    const reviewSetting = await client.query("SELECT value FROM settings WHERE key='manual_signup_review' LIMIT 1");
+    const requiresReview = String(reviewSetting.rows[0]?.value || "false").toLowerCase() === "true";
+    const accountStatus = requiresReview ? "pending" : "active";
     const hashedPassword = await bcrypt.hash(String(password), 10);
     const result = await client.query(
-      `INSERT INTO users (company_id, role_id, name, email, password, phone, preferred_currency)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO users (company_id, role_id, name, email, password, phone, preferred_currency, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id, name, email, phone, preferred_currency, status, created_at`,
       [
         companyId,
@@ -110,6 +113,7 @@ exports.register = async (req, res, next) => {
         hashedPassword,
         phoneNumber || null,
         preferredCurrency,
+        accountStatus,
       ]
     );
 
@@ -148,7 +152,16 @@ exports.register = async (req, res, next) => {
       company_name: companyName ? String(companyName).trim() : null,
       role: "user",
     });
-    res.status(201).json({ user, subscription: { name: freePlan.rows[0].name, status: "active" }, referral, token: createToken(user) });
+    res.status(201).json({
+      user,
+      subscription: { name: freePlan.rows[0].name, status: "active" },
+      referral,
+      requiresReview,
+      token: requiresReview ? null : createToken(user),
+      message: requiresReview
+        ? "Your account was created and is waiting for administrator approval."
+        : "Your account was created successfully.",
+    });
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
     if (err.code === "23505") {

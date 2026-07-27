@@ -11,7 +11,7 @@
   }
   function money(value) { return new Intl.NumberFormat(undefined, { style: "currency", currency: selectedCurrency(), maximumFractionDigits: 2 }).format(Number(value || 0)); }
   function interval(value) { return value === "lifetime" ? "one-time" : "per " + String(value || "monthly").replace(/ly$/, ""); }
-  function benefits(plan) { return [plan.vcardLimit + " digital card" + (plan.vcardLimit === 1 ? "" : "s"), plan.nfcLimit + " NFC card allowance", plan.analyticsLimit + " analytics allowance"].concat(plan.features || []); }
+  function benefits(plan) { return [plan.vcardLimit + " digital card" + (plan.vcardLimit === 1 ? "" : "s"), plan.nfcLimit + " NFC card allowance", plan.analyticsLimit + " analytics allowance", plan.storageLimitMb + " MB storage"].concat(plan.features || []); }
   function render(plan, index) {
     var modern = root.dataset.pricingVariant === "modern", featured = index === 1;
     var items = benefits(plan).map(function (item) { return "<li>" + escapeHtml(item) + "</li>"; }).join("");

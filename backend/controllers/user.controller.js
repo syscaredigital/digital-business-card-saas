@@ -1,7 +1,9 @@
 const pool = require("../config/database.config");
+const bcrypt = require("bcrypt");
 const fs = require("fs/promises");
 const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
 const { sendAppointmentApproved } = require("../services/email.service");
+const { getStorageSummary, virtualNfcPayloadBytes } = require("../services/storage.service");
 
 function number(value) {
   return Number(value || 0);
@@ -44,7 +46,7 @@ function normalizeSections(value, allowedKeys) {
 exports.dashboard = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const [profile, subscription, cards, orders, nfc, enquiries, analytics, notifications, affiliate] = await Promise.all([
+    const [profile, subscription, cards, orders, nfc, enquiries, analytics, notifications, affiliate, userSettings] = await Promise.all([
       pool.query(
         `SELECT u.id, u.name, u.email, u.phone, u.avatar_url, u.created_at,
                 c.name AS company_name
@@ -95,6 +97,7 @@ exports.dashboard = async (req, res, next) => {
             WHERE ac.affiliate_id = ap.id AND ac.status IN ('pending','approved')) AS commission
          FROM affiliate_profiles ap WHERE ap.user_id = $1`, [userId]
       ),
+      pool.query("SELECT browser_notifications FROM user_settings WHERE user_id=$1",[userId]),
     ]);
 
     const plan = subscription.rows[0] || { plan_name: "Free", status: "inactive", vcard_limit: 1, nfc_limit: 0 };
@@ -135,7 +138,7 @@ exports.dashboard = async (req, res, next) => {
       vcardEntitlements: entitlements,
       orders: orders.rows,
       nfcCards: nfc.rows,
-      notifications: notifications.rows,
+      notifications: userSettings.rows[0]?.browser_notifications === false ? [] : notifications.rows,
     });
   } catch (error) {
     next(error);
@@ -336,6 +339,104 @@ exports.orders = async (req, res, next) => {
 
 const supportedCurrencies = ["USD", "AUD", "LKR"];
 
+exports.accountSettings = async (req, res, next) => {
+  try {
+    const [accountResult,preferencesResult,subscriptionResult,sessionResult,storage] = await Promise.all([
+      pool.query(`SELECT id,name,email,phone,preferred_currency,status,created_at,last_login
+        FROM users WHERE id=$1`,[req.user.id]),
+      pool.query(`SELECT time_format,email_notifications,browser_notifications,marketing_emails,
+        contact_capture_required,updated_at FROM user_settings WHERE user_id=$1`,[req.user.id]),
+      pool.query(`SELECT p.id,p.name,p.billing_interval,s.start_date,s.end_date
+        FROM subscriptions s JOIN plans p ON p.id=s.plan_id
+        WHERE s.user_id=$1 AND s.status='active' ORDER BY s.updated_at DESC,s.id DESC LIMIT 1`,[req.user.id]),
+      pool.query(`SELECT COUNT(*)::int active_sessions,MAX(issued_at) last_session
+        FROM auth_sessions WHERE user_id=$1 AND revoked_at IS NULL AND expires_at>NOW()`,[req.user.id]),
+      getStorageSummary(pool,req.user.id),
+    ]);
+    if(!accountResult.rowCount)return res.status(404).json({message:"User account not found"});
+    const account=accountResult.rows[0],preferences=preferencesResult.rows[0] || {};
+    res.json({
+      account:{id:account.id,name:account.name,email:account.email,phone:account.phone || "",
+        currency:supportedCurrencies.includes(account.preferred_currency)?account.preferred_currency:"USD",
+        status:account.status,createdAt:account.created_at,lastLogin:account.last_login},
+      preferences:{timeFormat:preferences.time_format || "12",
+        emailNotifications:preferences.email_notifications !== false,
+        browserNotifications:preferences.browser_notifications !== false,
+        marketingEmails:Boolean(preferences.marketing_emails),
+        contactCaptureRequired:preferences.contact_capture_required !== false},
+      subscription:subscriptionResult.rows[0] || {id:storage.plan.id,name:storage.plan.name,billing_interval:"monthly"},
+      security:sessionResult.rows[0] || {active_sessions:0,last_session:null},
+      storage:{usedBytes:storage.usedBytes,limitBytes:storage.limitBytes,percentage:storage.percentage},
+    });
+  } catch(error){next(error);}
+};
+
+exports.updateAccountProfile = async (req,res,next) => {
+  try {
+    const name=String(req.body.name || "").trim().replace(/\s+/g," ");
+    const email=String(req.body.email || "").trim().toLowerCase();
+    const phone=String(req.body.phone || "").trim() || null;
+    if(name.length<2 || name.length>150)return res.status(400).json({message:"Enter your full name using 2 to 150 characters"});
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length>255)return res.status(400).json({message:"Enter a valid email address"});
+    if(phone && phone.length>50)return res.status(400).json({message:"Phone number is too long"});
+    const current=await pool.query("SELECT email,password FROM users WHERE id=$1",[req.user.id]);
+    if(!current.rowCount)return res.status(404).json({message:"User account not found"});
+    if(email!==String(current.rows[0].email).toLowerCase()){
+      const password=String(req.body.currentPassword || "");
+      if(!password || !(await bcrypt.compare(password,current.rows[0].password)))return res.status(403).json({message:"Enter your current password to change your email address"});
+    }
+    const result=await pool.query(`UPDATE users SET name=$1,email=$2,phone=$3,updated_at=NOW()
+      WHERE id=$4 RETURNING id,name,email,phone,preferred_currency,status,updated_at`,[name,email,phone,req.user.id]);
+    await pool.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata,ip_address,user_agent)
+      VALUES($1,'account.profile_updated','user',$1,$2::jsonb,$3,$4)`,
+    [req.user.id,JSON.stringify({emailChanged:email!==String(current.rows[0].email).toLowerCase()}),req.ip || null,req.get("user-agent") || null]);
+    res.json({message:"Account profile updated",account:result.rows[0]});
+  } catch(error){if(error.code==="23505")return res.status(409).json({message:"That email address is already in use"});next(error);}
+};
+
+exports.updateAccountPreferences = async (req,res,next) => {
+  try {
+    const currency=String(req.body.currency || "").trim().toUpperCase();
+    const timeFormat=String(req.body.timeFormat || "");
+    if(!supportedCurrencies.includes(currency))return res.status(400).json({message:"Currency must be USD, AUD, or LKR"});
+    if(!["12","24"].includes(timeFormat))return res.status(400).json({message:"Time format must be 12 or 24 hour"});
+    const fields=["emailNotifications","browserNotifications","marketingEmails","contactCaptureRequired"];
+    if(fields.some((key)=>typeof req.body[key]!=="boolean"))return res.status(400).json({message:"Notification preferences must be true or false"});
+    await pool.query("UPDATE users SET preferred_currency=$1,updated_at=NOW() WHERE id=$2",[currency,req.user.id]);
+    const result=await pool.query(`INSERT INTO user_settings(user_id,time_format,email_notifications,browser_notifications,marketing_emails,contact_capture_required)
+      VALUES($1,$2,$3,$4,$5,$6)
+      ON CONFLICT(user_id) DO UPDATE SET time_format=EXCLUDED.time_format,email_notifications=EXCLUDED.email_notifications,
+        browser_notifications=EXCLUDED.browser_notifications,marketing_emails=EXCLUDED.marketing_emails,
+        contact_capture_required=EXCLUDED.contact_capture_required,updated_at=NOW()
+      RETURNING time_format,email_notifications,browser_notifications,marketing_emails,contact_capture_required,updated_at`,
+    [req.user.id,timeFormat,req.body.emailNotifications,req.body.browserNotifications,req.body.marketingEmails,req.body.contactCaptureRequired]);
+    await pool.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata)
+      VALUES($1,'account.preferences_updated','user',$1,$2::jsonb)`,[req.user.id,JSON.stringify({currency,timeFormat})]);
+    res.json({message:"Preferences saved",currency,preferences:result.rows[0]});
+  } catch(error){next(error);}
+};
+
+exports.changeAccountPassword = async (req,res,next) => {
+  try {
+    const currentPassword=String(req.body.currentPassword || ""),newPassword=String(req.body.newPassword || "");
+    if(newPassword.length<8 || newPassword.length>128 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)){
+      return res.status(400).json({message:"New password must be 8 to 128 characters with uppercase, lowercase, and a number"});
+    }
+    if(currentPassword===newPassword)return res.status(400).json({message:"Choose a password different from your current password"});
+    const current=await pool.query("SELECT password FROM users WHERE id=$1",[req.user.id]);
+    if(!current.rowCount || !(await bcrypt.compare(currentPassword,current.rows[0].password)))return res.status(403).json({message:"Current password is incorrect"});
+    const hash=await bcrypt.hash(newPassword,10);
+    await pool.query("UPDATE users SET password=$1,updated_at=NOW() WHERE id=$2",[hash,req.user.id]);
+    await pool.query(`UPDATE auth_sessions SET revoked_at=NOW()
+      WHERE user_id=$1 AND token_hash<>$2 AND revoked_at IS NULL`,[req.user.id,req.authTokenHash || ""]);
+    await pool.query(`INSERT INTO notifications(user_id,title,message,type)
+      VALUES($1,'Password changed','Your account password was changed. Other signed-in sessions were closed.','security')`,[req.user.id]);
+    await pool.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,ip_address,user_agent)
+      VALUES($1,'account.password_changed','user',$1,$2,$3)`,[req.user.id,req.ip || null,req.get("user-agent") || null]);
+    res.json({message:"Password changed successfully. Other sessions have been signed out."});
+  } catch(error){next(error);}
+};
+
 exports.getPreferences = async (req, res, next) => {
   try {
     const result = await pool.query("SELECT preferred_currency FROM users WHERE id = $1", [req.user.id]);
@@ -365,6 +466,123 @@ exports.updatePreferences = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+function validateVirtualNfcImage(value, label, required) {
+  if (!value) return required ? `${label} is required` : null;
+  if (!/^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=\r\n]+$/i.test(value)) return `${label} must be a PNG, JPG, or WebP image`;
+  if (value.length > 2100000) return `${label} must be smaller than 1.5 MB`;
+  return null;
+}
+
+function virtualNfcDesignJson(row) {
+  return {
+    id:row.id,vcardId:row.vcard_id,name:row.name,frontImage:row.front_image,backImage:row.back_image,
+    logoImage:row.logo_image || "",details:row.details || {},createdAt:row.created_at,updatedAt:row.updated_at,
+  };
+}
+
+function readVirtualNfcDesignBody(body) {
+  const details = body.details && typeof body.details === "object" && !Array.isArray(body.details) ? body.details : {};
+  return {
+    name:String(body.name || "").trim(),vcardId:body.vcardId ? Number(body.vcardId) : null,
+    frontImage:String(body.frontImage || ""),backImage:String(body.backImage || ""),logoImage:String(body.logoImage || ""),
+    details:{
+      name:String(details.name || "").trim().slice(0,80),role:String(details.role || "").trim().slice(0,100),
+      phone:String(details.phone || "").trim().slice(0,50),email:String(details.email || "").trim().slice(0,120),
+      website:String(details.website || "").trim().slice(0,160),address:String(details.address || "").trim().slice(0,160),
+      textColor:/^#[0-9a-f]{6}$/i.test(String(details.textColor || "")) ? String(details.textColor) : "#ffffff",
+      position:["top-left","top-center","top-right","middle-left","middle-center","middle-right",
+        "bottom-left","bottom-center","bottom-right"].includes(String(details.position))
+        ? String(details.position) : "bottom-left",
+    },
+  };
+}
+
+exports.listVirtualNfcDesigns = async (req, res, next) => {
+  try {
+    const [designs,vcards] = await Promise.all([
+      pool.query(`SELECT id,vcard_id,name,front_image,back_image,logo_image,details,created_at,updated_at
+        FROM virtual_nfc_designs WHERE user_id=$1 ORDER BY updated_at DESC,id DESC`,[req.user.id]),
+      pool.query(`SELECT id,title,description,website_url,phone,email,address
+        FROM vcards WHERE user_id=$1 AND is_active=TRUE ORDER BY title,id`,[req.user.id]),
+    ]);
+    res.json({
+      designs:designs.rows.map(virtualNfcDesignJson),
+      vcards:vcards.rows.map((item)=>({id:item.id,title:item.title || `VCard #${item.id}`,role:item.description || "",
+        phone:item.phone || "",email:item.email || "",websiteUrl:item.website_url || "",address:item.address || ""})),
+    });
+  } catch (error) { next(error); }
+};
+
+exports.storage = async (req, res, next) => {
+  try {
+    res.json(await getStorageSummary(pool,req.user.id));
+  } catch (error) { next(error); }
+};
+
+exports.createVirtualNfcDesign = async (req, res, next) => {
+  try {
+    const input=readVirtualNfcDesignBody(req.body || {});
+    if(!input.name || input.name.length>120)return res.status(400).json({message:"Enter a design name up to 120 characters"});
+    const imageError=validateVirtualNfcImage(input.frontImage,"Front background",true)
+      ||validateVirtualNfcImage(input.backImage,"Back background",true)||validateVirtualNfcImage(input.logoImage,"Logo",false);
+    if(imageError)return res.status(400).json({message:imageError});
+    if(input.vcardId){
+      const owned=await pool.query("SELECT id FROM vcards WHERE id=$1 AND user_id=$2",[input.vcardId,req.user.id]);
+      if(!owned.rowCount)return res.status(400).json({message:"Select one of your own VCards"});
+    }
+    const storage=await getStorageSummary(pool,req.user.id);
+    if(storage.usedBytes+virtualNfcPayloadBytes(input)>storage.limitBytes){
+      return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Delete saved previews or upgrade your plan.`});
+    }
+    const result=await pool.query(`INSERT INTO virtual_nfc_designs(user_id,vcard_id,name,front_image,back_image,logo_image,details)
+      VALUES($1,$2,$3,$4,$5,$6,$7::jsonb)
+      RETURNING id,vcard_id,name,front_image,back_image,logo_image,details,created_at,updated_at`,
+    [req.user.id,input.vcardId,input.name,input.frontImage,input.backImage,input.logoImage || null,JSON.stringify(input.details)]);
+    res.status(201).json({message:"Virtual NFC preview saved",design:virtualNfcDesignJson(result.rows[0])});
+  } catch (error) { next(error); }
+};
+
+exports.updateVirtualNfcDesign = async (req, res, next) => {
+  try {
+    const designId=Number(req.params.id),input=readVirtualNfcDesignBody(req.body || {});
+    if(!Number.isInteger(designId)||designId<1)return res.status(400).json({message:"Invalid preview design"});
+    if(!input.name || input.name.length>120)return res.status(400).json({message:"Enter a design name up to 120 characters"});
+    const imageError=validateVirtualNfcImage(input.frontImage,"Front background",true)
+      ||validateVirtualNfcImage(input.backImage,"Back background",true)||validateVirtualNfcImage(input.logoImage,"Logo",false);
+    if(imageError)return res.status(400).json({message:imageError});
+    if(input.vcardId){
+      const owned=await pool.query("SELECT id FROM vcards WHERE id=$1 AND user_id=$2",[input.vcardId,req.user.id]);
+      if(!owned.rowCount)return res.status(400).json({message:"Select one of your own VCards"});
+    }
+    const existing=await pool.query(`SELECT name,front_image,back_image,logo_image,details
+      FROM virtual_nfc_designs WHERE id=$1 AND user_id=$2`,[designId,req.user.id]);
+    if(!existing.rowCount)return res.status(404).json({message:"Virtual NFC preview not found"});
+    const current=existing.rows[0];
+    const currentBytes=virtualNfcPayloadBytes({name:current.name,frontImage:current.front_image,
+      backImage:current.back_image,logoImage:current.logo_image,details:current.details});
+    const storage=await getStorageSummary(pool,req.user.id);
+    if(storage.usedBytes-currentBytes+virtualNfcPayloadBytes(input)>storage.limitBytes){
+      return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Reduce image sizes, delete saved previews, or upgrade your plan.`});
+    }
+    const result=await pool.query(`UPDATE virtual_nfc_designs SET vcard_id=$1,name=$2,front_image=$3,back_image=$4,
+      logo_image=$5,details=$6::jsonb,updated_at=NOW() WHERE id=$7 AND user_id=$8
+      RETURNING id,vcard_id,name,front_image,back_image,logo_image,details,created_at,updated_at`,
+    [input.vcardId,input.name,input.frontImage,input.backImage,input.logoImage || null,JSON.stringify(input.details),designId,req.user.id]);
+    if(!result.rowCount)return res.status(404).json({message:"Virtual NFC preview not found"});
+    res.json({message:"Virtual NFC preview updated",design:virtualNfcDesignJson(result.rows[0])});
+  } catch (error) { next(error); }
+};
+
+exports.deleteVirtualNfcDesign = async (req, res, next) => {
+  try {
+    const designId=Number(req.params.id);
+    if(!Number.isInteger(designId)||designId<1)return res.status(400).json({message:"Invalid preview design"});
+    const result=await pool.query("DELETE FROM virtual_nfc_designs WHERE id=$1 AND user_id=$2 RETURNING id",[designId,req.user.id]);
+    if(!result.rowCount)return res.status(404).json({message:"Virtual NFC preview not found"});
+    res.json({message:"Virtual NFC preview deleted"});
+  } catch (error) { next(error); }
+};
+
 exports.nfcStore = async (req, res, next) => {
   try {
     const [products, orders, vcards, settingsResult, userResult] = await Promise.all([
@@ -375,9 +593,10 @@ exports.nfcStore = async (req, res, next) => {
           o.admin_note,o.ordered_at,o.updated_at,p.name product_name,p.front_image,v.title vcard_title
         FROM nfc_orders o LEFT JOIN nfc_products p ON p.id=o.nfc_product_id
         LEFT JOIN vcards v ON v.id=o.vcard_id WHERE o.user_id=$1 ORDER BY o.ordered_at DESC`, [req.user.id]),
-      pool.query(`SELECT id,title FROM vcards WHERE user_id=$1 AND is_active=TRUE ORDER BY title,id`, [req.user.id]),
+      pool.query(`SELECT id,title,description,website_url,phone,email,address
+        FROM vcards WHERE user_id=$1 AND is_active=TRUE ORDER BY title,id`, [req.user.id]),
       pool.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency","bank_name","bank_account_name","bank_account_number","bank_branch","bank_swift_code"]]),
-      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
+      pool.query("SELECT name,email,phone,preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
     res.json({
@@ -386,7 +605,9 @@ exports.nfcStore = async (req, res, next) => {
         accountNumber: settings.bank_account_number || "", branch: settings.bank_branch || "", swiftCode: settings.bank_swift_code || "" },
       products: products.rows.map((item) => ({ id:item.id,name:item.name,price:number(item.price),description:item.description || "",
         frontImage:item.front_image,backImage:item.back_image,category:item.category || "essential" })),
-      vcards: vcards.rows.map((item) => ({ id:item.id,title:item.title || `VCard #${item.id}` })),
+      vcards: vcards.rows.map((item) => ({ id:item.id,title:item.title || userResult.rows[0]?.name || `VCard #${item.id}`,
+        role:item.description || "",email:item.email || userResult.rows[0]?.email || "",
+        phone:item.phone || userResult.rows[0]?.phone || "",websiteUrl:item.website_url || "",address:item.address || "" })),
       orders: orders.rows.map((item) => ({ id:item.id,productId:item.nfc_product_id,vcardId:item.vcard_id,
         productName:item.product_name || "NFC card",productImage:item.front_image || null,vcardTitle:item.vcard_title || null,
         quantity:number(item.quantity),amount:number(item.amount),currency:item.currency || "LKR",status:item.status,
@@ -577,14 +798,16 @@ function mapUserPlan(plan) {
   const normalized = normalizePlanFeatures(plan.features);
   return { id: plan.id, name: plan.name, price: number(plan.price), billingInterval: plan.billing_interval,
     vcardLimit: number(plan.vcard_limit), nfcLimit: number(plan.nfc_limit), analyticsLimit: number(plan.analytics_limit),
+    storageLimitMb: number(plan.storage_limit_mb),
     features: normalized.benefits, vcardFeatures: normalized.vcardFeatures, templateIds: normalized.templateIds };
 }
 
 exports.plans = async (req, res, next) => {
   try {
     const [plansResult, subscriptionsResult, settingsResult, paymentsResult, userResult] = await Promise.all([
-      pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,features FROM plans WHERE status='active' ORDER BY price,name`),
-      pool.query(`SELECT s.id,s.plan_id,s.status,s.created_at,p.name AS plan_name,
+      pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,storage_limit_mb,features FROM plans WHERE status='active' ORDER BY price,name`),
+      pool.query(`SELECT s.id,s.plan_id,s.status,s.start_date,s.end_date,s.auto_renew,s.created_at,
+        p.name AS plan_name,p.price,p.billing_interval,p.vcard_limit,p.nfc_limit,p.analytics_limit,p.storage_limit_mb,
         pay.status AS payment_status,pay.gateway_reference
         FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
         LEFT JOIN LATERAL (SELECT status,gateway_reference FROM payments WHERE subscription_id=s.id ORDER BY created_at DESC LIMIT 1) pay ON TRUE
@@ -597,20 +820,37 @@ exports.plans = async (req, res, next) => {
         FROM payments pay LEFT JOIN subscriptions s ON s.id=pay.subscription_id LEFT JOIN plans p ON p.id=s.plan_id
         LEFT JOIN coupon_redemptions cr ON cr.payment_id=pay.id
         LEFT JOIN coupon_codes c ON c.id=cr.coupon_id
-        WHERE pay.user_id=$1 AND LOWER(COALESCE(pay.method,''))=ANY($2::text[])
-        ORDER BY pay.created_at DESC LIMIT 20`, [req.user.id, ["cash", "manual", "bank_transfer", "cash_payment", "coupon"]]),
+        WHERE pay.user_id=$1
+        ORDER BY pay.created_at DESC LIMIT 20`, [req.user.id]),
       pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
-    const active = subscriptionsResult.rows.find((item) => item.status === "active") || null;
+    const active = subscriptionsResult.rows.find((item) => item.status === "active")
+      || subscriptionsResult.rows.find((item) => item.status === "trial")
+      || null;
     const pending = subscriptionsResult.rows.find((item) => item.status === "pending") || null;
+    const freePlan = plansResult.rows.find((item) => number(item.price) === 0) || null;
+    const effectivePlan = active || (freePlan ? {
+      id: null, plan_id: freePlan.id, status: "active", start_date: null, end_date: null, auto_renew: false,
+      plan_name: freePlan.name, price: freePlan.price, billing_interval: freePlan.billing_interval,
+      vcard_limit: freePlan.vcard_limit, nfc_limit: freePlan.nfc_limit, analytics_limit: freePlan.analytics_limit,
+      storage_limit_mb: freePlan.storage_limit_mb,
+    } : null);
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
     const bankDetails = { bankName: settings.bank_name || "", accountName: settings.bank_account_name || "",
       accountNumber: settings.bank_account_number || "", branch: settings.bank_branch || "", swiftCode: settings.bank_swift_code || "" };
-    res.json({ plans: plansResult.rows.map(mapUserPlan), currentPlanId: active ? active.plan_id : null,
+    res.json({ plans: plansResult.rows.map(mapUserPlan), currentPlanId: effectivePlan ? effectivePlan.plan_id : null,
       currency: userResult.rows[0]?.preferred_currency || settings.default_currency || "USD", bankDetails,
       bankConfigured: Boolean(bankDetails.bankName && bankDetails.accountName && bankDetails.accountNumber && bankDetails.branch),
+      current: effectivePlan ? {
+        subscriptionId: effectivePlan.id, planId: effectivePlan.plan_id, planName: effectivePlan.plan_name,
+        status: effectivePlan.status, price: number(effectivePlan.price), billingInterval: effectivePlan.billing_interval,
+        startDate: effectivePlan.start_date, endDate: effectivePlan.end_date, autoRenew: Boolean(effectivePlan.auto_renew),
+        vcardLimit: number(effectivePlan.vcard_limit), nfcLimit: number(effectivePlan.nfc_limit),
+        analyticsLimit: number(effectivePlan.analytics_limit), storageLimitMb: number(effectivePlan.storage_limit_mb),
+      } : null,
       pending: pending ? { id: pending.id, planId: pending.plan_id, planName: pending.plan_name,
-        paymentStatus: pending.payment_status || "pending", transactionNumber: pending.gateway_reference || null } : null,
+        paymentStatus: pending.payment_status || "pending", transactionNumber: pending.gateway_reference || null,
+        submittedAt: pending.created_at } : null,
       payments: paymentsResult.rows.map((payment) => ({ id: payment.id, planName: payment.plan_name || "Subscription",
         amount: number(payment.amount), currency: payment.currency, status: payment.status,
         couponCode: payment.coupon_code || null, originalAmount: payment.original_amount === null ? null : number(payment.original_amount),
@@ -861,6 +1101,13 @@ exports.getVcard = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+function vcardPayloadBytes(payload) {
+  return Buffer.byteLength(JSON.stringify({
+    title:payload.title || "",description:payload.description || "",websiteUrl:payload.websiteUrl || "",
+    phone:payload.phone || "",email:payload.email || "",address:payload.address || "",sections:payload.sections || {},
+  }));
+}
+
 exports.createVcard = async (req, res, next) => {
   try {
     const title = String(req.body.title || "").trim();
@@ -880,6 +1127,10 @@ exports.createVcard = async (req, res, next) => {
     if (!entitlements.templates.some((template) => Number(template.id) === templateId)) return res.status(403).json({ message: "This VCard template is not included in your plan" });
     const allowedKeys = new Set(entitlements.features.map((feature) => feature.key));
     const sections = normalizeSections(req.body.sections, allowedKeys);
+    const storage=await getStorageSummary(pool,req.user.id);
+    if(storage.usedBytes+vcardPayloadBytes({...req.body,title,sections})>storage.limitBytes){
+      return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Delete unused content or upgrade your plan.`});
+    }
     const result = await pool.query(
       `INSERT INTO vcards (user_id,template_id,title,description,website_url,phone,email,address,settings)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
@@ -899,6 +1150,15 @@ exports.updateVcard = async (req, res, next) => {
     if (!entitlements.templates.some((template) => Number(template.id) === templateId)) return res.status(403).json({ message: "This VCard template is not included in your plan" });
     const allowedKeys = new Set(entitlements.features.map((feature) => feature.key));
     const sections = normalizeSections(req.body.sections, allowedKeys);
+    const existing=await pool.query(`SELECT title,description,website_url,phone,email,address,settings
+      FROM vcards WHERE id=$1 AND user_id=$2`,[req.params.id,req.user.id]);
+    if(!existing.rowCount)return res.status(404).json({message:"Card not found"});
+    const current=existing.rows[0],storage=await getStorageSummary(pool,req.user.id);
+    const currentBytes=Buffer.byteLength(JSON.stringify(current));
+    const proposedBytes=vcardPayloadBytes({...req.body,title,sections});
+    if(storage.usedBytes-currentBytes+proposedBytes>storage.limitBytes){
+      return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Reduce uploaded content or upgrade your plan.`});
+    }
     const result = await pool.query(
       `UPDATE vcards SET template_id=$1,title=$2,description=$3,website_url=$4,phone=$5,
               email=$6,address=$7,settings=jsonb_set(COALESCE(settings,'{}'::jsonb),'{sections}',$8::jsonb,TRUE),

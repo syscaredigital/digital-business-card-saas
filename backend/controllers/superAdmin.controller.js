@@ -1,4 +1,5 @@
 const pool = require("../config/database.config");
+const { invalidatePlatformAccessCache } = require("../middlewares/platform-access.middleware");
 const bcrypt = require("bcrypt");
 const path = require("path");
 const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
@@ -1331,7 +1332,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
       ),
       pool.query(`
         SELECT p.id, p.name, p.price, p.billing_interval, p.vcard_limit, p.nfc_limit,
-               p.analytics_limit, p.features, p.status, p.created_at, p.updated_at,
+               p.analytics_limit, p.storage_limit_mb, p.features, p.status, p.created_at, p.updated_at,
                (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id)::int AS subscriber_count,
                (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id AND s.status = 'active')::int AS active_subscriber_count
         FROM plans p ORDER BY p.price, p.name
@@ -1380,6 +1381,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
         vcardLimit: number(plan.vcard_limit),
         nfcLimit: number(plan.nfc_limit),
         analyticsLimit: number(plan.analytics_limit),
+        storageLimitMb: number(plan.storage_limit_mb),
         features: plan.features || {},
         status: plan.status,
         subscribers: number(plan.subscriber_count),
@@ -1413,6 +1415,7 @@ function normalizePlanPayload(body) {
     vcardLimit: Number(body.vcardLimit),
     nfcLimit: Number(body.nfcLimit),
     analyticsLimit: Number(body.analyticsLimit),
+    storageLimitMb: Number(body.storageLimitMb),
     features: {
       benefits: structured.benefits.map((feature) => String(feature).trim()).filter(Boolean).slice(0, 100),
       vcardFeatures: structured.vcardFeatures,
@@ -1427,7 +1430,7 @@ function planValidationMessage(plan) {
   if (!Number.isFinite(plan.price) || plan.price < 0 || plan.price > 9999999999.99) return "Enter a valid plan price up to 9,999,999,999.99";
   if (!billingIntervals.includes(plan.billingInterval)) return "Invalid billing interval";
   if (!planStatuses.includes(plan.status)) return "Invalid plan status";
-  if (![plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit].every((limit) => Number.isInteger(limit) && limit >= 0 && limit <= 2147483647)) return "Plan limits must be whole numbers from 0 to 2,147,483,647";
+  if (![plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit, plan.storageLimitMb].every((limit) => Number.isInteger(limit) && limit >= 0 && limit <= 2147483647)) return "Plan limits must be whole numbers from 0 to 2,147,483,647";
   if (!plan.features.vcardFeatures.length) return "Select at least one VCard feature";
   if (!plan.features.templateIds.length) return "Select at least one VCard template";
   return null;
@@ -1446,15 +1449,15 @@ exports.createPlan = async (req, res, next) => {
     const templateValidation = await planTemplateValidationMessage(plan);
     if (templateValidation) return res.status(400).json({ message: templateValidation });
     const result = await pool.query(
-      `INSERT INTO plans (name, price, billing_interval, vcard_limit, nfc_limit, analytics_limit, features, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
+      `INSERT INTO plans (name, price, billing_interval, vcard_limit, nfc_limit, analytics_limit, storage_limit_mb, features, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
        RETURNING id, name, price, status`,
-      [plan.name, plan.price, plan.billingInterval, plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit, JSON.stringify(plan.features), plan.status]
+      [plan.name, plan.price, plan.billingInterval, plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit, plan.storageLimitMb, JSON.stringify(plan.features), plan.status]
     );
     await pool.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'plan.created', 'plan', $2, $3::jsonb, $4, $5)`,
-      [req.user.id, result.rows[0].id, JSON.stringify({ name: plan.name, price: plan.price }), req.ip || null, req.get("user-agent") || null]
+      [req.user.id, result.rows[0].id, JSON.stringify({ name: plan.name, price: plan.price, storageLimitMb: plan.storageLimitMb }), req.ip || null, req.get("user-agent") || null]
     );
     res.status(201).json({ plan: result.rows[0] });
   } catch (error) {
@@ -1474,15 +1477,15 @@ exports.updatePlan = async (req, res, next) => {
     if (templateValidation) return res.status(400).json({ message: templateValidation });
     const result = await pool.query(
       `UPDATE plans SET name = $1, price = $2, billing_interval = $3, vcard_limit = $4,
-       nfc_limit = $5, analytics_limit = $6, features = $7::jsonb, status = $8, updated_at = NOW()
-       WHERE id = $9 RETURNING id, name, price, status`,
-      [plan.name, plan.price, plan.billingInterval, plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit, JSON.stringify(plan.features), plan.status, planId]
+       nfc_limit = $5, analytics_limit = $6, storage_limit_mb = $7, features = $8::jsonb, status = $9, updated_at = NOW()
+       WHERE id = $10 RETURNING id, name, price, status`,
+      [plan.name, plan.price, plan.billingInterval, plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit, plan.storageLimitMb, JSON.stringify(plan.features), plan.status, planId]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Plan not found" });
     await pool.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'plan.updated', 'plan', $2, $3::jsonb, $4, $5)`,
-      [req.user.id, planId, JSON.stringify({ name: plan.name, price: plan.price, status: plan.status }), req.ip || null, req.get("user-agent") || null]
+      [req.user.id, planId, JSON.stringify({ name: plan.name, price: plan.price, status: plan.status, storageLimitMb: plan.storageLimitMb }), req.ip || null, req.get("user-agent") || null]
     );
     res.json({ plan: result.rows[0] });
   } catch (error) {
@@ -3178,12 +3181,42 @@ exports.getAnalytics = async (req, res, next) => {
   if (![7, 30, 90, 365].includes(days)) return res.status(400).json({ message: "Analytics range must be 7, 30, 90, or 365 days" });
   try {
     const [summaryResult, previousResult, seriesResult, sourcesResult, cardsResult, platformResult] = await Promise.all([
-      pool.query(`SELECT COALESCE(SUM(page_views),0)::bigint page_views,COALESCE(SUM(clicks),0)::bigint clicks,COALESCE(SUM(shares),0)::bigint shares,COALESCE(SUM(contact_requests),0)::bigint contact_requests FROM analytics WHERE event_date>=CURRENT_DATE-($1::integer-1)`,[days]),
-      pool.query(`SELECT COALESCE(SUM(page_views),0)::bigint page_views,COALESCE(SUM(clicks),0)::bigint clicks,COALESCE(SUM(shares),0)::bigint shares,COALESCE(SUM(contact_requests),0)::bigint contact_requests FROM analytics WHERE event_date>=CURRENT_DATE-($1::integer*2-1) AND event_date<CURRENT_DATE-($1::integer-1)`,[days]),
-      pool.query(`SELECT d.day::date date,COALESCE(SUM(a.page_views),0)::bigint page_views,COALESCE(SUM(a.clicks),0)::bigint clicks,COALESCE(SUM(a.shares),0)::bigint shares,COALESCE(SUM(a.contact_requests),0)::bigint contacts FROM GENERATE_SERIES(CURRENT_DATE-($1::integer-1),CURRENT_DATE,INTERVAL '1 day') d(day) LEFT JOIN analytics a ON a.event_date=d.day::date GROUP BY d.day ORDER BY d.day`,[days]),
+      pool.query(`SELECT
+        COUNT(*) FILTER (WHERE event_type IN ('vcard_view','qr_scan'))::bigint page_views,
+        COUNT(*) FILTER (WHERE event_type='link_click')::bigint clicks,
+        COUNT(*) FILTER (WHERE event_type='share')::bigint shares,
+        (SELECT COUNT(*) FROM contacts WHERE contacted_at>=CURRENT_DATE-($1::integer-1))::bigint contact_requests
+        FROM vcard_events WHERE occurred_at>=CURRENT_DATE-($1::integer-1)`,[days]),
+      pool.query(`SELECT
+        COUNT(*) FILTER (WHERE event_type IN ('vcard_view','qr_scan'))::bigint page_views,
+        COUNT(*) FILTER (WHERE event_type='link_click')::bigint clicks,
+        COUNT(*) FILTER (WHERE event_type='share')::bigint shares,
+        (SELECT COUNT(*) FROM contacts WHERE contacted_at>=CURRENT_DATE-($1::integer*2-1) AND contacted_at<CURRENT_DATE-($1::integer-1))::bigint contact_requests
+        FROM vcard_events
+        WHERE occurred_at>=CURRENT_DATE-($1::integer*2-1) AND occurred_at<CURRENT_DATE-($1::integer-1)`,[days]),
+      pool.query(`SELECT d.day::date date,
+        COUNT(e.id) FILTER (WHERE e.event_type IN ('vcard_view','qr_scan'))::bigint page_views,
+        COUNT(e.id) FILTER (WHERE e.event_type='link_click')::bigint clicks,
+        COUNT(e.id) FILTER (WHERE e.event_type='share')::bigint shares,
+        (SELECT COUNT(*) FROM contacts c WHERE c.contacted_at>=d.day AND c.contacted_at<d.day+INTERVAL '1 day')::bigint contacts
+        FROM GENERATE_SERIES(CURRENT_DATE-($1::integer-1),CURRENT_DATE,INTERVAL '1 day') d(day)
+        LEFT JOIN vcard_events e ON e.occurred_at>=d.day AND e.occurred_at<d.day+INTERVAL '1 day'
+        GROUP BY d.day ORDER BY d.day`,[days]),
       pool.query(`SELECT COALESCE(NULLIF(TRIM(source),''),'Direct') source,COUNT(*)::int count FROM contacts WHERE contacted_at>=NOW()-($1::integer*INTERVAL '1 day') GROUP BY 1 ORDER BY count DESC LIMIT 8`,[days]),
-      pool.query(`SELECT bc.id,COALESCE(NULLIF(bc.title,''),'Untitled card') title,u.name owner,COALESCE(SUM(a.page_views),0)::bigint views,COALESCE(SUM(a.clicks),0)::bigint clicks,COALESCE(SUM(a.contact_requests),0)::bigint contacts FROM business_cards bc LEFT JOIN users u ON u.id=bc.user_id LEFT JOIN analytics a ON a.business_card_id=bc.id AND a.event_date>=CURRENT_DATE-($1::integer-1) GROUP BY bc.id,u.name ORDER BY views DESC,clicks DESC LIMIT 8`,[days]),
-      pool.query(`SELECT (SELECT COUNT(*) FROM users WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day'))::int new_users,(SELECT COUNT(*) FROM vcards WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day'))::int new_vcards,(SELECT COUNT(*) FROM contacts WHERE contacted_at>=NOW()-($1::integer*INTERVAL '1 day'))::int contacts,(SELECT COUNT(*) FROM qrcodes WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day'))::int qr_codes_created`,[days]),
+      pool.query(`SELECT v.id,COALESCE(NULLIF(v.title,''),'Untitled card') title,u.name owner,
+        COUNT(DISTINCT e.id) FILTER (WHERE e.event_type IN ('vcard_view','qr_scan'))::bigint views,
+        COUNT(DISTINCT e.id) FILTER (WHERE e.event_type='link_click')::bigint clicks,
+        COUNT(DISTINCT ct.id)::bigint contacts
+        FROM vcards v
+        LEFT JOIN users u ON u.id=v.user_id
+        LEFT JOIN vcard_events e ON e.vcard_id=v.id AND e.occurred_at>=CURRENT_DATE-($1::integer-1)
+        LEFT JOIN contacts ct ON ct.vcard_id=v.id AND ct.contacted_at>=CURRENT_DATE-($1::integer-1)
+        GROUP BY v.id,u.name ORDER BY views DESC,clicks DESC,contacts DESC LIMIT 8`,[days]),
+      pool.query(`SELECT
+        (SELECT COUNT(*) FROM users WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day'))::int new_users,
+        (SELECT COUNT(*) FROM vcards WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day'))::int new_vcards,
+        (SELECT COUNT(*) FROM contacts WHERE contacted_at>=NOW()-($1::integer*INTERVAL '1 day'))::int contacts,
+        (SELECT COUNT(*) FROM vcard_events WHERE event_type='qr_scan' AND occurred_at>=NOW()-($1::integer*INTERVAL '1 day'))::int qr_scans`,[days]),
     ]);
     const current=summaryResult.rows[0],previous=previousResult.rows[0];
     const metric=(key)=>({ value:number(current[key]), change:percentChange(current[key],previous[key]) });
@@ -3211,7 +3244,17 @@ exports.deleteReport=async(req,res,next)=>{const id=positiveIntegerParam(req);if
 async function generateReportRows(client,type,days){
   if(type==="revenue")return(await client.query(`SELECT created_at::date date,currency,COUNT(*)::int transactions,COALESCE(SUM(amount),0) total_amount FROM transactions WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day') AND status IN ('completed','paid','approved','successful') GROUP BY created_at::date,currency ORDER BY date DESC,currency`,[days])).rows;
   if(type==="subscriptions")return(await client.query(`SELECT p.name plan,p.billing_interval,COUNT(s.id)::int subscriptions,COUNT(s.id) FILTER(WHERE s.status='active')::int active,COUNT(s.id) FILTER(WHERE s.status='cancelled')::int cancelled FROM plans p LEFT JOIN subscriptions s ON s.plan_id=p.id AND s.created_at>=NOW()-($1::integer*INTERVAL '1 day') GROUP BY p.id ORDER BY active DESC`,[days])).rows;
-  if(type==="platform")return(await client.query(`SELECT d.day::date date,(SELECT COUNT(*) FROM users u WHERE u.created_at::date=d.day::date)::int new_users,(SELECT COUNT(*) FROM vcards v WHERE v.created_at::date=d.day::date)::int new_vcards,COALESCE(SUM(a.page_views),0)::bigint page_views,COALESCE(SUM(a.clicks),0)::bigint clicks,COALESCE(SUM(a.contact_requests),0)::bigint contact_requests FROM GENERATE_SERIES(CURRENT_DATE-($1::integer-1),CURRENT_DATE,INTERVAL '1 day')d(day) LEFT JOIN analytics a ON a.event_date=d.day::date GROUP BY d.day ORDER BY d.day DESC`,[days])).rows;
+  if(type==="platform")return(await client.query(`SELECT d.day::date date,
+    (SELECT COUNT(*) FROM users u WHERE u.created_at>=d.day AND u.created_at<d.day+INTERVAL '1 day')::int new_users,
+    (SELECT COUNT(*) FROM vcards v WHERE v.created_at>=d.day AND v.created_at<d.day+INTERVAL '1 day')::int new_vcards,
+    (SELECT COUNT(*) FROM vcard_events e WHERE e.event_type IN ('vcard_view','qr_scan') AND e.occurred_at>=d.day AND e.occurred_at<d.day+INTERVAL '1 day')::int page_views,
+    (SELECT COUNT(*) FROM vcard_events e WHERE e.event_type='qr_scan' AND e.occurred_at>=d.day AND e.occurred_at<d.day+INTERVAL '1 day')::int qr_scans,
+    (SELECT COUNT(*) FROM vcard_events e WHERE e.event_type='link_click' AND e.occurred_at>=d.day AND e.occurred_at<d.day+INTERVAL '1 day')::int clicks,
+    (SELECT COUNT(*) FROM vcard_events e WHERE e.event_type='share' AND e.occurred_at>=d.day AND e.occurred_at<d.day+INTERVAL '1 day')::int shares,
+    (SELECT COUNT(*) FROM contacts c WHERE c.contacted_at>=d.day AND c.contacted_at<d.day+INTERVAL '1 day')::int contact_requests,
+    (SELECT COUNT(*) FROM vcard_events e WHERE e.event_type='contact_download' AND e.occurred_at>=d.day AND e.occurred_at<d.day+INTERVAL '1 day')::int contact_downloads
+    FROM GENERATE_SERIES(CURRENT_DATE-($1::integer-1),CURRENT_DATE,INTERVAL '1 day')d(day)
+    ORDER BY d.day DESC`,[days])).rows;
   if(type==="coupons")return(await client.query(`SELECT c.code,c.name,c.discount_type,c.discount_value,c.currency,c.status,
     COUNT(cr.id) FILTER (WHERE cr.status='applied')::int redemptions,
     COALESCE(SUM(cr.discount_amount) FILTER (WHERE cr.status='applied'),0) discount_granted
@@ -3235,14 +3278,8 @@ const platformSettingDefinitions = {
   bank_branch: { category:"billing",description:"Bank branch receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
   bank_swift_code: { category:"billing",description:"Optional SWIFT or routing code for manual payments",defaultValue:"",type:"text",maxLength:50,optional:true },
   affiliate_minimum_withdrawal: { category:"billing",description:"Minimum approved balance required for affiliate withdrawals",defaultValue:"10",type:"decimal",min:0.01,max:9999999999.99 },
-  default_timezone: { category:"general",description:"Default timezone for new accounts",defaultValue:"Asia/Colombo",type:"timezone",maxLength:80 },
   maintenance_mode: { category:"access",description:"Temporarily restrict public platform access",defaultValue:"false",type:"boolean" },
   manual_signup_review: { category:"access",description:"Require administrator approval for new accounts",defaultValue:"false",type:"boolean" },
-  require_email_verification: { category:"access",description:"Require verified email addresses before access",defaultValue:"true",type:"boolean" },
-  session_timeout_minutes: { category:"security",description:"Administrative session timeout in minutes",defaultValue:"120",type:"integer",min:5,max:1440 },
-  admin_email_alerts: { category:"notifications",description:"Send administrators operational alerts",defaultValue:"true",type:"boolean" },
-  payment_alerts: { category:"notifications",description:"Notify administrators about payment review events",defaultValue:"true",type:"boolean" },
-  security_alerts: { category:"notifications",description:"Notify administrators about security events",defaultValue:"true",type:"boolean" },
 };
 
 function validatePlatformSetting(key,value){const definition=platformSettingDefinitions[key];if(!definition)return"Unknown platform setting";const text=String(value===null||value===undefined?"":value).trim();if(definition.type==="boolean"&&!['true','false'].includes(text))return`${key} must be true or false`;if(definition.type==="integer"&&(!/^\d+$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="decimal"&&(!/^\d+(\.\d{1,2})?$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))return"Enter a valid support email";if(definition.type==="currency"&&!["USD","AUD","LKR"].includes(text.toUpperCase()))return"Currency must be USD, AUD, or LKR";if(!text&&!definition.optional&&!["boolean"].includes(definition.type))return`${key} cannot be empty`;if(definition.maxLength&&text.length>definition.maxLength)return`${key} is too long`;return null;}
@@ -3254,7 +3291,7 @@ exports.getSettings=async(req,res,next)=>{try{const keys=Object.keys(platformSet
   pool.query(`SELECT (SELECT COUNT(*) FROM settings WHERE key=ANY($1::text[]))::int stored_settings,(SELECT COUNT(*) FROM roles)::int roles,(SELECT COUNT(*) FROM role_permissions)::int permission_grants,(SELECT MAX(updated_at) FROM settings WHERE key=ANY($1::text[])) last_updated`,[keys])
 ]);const stored=new Map(settingsResult.rows.map((row)=>[row.key,row]));const settings=keys.map((key)=>{const definition=platformSettingDefinitions[key],row=stored.get(key);return{key,value:row?row.value:definition.defaultValue,category:definition.category,description:definition.description,type:definition.type,stored:Boolean(row),updatedAt:row?row.updated_at:null};});const roleMap=new Map(rolesResult.rows.map((row)=>[row.id,{id:row.id,name:row.name,description:row.description,locked:row.name==="super_admin",permissions:[]} ]));permissionsResult.rows.forEach((row)=>{roleMap.get(row.role_id).permissions.push({id:row.permission_id,name:row.permission_name,key:row.permission_key,description:row.permission_description,granted:row.role_name==="super_admin"?true:row.granted});});res.json({settings,roles:Array.from(roleMap.values()),summary:summaryResult.rows[0]});}catch(error){next(error);}};
 
-exports.updateSettings=async(req,res,next)=>{const input=req.body&&req.body.settings;if(!input||typeof input!=="object"||Array.isArray(input))return res.status(400).json({message:"Settings must be provided as an object"});const entries=Object.entries(input);if(!entries.length)return res.status(400).json({message:"Provide at least one setting"});if(entries.length>Object.keys(platformSettingDefinitions).length)return res.status(400).json({message:"Too many settings supplied"});for(const[key,value]of entries){const validation=validatePlatformSetting(key,value);if(validation)return res.status(400).json({message:validation});}let client;try{client=await pool.connect();await client.query("BEGIN");for(const[key,value]of entries){const definition=platformSettingDefinitions[key],normalized=definition.type==="currency"?String(value).trim().toUpperCase():String(value).trim();await client.query(`INSERT INTO settings(key,value,category,description,updated_at) VALUES($1,$2,$3,$4,NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,category=EXCLUDED.category,description=EXCLUDED.description,updated_at=NOW()`,[key,normalized,definition.category,definition.description]);}await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,metadata,ip_address,user_agent) VALUES($1,'settings.updated','settings',$2::jsonb,$3,$4)`,[req.user.id,JSON.stringify({changedKeys:entries.map(([key])=>key)}),req.ip||null,req.get("user-agent")||null]);await client.query("COMMIT");res.json({message:"Platform settings saved successfully",updatedKeys:entries.map(([key])=>key)});}catch(error){if(client)await client.query("ROLLBACK").catch(()=>{});next(error);}finally{if(client)client.release();}};
+exports.updateSettings=async(req,res,next)=>{const input=req.body&&req.body.settings;if(!input||typeof input!=="object"||Array.isArray(input))return res.status(400).json({message:"Settings must be provided as an object"});const entries=Object.entries(input);if(!entries.length)return res.status(400).json({message:"Provide at least one setting"});if(entries.length>Object.keys(platformSettingDefinitions).length)return res.status(400).json({message:"Too many settings supplied"});for(const[key,value]of entries){const validation=validatePlatformSetting(key,value);if(validation)return res.status(400).json({message:validation});}let client;try{client=await pool.connect();await client.query("BEGIN");for(const[key,value]of entries){const definition=platformSettingDefinitions[key],normalized=definition.type==="currency"?String(value).trim().toUpperCase():String(value).trim();await client.query(`INSERT INTO settings(key,value,category,description,updated_at) VALUES($1,$2,$3,$4,NOW()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,category=EXCLUDED.category,description=EXCLUDED.description,updated_at=NOW()`,[key,normalized,definition.category,definition.description]);}await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,metadata,ip_address,user_agent) VALUES($1,'settings.updated','settings',$2::jsonb,$3,$4)`,[req.user.id,JSON.stringify({changedKeys:entries.map(([key])=>key)}),req.ip||null,req.get("user-agent")||null]);await client.query("COMMIT");invalidatePlatformAccessCache();res.json({message:"Platform settings saved successfully",updatedKeys:entries.map(([key])=>key)});}catch(error){if(client)await client.query("ROLLBACK").catch(()=>{});next(error);}finally{if(client)client.release();}};
 
 exports.updateRolePermissions=async(req,res,next)=>{const roleId=positiveIntegerParam(req),permissionIds=req.body&&req.body.permissionIds;if(!roleId)return res.status(400).json({message:"Invalid role ID"});if(!Array.isArray(permissionIds)||permissionIds.some((id)=>!Number.isInteger(Number(id))||Number(id)<1||Number(id)>2147483647))return res.status(400).json({message:"Permission IDs must be a valid array"});const uniqueIds=Array.from(new Set(permissionIds.map(Number)));let client;try{client=await pool.connect();await client.query("BEGIN");const role=await client.query("SELECT id,name FROM roles WHERE id=$1 FOR UPDATE",[roleId]);if(!role.rowCount){await client.query("ROLLBACK");return res.status(404).json({message:"Role not found"});}if(role.rows[0].name==="super_admin"){await client.query("ROLLBACK");return res.status(409).json({message:"Super admin permissions are always enabled and cannot be changed"});}if(uniqueIds.length){const valid=await client.query("SELECT id FROM permissions WHERE id=ANY($1::integer[])",[uniqueIds]);if(valid.rowCount!==uniqueIds.length){await client.query("ROLLBACK");return res.status(400).json({message:"One or more permissions were not found"});}}await client.query("DELETE FROM role_permissions WHERE role_id=$1",[roleId]);for(const permissionId of uniqueIds)await client.query("INSERT INTO role_permissions(role_id,permission_id) VALUES($1,$2)",[roleId,permissionId]);await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata,ip_address,user_agent) VALUES($1,'role_permissions.updated','role',$2,$3::jsonb,$4,$5)`,[req.user.id,roleId,JSON.stringify({role:role.rows[0].name,permissionIds:uniqueIds}),req.ip||null,req.get("user-agent")||null]);await client.query("COMMIT");res.json({message:"Role permissions updated successfully",roleId,permissionIds:uniqueIds});}catch(error){if(client)await client.query("ROLLBACK").catch(()=>{});next(error);}finally{if(client)client.release();}};
 

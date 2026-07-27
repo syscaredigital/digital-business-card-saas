@@ -75,108 +75,53 @@
       </header>
 
       <main class="page-content client-settings-page">
-        <section class="client-settings-shell searchable-item" data-search="settings general payment configuration custom domain paypal payout currency time format pwa attachment inquiry contact">
+        <section class="client-settings-shell account-settings-shell searchable-item" data-search="account profile preferences currency notifications password security storage subscription">
           <aside class="client-settings-tabs" role="tablist" aria-label="Settings tabs">
-            <button class="client-settings-tab active" type="button" role="tab" aria-selected="true" data-settings-tab-target="settingsGeneralPanel"><span class="settings-tab-icon gear"></span>General</button>
-            <button class="client-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab-target="settingsPaymentPanel"><span class="settings-tab-icon money"></span>Payment Configuration</button>
-            <button class="client-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab-target="settingsDomainPanel"><span class="settings-tab-icon globe"></span>Custom Domain</button>
+            <div class="account-settings-nav-head"><span>Workspace</span><strong>Account settings</strong><small>Manage your identity and preferences.</small></div>
+            <button class="client-settings-tab active" type="button" role="tab" aria-selected="true" data-settings-tab-target="settingsGeneralPanel"><span class="settings-tab-icon gear"></span><span>Account profile<small>Name, email and phone</small></span></button>
+            <button class="client-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab-target="settingsPaymentPanel"><span class="settings-tab-icon money"></span><span>Preferences<small>Currency and notifications</small></span></button>
+            <button class="client-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab-target="settingsDomainPanel"><span class="settings-tab-icon globe"></span><span>Password & security<small>Protect your account</small></span></button>
+            <div class="account-settings-plan-card"><span>Active plan</span><strong id="settingsPlanName">Loading…</strong><small id="settingsStorageSummary">Checking storage…</small><a href="payments.html">Manage billing →</a></div>
           </aside>
 
           <div class="client-settings-content">
             <section class="client-settings-panel active" id="settingsGeneralPanel">
-              <form class="settings-general-form" id="currencyPreferenceForm">
-                <div class="settings-field">
-                  <label for="paypalPayoutEmail">Paypal Payout Email:</label>
-                  <input id="paypalPayoutEmail" type="email" placeholder="Paypal Payout Email" />
-                </div>
-
-                <div class="settings-field">
-                  <label for="settingsCurrency">Currency:<span class="required-mark">*</span></label>
-                  <select id="settingsCurrency" name="currency" required>
-                    <option value="USD">$ - USD US Dollar</option>
-                    <option value="AUD">A$ - AUD Australian Dollar</option>
-                    <option value="LKR">Rs - LKR Sri Lankan Rupee</option>
-                  </select>
-                </div>
-
-                <div class="settings-field">
-                  <label for="newsletterDelay">Newsletter Modal will open in X seconds after page load:</label>
-                  <input id="newsletterDelay" type="number" min="0" value="5" />
-                </div>
-
-                <div class="settings-field">
-                  <label>Time Format :<span class="required-mark">*</span></label>
-                  <div class="settings-segmented-control" role="group" aria-label="Time format">
-                    <label><input type="radio" name="timeFormat" checked /><span>12 Hour</span></label>
-                    <label><input type="radio" name="timeFormat" /><span>24 Hour</span></label>
-                  </div>
-                </div>
-
-                <div class="settings-toggle-group">
-                  <div>
-                    <strong>Enable PWA:</strong>
-                    <label class="settings-toggle"><input type="checkbox" /><span></span><em>Enable PWA</em></label>
-                  </div>
-
-                  <div>
-                    <strong>Enable Attachment for Inquiry:</strong>
-                    <label class="settings-toggle"><input type="checkbox" /><span></span><em>Enable Attachment for Inquiry</em></label>
-                  </div>
-
-                  <div>
-                    <strong>Ask Details before downloading Contact:</strong>
-                    <label class="settings-toggle"><input type="checkbox" checked /><span></span><em>Ask Details before downloading Contact</em></label>
-                  </div>
-                </div>
-
-                <button class="btn-share settings-save-btn" type="submit">Save currency</button>
-                <p class="form-feedback" id="currencyPreferenceFeedback" hidden></p>
+              <div class="account-settings-panel-head"><div><span>Personal information</span><h1>Account profile</h1><p>Keep the contact details associated with your Sync Card account up to date.</p></div><div class="account-settings-avatar" id="settingsProfileInitials">—</div></div>
+              <form class="account-settings-form" id="accountProfileForm">
+                <div class="account-settings-field"><label for="settingsFullName">Full name</label><input id="settingsFullName" name="name" type="text" maxlength="150" autocomplete="name" required /></div>
+                <div class="account-settings-field"><label for="settingsPhone">Phone number</label><input id="settingsPhone" name="phone" type="tel" maxlength="50" autocomplete="tel" placeholder="+94 77 123 4567" /></div>
+                <div class="account-settings-field account-settings-wide"><label for="settingsEmail">Email address</label><input id="settingsEmail" name="email" type="email" maxlength="255" autocomplete="email" required /><small>Changing your email requires your current password.</small></div>
+                <div class="account-settings-field account-settings-wide" id="settingsEmailPasswordWrap" hidden><label for="settingsEmailPassword">Current password</label><input id="settingsEmailPassword" name="currentPassword" type="password" autocomplete="current-password" placeholder="Confirm this email change" /></div>
+                <div class="account-settings-meta"><span>Member since <strong id="settingsMemberSince">—</strong></span><span>Last login <strong id="settingsLastLogin">—</strong></span></div>
+                <div class="account-settings-actions"><p id="accountProfileFeedback" aria-live="polite"></p><button type="submit">Save profile</button></div>
               </form>
             </section>
 
             <section class="client-settings-panel" id="settingsPaymentPanel">
-              <h1>Payment Method</h1>
-              <div class="client-settings-divider"></div>
-              <form class="settings-payment-form">
-                <label class="settings-payment-toggle"><strong>Stripe</strong><input type="checkbox" /><span></span></label>
-                <label class="settings-payment-toggle"><strong>Paystack</strong><input type="checkbox" /><span></span></label>
-                <label class="settings-payment-toggle"><strong>Flutterwave</strong><input type="checkbox" /><span></span></label>
-                <label class="settings-payment-toggle"><strong>Razorpay</strong><input type="checkbox" /><span></span></label>
-                <label class="settings-payment-toggle"><strong>PhonePe</strong><input type="checkbox" /><span></span></label>
-                <label class="settings-payment-toggle"><strong>Paypal</strong><input type="checkbox" /><span></span></label>
-                <label class="settings-payment-toggle"><strong>Manually</strong><input type="checkbox" /><span></span></label>
-                <button class="btn-share settings-save-btn" type="button" data-action="save-settings">Save</button>
+              <div class="account-settings-panel-head"><div><span>Workspace behaviour</span><h1>Preferences</h1><p>Choose how prices, time and account notifications are presented.</p></div></div>
+              <form class="account-settings-form" id="accountPreferencesForm">
+                <div class="account-settings-field"><label for="settingsCurrency">Display and payment currency</label><select id="settingsCurrency" name="currency" required><option value="USD">USD — US Dollar</option><option value="AUD">AUD — Australian Dollar</option><option value="LKR">LKR — Sri Lankan Rupee</option></select></div>
+                <div class="account-settings-field"><label>Time format</label><div class="account-settings-segmented"><label><input type="radio" name="timeFormat" value="12" checked /><span>12 hour</span></label><label><input type="radio" name="timeFormat" value="24" /><span>24 hour</span></label></div></div>
+                <div class="account-preference-list account-settings-wide">
+                  <label><span><strong>Email notifications</strong><small>Receive important account and order updates by email.</small></span><input type="checkbox" name="emailNotifications" /><i></i></label>
+                  <label><span><strong>Dashboard notifications</strong><small>Show activity and status alerts inside your dashboard.</small></span><input type="checkbox" name="browserNotifications" /><i></i></label>
+                  <label><span><strong>Product and marketing emails</strong><small>Receive occasional product news and offers.</small></span><input type="checkbox" name="marketingEmails" /><i></i></label>
+                  <label><span><strong>Capture details before contact download</strong><small>Ask visitors for their information before saving your VCard contact.</small></span><input type="checkbox" name="contactCaptureRequired" /><i></i></label>
+                </div>
+                <div class="account-settings-actions"><p id="accountPreferencesFeedback" aria-live="polite"></p><button type="submit">Save preferences</button></div>
               </form>
             </section>
 
             <section class="client-settings-panel" id="settingsDomainPanel">
-              <div class="settings-domain-toplink">
-                <a href="#" aria-label="Add DNS record instructions">Add your DNS record for custom domain</a>
-                <span>(Required Steps)</span>
-              </div>
-
-              <form class="settings-domain-form">
-                <div class="settings-field settings-domain-field">
-                  <label for="customDomain">Custom Domain:<span class="required-mark">*</span></label>
-                  <input id="customDomain" type="text" value="syscare.lk" required />
-                  <p>You are eligible to use custom domain now !!!</p>
-                </div>
-
-                <label class="settings-check">
-                  <input type="checkbox" />
-                  <span></span>
-                  <strong>Use Custom Domain URL Every where for my vCards</strong>
-                </label>
+              <div class="account-settings-panel-head"><div><span>Account protection</span><h1>Password & security</h1><p>Use a strong password and review how many active sessions are connected.</p></div><div class="account-security-score"><strong id="settingsActiveSessions">—</strong><span>active sessions</span></div></div>
+              <form class="account-settings-form" id="accountPasswordForm">
+                <div class="account-settings-field account-settings-wide"><label for="settingsCurrentPassword">Current password</label><input id="settingsCurrentPassword" name="currentPassword" type="password" autocomplete="current-password" required /></div>
+                <div class="account-settings-field"><label for="settingsNewPassword">New password</label><input id="settingsNewPassword" name="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required /></div>
+                <div class="account-settings-field"><label for="settingsConfirmPassword">Confirm new password</label><input id="settingsConfirmPassword" name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required /></div>
+                <div class="account-password-rules account-settings-wide"><strong>Password requirements</strong><span>8–128 characters</span><span>Uppercase and lowercase letters</span><span>At least one number</span></div>
+                <div class="account-security-note account-settings-wide"><strong>Other sessions will be signed out</strong><p>After changing your password, this browser remains active and all other authenticated sessions are revoked.</p></div>
+                <div class="account-settings-actions"><p id="accountPasswordFeedback" aria-live="polite"></p><button type="submit">Change password</button></div>
               </form>
-
-              <div class="settings-how-card">
-                <h2>How it Works?</h2>
-                <div class="settings-how-list">
-                  <p><span></span>Once your custom domain is approved, you can use your own URL for your vCards.</p>
-                  <p><span></span>URL before custom domain: <a href="#">https://appurl.com/{alias}</a></p>
-                  <p><span></span>URL after custom domain: <a href="#">https://custom-domain/{alias}</a></p>
-                </div>
-              </div>
             </section>
           </div>
         </section>

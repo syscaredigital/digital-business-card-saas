@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payments - Sync Card</title>
+  <title>Billing - Sync Card</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
@@ -40,33 +40,41 @@
         <div class="topbar-right"><button class="logout-btn" id="logoutButton" type="button">Sign out</button><div class="user-profile"><div class="user-avatar-placeholder">U</div><div class="user-info"><div class="user-name">My account</div><div class="user-plan">Loading plan</div></div></div></div>
       </header>
       <main class="page-content">
-        <div class="page-header">
-          <div><span class="eyebrow">Billing</span><h2>Manage your subscription</h2><p>Review your plan, invoices, and renewal settings.</p></div>
-          <button class="btn-share" type="button" data-action="upgrade-plan">Upgrade Plan</button>
+        <section class="billing-hero searchable-item" data-search="billing subscription plan">
+          <div class="billing-hero-copy">
+            <span class="billing-kicker">Billing workspace</span>
+            <h2>Your plan, payments and upgrades in one place.</h2>
+            <p>Prices use your account currency. Plan changes are recorded securely and bank transfers remain pending until a super admin approves them.</p>
+            <div class="billing-hero-actions">
+              <button class="billing-primary-action" type="button" data-action="upgrade-plan">Explore plans</button>
+              <button class="billing-refresh-action" id="refreshBilling" type="button"><span id="refreshBillingLabel">Refresh billing</span></button>
+            </div>
+          </div>
+          <div class="billing-hero-plan">
+            <span>Current plan</span>
+            <strong id="billingPlanName">Loading</strong>
+            <small id="billingPlanDescription">Fetching your subscription...</small>
+            <div><span class="billing-live-dot"></span><b id="billingPlanStatus">Loading</b></div>
+          </div>
+        </section>
+        <div class="billing-summary-grid">
+          <article><span>Plan price</span><strong id="billingCurrentPrice">—</strong><small id="billingCurrentInterval">Current billing interval</small></article>
+          <article><span>Next renewal</span><strong id="billingRenewalDate">—</strong><small id="billingRenewalNote">Based on your subscription</small></article>
+          <article><span>Digital cards</span><strong id="billingCardLimit">—</strong><small>Included with this plan</small></article>
+          <article><span>Storage allocation</span><strong id="billingStorageLimit">—</strong><small>Controlled by your plan</small></article>
         </div>
-        <div class="content-grid content-grid-two">
-          <article class="feature-panel searchable-item" data-search="pro plan subscription renewal">
-            <div class="feature-panel-header">
-              <div><h3>Current plan</h3><p id="billingPlanDescription">Loading your subscription...</p></div>
-              <span class="status-pill status-live" id="billingPlanStatus">Loading</span>
-            </div>
-            <div class="inline-metrics">
-              <div><strong id="billingPlanName">—</strong><span>Plan</span></div>
-              <div><strong id="billingRenewalDate">—</strong><span>Renews</span></div>
-              <div><strong id="billingCardLimit">—</strong><span>Card allowance</span></div>
-            </div>
-          </article>
-          <article class="feature-panel searchable-item" data-search="invoice payment history">
-            <div class="feature-panel-header">
-              <div><h3>Payment submissions</h3><p>Track bank transfers and administrator review.</p></div>
-            </div>
-            <ul class="detail-list" id="billingPaymentHistory"><li>Loading payment history...</li></ul>
-          </article>
-        </div>
+        <aside class="billing-pending-notice" id="billingPendingNotice" hidden aria-live="polite">
+          <div><span>Payment review</span><strong id="billingPendingTitle">Your payment is pending</strong><p id="billingPendingCopy"></p></div>
+          <b id="billingPendingStatus">Pending</b>
+        </aside>
         <section class="billing-plan-catalog" id="billingPlanCatalog">
-          <div class="feature-panel-header"><div><h3>Available plans</h3><p>Plans updated by the platform administrator appear here automatically.</p></div></div>
+          <div class="billing-section-heading"><div><span>Plan catalog</span><h3>Choose the right workspace</h3><p>Every plan and allowance below is fetched from the platform database.</p></div><b id="billingCurrency">USD pricing</b></div>
           <div class="billing-plan-grid" id="billingPlansGrid"><div class="user-empty">Loading available plans...</div></div>
           <p class="billing-plan-feedback" id="billingPlanFeedback" aria-live="polite"></p>
+        </section>
+        <section class="billing-history-panel searchable-item" data-search="invoice payment transaction history receipt">
+          <div class="billing-section-heading"><div><span>Payment activity</span><h3>Transfer and coupon history</h3><p>Track each database payment record and its review status.</p></div><b id="billingPaymentCount">0 records</b></div>
+          <ul class="billing-payment-history" id="billingPaymentHistory"><li class="billing-history-empty">Loading payment history...</li></ul>
         </section>
         <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another billing search term.</p></div>
       </main>

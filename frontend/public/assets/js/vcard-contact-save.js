@@ -7,12 +7,44 @@
   var apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
     ? "http://localhost:5000" : window.location.origin;
   var source = params.get("source") === "qr" ? "qr" : "direct";
+  var contactCaptureRequired = true;
+  fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id))
+    .then(function (response) { return response.ok ? response.json() : {}; })
+    .then(function (data) { contactCaptureRequired = !data.vcard || data.vcard.contactCaptureRequired !== false; })
+    .catch(function () {});
 
   fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ eventType: source === "qr" ? "qr_scan" : "vcard_view", source: source }),
   }).catch(function () {});
+
+  function recordEngagement(eventType, eventSource) {
+    fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventType: eventType, source: String(eventSource || "public_vcard").slice(0, 80) }),
+    }).catch(function () {});
+  }
+
+  document.addEventListener("click", function (event) {
+    var shareButton = event.target.closest("[data-share-card]");
+    if (!shareButton) {
+      var candidate = event.target.closest("button,a");
+      if (candidate && /share\\s+(?:profile|card|vcard)/i.test(String(candidate.textContent || ""))) shareButton = candidate;
+    }
+    if (shareButton) {
+      recordEngagement("share", "share_button");
+      return;
+    }
+    var anchor = event.target.closest("a[href]");
+    if (!anchor || anchor.closest(".vcard-save-widget") || /(?:save|add)\\s+(?:to\\s+)?contacts/i.test(String(anchor.textContent || ""))) return;
+    try {
+      var href = new URL(anchor.href, window.location.href);
+      var clickSource = href.protocol === "mailto:" ? "email" : href.protocol === "tel:" ? "phone" : href.hostname || "link";
+      recordEngagement("link_click", clickSource);
+    } catch (_) {}
+  });
 
   var shell = document.createElement("div");
   shell.className = "vcard-save-widget";
@@ -46,10 +78,17 @@
     document.body.classList.toggle("vcard-save-open", open);
     if (open) setTimeout(function () { form.elements.name.focus(); }, 0);
   }
-  shell.querySelector(".vcard-save-trigger").addEventListener("click", function () { setOpen(true); });
+  function saveContact() {
+    if (!contactCaptureRequired) {
+      window.location.assign(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/contact.vcf");
+      return;
+    }
+    setOpen(true);
+  }
+  shell.querySelector(".vcard-save-trigger").addEventListener("click", saveContact);
   document.querySelectorAll("a,button").forEach(function (node) {
     if (/^(?:\+|＋)?\s*(?:add to contacts|save contact)$/i.test(String(node.textContent || "").trim())) {
-      node.addEventListener("click", function (event) { event.preventDefault(); setOpen(true); });
+      node.addEventListener("click", function (event) { event.preventDefault(); saveContact(); });
     }
   });
   shell.querySelector(".vcard-save-backdrop").addEventListener("click", function () { setOpen(false); });
