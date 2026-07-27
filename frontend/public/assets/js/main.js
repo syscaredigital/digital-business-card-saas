@@ -10,6 +10,45 @@ document.addEventListener("DOMContentLoaded", () => {
   const publicTemplateGrid = document.querySelector("[data-public-template-grid]");
   const publicTemplateFilters = document.querySelector("[data-template-filters]");
 
+  const supportedCurrencies = ["USD", "AUD", "LKR"];
+  let websiteCurrency = String(localStorage.getItem("preferredCurrency") || "USD").toUpperCase();
+  if (!supportedCurrencies.includes(websiteCurrency)) websiteCurrency = "USD";
+  const navActions = document.querySelector(".nav-actions");
+  if (navActions) {
+    const currencyWrap = document.createElement("label");
+    currencyWrap.className = "website-currency-switcher";
+    currencyWrap.setAttribute("aria-label", "Billing currency");
+    currencyWrap.innerHTML = '<span>Currency</span><select><option value="USD">USD</option><option value="AUD">AUD</option><option value="LKR">LKR</option></select>';
+    const select = currencyWrap.querySelector("select");
+    select.value = websiteCurrency;
+    navActions.prepend(currencyWrap);
+    select.addEventListener("change", () => {
+      websiteCurrency = select.value;
+      localStorage.setItem("preferredCurrency", websiteCurrency);
+      document.querySelectorAll('a[href*="../auth/register.html"],a[href*="auth/register.html"]').forEach((link) => {
+        const target = new URL(link.href, window.location.href);
+        target.searchParams.set("currency", websiteCurrency);
+        link.href = target.href;
+      });
+      window.dispatchEvent(new CustomEvent("sync:currency-change", { detail: { currency: websiteCurrency } }));
+      const token = localStorage.getItem("token");
+      if (token) {
+        const apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
+          ? "http://localhost:5000" : window.location.origin;
+        fetch(apiOrigin + "/api/user/preferences", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ currency: websiteCurrency }),
+        }).catch(() => {});
+      }
+    });
+  }
+  document.querySelectorAll('a[href*="../auth/register.html"],a[href*="auth/register.html"]').forEach((link) => {
+    const target = new URL(link.href, window.location.href);
+    target.searchParams.set("currency", websiteCurrency);
+    link.href = target.href;
+  });
+
   const updateHeader = () => {
     if (!header) return;
     header.classList.toggle("header-scrolled", window.scrollY > 40);

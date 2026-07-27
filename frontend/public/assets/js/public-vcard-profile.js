@@ -29,6 +29,8 @@
     try {
       var target = new URL(previewUrl, window.location.href);
       target.searchParams.set("id", id);
+      var source = new URLSearchParams(window.location.search).get("source");
+      if (source) target.searchParams.set("source", source);
       return target.href;
     } catch (_) { return ""; }
   }

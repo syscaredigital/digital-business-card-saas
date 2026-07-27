@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
   <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
 </head>
-<body>
+<body class="user-workspace">
   <div class="bg-orb bg-orb-1"></div>
   <div class="bg-orb bg-orb-2"></div>
 
@@ -75,68 +75,65 @@
       </header>
 
       <main class="page-content client-product-orders-page">
-        <section class="client-product-orders-shell searchable-item" data-search="product orders product name ordered payment type amount action no data">
-          <div class="client-product-orders-toolbar">
-            <label class="search-bar client-product-orders-search" for="productOrdersSearch">
-              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input id="productOrdersSearch" type="search" placeholder="Search" />
-            </label>
-
-            <div class="client-product-orders-actions">
-              <label class="client-order-toggle">
-                <span>Send Email to Customer</span>
-                <input type="checkbox" aria-label="Send Email to Customer" />
-                <i aria-hidden="true"></i>
-              </label>
-              <label class="client-order-toggle">
-                <span>Send Email to User</span>
-                <input type="checkbox" aria-label="Send Email to User" />
-                <i aria-hidden="true"></i>
-              </label>
-              <button class="client-product-orders-filter" type="button" data-action="export-report" aria-label="Filter product orders">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5Z" fill="currentColor"></path></svg>
+        <section class="product-orders-hero">
+          <div class="product-orders-hero-copy">
+            <span class="product-orders-kicker"><i></i>Order centre</span>
+            <h1>Products &amp; orders</h1>
+            <p>Track every physical card order from payment confirmation through to delivery.</p>
+            <div class="product-orders-hero-actions">
+              <a href="my-nfc-cards.html" class="product-orders-primary-btn">Order a new card <span>→</span></a>
+              <button type="button" class="product-orders-export-btn" id="exportProductOrders">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+                Export
               </button>
             </div>
           </div>
-
-          <div class="client-product-orders-table-wrap">
-            <table class="client-product-orders-table" aria-label="Product orders">
-              <thead>
-                <tr>
-                  <th scope="col">Product Name &#8597;</th>
-                  <th scope="col">Name &#8597;</th>
-                  <th scope="col">Ordered At &#8597;</th>
-                  <th scope="col">Payment Type &#8597;</th>
-                  <th scope="col">Amount &#8597;</th>
-                  <th scope="col">Action</th>
-                </tr>
-              </thead>
-              <tbody id="productOrdersTableBody">
-                <tr>
-                  <td class="client-product-orders-empty light-empty-cell" colspan="6">No Data Available</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="client-product-orders-footer">
-            <span>Show</span>
-            <select class="client-product-orders-limit" aria-label="Rows per page">
-              <option selected>10</option>
-              <option>25</option>
-              <option>50</option>
-            </select>
-            <p class="client-product-orders-results" id="productOrdersResults">Showing 0 results</p>
+          <div class="product-orders-hero-art" aria-hidden="true">
+            <div class="product-card-stack product-card-stack-back"></div>
+            <div class="product-card-stack product-card-stack-front">
+              <span class="product-card-chip"></span>
+              <strong>SYNC</strong>
+              <small>Tap. Share. Connect.</small>
+              <i></i>
+            </div>
           </div>
         </section>
 
-        <div class="empty-search-state" id="emptySearchState" hidden>
-          <h3>No matches found</h3>
-          <p>Try another product order search term.</p>
-        </div>
+        <section class="product-orders-metrics" aria-label="Order summary">
+          <article><span class="product-orders-metric-icon is-red">◇</span><div><small>Total orders</small><strong id="productOrdersTotal">—</strong><p>All card purchases</p></div></article>
+          <article><span class="product-orders-metric-icon is-amber">◷</span><div><small>In progress</small><strong id="productOrdersProgress">—</strong><p>Being prepared</p></div></article>
+          <article><span class="product-orders-metric-icon is-green">✓</span><div><small>Completed</small><strong id="productOrdersCompleted">—</strong><p>Delivered orders</p></div></article>
+          <article><span class="product-orders-metric-icon is-blue">$</span><div><small>Total spent</small><strong id="productOrdersSpent">—</strong><p>Across all orders</p></div></article>
+        </section>
+
+        <section class="client-product-orders-shell searchable-item" data-search="product orders payments delivery tracking">
+          <header class="product-orders-list-heading">
+            <div><span>Order history</span><h2>Your recent orders</h2><p>Search, filter and follow the latest fulfilment status.</p></div>
+            <span class="product-orders-live"><i></i>Live updates</span>
+          </header>
+          <div class="client-product-orders-toolbar">
+            <label class="search-bar client-product-orders-search" for="productOrdersSearch">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input id="productOrdersSearch" type="search" placeholder="Search product, order or tracking number..." />
+            </label>
+            <label class="product-orders-status-filter">
+              <span>Status</span>
+              <select id="productOrdersStatus" aria-label="Filter orders by status">
+                <option value="">All statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+              </select>
+            </label>
+          </div>
+          <div class="client-product-orders-table-wrap">
+            <table class="client-product-orders-table" aria-label="Product orders">
+              <thead><tr><th scope="col">Order</th><th scope="col">Product</th><th scope="col">Placed</th><th scope="col">Payment</th><th scope="col">Total</th><th scope="col">Fulfilment</th><th scope="col">Tracking</th></tr></thead>
+              <tbody id="productOrdersTableBody"><tr><td class="client-product-orders-empty light-empty-cell" colspan="7">Loading your orders...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="client-product-orders-footer">
+            <p class="client-product-orders-results" id="productOrdersResults">Showing 0 orders</p>
+            <a href="my-nfc-cards.html">Browse NFC cards <span>→</span></a>
+          </div>
+        </section>
       </main>
     </div>
   </div>

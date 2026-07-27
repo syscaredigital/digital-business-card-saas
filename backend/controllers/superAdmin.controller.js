@@ -164,6 +164,7 @@ function mapAdminUser(user) {
     cards: number(user.card_count),
     joinedAt: user.created_at,
     lastLogin: user.last_login || null,
+    preferredCurrency: ["USD", "AUD", "LKR"].includes(user.preferred_currency) ? user.preferred_currency : "USD",
   };
 }
 
@@ -217,7 +218,7 @@ exports.listUsers = async (req, res, next) => {
 
     values.push(limit, offset);
     const usersResult = await pool.query(
-      `SELECT u.id, u.name, u.email, u.phone, u.status, u.created_at, u.last_login,
+      `SELECT u.id, u.name, u.email, u.phone, u.status, u.preferred_currency, u.created_at, u.last_login,
               r.name AS role, c.name AS company_name,
               COALESCE(p.name, 'Free') AS plan_name,
               (SELECT COUNT(*) FROM vcards v WHERE v.user_id = u.id) AS card_count
@@ -258,12 +259,13 @@ exports.createUser = async (req, res, next) => {
   let client;
   try {
     client = await pool.connect();
-    const { firstName, lastName, email, password, phoneNumber, status } = req.body;
+    const { firstName, lastName, email, password, phoneNumber, status, preferredCurrency } = req.body;
     const normalizedFirstName = String(firstName || "").trim();
     const normalizedLastName = String(lastName || "").trim();
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
     const normalizedStatus = String(status || "active").toLowerCase();
+    const normalizedCurrency = String(preferredCurrency || "USD").toUpperCase();
     if (!normalizedFirstName || !normalizedLastName || !normalizedEmail || !password) {
       return res.status(400).json({ message: "First name, last name, email, and password are required" });
     }
@@ -286,6 +288,9 @@ exports.createUser = async (req, res, next) => {
     if (!manageableStatuses.includes(normalizedStatus)) {
       return res.status(400).json({ message: "Invalid user status" });
     }
+    if (!["USD", "AUD", "LKR"].includes(normalizedCurrency)) {
+      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
+    }
 
     await client.query("BEGIN");
     const existing = await client.query(
@@ -304,9 +309,9 @@ exports.createUser = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(String(password), 10);
     const userResult = await client.query(
-      `INSERT INTO users (role_id, name, email, password, phone, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, email, phone, status, created_at, last_login`,
+      `INSERT INTO users (role_id, name, email, password, phone, status, preferred_currency)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, name, email, phone, status, preferred_currency, created_at, last_login`,
       [
         roleResult.rows[0].id,
         `${normalizedFirstName} ${normalizedLastName}`,
@@ -314,6 +319,7 @@ exports.createUser = async (req, res, next) => {
         hashedPassword,
         normalizedPhone,
         normalizedStatus,
+        normalizedCurrency,
       ]
     );
     const user = userResult.rows[0];
@@ -358,12 +364,13 @@ exports.updateUser = async (req, res, next) => {
   let client;
   try {
     client = await pool.connect();
-    const { firstName, lastName, email, password, phoneNumber, status } = req.body;
+    const { firstName, lastName, email, password, phoneNumber, status, preferredCurrency } = req.body;
     const normalizedFirstName = String(firstName || "").trim();
     const normalizedLastName = String(lastName || "").trim();
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
     const normalizedStatus = String(status || "active").toLowerCase();
+    const normalizedCurrency = String(preferredCurrency || "USD").toUpperCase();
 
     if (!normalizedFirstName || !normalizedLastName || !normalizedEmail) {
       return res.status(400).json({ message: "First name, last name, and email are required" });
@@ -373,6 +380,9 @@ exports.updateUser = async (req, res, next) => {
     }
     if (!manageableStatuses.includes(normalizedStatus)) {
       return res.status(400).json({ message: "Invalid user status" });
+    }
+    if (!["USD", "AUD", "LKR"].includes(normalizedCurrency)) {
+      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
     }
     if (`${normalizedFirstName} ${normalizedLastName}`.length > 150 || normalizedEmail.length > 255 || (normalizedPhone && normalizedPhone.length > 50)) {
       return res.status(400).json({ message: "User name, email, or phone number is too long" });
@@ -409,6 +419,7 @@ exports.updateUser = async (req, res, next) => {
       normalizedEmail,
       normalizedPhone,
       normalizedStatus,
+      normalizedCurrency,
     ];
     let passwordUpdate = "";
     if (password) {
@@ -419,9 +430,9 @@ exports.updateUser = async (req, res, next) => {
 
     const updatedResult = await client.query(
       `UPDATE users
-       SET name = $1, email = $2, phone = $3, status = $4${passwordUpdate}, updated_at = NOW()
+       SET name = $1, email = $2, phone = $3, status = $4, preferred_currency = $5${passwordUpdate}, updated_at = NOW()
        WHERE id = $${values.length}
-       RETURNING id, name, email, phone, status, created_at, last_login`,
+       RETURNING id, name, email, phone, status, preferred_currency, created_at, last_login`,
       values
     );
     const user = updatedResult.rows[0];
@@ -1629,7 +1640,7 @@ function cashPaymentValidationMessage(payment) {
   if (!Number.isInteger(payment.userId) || payment.userId < 1 || payment.userId > 2147483647) return "Select a valid user";
   if (payment.subscriptionId !== null && (!Number.isInteger(payment.subscriptionId) || payment.subscriptionId < 1 || payment.subscriptionId > 2147483647)) return "Select a valid subscription";
   if (!Number.isFinite(payment.amount) || payment.amount < 0.01 || payment.amount > 9999999999.99) return "Enter an amount from 0.01 to 9,999,999,999.99";
-  if (!/^[A-Z]{3,10}$/.test(payment.currency)) return "Currency must contain 3 to 10 letters";
+  if (!["USD", "AUD", "LKR"].includes(payment.currency)) return "Currency must be USD, AUD, or LKR";
   if (!cashPaymentStatuses.includes(payment.status)) return "Invalid cash payment status";
   if (payment.reference && payment.reference.length > 255) return "Payment reference must not exceed 255 characters";
   if (payment.proofUrl && (payment.proofUrl.length > 2000 || !(/^(https?:\/\/)/i.test(payment.proofUrl) || /^\/uploads\/payment-slips\/[A-Za-z0-9._-]+$/.test(payment.proofUrl)))) return "Proof attachment must be a valid URL or uploaded payment slip";
@@ -1675,6 +1686,7 @@ async function syncCashPaymentTransaction(client, payment) {
     );
   }
   if (payment.subscriptionId && payment.status === "approved") {
+    await client.query("UPDATE coupon_redemptions SET status='applied' WHERE payment_id=$1 AND status='pending'", [payment.id]);
     const subscription = await client.query(
       `SELECT s.id,s.user_id,p.name,p.billing_interval FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
        WHERE s.id=$1 FOR UPDATE OF s`, [payment.subscriptionId]
@@ -1685,6 +1697,9 @@ async function syncCashPaymentTransaction(client, payment) {
         WHERE user_id=$1 AND status='active' AND id<>$2`, [selected.user_id, payment.subscriptionId]);
       await client.query(`UPDATE subscriptions SET status='active',start_date=CURRENT_DATE,
         end_date=CASE WHEN LOWER(COALESCE($2,'')) IN ('year','yearly','annual') THEN (CURRENT_DATE + INTERVAL '1 year')::date
+                      WHEN LOWER(COALESCE($2,'')) IN ('week','weekly') THEN (CURRENT_DATE + INTERVAL '1 week')::date
+                      WHEN LOWER(COALESCE($2,'')) IN ('day','daily') THEN (CURRENT_DATE + INTERVAL '1 day')::date
+                      WHEN LOWER(COALESCE($2,''))='lifetime' THEN NULL
                       ELSE (CURRENT_DATE + INTERVAL '1 month')::date END,
         auto_renew=FALSE,cancel_reason=NULL,updated_at=NOW() WHERE id=$1`, [payment.subscriptionId, selected.billing_interval]);
       await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,'Subscription activated',$2,'billing')`,
@@ -1692,6 +1707,7 @@ async function syncCashPaymentTransaction(client, payment) {
       await createAffiliateCommissionForPayment(client, payment.id);
     }
   } else if (payment.subscriptionId && payment.status === "rejected") {
+    await client.query("UPDATE coupon_redemptions SET status='cancelled' WHERE payment_id=$1 AND status='pending'", [payment.id]);
     const rejected = await client.query(`UPDATE subscriptions SET status='cancelled',cancel_reason='Manual payment rejected',updated_at=NOW()
       WHERE id=$1 AND status='pending' RETURNING user_id`, [payment.subscriptionId]);
     if (rejected.rowCount) await client.query(`INSERT INTO notifications(user_id,title,message,type)
@@ -1880,6 +1896,7 @@ exports.deleteCashPayment = async (req, res, next) => {
       [paymentId, cashPaymentMethods]
     );
     if (!existing.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Cash payment not found" }); }
+    await client.query("UPDATE coupon_redemptions SET status='cancelled' WHERE payment_id=$1 AND status='pending'", [paymentId]);
     await client.query("DELETE FROM transactions WHERE payment_id = $1", [paymentId]);
     await client.query("DELETE FROM payments WHERE id = $1", [paymentId]);
     await client.query(
@@ -1915,7 +1932,7 @@ function transactionValidationMessage(transaction) {
   if (!Number.isInteger(transaction.userId) || transaction.userId < 1 || transaction.userId > 2147483647) return "Select a valid user";
   if (!transactionTypes.includes(transaction.type)) return "Invalid transaction type";
   if (!Number.isFinite(transaction.amount) || transaction.amount === 0 || transaction.amount < -9999999999.99 || transaction.amount > 9999999999.99) return "Enter a non-zero amount within the database range";
-  if (!/^[A-Z]{3,10}$/.test(transaction.currency)) return "Currency must contain 3 to 10 letters";
+  if (!["USD", "AUD", "LKR"].includes(transaction.currency)) return "Currency must be USD, AUD, or LKR";
   if (!transactionStatuses.includes(transaction.status)) return "Invalid transaction status";
   if (transaction.reference && transaction.reference.length > 255) return "Reference must not exceed 255 characters";
   if (transaction.gateway.length > 100) return "Gateway must not exceed 100 characters";
@@ -2118,7 +2135,7 @@ function payoutValidationMessage(payout) {
   if (!payout.payeeName || payout.payeeName.length > 150) return "Enter a payee name up to 150 characters";
   if (payout.payeeEmail && (payout.payeeEmail.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payout.payeeEmail))) return "Enter a valid payee email";
   if (!Number.isFinite(payout.amount) || payout.amount < 0.01 || payout.amount > 9999999999.99) return "Enter an amount from 0.01 to 9,999,999,999.99";
-  if (!/^[A-Z]{3,10}$/.test(payout.currency)) return "Currency must contain 3 to 10 letters";
+  if (!["USD", "AUD", "LKR"].includes(payout.currency)) return "Currency must be USD, AUD, or LKR";
   if (!payoutMethods.includes(payout.method)) return "Invalid payout method";
   if (!payoutStatuses.includes(payout.status)) return "Invalid payout status";
   if (payout.reference && payout.reference.length > 255) return "Reference must not exceed 255 characters";
@@ -2355,7 +2372,7 @@ function normalizeWithdrawalPayload(body) {
 function withdrawalValidationMessage(withdrawal) {
   if (!Number.isInteger(withdrawal.userId) || withdrawal.userId < 1 || withdrawal.userId > 2147483647) return "Select a valid user";
   if (!Number.isFinite(withdrawal.amount) || withdrawal.amount < 0.01 || withdrawal.amount > 9999999999.99) return "Enter an amount from 0.01 to 9,999,999,999.99";
-  if (!/^[A-Z]{3,10}$/.test(withdrawal.currency)) return "Currency must contain 3 to 10 letters";
+  if (!["USD", "AUD", "LKR"].includes(withdrawal.currency)) return "Currency must be USD, AUD, or LKR";
   if (!payoutMethods.includes(withdrawal.method)) return "Invalid withdrawal method";
   if (!withdrawalStatuses.includes(withdrawal.status)) return "Invalid withdrawal status";
   if (withdrawal.accountName && withdrawal.accountName.length > 500) return "Account details must not exceed 500 characters";
@@ -2899,7 +2916,7 @@ function affiliateCommissionValidationMessage(commission) {
   if (!Number.isInteger(commission.affiliateId) || commission.affiliateId < 1) return "Select an affiliate partner";
   if (commission.referralId !== null && (!Number.isInteger(commission.referralId) || commission.referralId < 1)) return "Select a valid referral";
   if (!Number.isFinite(commission.amount) || commission.amount < 0.01 || commission.amount > 9999999999.99) return "Enter a valid positive commission amount";
-  if (!/^[A-Z]{3,10}$/.test(commission.currency)) return "Currency must contain 3 to 10 letters";
+  if (!["USD", "AUD", "LKR"].includes(commission.currency)) return "Currency must be USD, AUD, or LKR";
   if (!affiliateCommissionStatuses.includes(commission.status)) return "Invalid commission status";
   if (commission.description && commission.description.length > 3000) return "Description must not exceed 3,000 characters";
   return null;
@@ -2993,7 +3010,7 @@ function couponValidationMessage(coupon) {
   if (!couponDiscountTypes.includes(coupon.discountType)) return "Invalid discount type";
   if (!Number.isFinite(coupon.discountValue) || coupon.discountValue < 0.01 || coupon.discountValue > 9999999999.99) return "Enter a valid discount value";
   if (coupon.discountType === "percentage" && coupon.discountValue > 100) return "Percentage discounts cannot exceed 100%";
-  if (!/^[A-Z]{3,10}$/.test(coupon.currency)) return "Currency must contain 3 to 10 letters";
+  if (!["USD", "AUD", "LKR"].includes(coupon.currency)) return "Currency must be USD, AUD, or LKR";
   if (coupon.usageLimit !== null && (!Number.isInteger(coupon.usageLimit) || coupon.usageLimit < 1 || coupon.usageLimit > 2147483647)) return "Usage limit must be a positive whole number";
   if (!Number.isInteger(coupon.perUserLimit) || coupon.perUserLimit < 1 || coupon.perUserLimit > 2147483647) return "Per-user limit must be a positive whole number";
   if (!Number.isFinite(coupon.minimumAmount) || coupon.minimumAmount < 0 || coupon.minimumAmount > 9999999999.99) return "Enter a valid minimum amount";
@@ -3027,7 +3044,7 @@ exports.listCoupons = async (req, res, next) => {
   const pattern = search ? `%${search}%` : null;
   try {
     const [couponsResult, redemptionsResult, plansResult, usersResult, summaryResult, discountTotalsResult] = await Promise.all([
-      pool.query(`SELECT c.*, p.name plan_name, COUNT(cr.id)::int used_count
+      pool.query(`SELECT c.*, p.name plan_name, COUNT(cr.id) FILTER (WHERE cr.status IN ('pending','applied'))::int used_count
         FROM coupon_codes c LEFT JOIN plans p ON p.id=c.applicable_plan_id LEFT JOIN coupon_redemptions cr ON cr.coupon_id=c.id
         WHERE ($1::text IS NULL OR c.code ILIKE $1 OR c.name ILIKE $1 OR c.status ILIKE $1 OR COALESCE(p.name,'') ILIKE $1)
         GROUP BY c.id,p.name ORDER BY c.created_at DESC`, [pattern]),
@@ -3039,15 +3056,16 @@ exports.listCoupons = async (req, res, next) => {
       pool.query(`SELECT u.id,u.name,u.email FROM users u LEFT JOIN roles r ON r.id=u.role_id WHERE COALESCE(r.name,'user')<>'super_admin' AND u.status='active' ORDER BY u.name,u.email`),
       pool.query(`SELECT COUNT(*) FILTER (WHERE c.status='active' AND (c.starts_at IS NULL OR c.starts_at<=NOW()) AND (c.expires_at IS NULL OR c.expires_at>NOW()) AND (c.usage_limit IS NULL OR COALESCE(r.used,0)<c.usage_limit))::int active_coupons,
         COUNT(*) FILTER (WHERE c.status='active' AND c.expires_at>NOW() AND c.expires_at<=NOW()+INTERVAL '7 days')::int ending_soon,
-        (SELECT COUNT(*) FROM coupon_redemptions)::int total_redemptions
-        FROM coupon_codes c LEFT JOIN (SELECT coupon_id,COUNT(*)::int used FROM coupon_redemptions GROUP BY coupon_id) r ON r.coupon_id=c.id`),
-      pool.query(`SELECT currency,COALESCE(SUM(discount_amount),0) amount FROM coupon_redemptions WHERE redeemed_at>=DATE_TRUNC('month',CURRENT_DATE) GROUP BY currency ORDER BY currency`),
+        (SELECT COUNT(*) FROM coupon_redemptions WHERE status='applied')::int total_redemptions
+        FROM coupon_codes c LEFT JOIN (SELECT coupon_id,COUNT(*)::int used FROM coupon_redemptions WHERE status IN ('pending','applied') GROUP BY coupon_id) r ON r.coupon_id=c.id`),
+      pool.query(`SELECT currency,COALESCE(SUM(discount_amount),0) amount FROM coupon_redemptions WHERE status='applied' AND redeemed_at>=DATE_TRUNC('month',CURRENT_DATE) GROUP BY currency ORDER BY currency`),
     ]);
     res.json({ coupons: couponsResult.rows.map(mapCoupon), redemptions: redemptionsResult.rows.map((row) => ({
       id: row.id, couponId: row.coupon_id, coupon: { code: row.code, name: row.coupon_name },
       user: row.user_id ? { id: row.user_id, name: row.user_name, email: row.user_email } : null,
       planId: row.plan_id || null, planName: row.plan_name || null, originalAmount: number(row.original_amount),
-      discountAmount: number(row.discount_amount), finalAmount: number(row.final_amount), currency: row.currency, redeemedAt: row.redeemed_at,
+      discountAmount: number(row.discount_amount), finalAmount: number(row.final_amount), currency: row.currency,
+      status: row.status || "applied", redeemedAt: row.redeemed_at,
     })), plans: plansResult.rows, users: usersResult.rows, summary: { ...(summaryResult.rows[0] || { active_coupons: 0, ending_soon: 0, total_redemptions: 0 }), discountsByCurrency: discountTotalsResult.rows.map((row) => ({ currency: row.currency, amount: number(row.amount) })) } });
   } catch (error) { next(error); }
 };
@@ -3059,6 +3077,41 @@ async function saveCoupon(req, res, next, couponId) {
   let client;
   try {
     client = await pool.connect(); await client.query("BEGIN");
+    if (couponId) {
+      const existing = await client.query(
+        `SELECT c.*,
+          (SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id=c.id AND status IN ('pending','applied'))::int active_uses,
+          (SELECT COALESCE(MAX(uses),0) FROM (
+            SELECT COUNT(*)::int uses FROM coupon_redemptions
+            WHERE coupon_id=c.id AND status IN ('pending','applied') GROUP BY user_id
+          ) per_user)::int max_user_uses
+         FROM coupon_codes c WHERE c.id=$1 FOR UPDATE OF c`,
+        [couponId]
+      );
+      if (!existing.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Coupon not found" }); }
+      const current = existing.rows[0];
+      if (Number(current.active_uses) > 0) {
+        const financialRulesChanged =
+          current.code !== coupon.code ||
+          current.discount_type !== coupon.discountType ||
+          number(current.discount_value) !== coupon.discountValue ||
+          current.currency !== coupon.currency ||
+          number(current.minimum_amount) !== coupon.minimumAmount ||
+          Number(current.applicable_plan_id || 0) !== Number(coupon.planId || 0);
+        if (financialRulesChanged) {
+          await client.query("ROLLBACK");
+          return res.status(409).json({ message: "Coupon financial rules cannot change after customer use. Deactivate it and create a new coupon instead." });
+        }
+        if (coupon.usageLimit !== null && coupon.usageLimit < Number(current.active_uses)) {
+          await client.query("ROLLBACK");
+          return res.status(409).json({ message: "Usage limit cannot be lower than existing coupon uses" });
+        }
+        if (coupon.perUserLimit < Number(current.max_user_uses)) {
+          await client.query("ROLLBACK");
+          return res.status(409).json({ message: "Per-customer limit cannot be lower than existing usage" });
+        }
+      }
+    }
     if (coupon.planId) {
       const plan = await client.query("SELECT id FROM plans WHERE id=$1", [coupon.planId]);
       if (!plan.rowCount) { await client.query("ROLLBACK"); return res.status(400).json({ message: "Selected plan was not found" }); }
@@ -3097,7 +3150,7 @@ exports.createCouponRedemption = async (req,res,next) => {
   if(planId!==null&&(!Number.isInteger(planId)||planId<1||planId>2147483647))return res.status(400).json({message:"Select a valid plan"});
   if(!Number.isFinite(originalAmount)||originalAmount<0.01||originalAmount>9999999999.99)return res.status(400).json({message:"Enter a valid original amount"});
   let client; try { client=await pool.connect();await client.query("BEGIN");
-    const couponResult=await client.query(`SELECT c.*,(SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id=c.id)::int used_count,(SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id=c.id AND user_id=$2)::int user_count FROM coupon_codes c WHERE c.id=$1 FOR UPDATE`,[couponId,userId]);
+    const couponResult=await client.query(`SELECT c.*,(SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id=c.id AND status IN ('pending','applied'))::int used_count,(SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id=c.id AND user_id=$2 AND status IN ('pending','applied'))::int user_count FROM coupon_codes c WHERE c.id=$1 FOR UPDATE`,[couponId,userId]);
     if(!couponResult.rowCount){await client.query("ROLLBACK");return res.status(404).json({message:"Coupon not found"});}
     const c=couponResult.rows[0], now=new Date();
     if(c.status!=="active"||(c.starts_at&&new Date(c.starts_at)>now)||(c.expires_at&&new Date(c.expires_at)<=now)){await client.query("ROLLBACK");return res.status(409).json({message:"This coupon is not currently available"});}
@@ -3109,7 +3162,7 @@ exports.createCouponRedemption = async (req,res,next) => {
     if(!relation.rows[0].user_exists||!relation.rows[0].plan_exists){await client.query("ROLLBACK");return res.status(400).json({message:"Selected user or plan was not found"});}
     const rawDiscount=c.discount_type==="percentage"?originalAmount*Number(c.discount_value)/100:Number(c.discount_value);
     const discountAmount=Number(Math.min(rawDiscount,originalAmount).toFixed(2)), finalAmount=Number((originalAmount-discountAmount).toFixed(2));
-    const result=await client.query(`INSERT INTO coupon_redemptions(coupon_id,user_id,plan_id,original_amount,discount_amount,final_amount,currency,metadata) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb) RETURNING id`,[couponId,userId,planId,originalAmount,discountAmount,finalAmount,c.currency,JSON.stringify({recordedBy:req.user.id})]);
+    const result=await client.query(`INSERT INTO coupon_redemptions(coupon_id,user_id,plan_id,original_amount,discount_amount,final_amount,currency,status,metadata) VALUES($1,$2,$3,$4,$5,$6,$7,'applied',$8::jsonb) RETURNING id`,[couponId,userId,planId,originalAmount,discountAmount,finalAmount,c.currency,JSON.stringify({recordedBy:req.user.id})]);
     await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata) VALUES($1,'coupon_redemption.created','coupon_redemption',$2,$3::jsonb)`,[req.user.id,result.rows[0].id,JSON.stringify({couponId,userId,discountAmount})]);
     await client.query("COMMIT");res.status(201).json({redemption:{id:result.rows[0].id,discountAmount,finalAmount}});
   }catch(error){if(client)await client.query("ROLLBACK").catch(()=>{});next(error);}finally{if(client)client.release();}
@@ -3159,7 +3212,11 @@ async function generateReportRows(client,type,days){
   if(type==="revenue")return(await client.query(`SELECT created_at::date date,currency,COUNT(*)::int transactions,COALESCE(SUM(amount),0) total_amount FROM transactions WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day') AND status IN ('completed','paid','approved','successful') GROUP BY created_at::date,currency ORDER BY date DESC,currency`,[days])).rows;
   if(type==="subscriptions")return(await client.query(`SELECT p.name plan,p.billing_interval,COUNT(s.id)::int subscriptions,COUNT(s.id) FILTER(WHERE s.status='active')::int active,COUNT(s.id) FILTER(WHERE s.status='cancelled')::int cancelled FROM plans p LEFT JOIN subscriptions s ON s.plan_id=p.id AND s.created_at>=NOW()-($1::integer*INTERVAL '1 day') GROUP BY p.id ORDER BY active DESC`,[days])).rows;
   if(type==="platform")return(await client.query(`SELECT d.day::date date,(SELECT COUNT(*) FROM users u WHERE u.created_at::date=d.day::date)::int new_users,(SELECT COUNT(*) FROM vcards v WHERE v.created_at::date=d.day::date)::int new_vcards,COALESCE(SUM(a.page_views),0)::bigint page_views,COALESCE(SUM(a.clicks),0)::bigint clicks,COALESCE(SUM(a.contact_requests),0)::bigint contact_requests FROM GENERATE_SERIES(CURRENT_DATE-($1::integer-1),CURRENT_DATE,INTERVAL '1 day')d(day) LEFT JOIN analytics a ON a.event_date=d.day::date GROUP BY d.day ORDER BY d.day DESC`,[days])).rows;
-  if(type==="coupons")return(await client.query(`SELECT c.code,c.name,c.discount_type,c.discount_value,c.currency,c.status,COUNT(cr.id)::int redemptions,COALESCE(SUM(cr.discount_amount),0) discount_granted FROM coupon_codes c LEFT JOIN coupon_redemptions cr ON cr.coupon_id=c.id AND cr.redeemed_at>=NOW()-($1::integer*INTERVAL '1 day') GROUP BY c.id ORDER BY redemptions DESC,c.code`,[days])).rows;
+  if(type==="coupons")return(await client.query(`SELECT c.code,c.name,c.discount_type,c.discount_value,c.currency,c.status,
+    COUNT(cr.id) FILTER (WHERE cr.status='applied')::int redemptions,
+    COALESCE(SUM(cr.discount_amount) FILTER (WHERE cr.status='applied'),0) discount_granted
+    FROM coupon_codes c LEFT JOIN coupon_redemptions cr ON cr.coupon_id=c.id AND cr.redeemed_at>=NOW()-($1::integer*INTERVAL '1 day')
+    GROUP BY c.id ORDER BY redemptions DESC,c.code`,[days])).rows;
   return(await client.query(`SELECT u.name affiliate,u.email,ap.referral_code,ap.status,COALESCE(refs.referrals,0)::int referrals,COALESCE(refs.qualified,0)::int qualified,COALESCE(earnings.commissions,0) commissions,COALESCE(earnings.currency,'USD') currency FROM affiliate_profiles ap JOIN users u ON u.id=ap.user_id LEFT JOIN LATERAL(SELECT COUNT(*)::int referrals,COUNT(*) FILTER(WHERE status='qualified')::int qualified FROM affiliate_referrals WHERE affiliate_id=ap.id AND joined_at>=NOW()-($1::integer*INTERVAL '1 day'))refs ON TRUE LEFT JOIN LATERAL(SELECT SUM(amount) commissions,MAX(currency) currency FROM affiliate_commissions WHERE affiliate_id=ap.id AND status IN ('approved','paid') AND created_at>=NOW()-($1::integer*INTERVAL '1 day'))earnings ON TRUE ORDER BY qualified DESC`,[days])).rows;
 }
 
@@ -3188,7 +3245,7 @@ const platformSettingDefinitions = {
   security_alerts: { category:"notifications",description:"Notify administrators about security events",defaultValue:"true",type:"boolean" },
 };
 
-function validatePlatformSetting(key,value){const definition=platformSettingDefinitions[key];if(!definition)return"Unknown platform setting";const text=String(value===null||value===undefined?"":value).trim();if(definition.type==="boolean"&&!['true','false'].includes(text))return`${key} must be true or false`;if(definition.type==="integer"&&(!/^\d+$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="decimal"&&(!/^\d+(\.\d{1,2})?$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))return"Enter a valid support email";if(definition.type==="currency"&&!/^[A-Z]{3,10}$/.test(text.toUpperCase()))return"Currency must contain 3 to 10 letters";if(!text&&!definition.optional&&!["boolean"].includes(definition.type))return`${key} cannot be empty`;if(definition.maxLength&&text.length>definition.maxLength)return`${key} is too long`;return null;}
+function validatePlatformSetting(key,value){const definition=platformSettingDefinitions[key];if(!definition)return"Unknown platform setting";const text=String(value===null||value===undefined?"":value).trim();if(definition.type==="boolean"&&!['true','false'].includes(text))return`${key} must be true or false`;if(definition.type==="integer"&&(!/^\d+$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="decimal"&&(!/^\d+(\.\d{1,2})?$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))return"Enter a valid support email";if(definition.type==="currency"&&!["USD","AUD","LKR"].includes(text.toUpperCase()))return"Currency must be USD, AUD, or LKR";if(!text&&!definition.optional&&!["boolean"].includes(definition.type))return`${key} cannot be empty`;if(definition.maxLength&&text.length>definition.maxLength)return`${key} is too long`;return null;}
 
 exports.getSettings=async(req,res,next)=>{try{const keys=Object.keys(platformSettingDefinitions);const[settingsResult,rolesResult,permissionsResult,summaryResult]=await Promise.all([
   pool.query("SELECT key,value,category,description,updated_at FROM settings WHERE key=ANY($1::text[]) ORDER BY category,key",[keys]),

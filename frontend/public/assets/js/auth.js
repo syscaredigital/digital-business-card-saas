@@ -91,7 +91,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await res.json();
         if (data.token) localStorage.setItem("token", data.token);
-        if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+        if (data.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+          if (data.user.preferredCurrency) localStorage.setItem("preferredCurrency", data.user.preferredCurrency);
+        }
 
         const role = (data.user && data.user.role) || "user";
         let dest = "../user/dashboard.html";
@@ -214,6 +217,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (registerForm) {
     const referralCode = new URLSearchParams(window.location.search).get("ref") || sessionStorage.getItem("affiliate_referral_code") || "";
+    const requestedPlan = new URLSearchParams(window.location.search).get("plan") || "";
+    const requestedCurrency = String(new URLSearchParams(window.location.search).get("currency") || localStorage.getItem("preferredCurrency") || "USD").toUpperCase();
+    const registerCurrency = document.getElementById("registerCurrency");
+    if (registerCurrency && ["USD", "AUD", "LKR"].includes(requestedCurrency)) registerCurrency.value = requestedCurrency;
+    if (registerCurrency) registerCurrency.addEventListener("change", function () { localStorage.setItem("preferredCurrency", registerCurrency.value); });
     if (referralCode) sessionStorage.setItem("affiliate_referral_code", referralCode);
     registerForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -259,6 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
         password: password.value,
         phoneNumber: phoneNumber ? phoneNumber.value.trim() : undefined,
         companyName: companyName ? companyName.value.trim() : undefined,
+        currency: registerCurrency ? registerCurrency.value : "USD",
         referralCode: referralCode || undefined,
       };
 
@@ -274,8 +283,11 @@ document.addEventListener("DOMContentLoaded", () => {
           const data = await res.json();
           if (data.token) localStorage.setItem("token", data.token);
           if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+          localStorage.setItem("preferredCurrency", payload.currency);
           sessionStorage.removeItem("affiliate_referral_code");
-          window.location.href = "../user/dashboard.html";
+          window.location.href = requestedPlan
+            ? "../user/payments.html?plan=" + encodeURIComponent(requestedPlan)
+            : "../user/dashboard.html";
         } else {
           const err = await res.json().catch(() => ({}));
           alert(err.message || "Registration failed. Please try again.");

@@ -78,7 +78,7 @@
       <button class="manual-payment-close" type="button" data-close-payment-modal aria-label="Close">&times;</button>
       <span class="eyebrow">Manual bank transfer</span>
       <h2 id="manualPaymentTitle">Pay for <span id="paymentPlanName">your plan</span></h2>
-      <p class="manual-payment-intro">Transfer <strong id="paymentPlanAmount">—</strong> to the account below, then enter the bank transaction number and upload your receipt.</p>
+      <p class="manual-payment-intro" id="manualPaymentIntro">Transfer <strong id="paymentPlanAmount">—</strong> to the account below, then enter the bank transaction number and upload your receipt.</p>
       <dl class="manual-bank-details" id="manualBankDetails">
         <div><dt>Bank</dt><dd id="paymentBankName">—</dd></div><div><dt>Account name</dt><dd id="paymentAccountName">—</dd></div>
         <div><dt>Account number</dt><dd id="paymentAccountNumber">—</dd></div><div><dt>Branch</dt><dd id="paymentBankBranch">—</dd></div>
@@ -86,6 +86,20 @@
       </dl>
       <form id="manualPaymentForm">
         <input type="hidden" name="planId" id="paymentPlanId" />
+        <div class="checkout-coupon">
+          <label for="paymentCouponCode">Coupon code <span>Optional</span></label>
+          <div class="checkout-coupon-row">
+            <input id="paymentCouponCode" name="couponCode" type="text" minlength="3" maxlength="80" pattern="[A-Za-z0-9_-]+" placeholder="Enter coupon code" autocomplete="off" />
+            <button id="applyPaymentCoupon" type="button">Apply</button>
+          </div>
+          <div class="checkout-coupon-result" id="paymentCouponResult" hidden>
+            <div><span>Original price</span><strong id="couponOriginalAmount">—</strong></div>
+            <div><span>Coupon discount</span><strong id="couponDiscountAmount">—</strong></div>
+            <div class="checkout-coupon-total"><span>Amount to pay</span><strong id="couponFinalAmount">—</strong></div>
+            <button id="removePaymentCoupon" type="button">Remove coupon</button>
+          </div>
+          <p class="billing-plan-feedback" id="paymentCouponFeedback" aria-live="polite"></p>
+        </div>
         <label>Transaction number<input name="transactionNumber" type="text" minlength="3" maxlength="255" required placeholder="Example: TXN-123456" /></label>
         <label>Payment slip<input name="slip" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" required /><small>JPG, PNG, WebP, or PDF. Maximum 5 MB.</small></label>
         <p class="manual-payment-wait">Your current plan remains active while the super admin reviews the payment. A paid plan is enabled only after approval.</p>

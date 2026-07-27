@@ -21,6 +21,7 @@ function toSafeUser(row) {
     email: row.email,
     phoneNumber: row.phone || null,
     companyName: row.company_name || null,
+    preferredCurrency: row.preferred_currency || "USD",
     role: row.role || "user",
     status: row.status,
     createdAt: row.created_at,
@@ -54,10 +55,14 @@ exports.register = async (req, res, next) => {
 
   try {
     const { firstName, lastName, email, password, phoneNumber, companyName } = req.body;
+    const preferredCurrency = String(req.body.currency || "USD").trim().toUpperCase();
     const referralCode = String(req.body.referralCode || "").trim().toUpperCase();
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+    if (!["USD", "AUD", "LKR"].includes(preferredCurrency)) {
+      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
     }
 
     const normalizedEmail = String(email).toLowerCase().trim();
@@ -94,9 +99,9 @@ exports.register = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(String(password), 10);
     const result = await client.query(
-      `INSERT INTO users (company_id, role_id, name, email, password, phone)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, email, phone, status, created_at`,
+      `INSERT INTO users (company_id, role_id, name, email, password, phone, preferred_currency)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, name, email, phone, preferred_currency, status, created_at`,
       [
         companyId,
         roleResult.rows[0].id,
@@ -104,6 +109,7 @@ exports.register = async (req, res, next) => {
         normalizedEmail,
         hashedPassword,
         phoneNumber || null,
+        preferredCurrency,
       ]
     );
 
@@ -163,7 +169,7 @@ exports.login = async (req, res, next) => {
 
     const result = await pool.query(
       `SELECT u.id, u.name, u.email, u.password, u.phone, u.status,
-              u.created_at, r.name AS role, c.name AS company_name
+              u.created_at,u.preferred_currency,r.name AS role,c.name AS company_name
        FROM users u
        LEFT JOIN roles r ON r.id = u.role_id
        LEFT JOIN companies c ON c.id = u.company_id

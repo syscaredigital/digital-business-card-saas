@@ -38,3 +38,6 @@
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/036_link_contacts_to_vcards.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/037_configure_manual_subscription_payments.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/038_complete_affiliate_workflow.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/043_add_user_currency_preference.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/044_complete_user_coupon_checkout.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/045_add_vcard_engagement_tracking.sql

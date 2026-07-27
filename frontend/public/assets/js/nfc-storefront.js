@@ -3,6 +3,7 @@
 
   var root = document.getElementById("nfcProductLines");
   if (!root) return;
+  var catalogProducts = [];
 
   var lines = {
     essential: { name: "Essential Line", badge: "Entry Level", description: "Perfect for getting started with contactless networking" },
@@ -24,7 +25,12 @@
   }
 
   function formatPrice(price) {
-    return new Intl.NumberFormat("en-LK", { maximumFractionDigits: 2 }).format(Number(price) || 0);
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: selectedCurrency(), maximumFractionDigits: 2 }).format(Number(price) || 0);
+  }
+
+  function selectedCurrency() {
+    var currency = String(localStorage.getItem("preferredCurrency") || "USD").toUpperCase();
+    return ["USD", "AUD", "LKR"].includes(currency) ? currency : "USD";
   }
 
   function descriptionItems(description) {
@@ -40,9 +46,9 @@
         '<figure class="nfc-card-face nfc-card-face-back"><img src="' + escapeHtml(item.backImage) + '" alt="' + name + ' back" /><figcaption>Back</figcaption></figure>' +
       '</div>' +
       '<div class="nfc-package-body"><div class="nfc-product-label"><span>Sync NFC</span><i></i></div><h3>' + name + '</h3>' +
-      '<p class="nfc-package-price"><span>LKR</span> ' + formatPrice(item.price) + '</p>' +
+      '<p class="nfc-package-price">' + formatPrice(item.price) + '</p>' +
       (features.length ? '<ul>' + features.map(function (feature) { return '<li><span aria-hidden="true">&#10003;</span>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul>' : '') +
-      '<a class="nfc-select-button" href="../auth/register.html?card=' + encodeURIComponent(item.id) + '">Select card <span aria-hidden="true">&rarr;</span></a></div></article>';
+      '<a class="nfc-select-button" href="../auth/register.html?card=' + encodeURIComponent(item.id) + '&currency=' + encodeURIComponent(selectedCurrency()) + '">Select card <span aria-hidden="true">&rarr;</span></a></div></article>';
   }
 
   function render(products) {
@@ -68,7 +74,8 @@
       var response = await fetch(apiBaseUrl() + "/api/public/nfc-products", { headers: { Accept: "application/json" } });
       var payload = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(payload.message || "The NFC catalog could not be loaded.");
-      render(Array.isArray(payload.data) ? payload.data : []);
+      catalogProducts = Array.isArray(payload.data) ? payload.data : [];
+      render(catalogProducts);
     } catch (error) {
       root.innerHTML = '<div class="nfc-catalog-state is-error"><strong>The NFC catalog could not be loaded.</strong><span>' + escapeHtml(error.message) + '</span><button type="button" id="retryNfcCatalog">Try again</button></div>';
       var retryButton = document.getElementById("retryNfcCatalog");
@@ -76,5 +83,6 @@
     }
   }
 
+  window.addEventListener("sync:currency-change", function () { render(catalogProducts); });
   loadProducts();
 })();

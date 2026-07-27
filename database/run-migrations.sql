@@ -42,3 +42,6 @@
 \i migrations/040_add_nfc_order_payments.sql
 \i migrations/041_harden_nfc_order_workflow.sql
 \i migrations/042_add_corporate_ceo_vcard_template.sql
+\i migrations/043_add_user_currency_preference.sql
+\i migrations/044_complete_user_coupon_checkout.sql
+\i migrations/045_add_vcard_engagement_tracking.sql

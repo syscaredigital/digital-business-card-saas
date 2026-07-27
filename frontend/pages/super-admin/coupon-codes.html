@@ -30,7 +30,7 @@
           <section class="tab-panel" id="usedCouponCodeListPanel">
             <article class="admin-card coupon-live-card">
               <div class="admin-card-header"><div><h3>Redemption Ledger</h3><p>An auditable record of each discount calculated by the server.</p></div><div class="coupon-header-actions"><span class="tiny-pill" id="couponRedemptionCount">Loading...</span><button class="btn-share" type="button" id="openCouponRedemptionModal">Record Redemption</button></div></div>
-              <div class="coupon-live-table-wrap"><table class="admin-table coupon-live-table"><thead><tr><th>Customer</th><th>Coupon</th><th>Plan</th><th>Original</th><th>Discount</th><th>Final</th><th>Redeemed</th><th>Actions</th></tr></thead><tbody id="couponRedemptionBody"><tr><td colspan="8" class="coupon-live-state">Loading redemptions from PostgreSQL...</td></tr></tbody></table></div>
+              <div class="coupon-live-table-wrap"><table class="admin-table coupon-live-table"><thead><tr><th>Customer</th><th>Coupon</th><th>Plan</th><th>Original</th><th>Discount</th><th>Final</th><th>Status</th><th>Redeemed</th><th>Actions</th></tr></thead><tbody id="couponRedemptionBody"><tr><td colspan="9" class="coupon-live-state">Loading redemptions from PostgreSQL...</td></tr></tbody></table></div>
             </article>
           </section>
         </section>
@@ -44,8 +44,9 @@
       <div class="form-field"><label for="couponAdminCode">Coupon code:<span class="required-mark">*</span></label><input id="couponAdminCode" name="code" type="text" minlength="3" maxlength="80" pattern="[A-Za-z0-9_-]+" required placeholder="SUMMER25" /></div>
       <div class="form-field"><label for="couponAdminDiscountType">Discount type:</label><select id="couponAdminDiscountType" name="discountType"><option value="percentage">Percentage</option><option value="fixed">Fixed amount</option></select></div>
       <div class="form-field"><label for="couponAdminDiscountValue">Discount value:<span class="required-mark">*</span></label><input id="couponAdminDiscountValue" name="discountValue" type="number" min="0.01" max="9999999999.99" step="0.01" required /></div>
-      <div class="form-field"><label for="couponAdminCurrency">Currency:</label><select id="couponAdminCurrency" name="currency"><option value="USD">USD</option><option value="LKR">LKR</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+      <div class="form-field"><label for="couponAdminCurrency">Currency:</label><select id="couponAdminCurrency" name="currency"><option value="USD">USD</option><option value="AUD">AUD</option><option value="LKR">LKR</option></select></div>
       <div class="form-field"><label for="couponAdminPlan">Applicable plan:</label><select id="couponAdminPlan" name="planId"><option value="">All plans</option></select></div>
+      <div class="form-field form-field-wide"><p class="coupon-calculation-note">The coupon currency must match the customer’s checkout currency. Percentage and fixed discounts are always recalculated by the backend.</p></div>
       <div class="form-field"><label for="couponAdminUsageLimit">Total usage limit:</label><input id="couponAdminUsageLimit" name="usageLimit" type="number" min="1" max="2147483647" placeholder="Unlimited" /></div>
       <div class="form-field"><label for="couponAdminPerUserLimit">Limit per customer:</label><input id="couponAdminPerUserLimit" name="perUserLimit" type="number" min="1" max="2147483647" value="1" required /></div>
       <div class="form-field"><label for="couponAdminMinimum">Minimum amount:</label><input id="couponAdminMinimum" name="minimumAmount" type="number" min="0" max="9999999999.99" step="0.01" value="0" /></div>

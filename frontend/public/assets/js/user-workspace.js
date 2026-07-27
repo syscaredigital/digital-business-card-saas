@@ -53,6 +53,44 @@
   function setText(id, value) { var node = document.getElementById(id); if (node) node.textContent = value; }
   function money(value) { return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(Number(value || 0)); }
 
+  var currencyPreferenceForm = document.getElementById("currencyPreferenceForm");
+  if (currencyPreferenceForm) {
+    var currencyPreferenceSelect = document.getElementById("settingsCurrency");
+    var currencyPreferenceFeedback = document.getElementById("currencyPreferenceFeedback");
+    request("/user/preferences").then(function (data) {
+      currencyPreferenceSelect.value = data.currency || "USD";
+    }).catch(function (error) {
+      currencyPreferenceFeedback.hidden = false;
+      currencyPreferenceFeedback.textContent = error.message;
+    });
+    currencyPreferenceForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var button = currencyPreferenceForm.querySelector('[type="submit"]');
+      button.disabled = true;
+      button.textContent = "Saving...";
+      currencyPreferenceFeedback.hidden = false;
+      currencyPreferenceFeedback.classList.remove("success");
+      currencyPreferenceFeedback.textContent = "Updating your workspace currency...";
+      request("/user/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currency: currencyPreferenceSelect.value }),
+      }).then(function (data) {
+        currencyPreferenceFeedback.classList.add("success");
+        currencyPreferenceFeedback.textContent = data.message + ". New purchases will use " + data.currency + "; existing records keep their original currency.";
+        if (user) {
+          user.preferredCurrency = data.currency;
+          localStorage.setItem("user", JSON.stringify(user));
+        }
+      }).catch(function (error) {
+        currencyPreferenceFeedback.textContent = error.message;
+      }).finally(function () {
+        button.disabled = false;
+        button.textContent = "Save currency";
+      });
+    });
+  }
+
   var vcardFeatureGuides = {
     "business-hours": ["One day per line", "Monday | 9:00 AM - 5:00 PM"],
     services: ["One service per line: name | description | optional image URL", "Property valuation | Accurate local market valuation | https://example.com/image.jpg"],
@@ -92,6 +130,7 @@
     setText("metricViews", Number(metrics.profileViews || 0).toLocaleString());
     setText("metricEnquiries", metrics.enquiries || 0);
     setText("metricOrders", metrics.pendingOrders || 0);
+    setText("metricQrScans", Number(metrics.qrScans || 0).toLocaleString());
     setText("vcardOverviewTotal", metrics.totalCards || 0);
     setText("vcardOverviewLive", metrics.activeCards || 0);
     setText("vcardOverviewPlan", plan.name || "Free");
@@ -260,21 +299,53 @@
     var paymentModal = document.getElementById("manualPaymentModal");
     var paymentForm = document.getElementById("manualPaymentForm");
     var paymentFeedback = document.getElementById("manualPaymentFeedback");
+    var couponInput = document.getElementById("paymentCouponCode");
+    var couponButton = document.getElementById("applyPaymentCoupon");
+    var couponRemoveButton = document.getElementById("removePaymentCoupon");
+    var couponResult = document.getElementById("paymentCouponResult");
+    var couponFeedback = document.getElementById("paymentCouponFeedback");
     var billingData = null;
+    var selectedPaymentPlan = null;
+    var couponPreview = null;
     function billingMoney(value, currency) {
       try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(Number(value || 0)); }
       catch (_) { return (currency || "USD") + " " + Number(value || 0).toFixed(2); }
     }
     function closePaymentModal() { if (paymentModal) paymentModal.hidden = true; }
+    function setCouponPaymentRequirements(isFree) {
+      var transactionInput = paymentForm.elements.transactionNumber;
+      var slipInput = paymentForm.elements.slip;
+      var bankDetails = document.getElementById("manualBankDetails");
+      var paymentIntro = document.getElementById("manualPaymentIntro");
+      transactionInput.required = !isFree;
+      slipInput.required = !isFree;
+      transactionInput.closest("label").hidden = isFree;
+      slipInput.closest("label").hidden = isFree;
+      bankDetails.hidden = isFree;
+      paymentIntro.innerHTML = isFree
+        ? "Your coupon covers the full plan price. Submit below to activate the plan immediately."
+        : 'Transfer <strong id="paymentPlanAmount">—</strong> to the account below, then enter the bank transaction number and upload your receipt.';
+    }
+    function clearPaymentCoupon(clearInput) {
+      couponPreview = null;
+      couponResult.hidden = true;
+      couponFeedback.textContent = "";
+      couponFeedback.className = "billing-plan-feedback";
+      if (clearInput) couponInput.value = "";
+      setCouponPaymentRequirements(false);
+      if (selectedPaymentPlan) setText("paymentPlanAmount", billingMoney(selectedPaymentPlan.price, billingData.currency));
+    }
     function openPaymentModal(plan) {
-      if (!billingData.bankConfigured) { billingFeedback.textContent = "Bank payment details are not configured yet. Please contact support."; return; }
+      selectedPaymentPlan = plan;
+      paymentForm.reset();
+      clearPaymentCoupon(true);
       setText("paymentPlanName", plan.name); setText("paymentPlanAmount", billingMoney(plan.price, billingData.currency));
       setText("paymentBankName", billingData.bankDetails.bankName); setText("paymentAccountName", billingData.bankDetails.accountName);
       setText("paymentAccountNumber", billingData.bankDetails.accountNumber); setText("paymentBankBranch", billingData.bankDetails.branch);
       setText("paymentBankSwift", billingData.bankDetails.swiftCode || "Not required");
       document.getElementById("paymentPlanId").value = plan.id;
       paymentFeedback.textContent = ""; paymentModal.hidden = false;
-      paymentForm.elements.transactionNumber.focus();
+      couponInput.focus();
     }
     function renderBillingPlans(data) {
       billingData = data;
@@ -287,9 +358,19 @@
       var history = document.getElementById("billingPaymentHistory");
       if (history) history.innerHTML = data.payments && data.payments.length ? data.payments.map(function (payment) {
         return '<li><strong>' + escapeHtml(payment.planName) + '</strong> — ' + escapeHtml(billingMoney(payment.amount, payment.currency)) +
-          ' <span class="payment-history-status is-' + escapeHtml(payment.status) + '">' + escapeHtml(payment.status) + '</span><small>Transaction ' + escapeHtml(payment.transactionNumber || "—") + ' · ' + escapeHtml(formatDate(payment.createdAt)) + '</small></li>';
+          ' <span class="payment-history-status is-' + escapeHtml(payment.status) + '">' + escapeHtml(payment.status) + '</span><small>' +
+          (payment.couponCode ? 'Coupon ' + escapeHtml(payment.couponCode) + ' saved ' + escapeHtml(billingMoney(payment.discountAmount, payment.currency)) + ' · ' : '') +
+          'Transaction ' + escapeHtml(payment.transactionNumber || "—") + ' · ' + escapeHtml(formatDate(payment.createdAt)) + '</small></li>';
       }).join("") : '<li>No manual payments submitted yet.</li>';
       if (data.pending && billingFeedback) billingFeedback.textContent = "Your " + data.pending.planName + " payment is waiting for super-admin approval. Your current plan remains active.";
+      var requestedPlanId = Number(new URLSearchParams(window.location.search).get("plan"));
+      if (requestedPlanId && !data.pending) {
+        var requestedPlan = (data.plans || []).find(function (plan) { return Number(plan.id) === requestedPlanId && Number(plan.id) !== Number(data.currentPlanId); });
+        if (requestedPlan) {
+          window.history.replaceState({}, "", window.location.pathname);
+          openPaymentModal(requestedPlan);
+        }
+      }
     }
     function loadBillingPlans() { request("/user/plans").then(renderBillingPlans).catch(function (error) { billingPlansGrid.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>'; }); }
     loadBillingPlans();
@@ -300,9 +381,55 @@
       if (plan) openPaymentModal(plan);
     });
     if (paymentModal) paymentModal.querySelectorAll("[data-close-payment-modal]").forEach(function (button) { button.addEventListener("click", closePaymentModal); });
+    if (couponButton) couponButton.addEventListener("click", function () {
+      var code = couponInput.value.trim().toUpperCase();
+      couponInput.value = code;
+      if (!selectedPaymentPlan || !code) {
+        couponFeedback.className = "billing-plan-feedback is-error";
+        couponFeedback.textContent = "Enter a coupon code first.";
+        return;
+      }
+      couponButton.disabled = true;
+      couponButton.textContent = "Checking...";
+      couponFeedback.className = "billing-plan-feedback";
+      couponFeedback.textContent = "Validating coupon...";
+      request("/user/coupons/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code, planId: selectedPaymentPlan.id }),
+      }).then(function (data) {
+        couponPreview = data;
+        setText("couponOriginalAmount", billingMoney(data.originalAmount, data.currency));
+        setText("couponDiscountAmount", "−" + billingMoney(data.discountAmount, data.currency));
+        setText("couponFinalAmount", billingMoney(data.finalAmount, data.currency));
+        setText("paymentPlanAmount", billingMoney(data.finalAmount, data.currency));
+        couponResult.hidden = false;
+        couponFeedback.className = "billing-plan-feedback is-success";
+        couponFeedback.textContent = data.coupon.name + " applied.";
+        setCouponPaymentRequirements(Number(data.finalAmount) === 0);
+      }).catch(function (error) {
+        clearPaymentCoupon(false);
+        couponFeedback.className = "billing-plan-feedback is-error";
+        couponFeedback.textContent = error.message;
+      }).finally(function () {
+        couponButton.disabled = false;
+        couponButton.textContent = "Apply";
+      });
+    });
+    if (couponRemoveButton) couponRemoveButton.addEventListener("click", function () { clearPaymentCoupon(true); });
+    if (couponInput) couponInput.addEventListener("input", function () {
+      couponInput.value = couponInput.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+      if (couponPreview && couponInput.value !== couponPreview.coupon.code) clearPaymentCoupon(false);
+    });
     if (paymentForm) paymentForm.addEventListener("submit", function (event) {
       event.preventDefault();
-      var submit = paymentForm.querySelector('[type="submit"]'); submit.disabled = true; submit.textContent = "Uploading..."; paymentFeedback.textContent = "";
+      if (couponInput.value.trim() && (!couponPreview || couponPreview.coupon.code !== couponInput.value.trim().toUpperCase())) {
+        couponFeedback.className = "billing-plan-feedback is-error";
+        couponFeedback.textContent = "Apply the coupon before submitting payment.";
+        couponInput.focus();
+        return;
+      }
+      var submit = paymentForm.querySelector('[type="submit"]'); submit.disabled = true; submit.textContent = couponPreview && Number(couponPreview.finalAmount) === 0 ? "Activating..." : "Uploading..."; paymentFeedback.textContent = "";
       request("/user/subscriptions/manual-payment", { method: "POST", body: new FormData(paymentForm) })
         .then(function (data) { paymentFeedback.textContent = data.message; paymentForm.reset(); setTimeout(function () { closePaymentModal(); loadBillingPlans(); }, 900); })
         .catch(function (error) { paymentFeedback.textContent = error.message; })
@@ -538,7 +665,7 @@
   }
 
   var ordersBody = document.getElementById("productOrdersTableBody");
-  if (ordersBody) {
+  if (ordersBody && !document.getElementById("productOrdersStatus")) {
     ordersBody.innerHTML = '<tr><td colspan="6" class="light-empty-cell">Loading orders...</td></tr>';
     request("/user/orders").then(function (data) {
       var rows = data.orders || [];
@@ -548,6 +675,91 @@
       }).join("") : '<tr><td colspan="6" class="light-empty-cell">No product orders yet.</td></tr>';
       setText("productOrdersResults", "Showing " + rows.length + " result" + (rows.length === 1 ? "" : "s"));
     }).catch(function (error) { ordersBody.innerHTML = '<tr><td colspan="6" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>"; });
+  }
+
+  if (ordersBody && document.getElementById("productOrdersStatus")) {
+    (function () {
+      var orderRows = [];
+      var statusSelect = document.getElementById("productOrdersStatus");
+      var searchInput = document.getElementById("productOrdersSearch");
+      function currency(value, code) {
+        try {
+          return new Intl.NumberFormat(undefined, { style: "currency", currency: code || "LKR", maximumFractionDigits: 0 }).format(Number(value || 0));
+        } catch (_) {
+          return (code || "LKR") + " " + Number(value || 0).toLocaleString();
+        }
+      }
+      function statusLabel(status) {
+        return String(status || "pending").replace(/_/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+      }
+      function renderOrders() {
+        var term = String(searchInput.value || "").trim().toLowerCase();
+        var selectedStatus = String(statusSelect.value || "").toLowerCase();
+        var visible = orderRows.filter(function (item) {
+          var haystack = [item.id, item.product_name, item.vcard_title, item.status, item.payment_status, item.tracking_number].join(" ").toLowerCase();
+          return (!term || haystack.includes(term)) && (!selectedStatus || String(item.status).toLowerCase() === selectedStatus);
+        });
+        ordersBody.innerHTML = visible.length ? visible.map(function (item) {
+          var status = String(item.status || "pending").toLowerCase();
+          var payment = String(item.payment_status || "pending").toLowerCase();
+          var productImage = item.product_image
+            ? '<img src="' + escapeHtml(item.product_image) + '" alt="" />'
+            : '<span class="product-order-placeholder">NFC</span>';
+          var tracking = item.tracking_number
+            ? '<strong class="product-order-tracking">' + escapeHtml(item.tracking_number) + '</strong>'
+            : '<span class="product-order-muted">Not assigned</span>';
+          return '<tr class="product-order-row" data-search="' + escapeHtml([item.id, item.product_name, item.status, item.tracking_number].join(" ").toLowerCase()) + '">' +
+            '<td data-label="Order"><strong class="product-order-number">#' + escapeHtml(item.id) + '</strong><small>' + escapeHtml(item.quantity) + ' item' + (Number(item.quantity) === 1 ? "" : "s") + '</small></td>' +
+            '<td data-label="Product"><div class="product-order-product">' + productImage + '<div><strong>' + escapeHtml(item.product_name || "NFC Card") + '</strong><small>' + escapeHtml(item.vcard_title || "Digital card") + '</small></div></div></td>' +
+            '<td data-label="Placed"><strong class="product-order-date">' + escapeHtml(formatDate(item.ordered_at)) + '</strong></td>' +
+            '<td data-label="Payment"><span class="product-order-badge payment-' + escapeHtml(payment) + '">' + escapeHtml(statusLabel(payment)) + '</span></td>' +
+            '<td data-label="Total"><strong class="product-order-total">' + escapeHtml(currency(item.amount, item.currency)) + '</strong></td>' +
+            '<td data-label="Fulfilment"><span class="product-order-badge status-' + escapeHtml(status) + '"><i></i>' + escapeHtml(statusLabel(status)) + '</span></td>' +
+            '<td data-label="Tracking">' + tracking + '</td></tr>';
+        }).join("") : '<tr><td colspan="7" class="client-product-orders-empty light-empty-cell"><div class="product-orders-empty-icon">⌁</div><strong>No matching orders</strong><span>Try a different search or status filter.</span></td></tr>';
+        setText("productOrdersResults", "Showing " + visible.length + " of " + orderRows.length + " order" + (orderRows.length === 1 ? "" : "s"));
+      }
+      ordersBody.innerHTML = '<tr><td colspan="7" class="client-product-orders-empty light-empty-cell">Loading your orders...</td></tr>';
+      request("/user/orders").then(function (data) {
+        orderRows = data.orders || [];
+        setText("productOrdersTotal", orderRows.length);
+        setText("productOrdersProgress", orderRows.filter(function (item) { return ["pending", "processing", "shipped"].includes(String(item.status).toLowerCase()); }).length);
+        setText("productOrdersCompleted", orderRows.filter(function (item) { return String(item.status).toLowerCase() === "completed"; }).length);
+        setText("productOrdersSpent", currency(orderRows.reduce(function (sum, item) { return sum + Number(item.amount || 0); }, 0), orderRows[0] && orderRows[0].currency));
+        renderOrders();
+      }).catch(function (error) {
+        ordersBody.innerHTML = '<tr><td colspan="7" class="client-product-orders-empty light-empty-cell">' + escapeHtml(error.message) + "</td></tr>";
+      });
+      searchInput.addEventListener("input", renderOrders);
+      statusSelect.addEventListener("change", renderOrders);
+      var exportButton = document.getElementById("exportProductOrders");
+      if (exportButton) exportButton.addEventListener("click", function () {
+        var term = String(searchInput.value || "").trim().toLowerCase();
+        var selectedStatus = String(statusSelect.value || "").toLowerCase();
+        var exportedRows = orderRows.filter(function (item) {
+          var haystack = [item.id, item.product_name, item.vcard_title, item.status, item.payment_status, item.tracking_number].join(" ").toLowerCase();
+          return (!term || haystack.includes(term)) && (!selectedStatus || String(item.status).toLowerCase() === selectedStatus);
+        });
+        function csvCell(value) {
+          var safe = String(value == null ? "" : value);
+          if (/^[=+\-@]/.test(safe)) safe = "'" + safe;
+          return '"' + safe.replace(/"/g, '""') + '"';
+        }
+        var csv = [["Order", "Product", "VCard", "Quantity", "Placed", "Payment", "Amount", "Currency", "Fulfilment", "Tracking"]]
+          .concat(exportedRows.map(function (item) {
+            return [item.id, item.product_name || "NFC Card", item.vcard_title || "", item.quantity, item.ordered_at, item.payment_status || "pending", item.amount, item.currency || "LKR", item.status || "pending", item.tracking_number || ""];
+          }))
+          .map(function (row) { return row.map(csvCell).join(","); }).join("\r\n");
+        var url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = "product-orders.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      });
+    }());
   }
 
   var editor = document.getElementById("userVcardEditor");
@@ -675,6 +887,86 @@
     var button = event.target.closest('[data-action="clear-notifications"]');
     if (!button) return;
     request("/user/notifications/read", { method: "PATCH" }).then(function () { setText("notificationCount", "0"); });
+  });
+
+  var userContactList = document.getElementById("userContactList");
+  if (userContactList) {
+    request("/user/contacts").then(function (data) {
+      setText("contactCount", data.total + " captured contact" + (data.total === 1 ? "" : "s"));
+      userContactList.innerHTML = data.contacts.length ? data.contacts.map(function (contact) {
+        var followup = contact.email
+          ? '<a class="btn-preview" href="mailto:' + encodeURIComponent(contact.email) + '">Email</a>'
+          : '<a class="btn-preview" href="tel:' + escapeHtml(contact.phone || "") + '">Call</a>';
+        return '<article class="contact-row searchable-item" data-search="' + escapeHtml([contact.name, contact.email, contact.phone, contact.company, contact.vcard_name].join(" ").toLowerCase()) + '">' +
+          '<div><strong>' + escapeHtml(contact.name || "Visitor") + '</strong><span>' + escapeHtml([contact.company, contact.email || contact.phone].filter(Boolean).join(" · ") || "Contact details shared") + '</span></div>' +
+          '<div><strong>' + escapeHtml(contact.vcard_name || "VCard") + '</strong><span>' + escapeHtml(contact.source || "Public VCard") + '</span></div>' +
+          '<div>' + escapeHtml(formatDate(contact.contacted_at)) + '</div>' + followup + '</article>';
+      }).join("") : '<div class="user-empty">No contacts yet. Visitors will appear here after they consent and save your VCard.</div>';
+    }).catch(function (error) {
+      userContactList.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>';
+    });
+  }
+
+  var userQrCardList = document.getElementById("userQrCardList");
+  if (userQrCardList) {
+    request("/user/vcard-engagement").then(function (data) {
+      userQrCardList.innerHTML = data.cards.length ? data.cards.map(function (card) {
+        var publicUrl = new URL("../public-vcard/profile.html", window.location.href);
+        publicUrl.searchParams.set("id", card.id);
+        publicUrl.searchParams.set("source", "qr");
+        var destination = publicUrl.href;
+        var qrUrl = API.replace(/\/api$/, "") + "/api/public/qrcode?data=" + encodeURIComponent(destination);
+        return '<article class="feature-panel qr-live-card searchable-item" data-search="' + escapeHtml((card.title || "vcard") + " qr") + '">' +
+          '<div class="feature-panel-header"><div><h3>' + escapeHtml(card.title || "Untitled VCard") + '</h3><p>Encoded to open this public VCard directly.</p></div><span class="status-pill ' + (card.is_active ? "status-live" : "status-warm") + '">' + (card.is_active ? "Active" : "Paused") + '</span></div>' +
+          '<div class="qr-preview"><img src="' + escapeHtml(qrUrl) + '" alt="QR code for ' + escapeHtml(card.title || "VCard") + '"></div>' +
+          '<div class="qr-live-stats"><span><strong>' + Number(card.qr_scans || 0).toLocaleString() + '</strong>QR scans</span><span><strong>' + Number(card.contact_downloads || 0).toLocaleString() + '</strong>contact saves</span><span><strong>' + Number(card.captured_contacts || 0).toLocaleString() + '</strong>leads</span></div>' +
+          '<div class="action-row"><button type="button" class="btn-preview" data-copy-text="' + escapeHtml(destination) + '">Copy Link</button><button class="btn-share" type="button" data-download-qr="' + escapeHtml(qrUrl) + '" data-qr-filename="vcard-' + card.id + '-qr.svg">Download SVG</button></div></article>';
+      }).join("") : '<div class="user-empty">Create a VCard to generate your first tracked QR code.</div>';
+    }).catch(function (error) {
+      userQrCardList.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>';
+    });
+  }
+
+  if (document.getElementById("analyticsQrScans")) {
+    request("/user/vcard-engagement").then(function (data) {
+      var totals = data.cards.reduce(function (sum, card) {
+        sum.scans += Number(card.qr_scans || 0);
+        sum.views += Number(card.views || 0);
+        sum.saves += Number(card.contact_downloads || 0);
+        sum.leads += Number(card.captured_contacts || 0);
+        return sum;
+      }, { scans: 0, views: 0, saves: 0, leads: 0 });
+      setText("analyticsQrScans", totals.scans.toLocaleString());
+      setText("analyticsCardViews", totals.views.toLocaleString());
+      setText("analyticsContactSaves", totals.saves.toLocaleString());
+      setText("analyticsCapturedLeads", totals.leads.toLocaleString());
+    }).catch(function () {});
+  }
+
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-download-qr]");
+    if (!button) return;
+    button.disabled = true;
+    var original = button.textContent;
+    button.textContent = "Downloading…";
+    fetch(button.dataset.downloadQr).then(function (response) {
+      if (!response.ok) throw new Error("Unable to download QR code");
+      return response.blob();
+    }).then(function (blob) {
+      var objectUrl = URL.createObjectURL(blob);
+      var anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = button.dataset.qrFilename || "vcard-qr.svg";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(objectUrl);
+    }).catch(function (error) {
+      window.alert(error.message);
+    }).finally(function () {
+      button.disabled = false;
+      button.textContent = original;
+    });
   });
 
   var logout = document.getElementById("logoutButton");

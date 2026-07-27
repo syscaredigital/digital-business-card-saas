@@ -42,9 +42,9 @@
         <article class="admin-card">
           <div class="admin-card-header"><div><h3>User Directory</h3><p>Live user accounts, plans, and activity from the platform database.</p></div><span class="tiny-pill success" id="userDirectoryCount">Loading...</span></div>
           <table class="admin-table" id="userDirectoryTable">
-            <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Cards</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>User</th><th>Email</th><th>Plan</th><th>Currency</th><th>Cards</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="userDirectoryBody">
-              <tr><td colspan="7"><div class="admin-data-empty"><strong>Loading users...</strong><span>Reading accounts from PostgreSQL.</span></div></td></tr>
+              <tr><td colspan="8"><div class="admin-data-empty"><strong>Loading users...</strong><span>Reading accounts from PostgreSQL.</span></div></td></tr>
             </tbody>
           </table>
         </article>
@@ -107,6 +107,14 @@
               <option value="Pending">Pending</option>
               <option value="Inactive">Inactive</option>
               <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="userPreferredCurrency">Preferred Currency:</label>
+            <select id="userPreferredCurrency" name="preferredCurrency">
+              <option value="USD">USD — US Dollar</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="LKR">LKR — Sri Lankan Rupee</option>
             </select>
           </div>
           <div class="form-field form-field-wide">

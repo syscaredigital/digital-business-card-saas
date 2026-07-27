@@ -84,7 +84,7 @@
 
           <div class="client-settings-content">
             <section class="client-settings-panel active" id="settingsGeneralPanel">
-              <form class="settings-general-form">
+              <form class="settings-general-form" id="currencyPreferenceForm">
                 <div class="settings-field">
                   <label for="paypalPayoutEmail">Paypal Payout Email:</label>
                   <input id="paypalPayoutEmail" type="email" placeholder="Paypal Payout Email" />
@@ -92,10 +92,10 @@
 
                 <div class="settings-field">
                   <label for="settingsCurrency">Currency:<span class="required-mark">*</span></label>
-                  <select id="settingsCurrency" required>
-                    <option>$ - USD US Dollar</option>
-                    <option>EUR - Euro</option>
-                    <option>LKR - Sri Lankan Rupee</option>
+                  <select id="settingsCurrency" name="currency" required>
+                    <option value="USD">$ - USD US Dollar</option>
+                    <option value="AUD">A$ - AUD Australian Dollar</option>
+                    <option value="LKR">Rs - LKR Sri Lankan Rupee</option>
                   </select>
                 </div>
 
@@ -129,7 +129,8 @@
                   </div>
                 </div>
 
-                <button class="btn-share settings-save-btn" type="button" data-action="save-settings">Save</button>
+                <button class="btn-share settings-save-btn" type="submit">Save currency</button>
+                <p class="form-feedback" id="currencyPreferenceFeedback" hidden></p>
               </form>
             </section>
 

@@ -1,0 +1,16 @@
+.vcard-save-widget{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.vcard-save-trigger{position:fixed;right:22px;bottom:22px;z-index:80;padding:14px 20px;border:0;border-radius:999px;color:#fff;background:#e63946;box-shadow:0 14px 35px rgba(15,23,42,.3);font:800 14px/1 inherit;cursor:pointer}
+.vcard-save-modal[hidden]{display:none}.vcard-save-modal{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px}
+.vcard-save-backdrop{position:absolute;inset:0;border:0;background:rgba(15,23,42,.72);backdrop-filter:blur(7px)}
+.vcard-save-dialog{position:relative;width:min(480px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:30px;border-radius:24px;background:#fff;box-shadow:0 30px 90px rgba(0,0,0,.35);color:#172033}
+.vcard-save-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border:0;border-radius:50%;background:#f1f5f9;color:#475569;font-size:24px;cursor:pointer}
+.vcard-save-eyebrow{color:#e63946;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
+.vcard-save-dialog h2{margin:8px 36px 7px 0;font-size:25px}.vcard-save-dialog>p{margin:0 0 21px;color:#64748b;line-height:1.55}
+.vcard-save-form{display:grid;gap:13px}.vcard-save-form label{display:grid;gap:6px;color:#334155;font-size:12px;font-weight:750}.vcard-save-form label span{color:#94a3b8;font-weight:500}
+.vcard-save-form input:not([type=checkbox]){width:100%;padding:12px 13px;border:1px solid #dbe3ed;border-radius:11px;background:#fff;color:#172033;font:500 14px inherit;outline:none}
+.vcard-save-form input:focus{border-color:#e63946;box-shadow:0 0 0 3px rgba(230,57,70,.1)}
+.vcard-save-consent{grid-template-columns:18px 1fr!important;align-items:start;gap:9px!important;padding:4px 0}.vcard-save-consent input{margin:2px 0}.vcard-save-consent span{color:#475569!important;line-height:1.45}
+.vcard-save-submit{padding:13px 18px;border:0;border-radius:12px;color:#fff;background:#e63946;font:800 14px inherit;cursor:pointer}.vcard-save-submit:disabled{opacity:.65;cursor:wait}
+.vcard-save-status{margin:0!important;padding:10px 12px;border-radius:9px;font-size:12px}.vcard-save-status.is-error{color:#991b1b;background:#fee2e2}.vcard-save-status.is-success{color:#166534;background:#dcfce7}
+body.vcard-save-open{overflow:hidden}
+@media(max-width:560px){.vcard-save-trigger{right:14px;bottom:14px}.vcard-save-dialog{padding:24px 20px;border-radius:19px}}

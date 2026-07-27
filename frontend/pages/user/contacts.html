@@ -28,30 +28,11 @@
       <main class="page-content">
         <div class="page-header">
           <div><span class="eyebrow">Contact manager</span><h2>Contacts captured from your cards</h2><p>Search, organize, and follow up with the people who saved your profile.</p></div>
-          <button class="btn-share" type="button" data-action="add-contact">Add Contact</button>
+          <a class="btn-share" href="my-vcard.html">Manage VCards</a>
         </div>
         <div class="table-panel">
-          <div class="table-panel-header"><strong>Recent leads</strong><span class="table-caption">1,028 contacts saved this month</span></div>
-          <div class="contact-list">
-            <article class="contact-row searchable-item" data-search="sarah johnson product lead">
-              <div><strong>Sarah Johnson</strong><span>Product Lead, Northwind Labs</span></div>
-              <div>Saved from Main Business Card</div>
-              <div>2 minutes ago</div>
-              <button type="button" class="btn-preview" data-action="contact-followup">Follow Up</button>
-            </article>
-            <article class="contact-row searchable-item" data-search="alex parker expo event">
-              <div><strong>Alex Parker</strong><span>Expo Partner, Bright Summit</span></div>
-              <div>Imported from Event Card</div>
-              <div>15 minutes ago</div>
-              <button type="button" class="btn-preview" data-action="contact-followup">Follow Up</button>
-            </article>
-            <article class="contact-row searchable-item" data-search="michael brown sales pipeline">
-              <div><strong>Michael Brown</strong><span>Sales Director, Vertex One</span></div>
-              <div>Saved from Sales Card</div>
-              <div>1 hour ago</div>
-              <button type="button" class="btn-preview" data-action="contact-followup">Follow Up</button>
-            </article>
-          </div>
+          <div class="table-panel-header"><strong>Recent contacts</strong><span class="table-caption" id="contactCount">Loading contacts…</span></div>
+          <div class="contact-list" id="userContactList"><div class="user-empty">Loading captured contacts…</div></div>
         </div>
         <div class="empty-search-state" id="emptySearchState" hidden><h3>No matches found</h3><p>Try another contact search term.</p></div>
       </main>

@@ -120,6 +120,12 @@ exports.dashboard = async (req, res, next) => {
         profileViews: number(analyticsRow.views),
         clicks: number(analyticsRow.clicks),
         leads: number(analyticsRow.leads),
+        qrScans: number((await pool.query(
+          `SELECT COUNT(*)::int AS total FROM vcard_events e
+           JOIN vcards v ON v.id=e.vcard_id
+           WHERE v.user_id=$1 AND e.event_type='qr_scan'`,
+          [userId]
+        )).rows[0]?.total),
         pendingOrders: orders.rows.filter((order) => order.status === "pending").length,
         nfcCards: nfc.rows.length,
         referrals: number(affiliateRow.referrals),
@@ -148,6 +154,45 @@ exports.enquiries = async (req, res, next) => {
        ORDER BY ct.contacted_at DESC`, [req.user.id]
     );
     res.json({ enquiries: result.rows });
+  } catch (error) { next(error); }
+};
+
+exports.contacts = async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT ct.id,ct.name,ct.email,ct.phone,ct.company,ct.message,ct.source,
+              ct.contacted_at,ct.consent_at,v.id AS vcard_id,v.title AS vcard_name
+       FROM contacts ct
+       JOIN vcards v ON v.id=ct.vcard_id
+       WHERE v.user_id=$1
+       ORDER BY ct.contacted_at DESC`,
+      [req.user.id]
+    );
+    res.json({
+      contacts: result.rows,
+      total: result.rowCount,
+      savedContacts: result.rows.filter((contact) => contact.source === "VCard contact save").length,
+    });
+  } catch (error) { next(error); }
+};
+
+exports.vcardEngagement = async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT v.id,v.title,v.is_active,
+              COUNT(DISTINCT e.id) FILTER (WHERE e.event_type='qr_scan')::int AS qr_scans,
+              COUNT(DISTINCT e.id) FILTER (WHERE e.event_type='vcard_view')::int AS views,
+              COUNT(DISTINCT e.id) FILTER (WHERE e.event_type='contact_download')::int AS contact_downloads,
+              COUNT(DISTINCT ct.id)::int AS captured_contacts
+       FROM vcards v
+       LEFT JOIN vcard_events e ON e.vcard_id=v.id
+       LEFT JOIN contacts ct ON ct.vcard_id=v.id
+       WHERE v.user_id=$1
+       GROUP BY v.id
+       ORDER BY v.updated_at DESC`,
+      [req.user.id]
+    );
+    res.json({ cards: result.rows });
   } catch (error) { next(error); }
 };
 
@@ -276,16 +321,53 @@ exports.updateAppointmentStatus = async (req, res, next) => {
 exports.orders = async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id, quantity, amount, status, shipping_address, tracking_number, ordered_at
-       FROM nfc_orders WHERE user_id = $1 ORDER BY ordered_at DESC`, [req.user.id]
+      `SELECT o.id, o.quantity, o.amount, o.currency, o.status, o.payment_status,
+              o.payment_method, o.shipping_address, o.tracking_number, o.ordered_at,
+              p.name AS product_name, p.front_image AS product_image, v.title AS vcard_title
+       FROM nfc_orders o
+       LEFT JOIN nfc_products p ON p.id = o.nfc_product_id
+       LEFT JOIN vcards v ON v.id = o.vcard_id
+       WHERE o.user_id = $1
+       ORDER BY o.ordered_at DESC`, [req.user.id]
     );
     res.json({ orders: result.rows });
   } catch (error) { next(error); }
 };
 
+const supportedCurrencies = ["USD", "AUD", "LKR"];
+
+exports.getPreferences = async (req, res, next) => {
+  try {
+    const result = await pool.query("SELECT preferred_currency FROM users WHERE id = $1", [req.user.id]);
+    if (!result.rowCount) return res.status(404).json({ message: "User not found" });
+    res.json({
+      currency: supportedCurrencies.includes(result.rows[0].preferred_currency)
+        ? result.rows[0].preferred_currency
+        : "USD",
+      supportedCurrencies,
+    });
+  } catch (error) { next(error); }
+};
+
+exports.updatePreferences = async (req, res, next) => {
+  try {
+    const currency = String(req.body.currency || "").trim().toUpperCase();
+    if (!supportedCurrencies.includes(currency)) {
+      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
+    }
+    const result = await pool.query(
+      `UPDATE users SET preferred_currency = $1, updated_at = NOW()
+       WHERE id = $2 RETURNING preferred_currency`,
+      [currency, req.user.id]
+    );
+    if (!result.rowCount) return res.status(404).json({ message: "User not found" });
+    res.json({ currency: result.rows[0].preferred_currency, message: "Currency preference saved" });
+  } catch (error) { next(error); }
+};
+
 exports.nfcStore = async (req, res, next) => {
   try {
-    const [products, orders, vcards, settingsResult] = await Promise.all([
+    const [products, orders, vcards, settingsResult, userResult] = await Promise.all([
       pool.query(`SELECT id,name,price,description,front_image,back_image,category
         FROM nfc_products WHERE is_active=TRUE ORDER BY category,price,name`),
       pool.query(`SELECT o.id,o.nfc_product_id,o.vcard_id,o.quantity,o.amount,o.currency,o.status,
@@ -295,10 +377,11 @@ exports.nfcStore = async (req, res, next) => {
         LEFT JOIN vcards v ON v.id=o.vcard_id WHERE o.user_id=$1 ORDER BY o.ordered_at DESC`, [req.user.id]),
       pool.query(`SELECT id,title FROM vcards WHERE user_id=$1 AND is_active=TRUE ORDER BY title,id`, [req.user.id]),
       pool.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency","bank_name","bank_account_name","bank_account_number","bank_branch","bank_swift_code"]]),
+      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
     res.json({
-      currency: settings.default_currency || "LKR",
+      currency: userResult.rows[0]?.preferred_currency || settings.default_currency || "USD",
       bankDetails: { bankName: settings.bank_name || "", accountName: settings.bank_account_name || "",
         accountNumber: settings.bank_account_number || "", branch: settings.bank_branch || "", swiftCode: settings.bank_swift_code || "" },
       products: products.rows.map((item) => ({ id:item.id,name:item.name,price:number(item.price),description:item.description || "",
@@ -333,12 +416,12 @@ exports.placeNfcOrder = async (req, res, next) => {
     client = await pool.connect(); await client.query("BEGIN");
     const productResult = await client.query("SELECT id,name,price FROM nfc_products WHERE id=$1 AND is_active=TRUE FOR SHARE", [productId]);
     const vcardResult = await client.query("SELECT id,title FROM vcards WHERE id=$1 AND user_id=$2 AND is_active=TRUE FOR SHARE", [vcardId,req.user.id]);
-    const currencyResult = await client.query("SELECT value FROM settings WHERE key='default_currency'");
+    const currencyResult = await client.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]);
     if (!productResult.rowCount || !vcardResult.rowCount) { await client.query("ROLLBACK"); await discardUpload(); return res.status(400).json({ message: "The selected NFC card or VCard is unavailable" }); }
     const duplicate = await client.query("SELECT id FROM nfc_orders WHERE LOWER(transaction_number)=LOWER($1)", [transactionNumber]);
     if (duplicate.rowCount) { await client.query("ROLLBACK"); await discardUpload(); return res.status(409).json({ message: "This transaction number has already been submitted" }); }
     const product = productResult.rows[0], amount = number(product.price) * quantity;
-    const currency = currencyResult.rows[0]?.value || "LKR";
+    const currency = currencyResult.rows[0]?.preferred_currency || "USD";
     const proofUrl = `/uploads/payment-slips/${req.file.filename}`;
     const result = await client.query(`INSERT INTO nfc_orders(user_id,nfc_product_id,vcard_id,quantity,amount,currency,status,
       shipping_address,payment_method,payment_status,transaction_number,proof_url)
@@ -499,7 +582,7 @@ function mapUserPlan(plan) {
 
 exports.plans = async (req, res, next) => {
   try {
-    const [plansResult, subscriptionsResult, settingsResult, paymentsResult] = await Promise.all([
+    const [plansResult, subscriptionsResult, settingsResult, paymentsResult, userResult] = await Promise.all([
       pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,features FROM plans WHERE status='active' ORDER BY price,name`),
       pool.query(`SELECT s.id,s.plan_id,s.status,s.created_at,p.name AS plan_name,
         pay.status AS payment_status,pay.gateway_reference
@@ -509,10 +592,14 @@ exports.plans = async (req, res, next) => {
         ORDER BY (s.status='active') DESC,s.created_at DESC`, [req.user.id]),
       pool.query(`SELECT key,value FROM settings WHERE key = ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch", "bank_swift_code"]]),
       pool.query(`SELECT pay.id,pay.amount,pay.currency,pay.status,pay.gateway_reference,pay.proof_url,
-        pay.created_at,pay.reviewed_at,p.name AS plan_name
+        pay.created_at,pay.reviewed_at,p.name AS plan_name,c.code AS coupon_code,
+        cr.original_amount,cr.discount_amount
         FROM payments pay LEFT JOIN subscriptions s ON s.id=pay.subscription_id LEFT JOIN plans p ON p.id=s.plan_id
+        LEFT JOIN coupon_redemptions cr ON cr.payment_id=pay.id
+        LEFT JOIN coupon_codes c ON c.id=cr.coupon_id
         WHERE pay.user_id=$1 AND LOWER(COALESCE(pay.method,''))=ANY($2::text[])
-        ORDER BY pay.created_at DESC LIMIT 20`, [req.user.id, ["cash", "manual", "bank_transfer", "cash_payment"]]),
+        ORDER BY pay.created_at DESC LIMIT 20`, [req.user.id, ["cash", "manual", "bank_transfer", "cash_payment", "coupon"]]),
+      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
     const active = subscriptionsResult.rows.find((item) => item.status === "active") || null;
     const pending = subscriptionsResult.rows.find((item) => item.status === "pending") || null;
@@ -520,14 +607,99 @@ exports.plans = async (req, res, next) => {
     const bankDetails = { bankName: settings.bank_name || "", accountName: settings.bank_account_name || "",
       accountNumber: settings.bank_account_number || "", branch: settings.bank_branch || "", swiftCode: settings.bank_swift_code || "" };
     res.json({ plans: plansResult.rows.map(mapUserPlan), currentPlanId: active ? active.plan_id : null,
-      currency: settings.default_currency || "USD", bankDetails,
+      currency: userResult.rows[0]?.preferred_currency || settings.default_currency || "USD", bankDetails,
       bankConfigured: Boolean(bankDetails.bankName && bankDetails.accountName && bankDetails.accountNumber && bankDetails.branch),
       pending: pending ? { id: pending.id, planId: pending.plan_id, planName: pending.plan_name,
         paymentStatus: pending.payment_status || "pending", transactionNumber: pending.gateway_reference || null } : null,
       payments: paymentsResult.rows.map((payment) => ({ id: payment.id, planName: payment.plan_name || "Subscription",
         amount: number(payment.amount), currency: payment.currency, status: payment.status,
+        couponCode: payment.coupon_code || null, originalAmount: payment.original_amount === null ? null : number(payment.original_amount),
+        discountAmount: payment.discount_amount === null ? null : number(payment.discount_amount),
         transactionNumber: payment.gateway_reference, proofUrl: payment.proof_url,
         createdAt: payment.created_at, reviewedAt: payment.reviewed_at })) });
+  } catch (error) { next(error); }
+};
+
+async function calculateUserCoupon(client, { code, userId, planId, originalAmount, currency, lock }) {
+  const normalizedCode = String(code || "").trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{3,80}$/.test(normalizedCode)) {
+    return { error: "Enter a valid coupon code", status: 400 };
+  }
+  const result = await client.query(
+    `SELECT c.*,
+       (SELECT COUNT(*) FROM coupon_redemptions cr
+        WHERE cr.coupon_id=c.id AND cr.status IN ('pending','applied'))::int used_count,
+       (SELECT COUNT(*) FROM coupon_redemptions cr
+        WHERE cr.coupon_id=c.id AND cr.user_id=$2 AND cr.status IN ('pending','applied'))::int user_count
+     FROM coupon_codes c
+     WHERE UPPER(c.code)=UPPER($1)
+     ${lock ? "FOR UPDATE OF c" : ""}`,
+    [normalizedCode, userId]
+  );
+  if (!result.rowCount) return { error: "Coupon code was not found", status: 404 };
+  const coupon = result.rows[0];
+  const now = new Date();
+  if (coupon.status !== "active") return { error: "This coupon is not active", status: 409 };
+  if (coupon.starts_at && new Date(coupon.starts_at) > now) return { error: "This coupon is not available yet", status: 409 };
+  if (coupon.expires_at && new Date(coupon.expires_at) <= now) return { error: "This coupon has expired", status: 409 };
+  if (coupon.usage_limit !== null && Number(coupon.used_count) >= Number(coupon.usage_limit)) {
+    return { error: "This coupon has reached its usage limit", status: 409 };
+  }
+  if (Number(coupon.user_count) >= Number(coupon.per_user_limit)) {
+    return { error: "You have already used this coupon the maximum number of times", status: 409 };
+  }
+  if (coupon.applicable_plan_id !== null && Number(coupon.applicable_plan_id) !== Number(planId)) {
+    return { error: "This coupon is not valid for the selected plan", status: 409 };
+  }
+  if (String(coupon.currency).toUpperCase() !== String(currency).toUpperCase()) {
+    return { error: `This coupon is only valid for ${coupon.currency} purchases`, status: 409 };
+  }
+  if (Number(originalAmount) < Number(coupon.minimum_amount)) {
+    return { error: `Minimum purchase amount is ${coupon.currency} ${Number(coupon.minimum_amount).toFixed(2)}`, status: 409 };
+  }
+  const rawDiscount = coupon.discount_type === "percentage"
+    ? Number(originalAmount) * Number(coupon.discount_value) / 100
+    : Number(coupon.discount_value);
+  const discountAmount = Number(Math.min(rawDiscount, Number(originalAmount)).toFixed(2));
+  const finalAmount = Number((Number(originalAmount) - discountAmount).toFixed(2));
+  return {
+    coupon,
+    discountAmount,
+    finalAmount,
+    originalAmount: Number(Number(originalAmount).toFixed(2)),
+    currency: String(currency).toUpperCase(),
+  };
+}
+
+exports.previewCoupon = async (req, res, next) => {
+  const planId = Number(req.body.planId);
+  const code = String(req.body.code || "");
+  if (!Number.isInteger(planId) || planId < 1) return res.status(400).json({ message: "Select a valid plan" });
+  try {
+    const [planResult, userResult] = await Promise.all([
+      pool.query("SELECT id,name,price FROM plans WHERE id=$1 AND status='active'", [planId]),
+      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
+    ]);
+    if (!planResult.rowCount) return res.status(404).json({ message: "Plan not found" });
+    const plan = planResult.rows[0];
+    const currency = userResult.rows[0]?.preferred_currency || "USD";
+    const calculation = await calculateUserCoupon(pool, {
+      code, userId: req.user.id, planId, originalAmount: number(plan.price), currency, lock: false,
+    });
+    if (calculation.error) return res.status(calculation.status).json({ message: calculation.error });
+    res.json({
+      coupon: {
+        code: calculation.coupon.code,
+        name: calculation.coupon.name,
+        discountType: calculation.coupon.discount_type,
+        discountValue: number(calculation.coupon.discount_value),
+      },
+      originalAmount: calculation.originalAmount,
+      discountAmount: calculation.discountAmount,
+      finalAmount: calculation.finalAmount,
+      currency: calculation.currency,
+      message: "Coupon applied successfully",
+    });
   } catch (error) { next(error); }
 };
 
@@ -538,22 +710,22 @@ exports.requestPlanUpgrade = async (req, res, next) => {
 exports.submitManualPayment = async (req, res, next) => {
   const planId = Number(req.body.planId);
   const reference = String(req.body.transactionNumber || "").trim();
+  const couponCode = String(req.body.couponCode || "").trim().toUpperCase();
   const uploadedPath = req.file?.path;
   const discardUpload = () => uploadedPath ? fs.unlink(uploadedPath).catch(() => {}) : Promise.resolve();
-  if (!req.file) return res.status(400).json({ message: "Upload your payment slip as JPG, PNG, WebP, or PDF" });
   if (!Number.isInteger(planId) || planId < 1) { await discardUpload(); return res.status(400).json({ message: "Select a valid plan" }); }
-  if (!/^[A-Za-z0-9][A-Za-z0-9._/# -]{2,254}$/.test(reference)) { await discardUpload(); return res.status(400).json({ message: "Enter a valid transaction number (3 to 255 characters)" }); }
 
   let client;
   let committed = false;
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    const [planResult, activeResult, settingsResult] = await Promise.all([
+    const [planResult, activeResult, settingsResult, userResult] = await Promise.all([
       client.query("SELECT id,name,price,billing_interval FROM plans WHERE id=$1 AND status='active' FOR SHARE", [planId]),
       client.query(`SELECT s.id,s.plan_id,COALESCE(p.price,0) price FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
         WHERE s.user_id=$1 AND s.status='active' ORDER BY s.created_at DESC LIMIT 1 FOR UPDATE OF s`, [req.user.id]),
       client.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch"]]),
+      client.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
     const plan = planResult.rows[0];
     if (!plan) { await client.query("ROLLBACK"); await discardUpload(); return res.status(404).json({ message: "This plan is no longer available" }); }
@@ -562,37 +734,106 @@ exports.submitManualPayment = async (req, res, next) => {
     if (active && Number(active.plan_id) === planId) { await client.query("ROLLBACK"); await discardUpload(); return res.status(409).json({ message: "This is already your current plan" }); }
     if (active && number(plan.price) <= number(active.price)) { await client.query("ROLLBACK"); await discardUpload(); return res.status(400).json({ message: "Choose a plan priced above your current plan" }); }
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
-    if (![settings.bank_name, settings.bank_account_name, settings.bank_account_number, settings.bank_branch].every(Boolean)) {
+    const purchaseCurrency = userResult.rows[0]?.preferred_currency || settings.default_currency || "USD";
+    let couponCalculation = null;
+    if (couponCode) {
+      couponCalculation = await calculateUserCoupon(client, {
+        code: couponCode,
+        userId: req.user.id,
+        planId,
+        originalAmount: number(plan.price),
+        currency: purchaseCurrency,
+        lock: true,
+      });
+      if (couponCalculation.error) {
+        await client.query("ROLLBACK"); await discardUpload();
+        return res.status(couponCalculation.status).json({ message: couponCalculation.error });
+      }
+    }
+    const payableAmount = couponCalculation ? couponCalculation.finalAmount : number(plan.price);
+    const fullyDiscounted = payableAmount === 0;
+    if (!fullyDiscounted && !req.file) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ message: "Upload your payment slip as JPG, PNG, WebP, or PDF" });
+    }
+    if (!fullyDiscounted && !/^[A-Za-z0-9][A-Za-z0-9._/# -]{2,254}$/.test(reference)) {
+      await client.query("ROLLBACK"); await discardUpload();
+      return res.status(400).json({ message: "Enter a valid transaction number (3 to 255 characters)" });
+    }
+    if (!fullyDiscounted && ![settings.bank_name, settings.bank_account_name, settings.bank_account_number, settings.bank_branch].every(Boolean)) {
       await client.query("ROLLBACK"); await discardUpload();
       return res.status(503).json({ message: "Bank transfer details are not configured yet. Please contact support." });
     }
-    const duplicate = await client.query(`SELECT id FROM payments WHERE LOWER(gateway_reference)=LOWER($1)
-      AND LOWER(COALESCE(method,''))=ANY($2::text[]) AND status<>'rejected' LIMIT 1`, [reference, ["cash", "manual", "bank_transfer", "cash_payment"]]);
-    if (duplicate.rowCount) { await client.query("ROLLBACK"); await discardUpload(); return res.status(409).json({ message: "This transaction number has already been submitted" }); }
+    if (!fullyDiscounted) {
+      const duplicate = await client.query(`SELECT id FROM payments WHERE LOWER(gateway_reference)=LOWER($1)
+        AND LOWER(COALESCE(method,''))=ANY($2::text[]) AND status<>'rejected' LIMIT 1`, [reference, ["cash", "manual", "bank_transfer", "cash_payment"]]);
+      if (duplicate.rowCount) { await client.query("ROLLBACK"); await discardUpload(); return res.status(409).json({ message: "This transaction number has already been submitted" }); }
+    }
 
     await client.query(`UPDATE payments SET status='rejected',notes=CONCAT_WS(E'\n',notes,'Superseded by a newer payment submission'),updated_at=NOW()
       WHERE subscription_id IN (SELECT id FROM subscriptions WHERE user_id=$1 AND status='pending') AND status='pending'`, [req.user.id]);
+    await client.query(`UPDATE coupon_redemptions cr SET status='cancelled'
+      FROM payments pay WHERE cr.payment_id=pay.id AND pay.user_id=$1
+      AND pay.status='rejected' AND cr.status='pending'`, [req.user.id]);
     await client.query(`UPDATE subscriptions SET status='cancelled',cancel_reason='Superseded by a newer payment submission',updated_at=NOW()
       WHERE user_id=$1 AND status='pending'`, [req.user.id]);
-    const subscription = await client.query(`INSERT INTO subscriptions(user_id,plan_id,status,start_date,auto_renew,cancel_reason)
-      VALUES($1,$2,'pending',CURRENT_DATE,FALSE,'Awaiting bank transfer verification') RETURNING id,plan_id,status`, [req.user.id, planId]);
-    const proofUrl = `/uploads/payment-slips/${req.file.filename}`;
-    const payment = await client.query(`INSERT INTO payments(subscription_id,user_id,amount,currency,method,status,gateway_reference,proof_url,notes)
-      VALUES($1,$2,$3,$4,'bank_transfer','pending',$5,$6,'Submitted by user for manual review') RETURNING id,status`,
-      [subscription.rows[0].id, req.user.id, plan.price, settings.default_currency || "USD", reference, proofUrl]);
+    if (fullyDiscounted) {
+      await client.query(`UPDATE subscriptions SET status='cancelled',cancel_reason='Replaced by coupon subscription',updated_at=NOW()
+        WHERE user_id=$1 AND status='active'`, [req.user.id]);
+    }
+    const subscription = await client.query(`INSERT INTO subscriptions(user_id,plan_id,status,start_date,end_date,auto_renew,cancel_reason)
+      VALUES($1,$2,$3,CURRENT_DATE,
+        CASE WHEN $3='active' AND LOWER(COALESCE($4,'')) IN ('year','yearly','annual') THEN (CURRENT_DATE + INTERVAL '1 year')::date
+             WHEN $3='active' AND LOWER(COALESCE($4,'')) IN ('week','weekly') THEN (CURRENT_DATE + INTERVAL '1 week')::date
+             WHEN $3='active' AND LOWER(COALESCE($4,'')) IN ('day','daily') THEN (CURRENT_DATE + INTERVAL '1 day')::date
+             WHEN $3='active' AND LOWER(COALESCE($4,''))='lifetime' THEN NULL
+             WHEN $3='active' THEN (CURRENT_DATE + INTERVAL '1 month')::date ELSE NULL END,
+        FALSE,$5) RETURNING id,plan_id,status`,
+      [req.user.id, planId, fullyDiscounted ? "active" : "pending", plan.billing_interval,
+        fullyDiscounted ? null : "Awaiting bank transfer verification"]);
+    const proofUrl = req.file ? `/uploads/payment-slips/${req.file.filename}` : null;
+    const paymentReference = fullyDiscounted
+      ? `COUPON-${couponCalculation.coupon.id}-${req.user.id}-${Date.now()}`
+      : reference;
+    const payment = await client.query(`INSERT INTO payments(subscription_id,user_id,amount,currency,method,status,gateway_reference,proof_url,notes,paid_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,CASE WHEN $6='approved' THEN NOW() ELSE NULL END) RETURNING id,status,amount,currency`,
+      [subscription.rows[0].id, req.user.id, payableAmount, purchaseCurrency,
+        fullyDiscounted ? "coupon" : "bank_transfer", fullyDiscounted ? "approved" : "pending",
+        paymentReference, proofUrl, couponCalculation ? `Coupon ${couponCalculation.coupon.code} applied` : "Submitted by user for manual review"]);
     await client.query(`INSERT INTO transactions(payment_id,user_id,transaction_type,amount,currency,reference,gateway,status,metadata)
       VALUES($1,$2,'cash_payment',$3,$4,$5,'manual','pending',$6::jsonb)`,
-      [payment.rows[0].id, req.user.id, plan.price, settings.default_currency || "USD", reference, JSON.stringify({ subscriptionId: subscription.rows[0].id, source: "user_upload" })]);
-    await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,'Payment submitted',$2,'billing')`,
-      [req.user.id, `Your ${plan.name} payment is waiting for administrator approval. Your current plan remains available until approval.`]);
-    await client.query(`INSERT INTO notifications(user_id,title,message,type)
-      SELECT u.id,'Manual payment awaiting review',$1,'billing' FROM users u JOIN roles r ON r.id=u.role_id WHERE r.name='super_admin'`,
-      [`A bank transfer for ${plan.name} was submitted with transaction ${reference}.`]);
+      [payment.rows[0].id, req.user.id, payableAmount, purchaseCurrency, paymentReference,
+        JSON.stringify({ subscriptionId: subscription.rows[0].id, source: fullyDiscounted ? "coupon" : "user_upload", couponCode: couponCode || null })]);
+    if (fullyDiscounted) {
+      await client.query("UPDATE transactions SET status='completed',updated_at=NOW() WHERE payment_id=$1", [payment.rows[0].id]);
+    }
+    if (couponCalculation) {
+      await client.query(`INSERT INTO coupon_redemptions
+        (coupon_id,user_id,plan_id,payment_id,original_amount,discount_amount,final_amount,currency,status,metadata)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)`,
+        [couponCalculation.coupon.id, req.user.id, planId, payment.rows[0].id,
+          couponCalculation.originalAmount, couponCalculation.discountAmount, couponCalculation.finalAmount,
+          purchaseCurrency, fullyDiscounted ? "applied" : "pending",
+          JSON.stringify({ source: "user_checkout", transactionNumber: paymentReference })]);
+    }
+    await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,$2,$3,'billing')`,
+      [req.user.id, fullyDiscounted ? "Subscription activated" : "Payment submitted",
+        fullyDiscounted
+          ? `Coupon ${couponCalculation.coupon.code} covered your ${plan.name} plan and it is now active.`
+          : `Your ${plan.name} payment is waiting for administrator approval. Your current plan remains available until approval.`]);
+    if (!fullyDiscounted) {
+      await client.query(`INSERT INTO notifications(user_id,title,message,type)
+        SELECT u.id,'Manual payment awaiting review',$1,'billing' FROM users u JOIN roles r ON r.id=u.role_id WHERE r.name='super_admin'`,
+        [`A ${purchaseCurrency} ${payableAmount.toFixed(2)} bank transfer for ${plan.name}${couponCalculation ? ` using coupon ${couponCalculation.coupon.code}` : ""} was submitted with transaction ${reference}.`]);
+    }
     await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata)
-      VALUES($1,'subscription.payment_submitted','payment',$2,$3::jsonb)`, [req.user.id, payment.rows[0].id, JSON.stringify({ planId, subscriptionId: subscription.rows[0].id, transactionNumber: reference })]);
+      VALUES($1,$2,'payment',$3,$4::jsonb)`, [req.user.id, fullyDiscounted ? "subscription.coupon_activated" : "subscription.payment_submitted",
+        payment.rows[0].id, JSON.stringify({ planId, subscriptionId: subscription.rows[0].id, transactionNumber: paymentReference,
+          couponCode: couponCode || null, originalAmount: number(plan.price), discountAmount: couponCalculation?.discountAmount || 0, finalAmount: payableAmount })]);
     await client.query("COMMIT");
     committed = true;
-    res.status(201).json({ payment: payment.rows[0], subscription: subscription.rows[0], message: "Payment submitted. Your paid plan will activate after administrator approval." });
+    res.status(201).json({ payment: payment.rows[0], subscription: subscription.rows[0],
+      message: fullyDiscounted ? "Coupon applied. Your plan is now active." : "Payment submitted. Your paid plan will activate after administrator approval." });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});
     if (!committed) await discardUpload();

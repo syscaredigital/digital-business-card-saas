@@ -1731,7 +1731,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!userDirectoryBody) return;
     superAdminUsersById = {};
     if (!users.length) {
-      userDirectoryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>No users found</strong><span>Create the first user with the Add User button.</span></div></td></tr>';
+      userDirectoryBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>No users found</strong><span>Create the first user with the Add User button.</span></div></td></tr>';
       updateUserDirectoryCount(total);
       return;
     }
@@ -1742,10 +1742,11 @@ document.addEventListener("DOMContentLoaded", function () {
       var email = user.email || "";
       var username = email.split("@")[0];
       var plan = user.plan || "Free";
+      var preferredCurrency = user.preferredCurrency || "USD";
       var rawStatus = String(user.status || "inactive").toLowerCase();
       var displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
       var joinedAt = user.joinedAt ? formatDate(new Date(user.joinedAt)) : "Not available";
-      var searchTerms = [name, email, username, plan, rawStatus, user.phoneNumber || "", user.companyName || ""].join(" ").toLowerCase();
+      var searchTerms = [name, email, username, plan, preferredCurrency, rawStatus, user.phoneNumber || "", user.companyName || ""].join(" ").toLowerCase();
       var approveAction = '<button type="button" class="user-action-btn approve" data-user-action="status" data-user-status="active" data-user-id="' + user.id + '">Approve</button>';
       var rejectAction = '<button type="button" class="user-action-btn reject" data-user-action="status" data-user-status="rejected" data-user-id="' + user.id + '">Reject</button>';
       var reviewAction = rawStatus === "pending"
@@ -1755,6 +1756,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(name) || "U") + '</span><div><strong>' + escapeDashboardHtml(name) + '</strong><div class="subtle-handle">@' + escapeDashboardHtml(username) + '</div></div></div></td>' +
         '<td>' + escapeDashboardHtml(email) + '</td>' +
         '<td><span class="plan-pill ' + planClass(plan) + '">' + escapeDashboardHtml(plan) + '</span></td>' +
+        '<td><span class="tiny-pill">' + escapeDashboardHtml(preferredCurrency) + '</span></td>' +
         '<td>' + formatDashboardNumber(user.cards) + '</td>' +
         '<td>' + escapeDashboardHtml(joinedAt) + '</td>' +
         '<td><span class="status-badge ' + statusClass(displayStatus) + '">' + escapeDashboardHtml(displayStatus) + '</span></td>' +
@@ -1784,7 +1786,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (adminPageSlug !== "users" || !userDirectoryBody) return;
     var token = localStorage.getItem("token");
     if (!token) {
-      userDirectoryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to view database users.</span></div></td></tr>';
+      userDirectoryBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to view database users.</span></div></td></tr>';
       updateUserDirectoryCount(0);
       return;
     }
@@ -1799,7 +1801,7 @@ document.addEventListener("DOMContentLoaded", function () {
       renderSuperAdminUsers(data.users || [], data.pagination ? data.pagination.total : 0);
       updateUsersPageSummary(data.summary || {});
     } catch (error) {
-      userDirectoryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Users could not be loaded</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
+      userDirectoryBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Users could not be loaded</strong><span>' + escapeDashboardHtml(error.message) + '</span></div></td></tr>';
       updateUserDirectoryCount(0);
       console.error("Super admin users:", error);
     }
@@ -2335,6 +2337,7 @@ document.addEventListener("DOMContentLoaded", function () {
     addUserForm.elements.lastName.value = nameParts.join(" ");
     addUserForm.elements.email.value = user.email || "";
     addUserForm.elements.status.value = String(user.status || "active").charAt(0).toUpperCase() + String(user.status || "active").slice(1);
+    addUserForm.elements.preferredCurrency.value = user.preferredCurrency || "USD";
     if (userEditId) userEditId.value = user.id;
     if (userModalTitle) userModalTitle.textContent = "Edit User";
 
@@ -4103,8 +4106,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function renderCouponRedemptions(redemptions){
     if(!couponRedemptionBody)return;if(couponRedemptionCount)couponRedemptionCount.textContent=formatDashboardNumber(redemptions.length)+(redemptions.length===1?" redemption":" redemptions");
-    if(!redemptions.length){couponRedemptionBody.innerHTML='<tr><td colspan="8"><div class="admin-data-empty"><strong>No redemptions found</strong><span>Applied coupons will appear here with their calculated totals.</span></div></td></tr>';return;}
-    couponRedemptionBody.innerHTML=redemptions.map(function(r){var user=r.user||{name:"Deleted user",email:"Account unavailable"};return '<tr><td><div class="table-user"><span class="mini-avatar">'+escapeDashboardHtml(avatarInitials(user.name)||"U")+'</span><div><strong>'+escapeDashboardHtml(user.name)+'</strong><div class="subtle-handle">'+escapeDashboardHtml(user.email)+'</div></div></div></td><td><span class="coupon-code-pill">'+escapeDashboardHtml(r.coupon.code)+'</span><div class="subtle-handle">'+escapeDashboardHtml(r.coupon.name)+'</div></td><td>'+escapeDashboardHtml(r.planName||"No plan")+'</td><td>'+couponMoney(r.originalAmount,r.currency)+'</td><td><strong class="coupon-discount">−'+couponMoney(r.discountAmount,r.currency)+'</strong></td><td><strong>'+couponMoney(r.finalAmount,r.currency)+'</strong></td><td>'+escapeDashboardHtml(couponDate(r.redeemedAt))+'</td><td><button class="user-action-btn delete" type="button" data-live-redemption-action="delete" data-redemption-id="'+r.id+'">Remove</button></td></tr>';}).join("");
+    if(!redemptions.length){couponRedemptionBody.innerHTML='<tr><td colspan="9"><div class="admin-data-empty"><strong>No redemptions found</strong><span>Applied coupons will appear here with their calculated totals.</span></div></td></tr>';return;}
+    couponRedemptionBody.innerHTML=redemptions.map(function(r){var user=r.user||{name:"Deleted user",email:"Account unavailable"};return '<tr><td><div class="table-user"><span class="mini-avatar">'+escapeDashboardHtml(avatarInitials(user.name)||"U")+'</span><div><strong>'+escapeDashboardHtml(user.name)+'</strong><div class="subtle-handle">'+escapeDashboardHtml(user.email)+'</div></div></div></td><td><span class="coupon-code-pill">'+escapeDashboardHtml(r.coupon.code)+'</span><div class="subtle-handle">'+escapeDashboardHtml(r.coupon.name)+'</div></td><td>'+escapeDashboardHtml(r.planName||"No plan")+'</td><td>'+couponMoney(r.originalAmount,r.currency)+'</td><td><strong class="coupon-discount">−'+couponMoney(r.discountAmount,r.currency)+'</strong></td><td><strong>'+couponMoney(r.finalAmount,r.currency)+'</strong></td><td><span class="status-badge '+statusClass(r.status||"applied")+'">'+escapeDashboardHtml(transactionTypeLabel(r.status||"applied"))+'</span></td><td>'+escapeDashboardHtml(couponDate(r.redeemedAt))+'</td><td><button class="user-action-btn delete" type="button" data-live-redemption-action="delete" data-redemption-id="'+r.id+'">Remove</button></td></tr>';}).join("");
   }
   function populateCouponOptions(coupons,plans,users){
     superAdminCouponPlans=plans;superAdminCouponUsers=users;var planOptions=plans.map(function(p){return '<option value="'+p.id+'">'+escapeDashboardHtml(p.name)+'</option>';}).join("");var userOptions=users.map(function(u){return '<option value="'+u.id+'">'+escapeDashboardHtml(u.name+" — "+u.email)+'</option>';}).join("");
@@ -4889,7 +4892,8 @@ document.addEventListener("DOMContentLoaded", function () {
             email: formData.get("email").trim(),
             password: formData.get("password"),
             phoneNumber: phone ? (String(formData.get("countryCode") || "") + " " + phone).trim() : null,
-            status: String(formData.get("status") || "active").toLowerCase()
+            status: String(formData.get("status") || "active").toLowerCase(),
+            preferredCurrency: String(formData.get("preferredCurrency") || "USD")
           })
         });
         var data = await response.json().catch(function () { return {}; });

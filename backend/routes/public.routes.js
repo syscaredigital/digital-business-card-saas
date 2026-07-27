@@ -1,9 +1,25 @@
 const express = require("express");
 const QRCode = require("qrcode");
+const crypto = require("crypto");
 const pool = require("../config/database.config");
 const { normalizePlanFeatures } = require("../config/vcard-features");
 
 const router = express.Router();
+
+function visitorHash(req) {
+  const address = String(req.ip || req.socket?.remoteAddress || "");
+  const agent = String(req.get("user-agent") || "").slice(0, 500);
+  const day = new Date().toISOString().slice(0, 10);
+  return crypto.createHash("sha256").update(`${address}|${agent}|${day}`).digest("hex");
+}
+
+function vcfEscape(value) {
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\r?\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
 
 router.get("/plans", async (req, res, next) => {
   try {
@@ -125,6 +141,116 @@ router.get("/vcards/:id", async (req, res, next) => {
       enabledFeatures: Array.from(allowedFeatures),
       companyName: card.company_name, template: { id: card.template_id, name: card.template_name, previewUrl: card.preview_url || null, config: card.template_json || {} },
     } });
+  } catch (error) { next(error); }
+});
+
+router.post("/vcards/:id/events", async (req, res, next) => {
+  const id = Number(req.params.id);
+  const eventType = String(req.body?.eventType || "").trim();
+  const source = String(req.body?.source || "direct").trim().slice(0, 80);
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
+  if (!["qr_scan", "vcard_view"].includes(eventType)) return res.status(400).json({ message: "Invalid event type" });
+  try {
+    const card = await pool.query("SELECT id FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
+    const hash = visitorHash(req);
+    const result = await pool.query(
+      `INSERT INTO vcard_events (vcard_id,event_type,source,visitor_hash,user_agent,referrer)
+       SELECT $1::integer,$2::varchar,$3::varchar,$4::varchar,$5::text,$6::text
+       WHERE NOT EXISTS (
+         SELECT 1 FROM vcard_events
+         WHERE vcard_id=$1 AND event_type=$2 AND visitor_hash=$4
+           AND occurred_at > NOW() - INTERVAL '30 minutes'
+       )
+       RETURNING id`,
+      [id, eventType, source, hash, String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000)]
+    );
+    res.status(result.rowCount ? 201 : 200).json({ recorded: Boolean(result.rowCount) });
+  } catch (error) { next(error); }
+});
+
+router.post("/vcards/:id/contact-saves", async (req, res, next) => {
+  const id = Number(req.params.id);
+  const name = String(req.body?.name || "").trim().slice(0, 150);
+  const email = String(req.body?.email || "").trim().toLowerCase().slice(0, 255);
+  const phone = String(req.body?.phone || "").trim().slice(0, 50);
+  const company = String(req.body?.company || "").trim().slice(0, 255);
+  const consent = req.body?.consent === true;
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
+  if (!name || (!email && !phone)) return res.status(400).json({ message: "Enter your name and an email address or phone number" });
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: "Enter a valid email address" });
+  if (!consent) return res.status(400).json({ message: "Consent is required before sharing your details" });
+  try {
+    const card = await pool.query("SELECT id FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
+    const result = await pool.query(
+      `WITH existing AS (
+         SELECT id FROM contacts
+         WHERE vcard_id=$1 AND contacted_at > NOW() - INTERVAL '24 hours'
+           AND (($3::varchar IS NOT NULL AND LOWER(email)=LOWER($3::varchar))
+             OR ($4::varchar IS NOT NULL AND phone=$4::varchar))
+         ORDER BY contacted_at DESC LIMIT 1
+       ), inserted AS (
+         INSERT INTO contacts
+           (vcard_id,name,email,phone,company,message,source,consent_at,consent_text)
+         SELECT $1,$2,$3,$4,$5,'Contact details shared before downloading the card','VCard contact save',NOW(),
+                 'I agree to share my submitted details with the owner of this VCard.'
+         WHERE NOT EXISTS (SELECT 1 FROM existing)
+         RETURNING id
+       )
+       SELECT id FROM inserted UNION ALL SELECT id FROM existing LIMIT 1`,
+      [id, name, email || null, phone || null, company || null]
+    );
+    res.status(201).json({
+      message: "Your details were shared. The contact is ready to save.",
+      downloadUrl: `/api/public/vcards/${id}/contact.vcf?capture=${result.rows[0].id}`,
+    });
+  } catch (error) { next(error); }
+});
+
+router.get("/vcards/:id/contact.vcf", async (req, res, next) => {
+  const id = Number(req.params.id);
+  const captureId = Number(req.query.capture);
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
+  try {
+    const result = await pool.query(
+      `SELECT v.id,v.title,v.email,v.phone,v.website_url,v.address,u.name AS owner_name,c.name AS company_name
+       FROM vcards v
+       LEFT JOIN users u ON u.id=v.user_id
+       LEFT JOIN companies c ON c.id=COALESCE(v.company_id,u.company_id)
+       WHERE v.id=$1 AND v.is_active=TRUE`,
+      [id]
+    );
+    if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
+    const card = result.rows[0];
+    if (!Number.isInteger(captureId) || captureId < 1) {
+      return res.status(403).json({ message: "Share your contact details before downloading this VCard" });
+    }
+    const capture = await pool.query("SELECT id FROM contacts WHERE id=$1 AND vcard_id=$2", [captureId, id]);
+    if (!capture.rowCount) return res.status(403).json({ message: "Invalid contact download" });
+    await pool.query(
+      `INSERT INTO vcard_events (vcard_id,event_type,source,visitor_hash,user_agent,referrer)
+       VALUES ($1,'contact_download','public_vcard',$2,$3,$4)`,
+      [id, visitorHash(req), String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000)]
+    );
+    const displayName = card.owner_name || card.title || "VCard contact";
+    const lines = [
+      "BEGIN:VCARD", "VERSION:3.0",
+      `FN:${vcfEscape(displayName)}`,
+      `N:${vcfEscape(displayName)};;;;`,
+      card.company_name ? `ORG:${vcfEscape(card.company_name)}` : "",
+      card.phone ? `TEL;TYPE=CELL:${vcfEscape(card.phone)}` : "",
+      card.email ? `EMAIL;TYPE=INTERNET:${vcfEscape(card.email)}` : "",
+      card.website_url ? `URL:${vcfEscape(card.website_url)}` : "",
+      card.address ? `ADR;TYPE=WORK:;;${vcfEscape(card.address)};;;;` : "",
+      "END:VCARD",
+    ].filter(Boolean);
+    const filename = displayName.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-|-$/g, "") || "contact";
+    res.set({
+      "Content-Type": "text/vcard; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}.vcf"`,
+      "Cache-Control": "no-store",
+    }).send(lines.join("\r\n"));
   } catch (error) { next(error); }
 });
 
