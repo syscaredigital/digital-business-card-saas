@@ -1,8 +1,7 @@
 (function () {
   "use strict";
   var id = new URLSearchParams(window.location.search).get("id");
-  var apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
-    ? "http://localhost:5000" : window.location.origin;
+  var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
 
   function localDateValue(date) {
     var offset = date.getTimezoneOffset() * 60000;

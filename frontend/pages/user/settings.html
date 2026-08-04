@@ -100,7 +100,7 @@
             <section class="client-settings-panel" id="settingsPaymentPanel">
               <div class="account-settings-panel-head"><div><span>Workspace behaviour</span><h1>Preferences</h1><p>Choose how prices, time and account notifications are presented.</p></div></div>
               <form class="account-settings-form" id="accountPreferencesForm">
-                <div class="account-settings-field"><label for="settingsCurrency">Display and payment currency</label><select id="settingsCurrency" name="currency" required><option value="USD">USD — US Dollar</option><option value="AUD">AUD — Australian Dollar</option><option value="LKR">LKR — Sri Lankan Rupee</option></select></div>
+                <div class="account-settings-field"><label for="settingsCurrency">Display and payment currency</label><select id="settingsCurrency" name="currency" data-currency-select required><option value="USD">USD — US Dollar</option></select></div>
                 <div class="account-settings-field"><label>Time format</label><div class="account-settings-segmented"><label><input type="radio" name="timeFormat" value="12" checked /><span>12 hour</span></label><label><input type="radio" name="timeFormat" value="24" /><span>24 hour</span></label></div></div>
                 <div class="account-preference-list account-settings-wide">
                   <label><span><strong>Email notifications</strong><small>Receive important account and order updates by email.</small></span><input type="checkbox" name="emailNotifications" /><i></i></label>
@@ -135,6 +135,7 @@
   </div>
 
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/currency-catalog.js"></script>
   <script src="../../public/assets/js/dashboard.js"></script>
   <script src="../../public/assets/js/user-workspace.js"></script>
 </body>

@@ -10,17 +10,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const publicTemplateGrid = document.querySelector("[data-public-template-grid]");
   const publicTemplateFilters = document.querySelector("[data-template-filters]");
 
-  const supportedCurrencies = ["USD", "AUD", "LKR"];
-  let websiteCurrency = String(localStorage.getItem("preferredCurrency") || "USD").toUpperCase();
-  if (!supportedCurrencies.includes(websiteCurrency)) websiteCurrency = "USD";
+  let websiteCurrency = String(localStorage.getItem("preferredCurrency") || "LKR").toUpperCase();
+  if (!/^[A-Z]{3}$/.test(websiteCurrency)) websiteCurrency = "LKR";
   const navActions = document.querySelector(".nav-actions");
   if (navActions) {
     const currencyWrap = document.createElement("label");
     currencyWrap.className = "website-currency-switcher";
     currencyWrap.setAttribute("aria-label", "Billing currency");
-    currencyWrap.innerHTML = '<span>Currency</span><select><option value="USD">USD</option><option value="AUD">AUD</option><option value="LKR">LKR</option></select>';
+    currencyWrap.innerHTML = '<span>Currency</span><select><option value="LKR">LKR</option></select>';
     const select = currencyWrap.querySelector("select");
     select.value = websiteCurrency;
+    const currencyApiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000") ? "http://localhost:5000" : window.location.origin;
+    fetch(currencyApiOrigin + "/api/public/currencies").then((response) => response.ok ? response.json() : Promise.reject()).then((payload) => {
+      const currencies = Array.isArray(payload.data) ? payload.data : [];
+      if (!currencies.length) return;
+      select.innerHTML = currencies.map((item) => '<option value="' + item.code + '">' + item.code + ' — ' + item.name + '</option>').join("");
+      select.value = currencies.some((item) => item.code === websiteCurrency) ? websiteCurrency : "LKR";
+    }).catch(() => {});
     navActions.prepend(currencyWrap);
     select.addEventListener("change", () => {
       websiteCurrency = select.value;

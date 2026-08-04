@@ -42,3 +42,10 @@
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/044_complete_user_coupon_checkout.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/045_add_vcard_engagement_tracking.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/046_complete_vcard_analytics_pipeline.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/047_create_virtual_nfc_designs.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/048_add_plan_storage_limits.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/049_create_user_settings.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/050_add_multi_currency_plan_prices.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/051_add_lkr_exchange_and_nfc_shipping.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/052_add_vcard_public_slugs.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/053_prefer_readable_vcard_slugs.sql

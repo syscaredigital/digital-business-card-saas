@@ -3,6 +3,9 @@ const QRCode = require("qrcode");
 const crypto = require("crypto");
 const pool = require("../config/database.config");
 const { normalizePlanFeatures } = require("../config/vcard-features");
+const { currencyName, normalizeCurrency } = require("../config/currencies");
+const { BASE_CURRENCY, getRate, supportedCurrencies, convertFromLkr } = require("../services/exchange-rate.service");
+const { publicVcardUrl } = require("../helpers/vcard-url");
 
 const router = express.Router();
 
@@ -23,18 +26,39 @@ function vcfEscape(value) {
 
 router.get("/plans", async (req, res, next) => {
   try {
-    const result = await pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,storage_limit_mb,features,updated_at FROM plans WHERE status='active' ORDER BY price,name`);
+    const currency = normalizeCurrency(req.query.currency, BASE_CURRENCY);
+    const exchange = await getRate(currency);
+    const result = await pool.query(`SELECT p.id,p.name,p.price,p.billing_interval,p.vcard_limit,p.nfc_limit,p.analytics_limit,p.storage_limit_mb,p.features,p.updated_at
+      FROM plans p WHERE p.status='active' ORDER BY p.price,p.name`);
     res.json({ data: result.rows.map((plan) => ({
-      id: plan.id, name: plan.name, price: Number(plan.price), billingInterval: plan.billing_interval,
+      id: plan.id, name: plan.name, price: convertFromLkr(plan.price, exchange.rate), basePrice: Number(plan.price), baseCurrency: BASE_CURRENCY, currency, billingInterval: plan.billing_interval,
       vcardLimit: Number(plan.vcard_limit), nfcLimit: Number(plan.nfc_limit), analyticsLimit: Number(plan.analytics_limit),
       storageLimitMb: Number(plan.storage_limit_mb),
       features: normalizePlanFeatures(plan.features).benefits, updatedAt: plan.updated_at,
-    })) });
+    })), currency, exchangeRate: exchange.rate, rateDate: exchange.rateDate, ratesStale: exchange.stale });
+  } catch (error) { next(error); }
+});
+
+router.get("/currencies", async (req, res, next) => {
+  try {
+    const codes = await supportedCurrencies();
+    res.json({ data: codes.map((code) => ({ code, name: currencyName(code) })), baseCurrency: BASE_CURRENCY });
+  } catch (error) { next(error); }
+});
+
+router.get("/exchange-rate", async (req, res, next) => {
+  try {
+    const currency = normalizeCurrency(req.query.currency);
+    if (!currency) return res.status(400).json({ message: "Select a valid ISO currency" });
+    const exchange = await getRate(currency);
+    res.json({ baseCurrency: BASE_CURRENCY, currency, rate: exchange.rate, rateDate: exchange.rateDate, fetchedAt: exchange.fetchedAt, stale: exchange.stale });
   } catch (error) { next(error); }
 });
 
 router.get("/nfc-products", async (req, res, next) => {
   try {
+    const currency = normalizeCurrency(req.query.currency, BASE_CURRENCY);
+    const exchange = await getRate(currency);
     const result = await pool.query(`
       SELECT id, name, price, description, front_image, back_image, category, updated_at
       FROM nfc_products
@@ -55,13 +79,15 @@ router.get("/nfc-products", async (req, res, next) => {
       data: result.rows.map((product) => ({
         id: product.id,
         name: product.name,
-        price: Number(product.price),
+        price: convertFromLkr(product.price, exchange.rate),
+        basePrice: Number(product.price),
+        currency,
         description: product.description || "",
         frontImage: product.front_image,
         backImage: product.back_image,
         category: product.category,
         updatedAt: product.updated_at,
-      })),
+      })), currency, baseCurrency: BASE_CURRENCY, exchangeRate: exchange.rate, rateDate: exchange.rateDate, ratesStale: exchange.stale,
     });
   } catch (error) {
     next(error);
@@ -92,6 +118,18 @@ router.get("/qrcode", async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.get("/vcards/:id/qrcode", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
+  try {
+    const result = await pool.query("SELECT slug FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
+    const destination = `${publicVcardUrl(req, result.rows[0].slug)}?source=qr`;
+    const svg = await QRCode.toString(destination, { type: "svg", errorCorrectionLevel: "M", margin: 4, width: 512, color: { dark: "#111827", light: "#ffffff" } });
+    res.set({ "Cache-Control": "public, max-age=3600", "X-VCard-URL": destination }).type("image/svg+xml").send(svg);
+  } catch (error) { next(error); }
+});
+
 router.get("/vcards/featured", async (req, res, next) => {
   const requestedLimit = Number.parseInt(req.query.limit, 10);
   const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 12) : 6;
@@ -119,7 +157,7 @@ router.get("/vcards/:id", async (req, res, next) => {
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
   try {
     const result = await pool.query(`
-      SELECT v.id,v.title,v.description,v.website_url,v.phone,v.email,v.address,v.social_links,v.settings,
+      SELECT v.id,v.slug,v.title,v.description,v.website_url,v.phone,v.email,v.address,v.social_links,v.settings,
              t.id AS template_id,t.name AS template_name,t.preview_url,t.template_json,
              u.name AS owner_name,u.avatar_url,c.name AS company_name,p.features AS plan_features,
              COALESCE(us.contact_capture_required,TRUE) AS contact_capture_required
@@ -138,7 +176,7 @@ router.get("/vcards/:id", async (req, res, next) => {
     const allowedFeatures = new Set(normalizePlanFeatures(card.plan_features).vcardFeatures);
     const visibleSections = Object.fromEntries(Object.entries(card.settings?.sections || {}).filter(([key]) => allowedFeatures.has(key)));
     res.json({ vcard: {
-      id: card.id, title: card.title, description: card.description, websiteUrl: card.website_url,
+      id: card.id, slug: card.slug, publicUrl: publicVcardUrl(req, card.slug), title: card.title, description: card.description, websiteUrl: card.website_url,
       phone: card.phone, email: card.email, address: card.address, socialLinks: card.social_links || [],
       sections: visibleSections, ownerName: card.owner_name, avatarUrl: card.avatar_url,
       contactCaptureRequired: card.contact_capture_required,

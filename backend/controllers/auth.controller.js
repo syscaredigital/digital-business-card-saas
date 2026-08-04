@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("../config/database.config");
+const { normalizeCurrency } = require("../config/currencies");
+const { getRate } = require("../services/exchange-rate.service");
 
 function splitName(name) {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -21,7 +23,7 @@ function toSafeUser(row) {
     email: row.email,
     phoneNumber: row.phone || null,
     companyName: row.company_name || null,
-    preferredCurrency: row.preferred_currency || "USD",
+    preferredCurrency: row.preferred_currency || "LKR",
     role: row.role || "user",
     status: row.status,
     createdAt: row.created_at,
@@ -55,15 +57,16 @@ exports.register = async (req, res, next) => {
 
   try {
     const { firstName, lastName, email, password, phoneNumber, companyName } = req.body;
-    const preferredCurrency = String(req.body.currency || "USD").trim().toUpperCase();
+    const preferredCurrency = normalizeCurrency(req.body.currency || "LKR");
     const referralCode = String(req.body.referralCode || "").trim().toUpperCase();
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-    if (!["USD", "AUD", "LKR"].includes(preferredCurrency)) {
-      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
+    if (!preferredCurrency) {
+      return res.status(400).json({ message: "Select a valid ISO 4217 currency" });
     }
+    await getRate(preferredCurrency);
 
     const normalizedEmail = String(email).toLowerCase().trim();
     const fullName = `${String(firstName).trim()} ${String(lastName).trim()}`.trim();

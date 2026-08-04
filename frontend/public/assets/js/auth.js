@@ -218,9 +218,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (registerForm) {
     const referralCode = new URLSearchParams(window.location.search).get("ref") || sessionStorage.getItem("affiliate_referral_code") || "";
     const requestedPlan = new URLSearchParams(window.location.search).get("plan") || "";
-    const requestedCurrency = String(new URLSearchParams(window.location.search).get("currency") || localStorage.getItem("preferredCurrency") || "USD").toUpperCase();
+    const requestedCurrency = String(new URLSearchParams(window.location.search).get("currency") || localStorage.getItem("preferredCurrency") || "LKR").toUpperCase();
     const registerCurrency = document.getElementById("registerCurrency");
-    if (registerCurrency && ["USD", "AUD", "LKR"].includes(requestedCurrency)) registerCurrency.value = requestedCurrency;
+    if (registerCurrency && /^[A-Z]{3}$/.test(requestedCurrency)) {
+      registerCurrency.value = requestedCurrency;
+      window.addEventListener("sync:currencies-ready", function () { registerCurrency.value = requestedCurrency; }, { once: true });
+    }
     if (registerCurrency) registerCurrency.addEventListener("change", function () { localStorage.setItem("preferredCurrency", registerCurrency.value); });
     if (referralCode) sessionStorage.setItem("affiliate_referral_code", referralCode);
     registerForm.addEventListener("submit", async (event) => {
@@ -267,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         password: password.value,
         phoneNumber: phoneNumber ? phoneNumber.value.trim() : undefined,
         companyName: companyName ? companyName.value.trim() : undefined,
-        currency: registerCurrency ? registerCurrency.value : "USD",
+        currency: registerCurrency ? registerCurrency.value : "LKR",
         referralCode: referralCode || undefined,
       };
 

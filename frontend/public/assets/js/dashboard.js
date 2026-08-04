@@ -69,9 +69,9 @@ document.addEventListener("DOMContentLoaded", function () {
       users: { title: "Users", eyebrow: "Identity management", stats: [["Total users", "12,543", "+12.5%"], ["Active today", "8,421", "67.1%"], ["Awaiting review", "83", "Needs action"]] },
       vcards: { title: "VCards", eyebrow: "Digital identity", stats: [["Published cards", "23,456", "+10.7%"], ["Profile views", "1.24M", "+18.4%"], ["Draft cards", "318", "In progress"]] },
       "nfc-orders": { title: "NFC Cards", eyebrow: "Physical products", stats: [["Total orders", "4,567", "+9.2%"], ["Awaiting fulfilment", "12", "Needs action"], ["Delivered", "3,890", "85.2%"]] },
-      subscriptions: { title: "Subscriptions", eyebrow: "Recurring billing", stats: [["Active plans", "8,456", "+8.2%"], ["Monthly revenue", "$45,678", "+15.3%"], ["Renewing soon", "246", "Next 7 days"]] },
-      transactions: { title: "Transactions", eyebrow: "Financial ledger", stats: [["Gross volume", "$68,420", "+13.8%"], ["Successful", "2,846", "98.7%"], ["Pending", "17", "Needs review"]] },
-      "cash-payments": { title: "Cash Payments", eyebrow: "Manual payments", stats: [["Pending value", "$1,420", "5 payments"], ["Approved today", "$2,860", "12 payments"], ["Approval rate", "96.4%", "+2.1%"]] },
+      subscriptions: { title: "Subscriptions", eyebrow: "Recurring billing", stats: [["Active plans", "—", "Loading"], ["Monthly revenue", "LKR 0.00", "Loading"], ["Renewing soon", "—", "Loading"]] },
+      transactions: { title: "Transactions", eyebrow: "Financial ledger", stats: [["Gross volume", "LKR 0.00", "Loading"], ["Successful", "—", "Loading"], ["Pending", "—", "Loading"]] },
+      "cash-payments": { title: "Cash Payments", eyebrow: "Manual payments", stats: [["Pending value", "LKR 0.00", "Loading"], ["Approved today", "LKR 0.00", "Loading"], ["Approval rate", "—", "Loading"]] },
       payouts: { title: "Payouts", eyebrow: "Partner finance", stats: [["Ready to pay", "$1,470", "2 payouts"], ["Paid this month", "$18,240", "+11.6%"], ["Next payout", "Jul 15", "2 days"]] },
       withdrawals: { title: "Withdrawals", eyebrow: "Fund requests", stats: [["Pending requests", "8", "$2,780"], ["Processed", "142", "This month"], ["Average time", "1.8 days", "-12%"]] },
       affiliations: { title: "Affiliations", eyebrow: "Partner network", stats: [["Active partners", "284", "+24 this month"], ["Conversions", "1,892", "14.6%"], ["Commission due", "$6,840", "Next cycle"]] },
@@ -343,6 +343,8 @@ document.addEventListener("DOMContentLoaded", function () {
   var planAdminModalTitle = document.getElementById("planAdminModalTitle");
   var planVcardFeatureOptions = document.getElementById("planVcardFeatureOptions");
   var planVcardTemplateOptions = document.getElementById("planVcardTemplateOptions");
+  var planCurrencyPrices = document.getElementById("planCurrencyPrices");
+  var addPlanCurrencyPriceButton = document.getElementById("addPlanCurrencyPrice");
   var superAdminSubscriptionsById = {};
   var superAdminPlansById = {};
   var affiliationsTabButtons = Array.from(document.querySelectorAll("[data-affiliations-tab-target]"));
@@ -1743,7 +1745,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var email = user.email || "";
       var username = email.split("@")[0];
       var plan = user.plan || "Free";
-      var preferredCurrency = user.preferredCurrency || "USD";
+      var preferredCurrency = user.preferredCurrency || "LKR";
       var rawStatus = String(user.status || "inactive").toLowerCase();
       var displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
       var joinedAt = user.joinedAt ? formatDate(new Date(user.joinedAt)) : "Not available";
@@ -1967,8 +1969,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function formatNfcMoney(value) {
-    return new Intl.NumberFormat("en-LK", { style: "currency", currency: "LKR", minimumFractionDigits: 2 }).format(Number(value || 0));
+  function formatNfcMoney(value, currency) {
+    var code=currency || "LKR";
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: code, minimumFractionDigits: 2 }).format(Number(value || 0));
   }
 
   function updateNfcPageSummary(summary) {
@@ -2060,11 +2063,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return '<tr class="nfc-live-row" data-nfc-order-id="' + order.id + '">' +
         '<td><strong>#' + order.id + ' · ' + escapeDashboardHtml(order.productName) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(order.vcardTitle || "No VCard") + '</div></td>' +
         '<td><div class="nfc-owner-stack"><strong>' + escapeDashboardHtml(order.userName) + '</strong><span>' + escapeDashboardHtml(order.userEmail || "No email") + '</span></div></td>' +
-        '<td><span class="nfc-quantity-pill">' + formatDashboardNumber(order.quantity) + '</span><div class="subtle-handle">' + escapeDashboardHtml(formatNfcMoney(order.amount)) + '</div></td>' +
+        '<td><span class="nfc-quantity-pill">' + formatDashboardNumber(order.quantity) + '</span><div class="subtle-handle">' + escapeDashboardHtml(formatNfcMoney(order.amount,order.currency)) + '</div>' + (Number(order.shippingCost)>0?'<div class="subtle-handle">Shipping '+escapeDashboardHtml(formatNfcMoney(order.shippingCost,order.currency))+'</div>':'') + '</td>' +
         '<td><strong>' + escapeDashboardHtml(order.transactionNumber || "Not provided") + '</strong></td>' +
         '<td>' + (order.hasProof?'<button class="user-action-btn edit" type="button" data-nfc-proof-id="' + order.id + '">View slip</button>':'—') + '</td>' +
         '<td><span class="status-badge ' + paymentClass + '">' + escapeDashboardHtml(order.paymentStatus) + '</span>' + (order.adminNote?'<div class="subtle-handle">' + escapeDashboardHtml(order.adminNote) + '</div>':'') + '</td>' +
-        '<td><span class="nfc-shipping-copy">' + escapeDashboardHtml(order.shippingAddress || "Not provided") + '</span></td>' +
+        '<td><span class="nfc-shipping-copy"><strong>' + escapeDashboardHtml(order.destinationCountry || "LK") + '</strong> · ' + escapeDashboardHtml(order.shippingAddress || "Not provided") + '</span></td>' +
         '<td><div class="nfc-admin-tracking"><strong>' + trackingLabel + '</strong><button class="nfc-order-save-btn" type="button" data-nfc-fulfilment-action data-nfc-order-id="' + order.id + '"' + fulfilmentDisabled + '>' + trackingAction + '</button>' + (fulfilmentDisabled?'<small>Approve payment first</small>':'') + '</div></td>' +
         '<td><span class="status-badge ' + nfcStatusClass(order.status) + '">' + escapeDashboardHtml(order.status) + '</span></td>' +
         '<td><div class="user-row-actions">' + actions + '</div></td>' +
@@ -2338,7 +2341,7 @@ document.addEventListener("DOMContentLoaded", function () {
     addUserForm.elements.lastName.value = nameParts.join(" ");
     addUserForm.elements.email.value = user.email || "";
     addUserForm.elements.status.value = String(user.status || "active").charAt(0).toUpperCase() + String(user.status || "active").slice(1);
-    addUserForm.elements.preferredCurrency.value = user.preferredCurrency || "USD";
+    addUserForm.elements.preferredCurrency.value = user.preferredCurrency || "LKR";
     if (userEditId) userEditId.value = user.id;
     if (userModalTitle) userModalTitle.textContent = "Edit User";
 
@@ -2735,8 +2738,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  function subscriptionMoney(value) {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+  function subscriptionMoney(value, currency) {
+    var code = String(currency || "LKR").toUpperCase();
+    try { return new Intl.NumberFormat(undefined, { style: "currency", currency: code }).format(Number(value || 0)); }
+    catch (_) { return code + " " + Number(value || 0).toFixed(2); }
+  }
+
+  function addPlanPriceRow(currency, amount) {
+    if (!planCurrencyPrices) return;
+    var row = document.createElement("div");
+    row.className = "plan-currency-price-row";
+    row.innerHTML = '<select data-plan-price-currency aria-label="Plan price currency" disabled><option value="LKR">LKR</option></select><input data-plan-price-amount type="number" min="0" max="9999999999.99" step="0.01" required aria-label="Plan price in LKR">';
+    planCurrencyPrices.appendChild(row);
+    var select = row.querySelector("select");
+    select.value = "LKR";
+    row.querySelector("input").value = amount === undefined ? "0" : amount;
+  }
+
+  function renderPlanPrices(prices) {
+    if (!planCurrencyPrices) return;
+    planCurrencyPrices.innerHTML = "";
+    addPlanPriceRow("LKR", prices && prices.LKR !== undefined ? prices.LKR : 0);
+  }
+
+  function collectPlanPrices() {
+    var prices = {};
+    Array.from(planCurrencyPrices ? planCurrencyPrices.querySelectorAll(".plan-currency-price-row") : []).forEach(function (row) {
+      prices[row.querySelector("[data-plan-price-currency]").value] = Number(row.querySelector("[data-plan-price-amount]").value);
+    });
+    return prices;
   }
 
   function subscriptionDate(value) {
@@ -2759,8 +2789,8 @@ document.addEventListener("DOMContentLoaded", function () {
     cards[0].querySelector("strong").textContent = formatDashboardNumber(summary.active_subscriptions);
     cards[0].querySelector("small").textContent = formatDashboardNumber(summary.total_subscriptions) + " total records";
     cards[1].querySelector("span").textContent = "Monthly recurring revenue";
-    cards[1].querySelector("strong").textContent = subscriptionMoney(summary.monthly_recurring_revenue);
-    cards[1].querySelector("small").textContent = "From active plans";
+    cards[1].querySelector("strong").textContent = subscriptionMoney(summary.monthly_recurring_revenue, summary.revenue_currency);
+    cards[1].querySelector("small").textContent = "From active plans priced in " + String(summary.revenue_currency || "USD");
     cards[2].querySelector("span").textContent = "Pending or trial";
     cards[2].querySelector("strong").textContent = formatDashboardNumber(summary.pending_subscriptions);
     cards[2].querySelector("small").textContent = "Needs review";
@@ -2782,7 +2812,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
       return '<tr>' +
         '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(user.name || "User") || "U") + '</span><div><strong>' + escapeDashboardHtml(user.name || "Unknown user") + '</strong><div class="subtle-handle">' + escapeDashboardHtml(user.email || "Account unavailable") + '</div></div></div></td>' +
-        '<td><strong>' + escapeDashboardHtml(plan.name || "No plan") + '</strong><div class="subtle-handle">' + subscriptionMoney(plan.price) + ' / ' + escapeDashboardHtml(plan.billingInterval || "month") + '</div></td>' +
+        '<td><strong>' + escapeDashboardHtml(plan.name || "No plan") + '</strong><div class="subtle-handle">' + subscriptionMoney(plan.price, plan.currency) + ' / ' + escapeDashboardHtml(plan.billingInterval || "month") + '</div></td>' +
         '<td><div class="subscription-period"><strong>' + escapeDashboardHtml(subscriptionDate(subscription.startDate)) + '</strong><span>to ' + escapeDashboardHtml(subscriptionDate(subscription.endDate)) + '</span></div></td>' +
         '<td><span class="subscription-renew-pill ' + (subscription.autoRenew ? "on" : "off") + '">' + (subscription.autoRenew ? "Auto-renew" : "Manual") + '</span></td>' +
         '<td><span class="status-badge ' + subscriptionStatusClass(status) + '">' + escapeDashboardHtml(displayStatus) + '</span></td>' +
@@ -2820,7 +2850,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var features = planFeatureNames(plan.features);
       return '<tr>' +
         '<td><div class="subscription-plan-name"><strong>' + escapeDashboardHtml(plan.name) + '</strong><span>' + escapeDashboardHtml(features.slice(0, 2).join(" · ") || "Core platform access") + '</span></div></td>' +
-        '<td><strong class="subscription-plan-price">' + subscriptionMoney(plan.price) + '</strong><div class="subtle-handle">per ' + escapeDashboardHtml(plan.billingInterval) + '</div></td>' +
+        '<td><strong class="subscription-plan-price">' + Object.entries(plan.prices || { USD: plan.price }).slice(0, 3).map(function (entry) { return escapeDashboardHtml(subscriptionMoney(entry[1], entry[0])); }).join('<br>') + '</strong><div class="subtle-handle">per ' + escapeDashboardHtml(plan.billingInterval) + '</div></td>' +
         '<td><div class="subscription-limit-list"><span>' + formatDashboardNumber(plan.vcardLimit) + ' VCards</span><span>' + formatDashboardNumber(plan.nfcLimit) + ' NFC</span><span>' + formatDashboardNumber(plan.analyticsLimit) + ' analytics</span><span>' + formatDashboardNumber(plan.storageLimitMb) + ' MB storage</span></div></td>' +
         '<td><strong>' + formatDashboardNumber(plan.activeSubscribers) + ' active</strong><div class="subtle-handle">' + formatDashboardNumber(plan.subscribers) + ' total</div></td>' +
         '<td><span class="status-badge ' + subscriptionStatusClass(status) + '">' + escapeDashboardHtml(status.charAt(0).toUpperCase() + status.slice(1)) + '</span></td>' +
@@ -2902,10 +2932,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     planAdminForm.reset();
+    renderPlanPrices(plan ? plan.prices : null);
     planAdminForm.elements.planId.value = plan ? plan.id : "";
     if (plan) {
       planAdminForm.elements.name.value = plan.name || "";
-      planAdminForm.elements.price.value = plan.price;
       planAdminForm.elements.billingInterval.value = plan.billingInterval;
       planAdminForm.elements.vcardLimit.value = plan.vcardLimit;
       planAdminForm.elements.nfcLimit.value = plan.nfcLimit;
@@ -2933,6 +2963,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (closePlanAdminModalButton) closePlanAdminModalButton.addEventListener("click", function () { setPlanAdminModal(false); });
   if (planAdminModalBackdrop) planAdminModalBackdrop.addEventListener("click", function () { setPlanAdminModal(false); });
   if (resetPlanAdminFormButton) resetPlanAdminFormButton.addEventListener("click", function () { setPlanAdminModal(false); });
+  if (addPlanCurrencyPriceButton) addPlanCurrencyPriceButton.hidden = true;
+  if (planCurrencyPrices) planCurrencyPrices.addEventListener("click", function (event) { var button = event.target.closest("[data-remove-plan-price]"); if (button && planCurrencyPrices.children.length > 1) button.closest(".plan-currency-price-row").remove(); });
 
   if (subscriptionAdminForm) {
     subscriptionAdminForm.addEventListener("submit", async function (event) {
@@ -2977,6 +3009,12 @@ document.addEventListener("DOMContentLoaded", function () {
       var planId = String(formData.get("planId") || "");
       var vcardFeatures = formData.getAll("vcardFeatures");
       var templateIds = formData.getAll("templateIds").map(Number);
+      var prices = collectPlanPrices();
+      var currencyRows = Array.from(planCurrencyPrices ? planCurrencyPrices.querySelectorAll("[data-plan-price-currency]") : []).map(function (select) { return select.value; });
+      if (!currencyRows.length || new Set(currencyRows).size !== currencyRows.length) {
+        if (planAdminFeedback) { planAdminFeedback.hidden = false; planAdminFeedback.textContent = "Add at least one price and use each currency only once."; }
+        return;
+      }
       if (!vcardFeatures.length || !templateIds.length) {
         if (planAdminFeedback) { planAdminFeedback.hidden = false; planAdminFeedback.textContent = "Select at least one VCard feature and one VCard template."; }
         return;
@@ -2988,7 +3026,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var response = await fetch("http://127.0.0.1:5000/api/super-admin/plans" + (planId ? "/" + encodeURIComponent(planId) : ""), {
           method: planId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-          body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), billingInterval: formData.get("billingInterval"), vcardLimit: Number(formData.get("vcardLimit")), nfcLimit: Number(formData.get("nfcLimit")), analyticsLimit: Number(formData.get("analyticsLimit")), storageLimitMb: Number(formData.get("storageLimitMb")), benefits: formData.get("features").split(",").map(function (feature) { return feature.trim(); }).filter(Boolean), vcardFeatures: vcardFeatures, templateIds: templateIds, status: formData.get("status") })
+          body: JSON.stringify({ name: formData.get("name").trim(), prices: prices, billingInterval: formData.get("billingInterval"), vcardLimit: Number(formData.get("vcardLimit")), nfcLimit: Number(formData.get("nfcLimit")), analyticsLimit: Number(formData.get("analyticsLimit")), storageLimitMb: Number(formData.get("storageLimitMb")), benefits: formData.get("features").split(",").map(function (feature) { return feature.trim(); }).filter(Boolean), vcardFeatures: vcardFeatures, templateIds: templateIds, status: formData.get("status") })
         });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to save plan");
@@ -4900,7 +4938,7 @@ document.addEventListener("DOMContentLoaded", function () {
             password: formData.get("password"),
             phoneNumber: phone ? (String(formData.get("countryCode") || "") + " " + phone).trim() : null,
             status: String(formData.get("status") || "active").toLowerCase(),
-            preferredCurrency: String(formData.get("preferredCurrency") || "USD")
+            preferredCurrency: String(formData.get("preferredCurrency") || "LKR")
           })
         });
         var data = await response.json().catch(function () { return {}; });

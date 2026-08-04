@@ -197,11 +197,12 @@
                   <div class="vcard-template-picker" id="createVcardTemplateGallery" aria-label="Available templates"></div>
                 </div>
                 <div class="form-field form-field-wide">
-                  <label for="urlAlias">URL Alias:<span class="required-mark">*</span> <span class="field-help">?</span></label>
+                  <label for="urlAlias">Public URL name:<span class="required-mark">*</span> <span class="field-help">?</span></label>
                   <div class="alias-input-group">
-                    <input id="urlAlias" type="text" placeholder="my-vcard-page-url" required />
+                    <input id="urlAlias" type="text" placeholder="my-vcard-page-url" minlength="3" maxlength="100" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
                     <button type="button" aria-label="Generate URL alias">↻</button>
                   </div>
+                  <small>Your link will use your domain and this name, for example: your-domain.com/vcard/my-vcard-page-url</small>
                 </div>
 
                 <div class="form-field">

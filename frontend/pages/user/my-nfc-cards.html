@@ -235,7 +235,7 @@
                 <small>This profile opens when someone taps the physical card.</small>
               </div>
             </div>
-            <div class="nfc-order-total"><span><small>Estimated total</small>Card price × quantity</span><strong id="nfcOrderTotal">LKR 0.00</strong></div>
+            <div class="nfc-order-total"><span><small>Estimated total</small><span id="nfcOrderTotalCopy">Card price × quantity</span></span><strong id="nfcOrderTotal">LKR 0.00</strong></div>
           </section>
 
           <section class="nfc-order-section" aria-labelledby="nfcOrderPaymentHeading">
@@ -266,6 +266,12 @@
             <div class="nfc-order-section-heading">
               <span>03</span>
               <div><h3 id="nfcOrderDeliveryHeading">Delivery address</h3><p>Add enough detail for us to deliver your card without delay.</p></div>
+            </div>
+            <div class="form-group nfc-form-wide">
+              <label for="nfcDestinationCountry">Destination country <span aria-hidden="true">*</span></label>
+              <input id="nfcDestinationCountry" name="destinationCountry" value="LK" minlength="2" maxlength="2" pattern="[A-Za-z]{2}" list="nfcCountryCodes" autocomplete="country" required placeholder="LK" />
+              <datalist id="nfcCountryCodes"><option value="LK">Sri Lanka</option><option value="AU">Australia</option><option value="CA">Canada</option><option value="DE">Germany</option><option value="FR">France</option><option value="GB">United Kingdom</option><option value="IN">India</option><option value="JP">Japan</option><option value="MV">Maldives</option><option value="NZ">New Zealand</option><option value="QA">Qatar</option><option value="SA">Saudi Arabia</option><option value="SG">Singapore</option><option value="AE">United Arab Emirates</option><option value="US">United States</option></datalist>
+              <small>Use the two-letter country code. Overseas shipping is added automatically.</small>
             </div>
             <div class="form-group nfc-form-wide">
               <label for="nfcShippingAddress">Shipping address <span aria-hidden="true">*</span></label>

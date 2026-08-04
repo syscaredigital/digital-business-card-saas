@@ -28,8 +28,7 @@
         status.classList.add("is-error");
         return;
       }
-      var apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
-        ? "http://localhost:5000" : window.location.origin;
+      var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
       button.disabled = true;
       status.classList.remove("is-error");
       status.textContent = "Sending your enquiry...";

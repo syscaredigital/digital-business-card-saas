@@ -100,7 +100,7 @@
         <form id="planAdminForm" class="admin-form-grid admin-form-grid-modal" novalidate>
           <input type="hidden" name="planId" />
           <div class="form-field"><label for="planAdminName">Plan name:<span class="required-mark">*</span></label><input id="planAdminName" name="name" type="text" maxlength="150" required placeholder="e.g. Professional" /></div>
-          <div class="form-field"><label for="planAdminPrice">Price (USD):<span class="required-mark">*</span></label><input id="planAdminPrice" name="price" type="number" min="0" step="0.01" required value="0" /></div>
+          <div class="form-field form-field-wide"><label>Plan price (LKR):<span class="required-mark">*</span></label><div id="planCurrencyPrices"></div><button class="btn-preview" id="addPlanCurrencyPrice" type="button" hidden>Add currency price</button><small>LKR is the base price. Customer currencies are calculated automatically using the current exchange rate.</small></div>
           <div class="form-field"><label for="planAdminInterval">Billing interval:</label><select id="planAdminInterval" name="billingInterval"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="weekly">Weekly</option><option value="daily">Daily</option><option value="lifetime">Lifetime</option></select></div>
           <div class="form-field"><label for="planAdminStatus">Availability:</label><select id="planAdminStatus" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></div>
           <div class="form-field"><label for="planAdminVcards">VCard limit:</label><input id="planAdminVcards" name="vcardLimit" type="number" min="0" step="1" value="1" required /></div>
@@ -126,6 +126,7 @@
   </div>
 
   <div class="toast-stack" id="toastStack"></div>
+  <script src="../../public/assets/js/currency-catalog.js"></script>
   <script src="../../public/assets/js/dashboard.js"></script>
 </body>
 </html>

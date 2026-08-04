@@ -3,6 +3,7 @@ const { invalidatePlatformAccessCache } = require("../middlewares/platform-acces
 const bcrypt = require("bcrypt");
 const path = require("path");
 const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
+const { normalizeCurrency } = require("../config/currencies");
 
 function number(value) {
   return Number(value || 0);
@@ -165,7 +166,7 @@ function mapAdminUser(user) {
     cards: number(user.card_count),
     joinedAt: user.created_at,
     lastLogin: user.last_login || null,
-    preferredCurrency: ["USD", "AUD", "LKR"].includes(user.preferred_currency) ? user.preferred_currency : "USD",
+    preferredCurrency: normalizeCurrency(user.preferred_currency, "LKR"),
   };
 }
 
@@ -266,7 +267,7 @@ exports.createUser = async (req, res, next) => {
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
     const normalizedStatus = String(status || "active").toLowerCase();
-    const normalizedCurrency = String(preferredCurrency || "USD").toUpperCase();
+    const normalizedCurrency = String(preferredCurrency || "LKR").toUpperCase();
     if (!normalizedFirstName || !normalizedLastName || !normalizedEmail || !password) {
       return res.status(400).json({ message: "First name, last name, email, and password are required" });
     }
@@ -289,8 +290,8 @@ exports.createUser = async (req, res, next) => {
     if (!manageableStatuses.includes(normalizedStatus)) {
       return res.status(400).json({ message: "Invalid user status" });
     }
-    if (!["USD", "AUD", "LKR"].includes(normalizedCurrency)) {
-      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
+    if (!normalizeCurrency(normalizedCurrency)) {
+      return res.status(400).json({ message: "Select a valid ISO 4217 currency" });
     }
 
     await client.query("BEGIN");
@@ -371,7 +372,7 @@ exports.updateUser = async (req, res, next) => {
     const normalizedEmail = String(email || "").toLowerCase().trim();
     const normalizedPhone = phoneNumber ? String(phoneNumber).trim() : null;
     const normalizedStatus = String(status || "active").toLowerCase();
-    const normalizedCurrency = String(preferredCurrency || "USD").toUpperCase();
+    const normalizedCurrency = String(preferredCurrency || "LKR").toUpperCase();
 
     if (!normalizedFirstName || !normalizedLastName || !normalizedEmail) {
       return res.status(400).json({ message: "First name, last name, and email are required" });
@@ -382,8 +383,8 @@ exports.updateUser = async (req, res, next) => {
     if (!manageableStatuses.includes(normalizedStatus)) {
       return res.status(400).json({ message: "Invalid user status" });
     }
-    if (!["USD", "AUD", "LKR"].includes(normalizedCurrency)) {
-      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
+    if (!normalizeCurrency(normalizedCurrency)) {
+      return res.status(400).json({ message: "Select a valid ISO 4217 currency" });
     }
     if (`${normalizedFirstName} ${normalizedLastName}`.length > 150 || normalizedEmail.length > 255 || (normalizedPhone && normalizedPhone.length > 50)) {
       return res.status(400).json({ message: "User name, email, or phone number is too long" });
@@ -840,6 +841,7 @@ exports.listNfcManagement = async (req, res, next) => {
       pool.query(
         `SELECT o.id,o.user_id,o.nfc_product_id,o.vcard_id,o.quantity,o.amount,o.currency,o.status,o.shipping_address,
                 o.tracking_number,o.payment_method,o.payment_status,o.transaction_number,o.proof_url,o.admin_note,
+                o.destination_country,o.subtotal_lkr,o.shipping_cost_lkr,o.shipping_cost,o.exchange_rate,o.exchange_rate_date,
                 o.payment_reviewed_at,o.ordered_at,o.updated_at,ou.name AS user_name,ou.email AS user_email,
                 p.name AS product_name,v.title AS vcard_title
          FROM nfc_orders o
@@ -857,7 +859,7 @@ exports.listNfcManagement = async (req, res, next) => {
           (SELECT COUNT(*) FROM nfc_cards)::int AS total_cards,
           (SELECT COUNT(*) FROM nfc_cards WHERE status IN ('active', 'assigned'))::int AS active_cards,
           (SELECT COUNT(*) FROM nfc_orders WHERE status = 'pending')::int AS pending_orders,
-          (SELECT COALESCE(SUM(amount), 0) FROM nfc_orders WHERE status IN ('pending', 'processing', 'shipped')) AS order_value
+          (SELECT COALESCE(SUM(subtotal_lkr + shipping_cost_lkr), 0) FROM nfc_orders WHERE status IN ('pending', 'processing', 'shipped')) AS order_value
       `),
       pool.query(`
         SELECT u.id, u.name, u.email
@@ -907,6 +909,12 @@ exports.listNfcManagement = async (req, res, next) => {
         adminNote: order.admin_note || null,
         paymentReviewedAt: order.payment_reviewed_at || null,
         shippingAddress: order.shipping_address || null,
+        destinationCountry: order.destination_country || "LK",
+        subtotalLkr: number(order.subtotal_lkr),
+        shippingCostLkr: number(order.shipping_cost_lkr),
+        shippingCost: number(order.shipping_cost),
+        exchangeRate: number(order.exchange_rate),
+        exchangeRateDate: order.exchange_rate_date || null,
         trackingNumber: order.tracking_number || null,
         orderedAt: order.ordered_at,
         updatedAt: order.updated_at,
@@ -1354,7 +1362,8 @@ exports.listSubscriptionManagement = async (req, res, next) => {
             WHEN p.billing_interval = 'weekly' THEN p.price * 4.345
             WHEN p.billing_interval = 'daily' THEN p.price * 30
             WHEN p.billing_interval = 'lifetime' THEN 0
-            ELSE p.price END), 0) AS monthly_recurring_revenue
+            ELSE p.price END), 0) AS monthly_recurring_revenue,
+          'LKR' AS revenue_currency
         FROM subscriptions s LEFT JOIN plans p ON p.id = s.plan_id
       `),
       pool.query(`SELECT id,name,description,preview_url FROM vcard_templates WHERE is_public=TRUE ORDER BY name,id`),
@@ -1364,7 +1373,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
       subscriptions: subscriptionsResult.rows.map((subscription) => ({
         id: subscription.id,
         user: { id: subscription.user_id, name: subscription.user_name || "Deleted user", email: subscription.user_email || null },
-        plan: subscription.plan_id ? { id: subscription.plan_id, name: subscription.plan_name || "Deleted plan", price: number(subscription.plan_price), billingInterval: subscription.billing_interval } : null,
+        plan: subscription.plan_id ? { id: subscription.plan_id, name: subscription.plan_name || "Deleted plan", price: number(subscription.plan_price), currency: "LKR", billingInterval: subscription.billing_interval } : null,
         status: subscription.status,
         startDate: subscription.start_date,
         endDate: subscription.end_date || null,
@@ -1377,6 +1386,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
         id: plan.id,
         name: plan.name,
         price: number(plan.price),
+        prices: { LKR: number(plan.price) },
         billingInterval: plan.billing_interval,
         vcardLimit: number(plan.vcard_limit),
         nfcLimit: number(plan.nfc_limit),
@@ -1408,9 +1418,22 @@ function normalizePlanPayload(body) {
     vcardFeatures: body.vcardFeatures,
     templateIds: body.templateIds,
   });
+  const suppliedPrices = body.prices && typeof body.prices === "object" && !Array.isArray(body.prices) ? body.prices : {};
+  const rawPrices = { LKR: suppliedPrices.LKR === undefined ? body.price : suppliedPrices.LKR };
+  const prices = {};
+  let invalidCurrency = false;
+  for (const [rawCurrency, rawAmount] of Object.entries(rawPrices)) {
+    const currency = normalizeCurrency(rawCurrency);
+    const amount = Number(rawAmount);
+    if (currency) prices[currency] = amount;
+    else invalidCurrency = true;
+  }
+  const firstPrice = Object.values(prices)[0];
   return {
     name: String(body.name || "").trim(),
-    price: Number(body.price),
+    price: prices.LKR === undefined ? firstPrice : prices.LKR,
+    prices,
+    invalidCurrency,
     billingInterval: String(body.billingInterval || "monthly").toLowerCase(),
     vcardLimit: Number(body.vcardLimit),
     nfcLimit: Number(body.nfcLimit),
@@ -1427,6 +1450,9 @@ function normalizePlanPayload(body) {
 
 function planValidationMessage(plan) {
   if (!plan.name || plan.name.length > 150) return "Enter a plan name up to 150 characters";
+  if (!Object.keys(plan.prices).length || plan.prices.LKR === undefined) return "Enter the plan price in LKR";
+  if (plan.invalidCurrency) return "One or more plan currencies are not valid ISO 4217 codes";
+  if (Object.entries(plan.prices).some(([currency, amount]) => !normalizeCurrency(currency) || !Number.isFinite(amount) || amount < 0 || amount > 9999999999.99)) return "Every currency needs a valid non-negative price";
   if (!Number.isFinite(plan.price) || plan.price < 0 || plan.price > 9999999999.99) return "Enter a valid plan price up to 9,999,999,999.99";
   if (!billingIntervals.includes(plan.billingInterval)) return "Invalid billing interval";
   if (!planStatuses.includes(plan.status)) return "Invalid plan status";
@@ -1441,57 +1467,76 @@ async function planTemplateValidationMessage(plan) {
   return result.rows[0].count === plan.features.templateIds.length ? null : "One or more selected VCard templates are unavailable";
 }
 
+async function replacePlanPrices(client, planId, prices) {
+  await client.query("DELETE FROM plan_prices WHERE plan_id=$1", [planId]);
+  for (const [currency, amount] of Object.entries(prices)) {
+    await client.query("INSERT INTO plan_prices(plan_id,currency,amount) VALUES($1,$2,$3)", [planId, currency, amount]);
+  }
+}
+
 exports.createPlan = async (req, res, next) => {
+  let client;
   try {
     const plan = normalizePlanPayload(req.body);
     const validation = planValidationMessage(plan);
     if (validation) return res.status(400).json({ message: validation });
     const templateValidation = await planTemplateValidationMessage(plan);
     if (templateValidation) return res.status(400).json({ message: templateValidation });
-    const result = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const result = await client.query(
       `INSERT INTO plans (name, price, billing_interval, vcard_limit, nfc_limit, analytics_limit, storage_limit_mb, features, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
        RETURNING id, name, price, status`,
       [plan.name, plan.price, plan.billingInterval, plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit, plan.storageLimitMb, JSON.stringify(plan.features), plan.status]
     );
-    await pool.query(
+    await replacePlanPrices(client, result.rows[0].id, plan.prices);
+    await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'plan.created', 'plan', $2, $3::jsonb, $4, $5)`,
-      [req.user.id, result.rows[0].id, JSON.stringify({ name: plan.name, price: plan.price, storageLimitMb: plan.storageLimitMb }), req.ip || null, req.get("user-agent") || null]
+      [req.user.id, result.rows[0].id, JSON.stringify({ name: plan.name, prices: plan.prices, storageLimitMb: plan.storageLimitMb }), req.ip || null, req.get("user-agent") || null]
     );
-    res.status(201).json({ plan: result.rows[0] });
+    await client.query("COMMIT");
+    res.status(201).json({ plan: { ...result.rows[0], prices: plan.prices } });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     if (error.code === "23505") return res.status(409).json({ message: "A plan with this name already exists" });
     next(error);
-  }
+  } finally { if (client) client.release(); }
 };
 
 exports.updatePlan = async (req, res, next) => {
   const planId = positiveIntegerParam(req);
   if (!planId) return res.status(400).json({ message: "Invalid plan ID" });
+  let client;
   try {
     const plan = normalizePlanPayload(req.body);
     const validation = planValidationMessage(plan);
     if (validation) return res.status(400).json({ message: validation });
     const templateValidation = await planTemplateValidationMessage(plan);
     if (templateValidation) return res.status(400).json({ message: templateValidation });
-    const result = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const result = await client.query(
       `UPDATE plans SET name = $1, price = $2, billing_interval = $3, vcard_limit = $4,
        nfc_limit = $5, analytics_limit = $6, storage_limit_mb = $7, features = $8::jsonb, status = $9, updated_at = NOW()
        WHERE id = $10 RETURNING id, name, price, status`,
       [plan.name, plan.price, plan.billingInterval, plan.vcardLimit, plan.nfcLimit, plan.analyticsLimit, plan.storageLimitMb, JSON.stringify(plan.features), plan.status, planId]
     );
-    if (!result.rowCount) return res.status(404).json({ message: "Plan not found" });
-    await pool.query(
+    if (!result.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Plan not found" }); }
+    await replacePlanPrices(client, planId, plan.prices);
+    await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'plan.updated', 'plan', $2, $3::jsonb, $4, $5)`,
-      [req.user.id, planId, JSON.stringify({ name: plan.name, price: plan.price, status: plan.status, storageLimitMb: plan.storageLimitMb }), req.ip || null, req.get("user-agent") || null]
+      [req.user.id, planId, JSON.stringify({ name: plan.name, prices: plan.prices, status: plan.status, storageLimitMb: plan.storageLimitMb }), req.ip || null, req.get("user-agent") || null]
     );
-    res.json({ plan: result.rows[0] });
+    await client.query("COMMIT");
+    res.json({ plan: { ...result.rows[0], prices: plan.prices } });
   } catch (error) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     if (error.code === "23505") return res.status(409).json({ message: "A plan with this name already exists" });
     next(error);
-  }
+  } finally { if (client) client.release(); }
 };
 
 exports.deletePlan = async (req, res, next) => {
@@ -1643,7 +1688,7 @@ function cashPaymentValidationMessage(payment) {
   if (!Number.isInteger(payment.userId) || payment.userId < 1 || payment.userId > 2147483647) return "Select a valid user";
   if (payment.subscriptionId !== null && (!Number.isInteger(payment.subscriptionId) || payment.subscriptionId < 1 || payment.subscriptionId > 2147483647)) return "Select a valid subscription";
   if (!Number.isFinite(payment.amount) || payment.amount < 0.01 || payment.amount > 9999999999.99) return "Enter an amount from 0.01 to 9,999,999,999.99";
-  if (!["USD", "AUD", "LKR"].includes(payment.currency)) return "Currency must be USD, AUD, or LKR";
+  if (!normalizeCurrency(payment.currency)) return "Select a valid ISO 4217 currency";
   if (!cashPaymentStatuses.includes(payment.status)) return "Invalid cash payment status";
   if (payment.reference && payment.reference.length > 255) return "Payment reference must not exceed 255 characters";
   if (payment.proofUrl && (payment.proofUrl.length > 2000 || !(/^(https?:\/\/)/i.test(payment.proofUrl) || /^\/uploads\/payment-slips\/[A-Za-z0-9._-]+$/.test(payment.proofUrl)))) return "Proof attachment must be a valid URL or uploaded payment slip";
@@ -1935,7 +1980,7 @@ function transactionValidationMessage(transaction) {
   if (!Number.isInteger(transaction.userId) || transaction.userId < 1 || transaction.userId > 2147483647) return "Select a valid user";
   if (!transactionTypes.includes(transaction.type)) return "Invalid transaction type";
   if (!Number.isFinite(transaction.amount) || transaction.amount === 0 || transaction.amount < -9999999999.99 || transaction.amount > 9999999999.99) return "Enter a non-zero amount within the database range";
-  if (!["USD", "AUD", "LKR"].includes(transaction.currency)) return "Currency must be USD, AUD, or LKR";
+  if (!normalizeCurrency(transaction.currency)) return "Select a valid ISO 4217 currency";
   if (!transactionStatuses.includes(transaction.status)) return "Invalid transaction status";
   if (transaction.reference && transaction.reference.length > 255) return "Reference must not exceed 255 characters";
   if (transaction.gateway.length > 100) return "Gateway must not exceed 100 characters";
@@ -2138,7 +2183,7 @@ function payoutValidationMessage(payout) {
   if (!payout.payeeName || payout.payeeName.length > 150) return "Enter a payee name up to 150 characters";
   if (payout.payeeEmail && (payout.payeeEmail.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payout.payeeEmail))) return "Enter a valid payee email";
   if (!Number.isFinite(payout.amount) || payout.amount < 0.01 || payout.amount > 9999999999.99) return "Enter an amount from 0.01 to 9,999,999,999.99";
-  if (!["USD", "AUD", "LKR"].includes(payout.currency)) return "Currency must be USD, AUD, or LKR";
+  if (!normalizeCurrency(payout.currency)) return "Select a valid ISO 4217 currency";
   if (!payoutMethods.includes(payout.method)) return "Invalid payout method";
   if (!payoutStatuses.includes(payout.status)) return "Invalid payout status";
   if (payout.reference && payout.reference.length > 255) return "Reference must not exceed 255 characters";
@@ -2375,7 +2420,7 @@ function normalizeWithdrawalPayload(body) {
 function withdrawalValidationMessage(withdrawal) {
   if (!Number.isInteger(withdrawal.userId) || withdrawal.userId < 1 || withdrawal.userId > 2147483647) return "Select a valid user";
   if (!Number.isFinite(withdrawal.amount) || withdrawal.amount < 0.01 || withdrawal.amount > 9999999999.99) return "Enter an amount from 0.01 to 9,999,999,999.99";
-  if (!["USD", "AUD", "LKR"].includes(withdrawal.currency)) return "Currency must be USD, AUD, or LKR";
+  if (!normalizeCurrency(withdrawal.currency)) return "Select a valid ISO 4217 currency";
   if (!payoutMethods.includes(withdrawal.method)) return "Invalid withdrawal method";
   if (!withdrawalStatuses.includes(withdrawal.status)) return "Invalid withdrawal status";
   if (withdrawal.accountName && withdrawal.accountName.length > 500) return "Account details must not exceed 500 characters";
@@ -2919,7 +2964,7 @@ function affiliateCommissionValidationMessage(commission) {
   if (!Number.isInteger(commission.affiliateId) || commission.affiliateId < 1) return "Select an affiliate partner";
   if (commission.referralId !== null && (!Number.isInteger(commission.referralId) || commission.referralId < 1)) return "Select a valid referral";
   if (!Number.isFinite(commission.amount) || commission.amount < 0.01 || commission.amount > 9999999999.99) return "Enter a valid positive commission amount";
-  if (!["USD", "AUD", "LKR"].includes(commission.currency)) return "Currency must be USD, AUD, or LKR";
+  if (!normalizeCurrency(commission.currency)) return "Select a valid ISO 4217 currency";
   if (!affiliateCommissionStatuses.includes(commission.status)) return "Invalid commission status";
   if (commission.description && commission.description.length > 3000) return "Description must not exceed 3,000 characters";
   return null;
@@ -3013,7 +3058,7 @@ function couponValidationMessage(coupon) {
   if (!couponDiscountTypes.includes(coupon.discountType)) return "Invalid discount type";
   if (!Number.isFinite(coupon.discountValue) || coupon.discountValue < 0.01 || coupon.discountValue > 9999999999.99) return "Enter a valid discount value";
   if (coupon.discountType === "percentage" && coupon.discountValue > 100) return "Percentage discounts cannot exceed 100%";
-  if (!["USD", "AUD", "LKR"].includes(coupon.currency)) return "Currency must be USD, AUD, or LKR";
+  if (!normalizeCurrency(coupon.currency)) return "Select a valid ISO 4217 currency";
   if (coupon.usageLimit !== null && (!Number.isInteger(coupon.usageLimit) || coupon.usageLimit < 1 || coupon.usageLimit > 2147483647)) return "Usage limit must be a positive whole number";
   if (!Number.isInteger(coupon.perUserLimit) || coupon.perUserLimit < 1 || coupon.perUserLimit > 2147483647) return "Per-user limit must be a positive whole number";
   if (!Number.isFinite(coupon.minimumAmount) || coupon.minimumAmount < 0 || coupon.minimumAmount > 9999999999.99) return "Enter a valid minimum amount";
@@ -3271,18 +3316,19 @@ exports.downloadReportRun=async(req,res,next)=>{const id=positiveIntegerParam(re
 const platformSettingDefinitions = {
   site_name: { category:"general",description:"Application name displayed in the admin interface",defaultValue:"Sync E-Card",type:"text",maxLength:100 },
   site_email: { category:"general",description:"Support email address",defaultValue:"info@syncecard.lk",type:"email",maxLength:255 },
-  default_currency: { category:"billing",description:"Default display and billing currency",defaultValue:"USD",type:"currency",maxLength:10 },
+  default_currency: { category:"billing",description:"Base display and billing currency",defaultValue:"LKR",type:"currency",maxLength:10 },
   bank_name: { category:"billing",description:"Bank receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
   bank_account_name: { category:"billing",description:"Account holder receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
   bank_account_number: { category:"billing",description:"Account number receiving manual subscription payments",defaultValue:"",type:"text",maxLength:100 },
   bank_branch: { category:"billing",description:"Bank branch receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
   bank_swift_code: { category:"billing",description:"Optional SWIFT or routing code for manual payments",defaultValue:"",type:"text",maxLength:50,optional:true },
+  international_nfc_shipping_lkr: { category:"billing",description:"Flat shipping charge for NFC orders delivered outside Sri Lanka (LKR)",defaultValue:"0",type:"decimal",min:0,max:9999999999.99 },
   affiliate_minimum_withdrawal: { category:"billing",description:"Minimum approved balance required for affiliate withdrawals",defaultValue:"10",type:"decimal",min:0.01,max:9999999999.99 },
   maintenance_mode: { category:"access",description:"Temporarily restrict public platform access",defaultValue:"false",type:"boolean" },
   manual_signup_review: { category:"access",description:"Require administrator approval for new accounts",defaultValue:"false",type:"boolean" },
 };
 
-function validatePlatformSetting(key,value){const definition=platformSettingDefinitions[key];if(!definition)return"Unknown platform setting";const text=String(value===null||value===undefined?"":value).trim();if(definition.type==="boolean"&&!['true','false'].includes(text))return`${key} must be true or false`;if(definition.type==="integer"&&(!/^\d+$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="decimal"&&(!/^\d+(\.\d{1,2})?$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))return"Enter a valid support email";if(definition.type==="currency"&&!["USD","AUD","LKR"].includes(text.toUpperCase()))return"Currency must be USD, AUD, or LKR";if(!text&&!definition.optional&&!["boolean"].includes(definition.type))return`${key} cannot be empty`;if(definition.maxLength&&text.length>definition.maxLength)return`${key} is too long`;return null;}
+function validatePlatformSetting(key,value){const definition=platformSettingDefinitions[key];if(!definition)return"Unknown platform setting";const text=String(value===null||value===undefined?"":value).trim();if(key==="default_currency"&&text.toUpperCase()!=="LKR")return"The platform base currency must remain LKR";if(definition.type==="boolean"&&!['true','false'].includes(text))return`${key} must be true or false`;if(definition.type==="integer"&&(!/^\d+$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="decimal"&&(!/^\d+(\.\d{1,2})?$/.test(text)||Number(text)<definition.min||Number(text)>definition.max))return`${key} must be between ${definition.min} and ${definition.max}`;if(definition.type==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))return"Enter a valid support email";if(definition.type==="currency"&&!normalizeCurrency(text))return"Select a valid ISO 4217 currency";if(!text&&!definition.optional&&!["boolean"].includes(definition.type))return`${key} cannot be empty`;if(definition.maxLength&&text.length>definition.maxLength)return`${key} is too long`;return null;}
 
 exports.getSettings=async(req,res,next)=>{try{const keys=Object.keys(platformSettingDefinitions);const[settingsResult,rolesResult,permissionsResult,summaryResult]=await Promise.all([
   pool.query("SELECT key,value,category,description,updated_at FROM settings WHERE key=ANY($1::text[]) ORDER BY category,key",[keys]),

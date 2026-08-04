@@ -4,8 +4,7 @@
   var id = params.get("id");
   if (!/^\d+$/.test(id || "")) return;
 
-  var apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
-    ? "http://localhost:5000" : window.location.origin;
+  var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
   var source = params.get("source") === "qr" ? "qr" : "direct";
   var contactCaptureRequired = true;
   fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id))

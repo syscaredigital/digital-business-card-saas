@@ -1,0 +1,54 @@
+/* Final mobile overrides shared by every published VCard template. */
+html { max-width: 100%; overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { max-width: 100%; overflow-x: hidden; }
+.vcard-shell, .public-card-shell, .ceo-card, .industry-card,
+.vfeature-sections, .vfeature-section, .vfeature-body { min-width: 0; max-width: 100%; }
+.vcard-shell img, .public-card-shell img, .ceo-card img,
+.vcard-shell video, .public-card-shell video, .ceo-card video,
+.vcard-shell canvas, .public-card-shell canvas, .ceo-card canvas { max-width: 100%; height: auto; }
+.vcard-shell iframe, .public-card-shell iframe, .ceo-card iframe { width: 100%; max-width: 100%; }
+.vcard-shell h1, .vcard-shell h2, .vcard-shell p, .vcard-shell a,
+.public-card-shell h1, .public-card-shell h2, .public-card-shell p, .public-card-shell a,
+.ceo-card h1, .ceo-card h2, .ceo-card p, .ceo-card a { overflow-wrap: anywhere; }
+
+@media (max-width: 480px) {
+  .public-card-shell { width: calc(100% - 16px); margin: 8px auto 78px; border-radius: 17px; }
+  .public-vcard-hero { padding: 28px 16px 24px; }
+  .public-vcard-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); width: 100%; }
+  .public-vcard-actions a { display: flex; min-height: 44px; align-items: center; justify-content: center; padding: 10px 12px; }
+  .public-vcard-intro { padding-right: 16px; padding-left: 16px; }
+  .public-vcard-sections { padding-right: 14px; padding-left: 14px; }
+  .vfeature-gallery-grid { grid-template-columns: 1fr; }
+  .vfeature-gallery-item, .vfeature-gallery-item img { min-height: 180px; }
+  .vfeature-qr-panel { align-items: center; flex-direction: column; text-align: center; }
+  .vfeature-qr-image { width: min(220px,72vw); height: min(220px,72vw); }
+  .vfeature-hours > div { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .vfeature-hours span { text-align: left; }
+  .vfeature-link { width: 100%; min-height: 44px; }
+  .vfeature-button { min-height: 44px; align-items: center; justify-content: center; }
+  .vfeature-booking-input, .vcard-save-form input:not([type=checkbox]) { font-size: 16px; }
+  .ceo-contact-grid { grid-template-columns: 1fr; }
+  .ceo-feature-root .vfeature-gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .ceo-feature-root .vfeature-products .vfeature-card-grid { grid-template-columns: 1fr; }
+  .ceo-feature-root .vfeature-products .vfeature-item-card { display: flex; }
+  .ceo-feature-root .vfeature-products .vfeature-item-image { width: 96px; height: 90px; flex-basis: 96px; }
+  .ceo-enquiry-grid label { grid-template-columns: 1fr; gap: 7px; }
+  .ceo-message-field > span { padding-top: 0; }
+  .ceo-card .submit-button { width: 100%; min-height: 44px; margin-left: 0; }
+}
+
+@media (max-width: 560px) {
+  .vcard-save-modal { align-items: end; padding: 10px max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); }
+  .vcard-save-dialog { width: 100%; max-height: calc(100dvh - 20px); overflow-y: auto; overscroll-behavior: contain; }
+  .vcard-save-trigger { right: max(14px,env(safe-area-inset-right)); bottom: max(14px,env(safe-area-inset-bottom)); max-width: calc(100vw - 28px); min-height: 46px; white-space: normal; }
+  .vcard-save-submit { min-height: 46px; }
+}
+
+@media (max-width: 600px) {
+  .ceo-contact-grid { grid-template-columns: 1fr; }
+  .ceo-contact-item strong { white-space: normal; }
+  .ceo-feature-root .vfeature-gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .ceo-enquiry-grid label { grid-template-columns: 1fr; gap: 7px; }
+  .ceo-card .submit-button { width: 100%; min-height: 44px; margin-left: 0; }
+  .vcard-save-trigger { right: auto; left: max(14px,env(safe-area-inset-left)); max-width: calc(100vw - 28px); white-space: normal; }
+}

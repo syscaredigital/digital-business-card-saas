@@ -2,7 +2,7 @@
   "use strict";
   var id = new URLSearchParams(window.location.search).get("id");
   if (!id) return;
-  var API = window.location.protocol + "//" + window.location.hostname + ":5000/api/public/vcards/" + encodeURIComponent(id);
+  var API = (window.SyncVCardApiOrigin || window.location.origin) + "/api/public/vcards/" + encodeURIComponent(id);
   function text(selector, value) { var node = document.querySelector(selector); if (node && value) node.textContent = value; }
   function safeUrl(value) { try { var url = new URL(String(value)); return /^https?:$/.test(url.protocol) ? url.href : ""; } catch (_) { return ""; } }
   function setContact(index, value, type) {

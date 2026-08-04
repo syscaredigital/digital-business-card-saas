@@ -51,14 +51,14 @@
   }
 
   function setText(id, value) { var node = document.getElementById(id); if (node) node.textContent = value; }
-  function money(value) { return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(Number(value || 0)); }
+  function money(value) { return new Intl.NumberFormat(undefined, { style: "currency", currency: "LKR" }).format(Number(value || 0)); }
 
   var currencyPreferenceForm = document.getElementById("currencyPreferenceForm");
   if (currencyPreferenceForm) {
     var currencyPreferenceSelect = document.getElementById("settingsCurrency");
     var currencyPreferenceFeedback = document.getElementById("currencyPreferenceFeedback");
     request("/user/preferences").then(function (data) {
-      currencyPreferenceSelect.value = data.currency || "USD";
+      currencyPreferenceSelect.value = data.currency || "LKR";
     }).catch(function (error) {
       currencyPreferenceFeedback.hidden = false;
       currencyPreferenceFeedback.textContent = error.message;
@@ -124,7 +124,8 @@
         setText("settingsMemberSince",settingsDate(account.createdAt));setText("settingsLastLogin",settingsDate(account.lastLogin));
         setText("settingsPlanName",(subscription.name || "Free")+" plan");
         setText("settingsStorageSummary",settingsBytes(storage.usedBytes)+" of "+settingsBytes(storage.limitBytes)+" used");
-        accountPreferencesForm.elements.currency.value=account.currency || "USD";
+        accountPreferencesForm.elements.currency.value=account.currency || "LKR";
+        window.addEventListener("sync:currencies-ready",function(){accountPreferencesForm.elements.currency.value=account.currency || "LKR";},{once:true});
         var timeInput=accountPreferencesForm.querySelector('input[name="timeFormat"][value="'+(preferences.timeFormat || "12")+'"]');
         if(timeInput)timeInput.checked=true;
         localStorage.setItem("timeFormat",preferences.timeFormat || "12");
@@ -264,12 +265,12 @@
       vcardTable.querySelectorAll(".client-vcard-row, .user-empty").forEach(function (row) { row.remove(); });
       if (data.vcards && data.vcards.length) {
         vcardTable.insertAdjacentHTML("beforeend", data.vcards.map(function (card) {
-          var publicUrl = "../public-vcard/profile.html?id=" + encodeURIComponent(card.id);
+          var publicUrl = card.publicUrl || card.public_url || ("../public-vcard/profile.html?id=" + encodeURIComponent(card.id));
           return '<article class="client-vcard-row vcard-library-card searchable-item" data-search="' + escapeHtml([card.title, card.email, card.phone, card.template_name].join(" ").toLowerCase()) + '">' +
             '<div class="vcard-library-cover"><span class="vcard-library-template">' + escapeHtml(card.template_name || "VCard template") + '</span><div class="vcard-library-monogram">' + escapeHtml((card.title || "V").charAt(0).toUpperCase()) + '</div><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + '</span></div>' +
-            '<div class="vcard-library-body"><div class="client-vcard-name-cell"><div><a href="' + publicUrl + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.title || "Untitled card") + '</a><span>' + escapeHtml(card.description || "Your digital business card") + '</span></div></div>' +
-            '<div class="vcard-library-meta"><span><small>Contact</small>' + escapeHtml(card.email || card.phone || "Not added") + '</span><span><small>Updated</small>' + escapeHtml(formatDate(card.updated_at)) + '</span></div>' +
-            '<div class="vcard-library-actions"><a class="vcard-open-link" href="' + publicUrl + '" target="_blank" rel="noopener noreferrer">View card <span>↗</span></a><div class="vcard-manage"><button class="vcard-manage-toggle" type="button" data-vcard-manage-toggle="' + card.id + '" aria-expanded="false">Manage <span>•••</span></button><div class="vcard-manage-menu" data-vcard-manage-menu="' + card.id + '" hidden><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + '"><span>✎</span><div><strong>Edit VCard</strong><small>Update details and design</small></div></a><a href="' + publicUrl + '" target="_blank" rel="noopener noreferrer"><span>↗</span><div><strong>Open public card</strong><small>View the published profile</small></div></a><button type="button" class="vcard-delete-action" data-delete-vcard="' + card.id + '" data-vcard-title="' + escapeHtml(card.title || "Untitled card") + '"><span>×</span><div><strong>Delete VCard</strong><small>Permanently remove this card</small></div></button></div></div></div></div></article>';
+            '<div class="vcard-library-body"><div class="client-vcard-name-cell"><div><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.title || "Untitled card") + '</a><span>' + escapeHtml(card.description || "Your digital business card") + '</span></div></div>' +
+            '<div class="vcard-library-meta"><span><small>Contact</small>' + escapeHtml(card.email || card.phone || "Not added") + '</span><span><small>Updated</small>' + escapeHtml(formatDate(card.updated_at)) + '</span><span><small>Public URL</small><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl.replace(/^https?:\/\//,"")) + '</a></span></div>' +
+            '<div class="vcard-library-actions"><a class="vcard-open-link" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">View card <span>↗</span></a><div class="vcard-manage"><button class="vcard-manage-toggle" type="button" data-vcard-manage-toggle="' + card.id + '" aria-expanded="false">Manage <span>•••</span></button><div class="vcard-manage-menu" data-vcard-manage-menu="' + card.id + '" hidden><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + '"><span>✎</span><div><strong>Edit VCard</strong><small>Update details and design</small></div></a><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer"><span>↗</span><div><strong>Open public card</strong><small>View the published profile</small></div></a><button type="button" class="vcard-delete-action" data-delete-vcard="' + card.id + '" data-vcard-title="' + escapeHtml(card.title || "Untitled card") + '"><span>×</span><div><strong>Delete VCard</strong><small>Permanently remove this card</small></div></button></div></div></div></div></article>';
           /* Legacy table row retained below for reference while the gallery renderer is active.
           return '<div class="client-vcard-row searchable-item" data-search="' + escapeHtml([card.title, card.email, card.phone].join(" ").toLowerCase()) + '"><label class="client-check"><input type="checkbox" aria-label="Select card"><span></span></label><div class="client-vcard-name-cell"><div class="client-vcard-thumb"></div><div><a href="../public-vcard/profile.html?id=' + encodeURIComponent(card.id) + '" target="_blank">' + escapeHtml(card.title || "Untitled card") + '</a><span>' + escapeHtml(card.description || "Digital identity") + '</span></div></div><div class="client-vcard-url-cell"><a href="../public-vcard/profile.html?id=' + encodeURIComponent(card.id) + '" target="_blank">Open public card</a></div><span>—</span><span>—</span><a href="mailto:' + escapeHtml(card.email || "") + '">' + escapeHtml(card.email || card.phone || "—") + '</a><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + '</span><span class="date-pill">' + escapeHtml(formatDate(card.updated_at)) + '</span><div class="client-action-cell"><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + '" aria-label="Edit card">Edit</a></div></div>';
           */
@@ -680,9 +681,10 @@
     var refreshNfcOrdersButton = document.getElementById("refreshNfcOrders");
     var refreshNfcOrdersLabel = refreshNfcOrdersButton ? refreshNfcOrdersButton.querySelector("span") : null;
     var liveNfcLoading = null;
-    function nfcMoney(value) {
-      try { return new Intl.NumberFormat("en-LK", { style:"currency", currency:liveNfcData.currency || "LKR" }).format(Number(value || 0)); }
-      catch (_) { return (liveNfcData.currency || "LKR") + " " + Number(value || 0).toFixed(2); }
+    function nfcMoney(value, currency) {
+      var code=currency || liveNfcData.currency || "LKR";
+      try { return new Intl.NumberFormat(undefined, { style:"currency", currency:code }).format(Number(value || 0)); }
+      catch (_) { return code + " " + Number(value || 0).toFixed(2); }
     }
     function nfcBadge(status) { return '<span class="nfc-live-badge is-' + escapeHtml(status || "pending") + '">' + escapeHtml(String(status || "pending").replace(/_/g," ")) + '</span>'; }
     function nfcTracking(order) {
@@ -691,7 +693,10 @@
     }
     function updateLiveNfcTotal() {
       var product = liveNfcData.products.find(function(item){return Number(item.id)===Number(liveNfcProductSelect.value);});
-      setText("nfcOrderTotal", nfcMoney((product ? product.price : 0) * Math.max(1,Number(liveNfcQuantity.value || 1))));
+      var country=String(document.getElementById("nfcDestinationCountry").value || "LK").trim().toUpperCase();
+      var shipping=country && country!=="LK" ? Number(liveNfcData.internationalShipping || 0) : 0;
+      setText("nfcOrderTotal", nfcMoney((product ? product.price : 0) * Math.max(1,Number(liveNfcQuantity.value || 1)) + shipping));
+      setText("nfcOrderTotalCopy", "Card price × quantity" + (shipping ? " + " + nfcMoney(shipping) + " overseas shipping" : ""));
     }
     function renderLiveNfc(data) {
       liveNfcData = data;
@@ -699,6 +704,7 @@
       var grid = document.getElementById("nfcUserProductGrid");
       grid.innerHTML = products.length ? products.map(function(product){return '<article class="nfc-user-product-card"><div class="nfc-user-product-visual"><img src="' + escapeHtml(product.frontImage) + '" alt="' + escapeHtml(product.name) + '" /><span>' + escapeHtml(product.category) + '</span></div><div class="nfc-user-product-copy"><small>Sync NFC collection</small><h3>' + escapeHtml(product.name) + '</h3><p>' + escapeHtml(product.description || "Premium contactless business card.") + '</p><div><strong>' + escapeHtml(nfcMoney(product.price)) + '</strong><button type="button" data-user-nfc-product="' + product.id + '">Order this card</button></div></div></article>';}).join("") : '<div class="nfc-user-loading">No NFC card products are available right now.</div>';
       setText("nfcCatalogCount", products.length + " design" + (products.length===1?"":"s"));
+      if(data.rateDate && data.currency!=="LKR")setText("nfcOrderFeedback","Prices converted from LKR using the reference rate dated "+data.rateDate+". The submitted total will be saved with that rate.");
       liveNfcProductSelect.innerHTML = '<option value="">Select a card design</option>' + products.map(function(item){return '<option value="' + item.id + '">' + escapeHtml(item.name) + ' — ' + escapeHtml(nfcMoney(item.price)) + '</option>';}).join("");
       if (!requestedNfcProductApplied && requestedNfcProductId && products.some(function (item) { return Number(item.id) === requestedNfcProductId; })) {
         liveNfcProductSelect.value = String(requestedNfcProductId);
@@ -713,7 +719,7 @@
       setText("nfcBankName",data.bankDetails.bankName || "Not configured");setText("nfcBankAccountName",data.bankDetails.accountName || "Not configured");setText("nfcBankAccountNumber",data.bankDetails.accountNumber || "Not configured");setText("nfcBankBranch",data.bankDetails.branch || "Not configured");
       setText("nfcMetricOrders",orders.length);setText("nfcMetricPending",orders.filter(function(item){return item.paymentStatus==="pending";}).length);setText("nfcMetricProduction",orders.filter(function(item){return ["processing","shipped"].includes(item.status);}).length);setText("nfcMetricDelivered",orders.filter(function(item){return item.status==="completed";}).length);
       var body=document.getElementById("nfcCardsTableBody");
-      body.innerHTML=orders.length?orders.map(function(order){var search=[order.id,order.productName,order.vcardTitle,order.paymentStatus,order.status,order.transactionNumber,order.trackingNumber].join(" ").toLowerCase();return '<tr class="nfc-card-row" data-search="' + escapeHtml(search) + '"><td data-label="Order"><strong class="nfc-order-id">#' + order.id + '</strong><small class="nfc-order-ref">' + escapeHtml(order.transactionNumber || "No reference") + '</small></td><td data-label="Card / VCard"><div class="nfc-order-product">' + (order.productImage?'<img src="' + escapeHtml(order.productImage) + '" alt="" />':'<span>NFC</span>') + '<div><strong>' + escapeHtml(order.productName) + '</strong><small>' + escapeHtml(order.vcardTitle || "VCard not linked") + '</small></div></div></td><td data-label="Qty"><span class="nfc-client-quantity">' + order.quantity + '</span></td><td data-label="Total"><strong class="nfc-client-total">' + escapeHtml(nfcMoney(order.amount)) + '</strong></td><td data-label="Payment">' + nfcBadge(order.paymentStatus) + (order.adminNote?'<small class="nfc-admin-note">' + escapeHtml(order.adminNote) + '</small>':'') + '</td><td data-label="Fulfilment">' + nfcBadge(order.status) + '</td><td data-label="Tracking">' + nfcTracking(order) + '</td><td data-label="Ordered"><span class="nfc-client-date">' + escapeHtml(formatDate(order.orderedAt)) + '</span></td></tr>';}).join(""):'<tr><td colspan="8" class="light-empty-cell">No NFC orders yet. Choose a card above to begin.</td></tr>';
+      body.innerHTML=orders.length?orders.map(function(order){var search=[order.id,order.productName,order.vcardTitle,order.paymentStatus,order.status,order.transactionNumber,order.trackingNumber].join(" ").toLowerCase();return '<tr class="nfc-card-row" data-search="' + escapeHtml(search) + '"><td data-label="Order"><strong class="nfc-order-id">#' + order.id + '</strong><small class="nfc-order-ref">' + escapeHtml(order.transactionNumber || "No reference") + '</small></td><td data-label="Card / VCard"><div class="nfc-order-product">' + (order.productImage?'<img src="' + escapeHtml(order.productImage) + '" alt="" />':'<span>NFC</span>') + '<div><strong>' + escapeHtml(order.productName) + '</strong><small>' + escapeHtml(order.vcardTitle || "VCard not linked") + '</small></div></div></td><td data-label="Qty"><span class="nfc-client-quantity">' + order.quantity + '</span></td><td data-label="Total"><strong class="nfc-client-total">' + escapeHtml(nfcMoney(order.amount,order.currency)) + '</strong>' + (Number(order.shippingCost)>0?'<small class="nfc-order-ref">Includes '+escapeHtml(nfcMoney(order.shippingCost,order.currency))+' shipping</small>':'') + '</td><td data-label="Payment">' + nfcBadge(order.paymentStatus) + (order.adminNote?'<small class="nfc-admin-note">' + escapeHtml(order.adminNote) + '</small>':'') + '</td><td data-label="Fulfilment">' + nfcBadge(order.status) + '</td><td data-label="Tracking">' + nfcTracking(order) + '</td><td data-label="Ordered"><span class="nfc-client-date">' + escapeHtml(formatDate(order.orderedAt)) + '</span></td></tr>';}).join(""):'<tr><td colspan="8" class="light-empty-cell">No NFC orders yet. Choose a card above to begin.</td></tr>';
       setText("nfcCardsResults","Showing " + orders.length + " order" + (orders.length===1?"":"s"));updateLiveNfcTotal();
     }
     function loadLiveNfc(){
@@ -727,7 +733,7 @@
     window.addEventListener("focus",function(){if(document.getElementById("nfcOrderModal").hidden)loadLiveNfc();});
     document.addEventListener("visibilitychange",function(){if(!document.hidden&&document.getElementById("nfcOrderModal").hidden)loadLiveNfc();});
     if(refreshNfcOrdersButton)refreshNfcOrdersButton.addEventListener("click",loadLiveNfc);
-    liveNfcProductSelect.addEventListener("change",updateLiveNfcTotal);liveNfcQuantity.addEventListener("input",updateLiveNfcTotal);
+    liveNfcProductSelect.addEventListener("change",updateLiveNfcTotal);liveNfcQuantity.addEventListener("input",updateLiveNfcTotal);document.getElementById("nfcDestinationCountry").addEventListener("input",updateLiveNfcTotal);
     liveNfcOrderForm.addEventListener("reset",function(){window.setTimeout(updateLiveNfcTotal,0);});
     document.addEventListener("click",function(event){var button=event.target.closest("[data-user-nfc-product]");if(!button)return;liveNfcProductSelect.value=button.dataset.userNfcProduct;updateLiveNfcTotal();document.getElementById("openNfcOrderModal").click();});
     liveNfcOrderForm.addEventListener("submit",function(event){event.preventDefault();var submit=liveNfcOrderForm.querySelector('[type="submit"]'),feedback=document.getElementById("nfcOrderFeedback");submit.disabled=true;submit.textContent="Uploading payment...";feedback.textContent="Submitting your order securely...";request("/user/nfc/orders",{method:"POST",body:new FormData(liveNfcOrderForm)}).then(function(data){feedback.textContent=data.message;liveNfcOrderForm.reset();updateLiveNfcTotal();return loadLiveNfc();}).then(function(){setTimeout(function(){document.getElementById("closeNfcOrderModal").click();},800);}).catch(function(error){feedback.textContent=error.message;}).finally(function(){submit.disabled=false;submit.textContent="Submit payment & order";});});
@@ -801,7 +807,7 @@
     }
     function renderCurrentBilling(data) {
       var current = data.current;
-      setText("billingCurrency", String(data.currency || "USD") + " pricing");
+      setText("billingCurrency", String(data.currency || "LKR") + " pricing · converted from LKR at the current rate");
       if (!current) {
         setText("billingPlanName", "No active plan"); setText("billingPlanDescription", "Choose a plan to activate your workspace.");
         setText("billingPlanStatus", "Inactive"); setText("billingCurrentPrice", billingMoney(0, data.currency));
@@ -1322,6 +1328,15 @@
 
   var createCardForm = document.querySelector("#newVcardPanel .client-vcard-form");
   if (createCardForm) {
+    var createVcardNameInput=document.getElementById("vcardName");
+    var createVcardSlugInput=document.getElementById("urlAlias");
+    var slugifyVcardName=function(value){return String(value||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,100);};
+    if(createVcardNameInput&&createVcardSlugInput){
+      createVcardNameInput.addEventListener("input",function(){if(createVcardSlugInput.dataset.custom!=="true")createVcardSlugInput.value=slugifyVcardName(createVcardNameInput.value);});
+      createVcardSlugInput.addEventListener("input",function(){createVcardSlugInput.dataset.custom="true";createVcardSlugInput.value=slugifyVcardName(createVcardSlugInput.value);});
+      var generateSlugButton=createVcardSlugInput.parentElement.querySelector("button");
+      if(generateSlugButton)generateSlugButton.addEventListener("click",function(){createVcardSlugInput.dataset.custom="false";createVcardSlugInput.value=slugifyVcardName(createVcardNameInput.value);createVcardSlugInput.focus();});
+    }
     createCardForm.addEventListener("submit", function (event) {
       event.preventDefault();
       var title = document.getElementById("vcardName");
@@ -1334,7 +1349,7 @@
       createCardForm.querySelectorAll("[data-create-vcard-section]").forEach(function (field) { sections[field.dataset.createVcardSection] = field.value.trim(); });
       var occupation = document.getElementById("occupation");
       if (occupation && occupation.value.trim()) sections["basic-details"] = occupation.value.trim();
-      request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), templateId: Number(template && template.value), description: description ? description.value.trim() : "", sections: sections }) })
+      request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), description: description ? description.value.trim() : "", sections: sections }) })
         .then(function (data) { window.location.href = "edit-vcard.html?id=" + encodeURIComponent(data.vcard.id); })
         .catch(function (error) { window.alert(error.message); if (button) button.disabled = false; });
     });
@@ -1423,16 +1438,13 @@
   if (userQrCardList) {
     request("/user/vcard-engagement").then(function (data) {
       userQrCardList.innerHTML = data.cards.length ? data.cards.map(function (card) {
-        var publicUrl = new URL("../public-vcard/profile.html", window.location.href);
-        publicUrl.searchParams.set("id", card.id);
-        publicUrl.searchParams.set("source", "qr");
-        var destination = publicUrl.href;
-        var qrUrl = API.replace(/\/api$/, "") + "/api/public/qrcode?data=" + encodeURIComponent(destination);
+        var destination = card.publicUrl || (new URL("../public-vcard/profile.html?id="+encodeURIComponent(card.id),window.location.href)).href;
+        var qrUrl = API + "/public/vcards/" + encodeURIComponent(card.id) + "/qrcode";
         return '<article class="feature-panel qr-live-card searchable-item" data-search="' + escapeHtml((card.title || "vcard") + " qr") + '">' +
           '<div class="feature-panel-header"><div><h3>' + escapeHtml(card.title || "Untitled VCard") + '</h3><p>Encoded to open this public VCard directly.</p></div><span class="status-pill ' + (card.is_active ? "status-live" : "status-warm") + '">' + (card.is_active ? "Active" : "Paused") + '</span></div>' +
           '<div class="qr-preview"><img src="' + escapeHtml(qrUrl) + '" alt="QR code for ' + escapeHtml(card.title || "VCard") + '"></div>' +
           '<div class="qr-live-stats"><span><strong>' + Number(card.qr_scans || 0).toLocaleString() + '</strong>QR scans</span><span><strong>' + Number(card.contact_downloads || 0).toLocaleString() + '</strong>contact saves</span><span><strong>' + Number(card.captured_contacts || 0).toLocaleString() + '</strong>leads</span></div>' +
-          '<div class="action-row"><button type="button" class="btn-preview" data-copy-text="' + escapeHtml(destination) + '">Copy Link</button><button class="btn-share" type="button" data-download-qr="' + escapeHtml(qrUrl) + '" data-qr-filename="vcard-' + card.id + '-qr.svg">Download SVG</button></div></article>';
+          '<div class="action-row"><button type="button" class="btn-preview" data-copy-text="' + escapeHtml(destination) + '">Copy Link</button><button class="btn-share" type="button" data-download-qr="' + escapeHtml(qrUrl) + '" data-qr-filename="' + escapeHtml(card.slug || "vcard-"+card.id) + '-qr.svg">Download SVG</button></div></article>';
       }).join("") : '<div class="user-empty">Create a VCard to generate your first tracked QR code.</div>';
     }).catch(function (error) {
       userQrCardList.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>';

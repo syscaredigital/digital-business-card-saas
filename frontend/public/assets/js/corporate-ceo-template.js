@@ -114,8 +114,7 @@
   }
   root.classList.add("is-loading");
   if (!id) { hydrate(demoCard()); return; }
-  var apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
-    ? "http://localhost:5000" : window.location.origin;
+  var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
   fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id))
     .then(function (response) { return response.json().then(function (data) { if (!response.ok) throw new Error(data.message || "Unable to load VCard"); return data; }); })
     .then(function (data) { hydrate(data.vcard); })

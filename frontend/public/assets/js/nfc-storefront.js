@@ -4,6 +4,7 @@
   var root = document.getElementById("nfcProductLines");
   if (!root) return;
   var catalogProducts = [];
+  var rateDate = "";
 
   var lines = {
     essential: { name: "Essential Line", badge: "Entry Level", description: "Perfect for getting started with contactless networking" },
@@ -29,8 +30,8 @@
   }
 
   function selectedCurrency() {
-    var currency = String(localStorage.getItem("preferredCurrency") || "USD").toUpperCase();
-    return ["USD", "AUD", "LKR"].includes(currency) ? currency : "USD";
+    var currency = String(localStorage.getItem("preferredCurrency") || "LKR").toUpperCase();
+    return /^[A-Z]{3}$/.test(currency) ? currency : "LKR";
   }
 
   function descriptionItems(description) {
@@ -66,15 +67,16 @@
         '<div class="nfc-package-grid">' + categoryProducts.map(renderProduct).join("") + '</div></div></section>';
     }).join("");
 
-    root.innerHTML = markup || '<div class="nfc-catalog-state"><strong>No NFC cards are available right now.</strong><span>Please check again soon.</span></div>';
+    root.innerHTML = (rateDate && selectedCurrency()!=="LKR" ? '<div class="nfc-catalog-state"><span>Prices are converted from LKR using the current reference rate dated ' + escapeHtml(rateDate) + '.</span></div>' : '') + (markup || '<div class="nfc-catalog-state"><strong>No NFC cards are available right now.</strong><span>Please check again soon.</span></div>');
   }
 
   async function loadProducts() {
     try {
-      var response = await fetch(apiBaseUrl() + "/api/public/nfc-products", { headers: { Accept: "application/json" } });
+      var response = await fetch(apiBaseUrl() + "/api/public/nfc-products?currency=" + encodeURIComponent(selectedCurrency()), { headers: { Accept: "application/json" } });
       var payload = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(payload.message || "The NFC catalog could not be loaded.");
       catalogProducts = Array.isArray(payload.data) ? payload.data : [];
+      rateDate = payload.rateDate || "";
       render(catalogProducts);
     } catch (error) {
       root.innerHTML = '<div class="nfc-catalog-state is-error"><strong>The NFC catalog could not be loaded.</strong><span>' + escapeHtml(error.message) + '</span><button type="button" id="retryNfcCatalog">Try again</button></div>';
@@ -83,6 +85,6 @@
     }
   }
 
-  window.addEventListener("sync:currency-change", function () { render(catalogProducts); });
+  window.addEventListener("sync:currency-change", loadProducts);
   loadProducts();
 })();

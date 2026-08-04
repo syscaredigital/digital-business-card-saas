@@ -4,6 +4,9 @@ const fs = require("fs/promises");
 const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
 const { sendAppointmentApproved } = require("../services/email.service");
 const { getStorageSummary, virtualNfcPayloadBytes } = require("../services/storage.service");
+const { CURRENCY_CODES, normalizeCurrency } = require("../config/currencies");
+const { BASE_CURRENCY, getRate, convertFromLkr } = require("../services/exchange-rate.service");
+const { normalizeCustomSlug, publicVcardUrl } = require("../helpers/vcard-url");
 
 function number(value) {
   return Number(value || 0);
@@ -61,7 +64,7 @@ exports.dashboard = async (req, res, next) => {
          ORDER BY s.created_at DESC LIMIT 1`, [userId]
       ),
       pool.query(
-        `SELECT v.id,v.title,v.email,v.phone,v.is_active,v.updated_at,v.template_id,t.name AS template_name
+        `SELECT v.id,v.slug,v.title,v.email,v.phone,v.is_active,v.updated_at,v.template_id,t.name AS template_name
          FROM vcards v LEFT JOIN vcard_templates t ON t.id=v.template_id WHERE v.user_id = $1 ORDER BY v.updated_at DESC`, [userId]
       ),
       pool.query(
@@ -101,7 +104,7 @@ exports.dashboard = async (req, res, next) => {
     ]);
 
     const plan = subscription.rows[0] || { plan_name: "Free", status: "inactive", vcard_limit: 1, nfc_limit: 0 };
-    const cardRows = cards.rows;
+    const cardRows = cards.rows.map((card) => ({ ...card, publicUrl: publicVcardUrl(req, card.slug), public_url: publicVcardUrl(req, card.slug) }));
     const entitlements = await loadVcardEntitlements(pool, userId);
     const analyticsRow = analytics.rows[0] || {};
     const affiliateRow = affiliate.rows[0] || {};
@@ -182,7 +185,7 @@ exports.contacts = async (req, res, next) => {
 exports.vcardEngagement = async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT v.id,v.title,v.is_active,
+      `SELECT v.id,v.slug,v.title,v.is_active,
               COUNT(DISTINCT e.id) FILTER (WHERE e.event_type='qr_scan')::int AS qr_scans,
               COUNT(DISTINCT e.id) FILTER (WHERE e.event_type='vcard_view')::int AS views,
               COUNT(DISTINCT e.id) FILTER (WHERE e.event_type='contact_download')::int AS contact_downloads,
@@ -195,7 +198,7 @@ exports.vcardEngagement = async (req, res, next) => {
        ORDER BY v.updated_at DESC`,
       [req.user.id]
     );
-    res.json({ cards: result.rows });
+    res.json({ cards: result.rows.map((card) => ({ ...card, publicUrl: publicVcardUrl(req, card.slug) })) });
   } catch (error) { next(error); }
 };
 
@@ -337,7 +340,7 @@ exports.orders = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-const supportedCurrencies = ["USD", "AUD", "LKR"];
+const supportedCurrencies = CURRENCY_CODES;
 
 exports.accountSettings = async (req, res, next) => {
   try {
@@ -357,7 +360,7 @@ exports.accountSettings = async (req, res, next) => {
     const account=accountResult.rows[0],preferences=preferencesResult.rows[0] || {};
     res.json({
       account:{id:account.id,name:account.name,email:account.email,phone:account.phone || "",
-        currency:supportedCurrencies.includes(account.preferred_currency)?account.preferred_currency:"USD",
+        currency:supportedCurrencies.includes(account.preferred_currency)?account.preferred_currency:BASE_CURRENCY,
         status:account.status,createdAt:account.created_at,lastLogin:account.last_login},
       preferences:{timeFormat:preferences.time_format || "12",
         emailNotifications:preferences.email_notifications !== false,
@@ -398,7 +401,8 @@ exports.updateAccountPreferences = async (req,res,next) => {
   try {
     const currency=String(req.body.currency || "").trim().toUpperCase();
     const timeFormat=String(req.body.timeFormat || "");
-    if(!supportedCurrencies.includes(currency))return res.status(400).json({message:"Currency must be USD, AUD, or LKR"});
+    if(!normalizeCurrency(currency))return res.status(400).json({message:"Select a valid ISO 4217 currency"});
+    await getRate(currency);
     if(!["12","24"].includes(timeFormat))return res.status(400).json({message:"Time format must be 12 or 24 hour"});
     const fields=["emailNotifications","browserNotifications","marketingEmails","contactCaptureRequired"];
     if(fields.some((key)=>typeof req.body[key]!=="boolean"))return res.status(400).json({message:"Notification preferences must be true or false"});
@@ -444,7 +448,7 @@ exports.getPreferences = async (req, res, next) => {
     res.json({
       currency: supportedCurrencies.includes(result.rows[0].preferred_currency)
         ? result.rows[0].preferred_currency
-        : "USD",
+        : BASE_CURRENCY,
       supportedCurrencies,
     });
   } catch (error) { next(error); }
@@ -453,9 +457,10 @@ exports.getPreferences = async (req, res, next) => {
 exports.updatePreferences = async (req, res, next) => {
   try {
     const currency = String(req.body.currency || "").trim().toUpperCase();
-    if (!supportedCurrencies.includes(currency)) {
-      return res.status(400).json({ message: "Currency must be USD, AUD, or LKR" });
+    if (!normalizeCurrency(currency)) {
+      return res.status(400).json({ message: "Select a valid ISO 4217 currency" });
     }
+    await getRate(currency);
     const result = await pool.query(
       `UPDATE users SET preferred_currency = $1, updated_at = NOW()
        WHERE id = $2 RETURNING preferred_currency`,
@@ -589,21 +594,27 @@ exports.nfcStore = async (req, res, next) => {
       pool.query(`SELECT id,name,price,description,front_image,back_image,category
         FROM nfc_products WHERE is_active=TRUE ORDER BY category,price,name`),
       pool.query(`SELECT o.id,o.nfc_product_id,o.vcard_id,o.quantity,o.amount,o.currency,o.status,
+          o.subtotal_lkr,o.shipping_cost_lkr,o.shipping_cost,o.destination_country,o.exchange_rate,o.exchange_rate_date,
           o.payment_status,o.payment_method,o.transaction_number,o.shipping_address,o.tracking_number,
           o.admin_note,o.ordered_at,o.updated_at,p.name product_name,p.front_image,v.title vcard_title
         FROM nfc_orders o LEFT JOIN nfc_products p ON p.id=o.nfc_product_id
         LEFT JOIN vcards v ON v.id=o.vcard_id WHERE o.user_id=$1 ORDER BY o.ordered_at DESC`, [req.user.id]),
       pool.query(`SELECT id,title,description,website_url,phone,email,address
         FROM vcards WHERE user_id=$1 AND is_active=TRUE ORDER BY title,id`, [req.user.id]),
-      pool.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency","bank_name","bank_account_name","bank_account_number","bank_branch","bank_swift_code"]]),
+      pool.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency","bank_name","bank_account_name","bank_account_number","bank_branch","bank_swift_code","international_nfc_shipping_lkr"]]),
       pool.query("SELECT name,email,phone,preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
+    const currency = normalizeCurrency(userResult.rows[0]?.preferred_currency, BASE_CURRENCY);
+    const exchange = await getRate(currency);
+    const internationalShippingLkr = number(settings.international_nfc_shipping_lkr);
     res.json({
-      currency: userResult.rows[0]?.preferred_currency || settings.default_currency || "USD",
+      currency, baseCurrency: BASE_CURRENCY, exchangeRate: exchange.rate, rateDate: exchange.rateDate, ratesStale: exchange.stale,
+      internationalShippingLkr,
+      internationalShipping: convertFromLkr(internationalShippingLkr, exchange.rate),
       bankDetails: { bankName: settings.bank_name || "", accountName: settings.bank_account_name || "",
         accountNumber: settings.bank_account_number || "", branch: settings.bank_branch || "", swiftCode: settings.bank_swift_code || "" },
-      products: products.rows.map((item) => ({ id:item.id,name:item.name,price:number(item.price),description:item.description || "",
+      products: products.rows.map((item) => ({ id:item.id,name:item.name,basePrice:number(item.price),price:convertFromLkr(item.price, exchange.rate),description:item.description || "",
         frontImage:item.front_image,backImage:item.back_image,category:item.category || "essential" })),
       vcards: vcards.rows.map((item) => ({ id:item.id,title:item.title || userResult.rows[0]?.name || `VCard #${item.id}`,
         role:item.description || "",email:item.email || userResult.rows[0]?.email || "",
@@ -611,6 +622,8 @@ exports.nfcStore = async (req, res, next) => {
       orders: orders.rows.map((item) => ({ id:item.id,productId:item.nfc_product_id,vcardId:item.vcard_id,
         productName:item.product_name || "NFC card",productImage:item.front_image || null,vcardTitle:item.vcard_title || null,
         quantity:number(item.quantity),amount:number(item.amount),currency:item.currency || "LKR",status:item.status,
+        subtotalLkr:number(item.subtotal_lkr),shippingCostLkr:number(item.shipping_cost_lkr),shippingCost:number(item.shipping_cost),
+        destinationCountry:item.destination_country || "LK",exchangeRate:number(item.exchange_rate),exchangeRateDate:item.exchange_rate_date,
         paymentStatus:item.payment_status || "pending",paymentMethod:item.payment_method,transactionNumber:item.transaction_number,
         shippingAddress:item.shipping_address,trackingNumber:item.tracking_number,adminNote:item.admin_note,
         orderedAt:item.ordered_at,updatedAt:item.updated_at })),
@@ -624,6 +637,7 @@ exports.placeNfcOrder = async (req, res, next) => {
   const quantity = Number(req.body.quantity);
   const transactionNumber = String(req.body.transactionNumber || "").trim();
   const shippingAddress = String(req.body.shippingAddress || "").trim();
+  const destinationCountry = String(req.body.destinationCountry || "").trim().toUpperCase();
   const uploadedPath = req.file?.path;
   const discardUpload = () => uploadedPath ? fs.unlink(uploadedPath).catch(() => {}) : Promise.resolve();
   if (!req.file) return res.status(400).json({ message: "Upload your bank payment slip" });
@@ -632,23 +646,34 @@ exports.placeNfcOrder = async (req, res, next) => {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) { await discardUpload(); return res.status(400).json({ message: "Order between 1 and 100 NFC cards" }); }
   if (!/^[A-Za-z0-9][A-Za-z0-9._/# -]{2,254}$/.test(transactionNumber)) { await discardUpload(); return res.status(400).json({ message: "Enter a valid transaction number" }); }
   if (shippingAddress.length < 10 || shippingAddress.length > 2000) { await discardUpload(); return res.status(400).json({ message: "Enter a complete shipping address" }); }
+  if (!/^[A-Z]{2}$/.test(destinationCountry)) { await discardUpload(); return res.status(400).json({ message: "Select a valid destination country" }); }
   let client;
   try {
     client = await pool.connect(); await client.query("BEGIN");
     const productResult = await client.query("SELECT id,name,price FROM nfc_products WHERE id=$1 AND is_active=TRUE FOR SHARE", [productId]);
     const vcardResult = await client.query("SELECT id,title FROM vcards WHERE id=$1 AND user_id=$2 AND is_active=TRUE FOR SHARE", [vcardId,req.user.id]);
-    const currencyResult = await client.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]);
+    const [currencyResult, shippingResult] = await Promise.all([
+      client.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
+      client.query("SELECT value FROM settings WHERE key='international_nfc_shipping_lkr'"),
+    ]);
     if (!productResult.rowCount || !vcardResult.rowCount) { await client.query("ROLLBACK"); await discardUpload(); return res.status(400).json({ message: "The selected NFC card or VCard is unavailable" }); }
     const duplicate = await client.query("SELECT id FROM nfc_orders WHERE LOWER(transaction_number)=LOWER($1)", [transactionNumber]);
     if (duplicate.rowCount) { await client.query("ROLLBACK"); await discardUpload(); return res.status(409).json({ message: "This transaction number has already been submitted" }); }
-    const product = productResult.rows[0], amount = number(product.price) * quantity;
-    const currency = currencyResult.rows[0]?.preferred_currency || "USD";
+    const product = productResult.rows[0];
+    const subtotalLkr = number(product.price) * quantity;
+    const shippingCostLkr = destinationCountry === "LK" ? 0 : number(shippingResult.rows[0]?.value);
+    const currency = normalizeCurrency(currencyResult.rows[0]?.preferred_currency, BASE_CURRENCY);
+    const exchange = await getRate(currency);
+    const subtotal = convertFromLkr(subtotalLkr, exchange.rate);
+    const shippingCost = convertFromLkr(shippingCostLkr, exchange.rate);
+    const amount = Math.round((subtotal + shippingCost + Number.EPSILON) * 100) / 100;
     const proofUrl = `/uploads/payment-slips/${req.file.filename}`;
     const result = await client.query(`INSERT INTO nfc_orders(user_id,nfc_product_id,vcard_id,quantity,amount,currency,status,
-      shipping_address,payment_method,payment_status,transaction_number,proof_url)
-      VALUES($1,$2,$3,$4,$5,$6,'pending',$7,'bank_transfer','pending',$8,$9)
+      shipping_address,destination_country,subtotal_lkr,shipping_cost_lkr,shipping_cost,exchange_rate,exchange_rate_date,
+      payment_method,payment_status,transaction_number,proof_url)
+      VALUES($1,$2,$3,$4,$5,$6,'pending',$7,$8,$9,$10,$11,$12,$13,'bank_transfer','pending',$14,$15)
       RETURNING id,amount,currency,status,payment_status,ordered_at`,
-      [req.user.id,productId,vcardId,quantity,amount,currency,shippingAddress,transactionNumber,proofUrl]);
+      [req.user.id,productId,vcardId,quantity,amount,currency,shippingAddress,destinationCountry,subtotalLkr,shippingCostLkr,shippingCost,exchange.rate,exchange.rateDate,transactionNumber,proofUrl]);
     await client.query(`INSERT INTO notifications(user_id,title,message,type)
       SELECT u.id,'NFC payment awaiting review',$1,'billing' FROM users u JOIN roles r ON r.id=u.role_id WHERE r.name='super_admin'`,
       [`${req.user.name} ordered ${quantity} × ${product.name} and submitted transaction ${transactionNumber}.`]);
@@ -804,8 +829,16 @@ function mapUserPlan(plan) {
 
 exports.plans = async (req, res, next) => {
   try {
-    const [plansResult, subscriptionsResult, settingsResult, paymentsResult, userResult] = await Promise.all([
-      pool.query(`SELECT id,name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,storage_limit_mb,features FROM plans WHERE status='active' ORDER BY price,name`),
+    const [settingsResult, userResult] = await Promise.all([
+      pool.query(`SELECT key,value FROM settings WHERE key = ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch", "bank_swift_code"]]),
+      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
+    ]);
+    const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
+    const currency = normalizeCurrency(userResult.rows[0]?.preferred_currency, normalizeCurrency(settings.default_currency, BASE_CURRENCY));
+    const exchange = await getRate(currency);
+    const [plansResult, subscriptionsResult, paymentsResult] = await Promise.all([
+      pool.query(`SELECT p.id,p.name,p.price,p.billing_interval,p.vcard_limit,p.nfc_limit,p.analytics_limit,p.storage_limit_mb,p.features
+        FROM plans p WHERE p.status='active' ORDER BY p.price,p.name`),
       pool.query(`SELECT s.id,s.plan_id,s.status,s.start_date,s.end_date,s.auto_renew,s.created_at,
         p.name AS plan_name,p.price,p.billing_interval,p.vcard_limit,p.nfc_limit,p.analytics_limit,p.storage_limit_mb,
         pay.status AS payment_status,pay.gateway_reference
@@ -813,7 +846,6 @@ exports.plans = async (req, res, next) => {
         LEFT JOIN LATERAL (SELECT status,gateway_reference FROM payments WHERE subscription_id=s.id ORDER BY created_at DESC LIMIT 1) pay ON TRUE
         WHERE s.user_id=$1 AND s.status IN ('active','pending','trial')
         ORDER BY (s.status='active') DESC,s.created_at DESC`, [req.user.id]),
-      pool.query(`SELECT key,value FROM settings WHERE key = ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch", "bank_swift_code"]]),
       pool.query(`SELECT pay.id,pay.amount,pay.currency,pay.status,pay.gateway_reference,pay.proof_url,
         pay.created_at,pay.reviewed_at,p.name AS plan_name,c.code AS coupon_code,
         cr.original_amount,cr.discount_amount
@@ -822,8 +854,9 @@ exports.plans = async (req, res, next) => {
         LEFT JOIN coupon_codes c ON c.id=cr.coupon_id
         WHERE pay.user_id=$1
         ORDER BY pay.created_at DESC LIMIT 20`, [req.user.id]),
-      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
+    plansResult.rows.forEach((item) => { item.price = convertFromLkr(item.price, exchange.rate); });
+    subscriptionsResult.rows.forEach((item) => { item.price = convertFromLkr(item.price, exchange.rate); });
     const active = subscriptionsResult.rows.find((item) => item.status === "active")
       || subscriptionsResult.rows.find((item) => item.status === "trial")
       || null;
@@ -835,11 +868,10 @@ exports.plans = async (req, res, next) => {
       vcard_limit: freePlan.vcard_limit, nfc_limit: freePlan.nfc_limit, analytics_limit: freePlan.analytics_limit,
       storage_limit_mb: freePlan.storage_limit_mb,
     } : null);
-    const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
     const bankDetails = { bankName: settings.bank_name || "", accountName: settings.bank_account_name || "",
       accountNumber: settings.bank_account_number || "", branch: settings.bank_branch || "", swiftCode: settings.bank_swift_code || "" };
     res.json({ plans: plansResult.rows.map(mapUserPlan), currentPlanId: effectivePlan ? effectivePlan.plan_id : null,
-      currency: userResult.rows[0]?.preferred_currency || settings.default_currency || "USD", bankDetails,
+      currency, baseCurrency:BASE_CURRENCY, exchangeRate:exchange.rate, rateDate:exchange.rateDate, ratesStale:exchange.stale, bankDetails,
       bankConfigured: Boolean(bankDetails.bankName && bankDetails.accountName && bankDetails.accountNumber && bankDetails.branch),
       current: effectivePlan ? {
         subscriptionId: effectivePlan.id, planId: effectivePlan.plan_id, planName: effectivePlan.plan_name,
@@ -916,15 +948,14 @@ exports.previewCoupon = async (req, res, next) => {
   const code = String(req.body.code || "");
   if (!Number.isInteger(planId) || planId < 1) return res.status(400).json({ message: "Select a valid plan" });
   try {
-    const [planResult, userResult] = await Promise.all([
-      pool.query("SELECT id,name,price FROM plans WHERE id=$1 AND status='active'", [planId]),
-      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
-    ]);
+    const userResult = await pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]);
+    const currency = normalizeCurrency(userResult.rows[0]?.preferred_currency, BASE_CURRENCY);
+    const exchange = await getRate(currency);
+    const planResult = await pool.query(`SELECT p.id,p.name,p.price FROM plans p WHERE p.id=$1 AND p.status='active'`, [planId]);
     if (!planResult.rowCount) return res.status(404).json({ message: "Plan not found" });
     const plan = planResult.rows[0];
-    const currency = userResult.rows[0]?.preferred_currency || "USD";
     const calculation = await calculateUserCoupon(pool, {
-      code, userId: req.user.id, planId, originalAmount: number(plan.price), currency, lock: false,
+      code, userId: req.user.id, planId, originalAmount: convertFromLkr(plan.price, exchange.rate), currency, lock: false,
     });
     if (calculation.error) return res.status(calculation.status).json({ message: calculation.error });
     res.json({
@@ -961,27 +992,30 @@ exports.submitManualPayment = async (req, res, next) => {
     client = await pool.connect();
     await client.query("BEGIN");
     const [planResult, activeResult, settingsResult, userResult] = await Promise.all([
-      client.query("SELECT id,name,price,billing_interval FROM plans WHERE id=$1 AND status='active' FOR SHARE", [planId]),
+      client.query(`SELECT p.id,p.name,p.price,p.billing_interval FROM plans p
+        WHERE p.id=$1 AND p.status='active' FOR SHARE OF p`, [planId]),
       client.query(`SELECT s.id,s.plan_id,COALESCE(p.price,0) price FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
         WHERE s.user_id=$1 AND s.status='active' ORDER BY s.created_at DESC LIMIT 1 FOR UPDATE OF s`, [req.user.id]),
       client.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch"]]),
       client.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
     const plan = planResult.rows[0];
-    if (!plan) { await client.query("ROLLBACK"); await discardUpload(); return res.status(404).json({ message: "This plan is no longer available" }); }
+    if (!plan) { await client.query("ROLLBACK"); await discardUpload(); return res.status(404).json({ message: "Plan not found" }); }
     if (number(plan.price) < 0.01) { await client.query("ROLLBACK"); await discardUpload(); return res.status(400).json({ message: "The free plan does not require payment" }); }
     const active = activeResult.rows[0];
     if (active && Number(active.plan_id) === planId) { await client.query("ROLLBACK"); await discardUpload(); return res.status(409).json({ message: "This is already your current plan" }); }
     if (active && number(plan.price) <= number(active.price)) { await client.query("ROLLBACK"); await discardUpload(); return res.status(400).json({ message: "Choose a plan priced above your current plan" }); }
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
-    const purchaseCurrency = userResult.rows[0]?.preferred_currency || settings.default_currency || "USD";
+    const purchaseCurrency = normalizeCurrency(userResult.rows[0]?.preferred_currency, normalizeCurrency(settings.default_currency, BASE_CURRENCY));
+    const exchange = await getRate(purchaseCurrency);
+    const convertedPlanPrice = convertFromLkr(plan.price, exchange.rate);
     let couponCalculation = null;
     if (couponCode) {
       couponCalculation = await calculateUserCoupon(client, {
         code: couponCode,
         userId: req.user.id,
         planId,
-        originalAmount: number(plan.price),
+        originalAmount: convertedPlanPrice,
         currency: purchaseCurrency,
         lock: true,
       });
@@ -990,7 +1024,7 @@ exports.submitManualPayment = async (req, res, next) => {
         return res.status(couponCalculation.status).json({ message: couponCalculation.error });
       }
     }
-    const payableAmount = couponCalculation ? couponCalculation.finalAmount : number(plan.price);
+    const payableAmount = couponCalculation ? couponCalculation.finalAmount : convertedPlanPrice;
     const fullyDiscounted = payableAmount === 0;
     if (!fullyDiscounted && !req.file) {
       await client.query("ROLLBACK");
@@ -1043,7 +1077,8 @@ exports.submitManualPayment = async (req, res, next) => {
     await client.query(`INSERT INTO transactions(payment_id,user_id,transaction_type,amount,currency,reference,gateway,status,metadata)
       VALUES($1,$2,'cash_payment',$3,$4,$5,'manual','pending',$6::jsonb)`,
       [payment.rows[0].id, req.user.id, payableAmount, purchaseCurrency, paymentReference,
-        JSON.stringify({ subscriptionId: subscription.rows[0].id, source: fullyDiscounted ? "coupon" : "user_upload", couponCode: couponCode || null })]);
+        JSON.stringify({ subscriptionId: subscription.rows[0].id, source: fullyDiscounted ? "coupon" : "user_upload", couponCode: couponCode || null,
+          baseCurrency: BASE_CURRENCY, baseAmountLkr: number(plan.price), exchangeRate: exchange.rate, exchangeRateDate: exchange.rateDate })]);
     if (fullyDiscounted) {
       await client.query("UPDATE transactions SET status='completed',updated_at=NOW() WHERE payment_id=$1", [payment.rows[0].id]);
     }
@@ -1069,7 +1104,8 @@ exports.submitManualPayment = async (req, res, next) => {
     await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata)
       VALUES($1,$2,'payment',$3,$4::jsonb)`, [req.user.id, fullyDiscounted ? "subscription.coupon_activated" : "subscription.payment_submitted",
         payment.rows[0].id, JSON.stringify({ planId, subscriptionId: subscription.rows[0].id, transactionNumber: paymentReference,
-          couponCode: couponCode || null, originalAmount: number(plan.price), discountAmount: couponCalculation?.discountAmount || 0, finalAmount: payableAmount })]);
+          couponCode: couponCode || null, originalAmount: convertedPlanPrice, baseAmountLkr: number(plan.price), exchangeRate: exchange.rate,
+          exchangeRateDate: exchange.rateDate, discountAmount: couponCalculation?.discountAmount || 0, finalAmount: payableAmount })]);
     await client.query("COMMIT");
     committed = true;
     res.status(201).json({ payment: payment.rows[0], subscription: subscription.rows[0],
@@ -1092,12 +1128,12 @@ exports.markNotificationsRead = async (req, res, next) => {
 exports.getVcard = async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id,template_id,title,description,website_url,phone,email,address,social_links,settings,is_active
+      `SELECT id,slug,template_id,title,description,website_url,phone,email,address,social_links,settings,is_active
        FROM vcards WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Card not found" });
     const entitlements = await loadVcardEntitlements(pool, req.user.id);
-    res.json({ vcard: result.rows[0], entitlements });
+    res.json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) }, entitlements });
   } catch (error) { next(error); }
 };
 
@@ -1111,6 +1147,7 @@ function vcardPayloadBytes(payload) {
 exports.createVcard = async (req, res, next) => {
   try {
     const title = String(req.body.title || "").trim();
+    const slug = normalizeCustomSlug(req.body.slug);
     if (!title) return res.status(400).json({ message: "Card name is required" });
     const allowance = await pool.query(
       `SELECT COALESCE(p.vcard_limit, 1)::int AS card_limit,
@@ -1132,18 +1169,20 @@ exports.createVcard = async (req, res, next) => {
       return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Delete unused content or upgrade your plan.`});
     }
     const result = await pool.query(
-      `INSERT INTO vcards (user_id,template_id,title,description,website_url,phone,email,address,settings)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
-       RETURNING id,template_id,title,description,website_url,phone,email,address,settings,is_active,created_at`,
-      [req.user.id, templateId, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections })]
+      `INSERT INTO vcards (user_id,template_id,title,slug,description,website_url,phone,email,address,settings)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)
+       RETURNING id,slug,template_id,title,description,website_url,phone,email,address,settings,is_active,created_at`,
+      [req.user.id, templateId, title, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections })]
     );
-    res.status(201).json({ vcard: result.rows[0] });
-  } catch (error) { next(error); }
+    res.status(201).json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
+  } catch (error) { if(error.code==="23505")return res.status(409).json({message:"That VCard URL name is already in use. Choose another one."}); next(error); }
 };
 
 exports.updateVcard = async (req, res, next) => {
   try {
     const title = String(req.body.title || "").trim();
+    const hasSlug = Object.prototype.hasOwnProperty.call(req.body, "slug");
+    const slug = hasSlug ? normalizeCustomSlug(req.body.slug) : null;
     if (!title) return res.status(400).json({ message: "Card name is required" });
     const entitlements = await loadVcardEntitlements(pool, req.user.id);
     const templateId = Number(req.body.templateId);
@@ -1162,14 +1201,14 @@ exports.updateVcard = async (req, res, next) => {
     const result = await pool.query(
       `UPDATE vcards SET template_id=$1,title=$2,description=$3,website_url=$4,phone=$5,
               email=$6,address=$7,settings=jsonb_set(COALESCE(settings,'{}'::jsonb),'{sections}',$8::jsonb,TRUE),
-              is_active=COALESCE($9,is_active),updated_at=NOW()
-       WHERE id=$10 AND user_id=$11
-       RETURNING id,template_id,title,description,website_url,phone,email,address,settings,is_active,updated_at`,
-      [templateId, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify(sections), typeof req.body.isActive === "boolean" ? req.body.isActive : null, req.params.id, req.user.id]
+              is_active=COALESCE($9,is_active),slug=CASE WHEN $10::boolean THEN $11 ELSE slug END,updated_at=NOW()
+       WHERE id=$12 AND user_id=$13
+       RETURNING id,slug,template_id,title,description,website_url,phone,email,address,settings,is_active,updated_at`,
+      [templateId, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify(sections), typeof req.body.isActive === "boolean" ? req.body.isActive : null, hasSlug, slug, req.params.id, req.user.id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Card not found" });
-    res.json({ vcard: result.rows[0] });
-  } catch (error) { next(error); }
+    res.json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
+  } catch (error) { if(error.code==="23505")return res.status(409).json({message:"That VCard URL name is already in use. Choose another one."}); next(error); }
 };
 
 exports.deleteVcard = async (req, res, next) => {

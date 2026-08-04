@@ -203,8 +203,7 @@
     if (!url) { renderText(body, content); return; }
     var panel = el("div", "vfeature-qr-panel");
     var qr = el("img", "vfeature-qr-image");
-    var apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
-      ? "http://localhost:5000" : window.location.origin;
+    var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
     qr.src = apiOrigin + "/api/public/qrcode?data=" + encodeURIComponent(url);
     qr.alt = "QR code";
     qr.loading = "lazy";
