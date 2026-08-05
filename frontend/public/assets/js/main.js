@@ -185,22 +185,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const getStaticFeaturedVcards = () => ([
-    {
-      name: "Corporate & Business",
-      description: "Executive and professional template",
-      previewUrl: "../public-vcard/industry-template.html?category=corporate-business",
-    },
-    {
-      name: "Creative & Media",
-      description: "Portfolio-focused creative template",
-      previewUrl: "../public-vcard/industry-template.html?category=creative-media",
-    },
-    {
-      name: "Technology & IT",
-      description: "Modern technology professional template",
-      previewUrl: "../public-vcard/industry-template.html?category=technology-it",
-    },
-  ]);
+    ["Style Boutique", "Fashion and retail profile", "final-01-boutique.html"],
+    ["Creative Studio", "Designer and media portfolio", "final-02-creative.html"],
+    ["Technology Expert", "Technology professional profile", "final-03-technology.html"],
+    ["Medical Professional", "Healthcare professional profile", "final-04-medical.html"],
+    ["Legal Counsel", "Legal practice and counsel profile", "final-05-legal.html"],
+    ["Event Planner", "Events and wedding planner profile", "final-06-events.html"],
+    ["Real Estate Professional", "Property and real estate profile", "final-07-property.html"],
+    ["Corporate Trainer", "Training and coaching profile", "final-08-trainer.html"],
+    ["Automotive Showroom", "Vehicle sales and showroom profile", "final-09-automotive.html"],
+    ["Corporate Executive", "Executive and business profile", "final-10-corporate.html"],
+  ].map(([name, description, file]) => ({ name, description, previewUrl: `../public-vcard/${file}` })));
 
   const createVcardPreview = (card, index) => {
     const article = document.createElement("article");
@@ -300,6 +295,65 @@ document.addEventListener("DOMContentLoaded", () => {
       requestAnimationFrame(updateTemplateProgress);
     }
   };
+
+  const autoScrollPreview = (frame, index) => {
+    if (frame.dataset.autoScrollReady === "true") return;
+    frame.dataset.autoScrollReady = "true";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let direction = 1;
+    let previousTime = 0;
+    let pauseUntil = performance.now() + 1200 + index * 180;
+    let pausedByHover = false;
+    const panel = frame.closest(".vcard-template, .industry-template-frame");
+
+    panel?.addEventListener("mouseenter", () => { pausedByHover = true; });
+    panel?.addEventListener("mouseleave", () => { pausedByHover = false; });
+    frame.addEventListener("load", () => {
+      direction = 1;
+      previousTime = 0;
+      pauseUntil = performance.now() + 1400 + index * 180;
+      try { frame.contentWindow.scrollTo(0, 0); } catch (_) {}
+    });
+
+    const animate = (time) => {
+      if (!frame.isConnected) return;
+      const rect = frame.getBoundingClientRect();
+      const visible = rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
+      if (!document.hidden && visible && !pausedByHover && !reduceMotion.matches && time >= pauseUntil) {
+        try {
+          const documentRoot = frame.contentDocument && frame.contentDocument.scrollingElement;
+          if (documentRoot) {
+            const maxScroll = Math.max(0, documentRoot.scrollHeight - documentRoot.clientHeight);
+            const elapsed = previousTime ? Math.min(time - previousTime, 50) : 0;
+            if (maxScroll > 8 && elapsed) {
+              documentRoot.scrollTop += direction * elapsed * 0.055;
+              if (documentRoot.scrollTop >= maxScroll - 2) {
+                documentRoot.scrollTop = maxScroll;
+                direction = -1;
+                pauseUntil = time + 1600;
+              } else if (documentRoot.scrollTop <= 2 && direction < 0) {
+                documentRoot.scrollTop = 0;
+                direction = 1;
+                pauseUntil = time + 1600;
+              }
+            }
+          }
+        } catch (_) {
+          // A remotely hosted preview cannot be controlled by the parent page.
+        }
+      }
+      previousTime = time;
+      requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  };
+
+  const connectPreviewAutoScroll = (root = document) => {
+    root.querySelectorAll?.(".vcard-live-preview iframe, .industry-template-frame iframe").forEach((frame, index) => autoScrollPreview(frame, index));
+  };
+
+  connectPreviewAutoScroll();
+  new MutationObserver(() => connectPreviewAutoScroll()).observe(document.body, { childList: true, subtree: true });
 
   loadFeaturedVcards();
 });

@@ -49,3 +49,4 @@
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/051_add_lkr_exchange_and_nfc_shipping.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/052_add_vcard_public_slugs.sql
 \i c:/Syscare Projects/digital-business-card-saas/database/migrations/053_prefer_readable_vcard_slugs.sql
+\i c:/Syscare Projects/digital-business-card-saas/database/migrations/054_replace_with_final_vcard_templates.sql

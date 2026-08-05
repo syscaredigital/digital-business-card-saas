@@ -100,7 +100,7 @@ router.get("/vcard-templates", async (req, res, next) => {
       SELECT id, name, description, preview_url, template_json, updated_at
       FROM vcard_templates
       WHERE is_public = TRUE
-      ORDER BY CASE WHEN COALESCE(template_json, '{}'::jsonb) @> '{"industry":true}'::jsonb THEN 0 ELSE 1 END, name, id
+      ORDER BY CASE WHEN COALESCE(template_json, '{}'::jsonb) @> '{"finalized":true}'::jsonb THEN 0 ELSE 1 END, id
     `);
     res.json({ data: result.rows.map((template) => ({
       id: template.id, name: template.name, description: template.description || "",
@@ -139,7 +139,7 @@ router.get("/vcards/featured", async (req, res, next) => {
       SELECT id, name, description, preview_url, template_json
       FROM vcard_templates
       WHERE is_public = TRUE
-      ORDER BY CASE WHEN COALESCE(template_json, '{}'::jsonb) @> '{"industry":true}'::jsonb THEN 0 ELSE 1 END, name, id
+      ORDER BY CASE WHEN COALESCE(template_json, '{}'::jsonb) @> '{"finalized":true}'::jsonb THEN 0 ELSE 1 END, id
       LIMIT $1
     `, [limit]);
     res.json({ data: result.rows.map((template) => ({
@@ -178,7 +178,9 @@ router.get("/vcards/:id", async (req, res, next) => {
     res.json({ vcard: {
       id: card.id, slug: card.slug, publicUrl: publicVcardUrl(req, card.slug), title: card.title, description: card.description, websiteUrl: card.website_url,
       phone: card.phone, email: card.email, address: card.address, socialLinks: card.social_links || [],
-      sections: visibleSections, ownerName: card.owner_name, avatarUrl: card.avatar_url,
+      sections: visibleSections, ownerName: card.owner_name,
+      avatarUrl: card.settings?.profileImageUrl || card.avatar_url,
+      coverImageUrl: card.settings?.coverImageUrl || null,
       contactCaptureRequired: card.contact_capture_required,
       enabledFeatures: Array.from(allowedFeatures),
       companyName: card.company_name, template: { id: card.template_id, name: card.template_name, previewUrl: card.preview_url || null, config: card.template_json || {} },

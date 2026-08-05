@@ -10275,3 +10275,10 @@
   .admin-page-settings .settings-timeout-row { align-items: flex-start; }
   .admin-page-system-logs .log-filter-actions { flex-direction: column; }
 }
+
+/* Full-width finalized VCard previews in the super-admin catalogue. */
+.vcard-template-visual iframe {
+  width: 100%;
+  height: 100%;
+  transform: none;
+}

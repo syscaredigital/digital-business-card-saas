@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../../public/assets/css/billing-plan-form.css" />
 </head>
 <body>
   <div class="dashboard-wrapper">
@@ -89,37 +90,82 @@
     </div>
   </div>
 
-  <div class="user-modal" id="planAdminModal" hidden>
+  <div class="user-modal billing-plan-modal" id="planAdminModal" hidden>
     <div class="user-modal-backdrop" id="planAdminModalBackdrop"></div>
-    <div class="user-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="planAdminModalTitle">
-      <div class="user-modal-header">
-        <div><span class="admin-page-eyebrow">Plan catalogue</span><h2 id="planAdminModalTitle">New Plan</h2></div>
-        <button class="user-modal-close" type="button" id="closePlanAdminModal">Back</button>
+    <div class="user-modal-dialog billing-plan-dialog" role="dialog" aria-modal="true" aria-labelledby="planAdminModalTitle">
+      <div class="user-modal-header billing-plan-header">
+        <div class="billing-plan-title-wrap"><span class="billing-plan-title-icon">P</span><div><span class="admin-page-eyebrow">Billing plan builder</span><h2 id="planAdminModalTitle">New Plan</h2><p>Configure pricing, usage allowances and the VCard experience available to customers.</p></div></div>
+        <button class="user-modal-close billing-plan-close" type="button" id="closePlanAdminModal" aria-label="Close plan builder"><span>&times;</span> Close</button>
       </div>
-      <div class="user-modal-body">
-        <form id="planAdminForm" class="admin-form-grid admin-form-grid-modal" novalidate>
+      <div class="user-modal-body billing-plan-body">
+        <div class="billing-plan-steps" aria-hidden="true"><span class="active"><b>1</b>Plan details</span><i></i><span><b>2</b>Entitlements</span><i></i><span><b>3</b>Publish</span></div>
+        <form id="planAdminForm" class="billing-plan-form" novalidate>
           <input type="hidden" name="planId" />
-          <div class="form-field"><label for="planAdminName">Plan name:<span class="required-mark">*</span></label><input id="planAdminName" name="name" type="text" maxlength="150" required placeholder="e.g. Professional" /></div>
-          <div class="form-field form-field-wide"><label>Plan price (LKR):<span class="required-mark">*</span></label><div id="planCurrencyPrices"></div><button class="btn-preview" id="addPlanCurrencyPrice" type="button" hidden>Add currency price</button><small>LKR is the base price. Customer currencies are calculated automatically using the current exchange rate.</small></div>
-          <div class="form-field"><label for="planAdminInterval">Billing interval:</label><select id="planAdminInterval" name="billingInterval"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="weekly">Weekly</option><option value="daily">Daily</option><option value="lifetime">Lifetime</option></select></div>
-          <div class="form-field"><label for="planAdminStatus">Availability:</label><select id="planAdminStatus" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></div>
-          <div class="form-field"><label for="planAdminVcards">VCard limit:</label><input id="planAdminVcards" name="vcardLimit" type="number" min="0" step="1" value="1" required /></div>
-          <div class="form-field"><label for="planAdminNfc">NFC card limit:</label><input id="planAdminNfc" name="nfcLimit" type="number" min="0" step="1" value="0" required /></div>
-          <div class="form-field"><label for="planAdminAnalytics">Analytics limit:</label><input id="planAdminAnalytics" name="analyticsLimit" type="number" min="0" step="1" value="0" required /></div>
-          <div class="form-field"><label for="planAdminStorage">Storage limit (MB):</label><input id="planAdminStorage" name="storageLimitMb" type="number" min="0" step="1" value="50" required /></div>
-          <div class="form-field form-field-wide"><label for="planAdminFeatures">Plan benefits:</label><textarea id="planAdminFeatures" name="features" rows="3" placeholder="Advanced analytics, Custom branding, Priority support"></textarea><small>Separate customer-facing benefits with commas.</small></div>
-          <fieldset class="form-field form-field-wide plan-entitlement-fieldset">
-            <legend>VCard features:<span class="required-mark">*</span></legend>
-            <p>Select the editor sections customers on this plan can use. The API also enforces these selections.</p>
-            <div class="plan-entitlement-grid" id="planVcardFeatureOptions"><span>Loading VCard features...</span></div>
-          </fieldset>
-          <fieldset class="form-field form-field-wide plan-entitlement-fieldset">
-            <legend>VCard templates:<span class="required-mark">*</span></legend>
-            <p>Only selected templates will be available while a customer creates or edits a card.</p>
-            <div class="plan-entitlement-grid plan-template-options" id="planVcardTemplateOptions"><span>Loading templates...</span></div>
-          </fieldset>
-          <div class="form-actions form-field-wide"><button class="btn-share" type="submit">Save Plan</button><button class="btn-preview" type="button" id="resetPlanAdminForm">Discard</button></div>
-          <p class="form-feedback form-field-wide" id="planAdminFeedback" hidden></p>
+          <div class="billing-plan-builder">
+            <div class="billing-plan-form-column">
+              <section class="billing-plan-section">
+                <div class="billing-plan-section-heading"><span>01</span><div><h3>Plan setup</h3><p>Name the plan and define how customers will be charged.</p></div></div>
+                <div class="billing-plan-field-grid">
+                  <div class="form-field billing-field-wide"><label for="planAdminName">Plan name<span class="required-mark">*</span></label><input id="planAdminName" name="name" type="text" maxlength="150" required placeholder="e.g. Professional" /><small>A short customer-facing name.</small></div>
+                  <div class="form-field billing-price-field"><label>Base price in LKR<span class="required-mark">*</span></label><div id="planCurrencyPrices"></div><button class="btn-preview" id="addPlanCurrencyPrice" type="button" hidden>Add currency price</button><small>Other currencies are calculated automatically using the live exchange rate.</small></div>
+                  <div class="form-field"><label for="planAdminInterval">Billing interval</label><select id="planAdminInterval" name="billingInterval"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="weekly">Weekly</option><option value="daily">Daily</option><option value="lifetime">Lifetime</option></select></div>
+                  <div class="form-field"><label for="planAdminStatus">Availability</label><select id="planAdminStatus" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></div>
+                </div>
+              </section>
+
+              <section class="billing-plan-section">
+                <div class="billing-plan-section-heading"><span>02</span><div><h3>Usage allowances</h3><p>Set the resources included with this plan.</p></div></div>
+                <div class="billing-limit-grid">
+                  <label class="billing-limit-card" for="planAdminVcards"><span class="billing-limit-icon">VC</span><strong>VCard limit</strong><small>Published digital cards</small><input id="planAdminVcards" name="vcardLimit" type="number" min="0" step="1" value="1" required /></label>
+                  <label class="billing-limit-card" for="planAdminNfc"><span class="billing-limit-icon">NF</span><strong>NFC card limit</strong><small>Physical NFC products</small><input id="planAdminNfc" name="nfcLimit" type="number" min="0" step="1" value="0" required /></label>
+                  <label class="billing-limit-card" for="planAdminAnalytics"><span class="billing-limit-icon">AN</span><strong>Analytics limit</strong><small>Tracked interactions</small><input id="planAdminAnalytics" name="analyticsLimit" type="number" min="0" step="1" value="0" required /></label>
+                  <label class="billing-limit-card" for="planAdminStorage"><span class="billing-limit-icon">MB</span><strong>Storage limit</strong><small>File storage in MB</small><input id="planAdminStorage" name="storageLimitMb" type="number" min="0" step="1" value="50" required /></label>
+                </div>
+              </section>
+
+              <section class="billing-plan-section">
+                <div class="billing-plan-section-heading"><span>03</span><div><h3>Customer benefits</h3><p>Describe the value customers will see on the pricing page.</p></div></div>
+                <div class="form-field"><label for="planAdminFeatures">Plan benefits</label><textarea id="planAdminFeatures" name="features" rows="4" placeholder="Advanced analytics, Custom branding, Priority support"></textarea><small>Separate customer-facing benefits with commas.</small></div>
+              </section>
+
+              <section class="billing-plan-section billing-entitlement-section">
+                <div class="billing-plan-section-heading"><span>04</span><div><h3>VCard entitlements</h3><p>Choose precisely what customers can access.</p></div></div>
+                <div class="billing-entitlement-columns">
+                  <fieldset class="form-field plan-entitlement-fieldset">
+                    <legend>Editor features<span class="required-mark">*</span></legend><p>Select the VCard sections enabled in the editor and API.</p>
+                    <div class="plan-entitlement-grid" id="planVcardFeatureOptions"><span>Loading VCard features...</span></div>
+                  </fieldset>
+                  <fieldset class="form-field plan-entitlement-fieldset">
+                    <legend>Available templates<span class="required-mark">*</span></legend><p>Select the finalized designs included with this plan.</p>
+                    <div class="plan-entitlement-grid plan-template-options" id="planVcardTemplateOptions"><span>Loading templates...</span></div>
+                  </fieldset>
+                </div>
+              </section>
+            </div>
+
+            <aside class="billing-plan-preview" aria-label="Live billing plan summary">
+              <div class="billing-preview-sticky">
+                <span class="billing-preview-label"><i></i> Live plan preview</span>
+                <article class="billing-preview-card">
+                  <div class="billing-preview-card-top"><span id="planPreviewStatus">Active</span><b>SYNC / PLAN</b></div>
+                  <h3 id="planPreviewName">Professional</h3>
+                  <p>Everything needed to build a stronger digital identity.</p>
+                  <div class="billing-preview-price"><small>LKR</small><strong id="planPreviewPrice">0.00</strong><span id="planPreviewInterval">/ month</span></div>
+                  <div class="billing-preview-rule"></div>
+                  <ul>
+                    <li><span>&#10003;</span><strong id="planPreviewVcards">1</strong> VCards included</li>
+                    <li><span>&#10003;</span><strong id="planPreviewNfc">0</strong> NFC cards included</li>
+                    <li><span>&#10003;</span><strong id="planPreviewAnalytics">0</strong> analytics interactions</li>
+                    <li><span>&#10003;</span><strong id="planPreviewStorage">50 MB</strong> storage</li>
+                  </ul>
+                  <div class="billing-preview-note"><i>FX</i><span><strong>Currency ready</strong><small>International prices use live exchange rates.</small></span></div>
+                </article>
+                <p class="billing-preview-help"><span>Tip</span> Keep limits simple and benefits customer-focused.</p>
+              </div>
+            </aside>
+          </div>
+
+          <div class="billing-plan-footer"><p class="form-feedback" id="planAdminFeedback" hidden></p><div class="form-actions"><button class="btn-preview" type="button" id="resetPlanAdminForm">Cancel</button><button class="btn-share billing-save-plan" type="submit"><span>Save billing plan</span><b>&rarr;</b></button></div></div>
         </form>
       </div>
     </div>

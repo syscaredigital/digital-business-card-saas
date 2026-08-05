@@ -16,6 +16,12 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(morgan("dev"));
 
+// Serve the public VCard portal and its browser assets from the live API
+// process. This keeps public links and QR scans on one reachable origin.
+const frontendRoot = path.resolve(__dirname, "..", "frontend");
+app.use("/public", express.static(path.join(frontendRoot, "public"), { index: false, fallthrough: true }));
+app.use("/pages/public-vcard", express.static(path.join(frontendRoot, "pages", "public-vcard"), { index: false, fallthrough: true }));
+
 app.get("/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
@@ -31,10 +37,16 @@ app.get("/vcard/:slug", requirePlatformAvailable, async (req, res, next) => {
   const slug = String(req.params.slug || "").trim().toLowerCase();
   if (!/^[a-z0-9][a-z0-9-]{1,118}[a-z0-9]$/.test(slug)) return res.status(404).json({ message: "VCard not found" });
   try {
-    const result = await pool.query("SELECT id FROM vcards WHERE LOWER(slug)=$1 AND is_active=TRUE", [slug]);
+    const result = await pool.query(
+      `SELECT v.id, t.preview_url
+       FROM vcards v
+       LEFT JOIN vcard_templates t ON t.id=v.template_id
+       WHERE LOWER(v.slug)=$1 AND v.is_active=TRUE`,
+      [slug]
+    );
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const source = req.query.source === "qr" ? "qr" : "public_link";
-    return res.redirect(302, frontendVcardUrl(result.rows[0].id, source));
+    return res.redirect(302, frontendVcardUrl(req, result.rows[0].id, source, result.rows[0].preview_url));
   } catch (error) { next(error); }
 });
 

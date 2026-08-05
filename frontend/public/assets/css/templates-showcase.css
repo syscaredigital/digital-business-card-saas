@@ -1,0 +1,24 @@
+@media (max-width: 650px) {
+  .templates-showcase-layout,
+  .templates-showcase-copy,
+  .templates-showcase-copy > p,
+  .templates-hero-proof {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .templates-showcase-copy h1 {
+    max-width: 100%;
+    font-size: clamp(40px, 13vw, 50px);
+    overflow-wrap: anywhere;
+  }
+
+  .templates-showcase-copy h1 span {
+    display: block;
+    white-space: normal;
+  }
+
+  .templates-hero-proof span { overflow: hidden; }
+  .templates-hero-stack { width: 100%; max-width: 100%; }
+}

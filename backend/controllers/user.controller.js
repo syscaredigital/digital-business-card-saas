@@ -18,7 +18,7 @@ async function loadVcardEntitlements(db, userId) {
       FROM subscriptions s JOIN plans p ON p.id=s.plan_id
       WHERE s.user_id=$1 AND s.status='active'
       ORDER BY s.created_at DESC LIMIT 1`, [userId]),
-    db.query(`SELECT id,name,description,preview_url,template_json FROM vcard_templates WHERE is_public=TRUE ORDER BY name,id`),
+    db.query(`SELECT id,name,description,preview_url,template_json FROM vcard_templates WHERE is_public=TRUE ORDER BY id`),
   ]);
   const plan = planResult.rows[0] || { id: null, name: "Free", vcard_limit: 1, features: [] };
   const normalized = normalizePlanFeatures(plan.features);
@@ -46,6 +46,24 @@ function normalizeSections(value, allowedKeys) {
   return sections;
 }
 
+function normalizeVcardImage(value) {
+  const image = String(value || "").trim();
+  if (!image) return null;
+  if (image.length > 3_000_000) {
+    const error = new Error("Each VCard image must be smaller than 2 MB");
+    error.statusCode = 413;
+    throw error;
+  }
+  if (/^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=\s]+$/i.test(image)) return image;
+  try {
+    const parsed = new URL(image);
+    if (["http:", "https:"].includes(parsed.protocol)) return parsed.href;
+  } catch (_) {}
+  const error = new Error("VCard images must be PNG, JPEG, WebP, or a valid image URL");
+  error.statusCode = 400;
+  throw error;
+}
+
 exports.dashboard = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -64,7 +82,8 @@ exports.dashboard = async (req, res, next) => {
          ORDER BY s.created_at DESC LIMIT 1`, [userId]
       ),
       pool.query(
-        `SELECT v.id,v.slug,v.title,v.email,v.phone,v.is_active,v.updated_at,v.template_id,t.name AS template_name
+        `SELECT v.id,v.slug,v.title,v.description,v.email,v.phone,v.is_active,v.updated_at,v.template_id,
+                t.name AS template_name,t.preview_url AS template_preview_url,t.template_json
          FROM vcards v LEFT JOIN vcard_templates t ON t.id=v.template_id WHERE v.user_id = $1 ORDER BY v.updated_at DESC`, [userId]
       ),
       pool.query(
@@ -1141,6 +1160,7 @@ function vcardPayloadBytes(payload) {
   return Buffer.byteLength(JSON.stringify({
     title:payload.title || "",description:payload.description || "",websiteUrl:payload.websiteUrl || "",
     phone:payload.phone || "",email:payload.email || "",address:payload.address || "",sections:payload.sections || {},
+    profileImageUrl:payload.profileImageUrl || "",coverImageUrl:payload.coverImageUrl || "",
   }));
 }
 
@@ -1164,15 +1184,17 @@ exports.createVcard = async (req, res, next) => {
     if (!entitlements.templates.some((template) => Number(template.id) === templateId)) return res.status(403).json({ message: "This VCard template is not included in your plan" });
     const allowedKeys = new Set(entitlements.features.map((feature) => feature.key));
     const sections = normalizeSections(req.body.sections, allowedKeys);
+    const profileImageUrl=normalizeVcardImage(req.body.profileImageUrl);
+    const coverImageUrl=normalizeVcardImage(req.body.coverImageUrl);
     const storage=await getStorageSummary(pool,req.user.id);
-    if(storage.usedBytes+vcardPayloadBytes({...req.body,title,sections})>storage.limitBytes){
+    if(storage.usedBytes+vcardPayloadBytes({...req.body,title,sections,profileImageUrl,coverImageUrl})>storage.limitBytes){
       return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Delete unused content or upgrade your plan.`});
     }
     const result = await pool.query(
       `INSERT INTO vcards (user_id,template_id,title,slug,description,website_url,phone,email,address,settings)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)
        RETURNING id,slug,template_id,title,description,website_url,phone,email,address,settings,is_active,created_at`,
-      [req.user.id, templateId, title, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections })]
+       [req.user.id, templateId, title, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections, profileImageUrl, coverImageUrl })]
     );
     res.status(201).json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
   } catch (error) { if(error.code==="23505")return res.status(409).json({message:"That VCard URL name is already in use. Choose another one."}); next(error); }
@@ -1193,18 +1215,21 @@ exports.updateVcard = async (req, res, next) => {
       FROM vcards WHERE id=$1 AND user_id=$2`,[req.params.id,req.user.id]);
     if(!existing.rowCount)return res.status(404).json({message:"Card not found"});
     const current=existing.rows[0],storage=await getStorageSummary(pool,req.user.id);
+    const profileImageUrl=Object.prototype.hasOwnProperty.call(req.body,"profileImageUrl")?normalizeVcardImage(req.body.profileImageUrl):current.settings?.profileImageUrl||null;
+    const coverImageUrl=Object.prototype.hasOwnProperty.call(req.body,"coverImageUrl")?normalizeVcardImage(req.body.coverImageUrl):current.settings?.coverImageUrl||null;
+    const nextSettings={...(current.settings||{}),sections,profileImageUrl,coverImageUrl};
     const currentBytes=Buffer.byteLength(JSON.stringify(current));
-    const proposedBytes=vcardPayloadBytes({...req.body,title,sections});
+    const proposedBytes=vcardPayloadBytes({...req.body,title,sections,profileImageUrl,coverImageUrl});
     if(storage.usedBytes-currentBytes+proposedBytes>storage.limitBytes){
       return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Reduce uploaded content or upgrade your plan.`});
     }
     const result = await pool.query(
       `UPDATE vcards SET template_id=$1,title=$2,description=$3,website_url=$4,phone=$5,
-              email=$6,address=$7,settings=jsonb_set(COALESCE(settings,'{}'::jsonb),'{sections}',$8::jsonb,TRUE),
+               email=$6,address=$7,settings=$8::jsonb,
               is_active=COALESCE($9,is_active),slug=CASE WHEN $10::boolean THEN $11 ELSE slug END,updated_at=NOW()
        WHERE id=$12 AND user_id=$13
        RETURNING id,slug,template_id,title,description,website_url,phone,email,address,settings,is_active,updated_at`,
-      [templateId, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify(sections), typeof req.body.isActive === "boolean" ? req.body.isActive : null, hasSlug, slug, req.params.id, req.user.id]
+       [templateId, title, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify(nextSettings), typeof req.body.isActive === "boolean" ? req.body.isActive : null, hasSlug, slug, req.params.id, req.user.id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Card not found" });
     res.json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });

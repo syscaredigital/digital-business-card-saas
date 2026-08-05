@@ -265,15 +265,13 @@
       vcardTable.querySelectorAll(".client-vcard-row, .user-empty").forEach(function (row) { row.remove(); });
       if (data.vcards && data.vcards.length) {
         vcardTable.insertAdjacentHTML("beforeend", data.vcards.map(function (card) {
-          var publicUrl = card.publicUrl || card.public_url || ("../public-vcard/profile.html?id=" + encodeURIComponent(card.id));
-          return '<article class="client-vcard-row vcard-library-card searchable-item" data-search="' + escapeHtml([card.title, card.email, card.phone, card.template_name].join(" ").toLowerCase()) + '">' +
-            '<div class="vcard-library-cover"><span class="vcard-library-template">' + escapeHtml(card.template_name || "VCard template") + '</span><div class="vcard-library-monogram">' + escapeHtml((card.title || "V").charAt(0).toUpperCase()) + '</div><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + '</span></div>' +
+          var publicUrl = card.publicUrl || card.public_url || (card.slug ? (window.location.origin + "/vcard/" + encodeURIComponent(card.slug)) : "#");
+           var templatePreviewUrl = card.template_preview_url || "";
+           return '<article class="client-vcard-row vcard-library-card searchable-item" data-search="' + escapeHtml([card.title, card.email, card.phone, card.template_name].join(" ").toLowerCase()) + '">' +
+             '<div class="vcard-library-cover">' + (templatePreviewUrl ? '<iframe src="' + escapeHtml(templatePreviewUrl) + '" title="' + escapeHtml(card.template_name || "VCard") + ' preview" loading="lazy" tabindex="-1"></iframe>' : '') + '<span class="vcard-library-template">' + escapeHtml(card.template_name || "VCard template") + '</span><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + '</span></div>' +
             '<div class="vcard-library-body"><div class="client-vcard-name-cell"><div><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.title || "Untitled card") + '</a><span>' + escapeHtml(card.description || "Your digital business card") + '</span></div></div>' +
             '<div class="vcard-library-meta"><span><small>Contact</small>' + escapeHtml(card.email || card.phone || "Not added") + '</span><span><small>Updated</small>' + escapeHtml(formatDate(card.updated_at)) + '</span><span><small>Public URL</small><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl.replace(/^https?:\/\//,"")) + '</a></span></div>' +
             '<div class="vcard-library-actions"><a class="vcard-open-link" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">View card <span>↗</span></a><div class="vcard-manage"><button class="vcard-manage-toggle" type="button" data-vcard-manage-toggle="' + card.id + '" aria-expanded="false">Manage <span>•••</span></button><div class="vcard-manage-menu" data-vcard-manage-menu="' + card.id + '" hidden><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + '"><span>✎</span><div><strong>Edit VCard</strong><small>Update details and design</small></div></a><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer"><span>↗</span><div><strong>Open public card</strong><small>View the published profile</small></div></a><button type="button" class="vcard-delete-action" data-delete-vcard="' + card.id + '" data-vcard-title="' + escapeHtml(card.title || "Untitled card") + '"><span>×</span><div><strong>Delete VCard</strong><small>Permanently remove this card</small></div></button></div></div></div></div></article>';
-          /* Legacy table row retained below for reference while the gallery renderer is active.
-          return '<div class="client-vcard-row searchable-item" data-search="' + escapeHtml([card.title, card.email, card.phone].join(" ").toLowerCase()) + '"><label class="client-check"><input type="checkbox" aria-label="Select card"><span></span></label><div class="client-vcard-name-cell"><div class="client-vcard-thumb"></div><div><a href="../public-vcard/profile.html?id=' + encodeURIComponent(card.id) + '" target="_blank">' + escapeHtml(card.title || "Untitled card") + '</a><span>' + escapeHtml(card.description || "Digital identity") + '</span></div></div><div class="client-vcard-url-cell"><a href="../public-vcard/profile.html?id=' + encodeURIComponent(card.id) + '" target="_blank">Open public card</a></div><span>—</span><span>—</span><a href="mailto:' + escapeHtml(card.email || "") + '">' + escapeHtml(card.email || card.phone || "—") + '</a><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + '</span><span class="date-pill">' + escapeHtml(formatDate(card.updated_at)) + '</span><div class="client-action-cell"><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + '" aria-label="Edit card">Edit</a></div></div>';
-          */
         }).join(""));
       } else vcardTable.insertAdjacentHTML("beforeend", '<div class="user-empty">No cards found. Use “Add New VCard” to create one.</div>');
     }
@@ -853,14 +851,14 @@
       renderPendingBilling(data);
       renderPaymentHistory(data);
       var pendingPlanId = data.pending ? Number(data.pending.planId) : null;
-      billingPlansGrid.innerHTML = (data.plans || []).map(function (plan) {
+      billingPlansGrid.innerHTML = (data.plans || []).map(function (plan, index) {
         var current = Number(data.currentPlanId) === Number(plan.id);
         var pending = pendingPlanId === Number(plan.id);
         var waiting = Boolean(data.pending) && !pending;
         var features = [plan.vcardLimit + " VCards", plan.nfcLimit + " NFC cards", plan.analyticsLimit + " analytics", plan.storageLimitMb + " MB storage"].concat(plan.features || []);
         var label = current ? "Current plan" : pending ? "Approval pending" : "Available";
         var action = current ? "Current plan" : pending ? "Pending approval" : waiting ? "Payment pending" : "Choose " + plan.name;
-        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div class="billing-plan-top"><span>' + escapeHtml(label) + '</span><h4>' + escapeHtml(plan.name) + '</h4><p><strong>' + escapeHtml(billingMoney(plan.price, data.currency)) + '</strong><small> / ' + escapeHtml(plan.billingInterval) + '</small></p></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (current || pending || waiting ? ' disabled' : '') + '>' + escapeHtml(action) + '</button></article>';
+        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div class="billing-plan-number">' + String(index + 1).padStart(2, "0") + '</div><div class="billing-plan-top"><span>' + escapeHtml(label) + '</span><h4>' + escapeHtml(plan.name) + '</h4><p><strong>' + escapeHtml(billingMoney(plan.price, data.currency)) + '</strong><small> / ' + escapeHtml(plan.billingInterval) + '</small></p></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (current || pending || waiting ? ' disabled' : '') + '><span>' + escapeHtml(action) + '</span><b>&rarr;</b></button></article>';
       }).join("") || '<div class="user-empty">No active plans are available.</div>';
       if (billingFeedback) {
         billingFeedback.className = "billing-plan-feedback" + (!data.bankConfigured ? " is-error" : "");
@@ -1280,10 +1278,24 @@
     }());
   }
 
+  function readVcardImageInput(input) {
+    var file = input && input.files && input.files[0];
+    if (!file) return Promise.resolve(null);
+    if (!/^image\/(?:png|jpeg|webp)$/i.test(file.type)) return Promise.reject(new Error("Choose a PNG, JPEG, or WebP image."));
+    if (file.size > 2 * 1024 * 1024) return Promise.reject(new Error("Each VCard image must be 2 MB or smaller."));
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || "")); };
+      reader.onerror = function () { reject(new Error("Unable to read the selected image.")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
   var editor = document.getElementById("userVcardEditor");
   if (editor) {
     var cardId = new URLSearchParams(window.location.search).get("id");
     var editorStatus = document.getElementById("vcardEditorStatus");
+    var savedProfileImage = null, savedCoverImage = null;
     if (!cardId) {
       editorStatus.textContent = "No card was selected.";
       editor.querySelector('button[type="submit"]').disabled = true;
@@ -1297,6 +1309,8 @@
         editor.elements.websiteUrl.value = card.website_url || "";
         editor.elements.address.value = card.address || "";
         editor.elements.description.value = card.description || "";
+        savedProfileImage = card.settings && card.settings.profileImageUrl || null;
+        savedCoverImage = card.settings && card.settings.coverImageUrl || null;
         editor.elements.occupation.value = card.settings && card.settings.sections ? (card.settings.sections["basic-details"] || "") : "";
         editor.elements.isActive.checked = Boolean(card.is_active);
         editor.elements.templateId.innerHTML = (entitlements.templates || []).map(function (template) {
@@ -1312,16 +1326,21 @@
           }).join("") || '<p>Basic details are the only editable feature in this plan.</p>';
         editorStatus.textContent = "Loaded from your account";
       }).catch(function (error) { editorStatus.textContent = error.message; });
-      editor.addEventListener("submit", function (event) {
+      editor.addEventListener("submit", async function (event) {
         event.preventDefault();
         var button = editor.querySelector('button[type="submit"]');
         button.disabled = true; editorStatus.textContent = "Saving...";
-        var sections = {};
-        editor.querySelectorAll("[data-vcard-section]").forEach(function (field) { sections[field.dataset.vcardSection] = field.value.trim(); });
-        request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, isActive: editor.elements.isActive.checked }) })
-          .then(function () { editorStatus.textContent = "Saved successfully"; })
-          .catch(function (error) { editorStatus.textContent = error.message; })
-          .finally(function () { button.disabled = false; });
+        try {
+          var sections = {};
+          editor.querySelectorAll("[data-vcard-section]").forEach(function (field) { sections[field.dataset.vcardSection] = field.value.trim(); });
+          var newProfileImage = await readVcardImageInput(document.getElementById("editCardProfileImage"));
+          var newCoverImage = await readVcardImageInput(document.getElementById("editCardCoverImage"));
+          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, isActive: editor.elements.isActive.checked }) });
+          if (newProfileImage) savedProfileImage = newProfileImage;
+          if (newCoverImage) savedCoverImage = newCoverImage;
+          editorStatus.textContent = "Saved successfully";
+        } catch (error) { editorStatus.textContent = error.message; }
+        finally { button.disabled = false; }
       });
     }
   }
@@ -1337,7 +1356,7 @@
       var generateSlugButton=createVcardSlugInput.parentElement.querySelector("button");
       if(generateSlugButton)generateSlugButton.addEventListener("click",function(){createVcardSlugInput.dataset.custom="false";createVcardSlugInput.value=slugifyVcardName(createVcardNameInput.value);createVcardSlugInput.focus();});
     }
-    createCardForm.addEventListener("submit", function (event) {
+    createCardForm.addEventListener("submit", async function (event) {
       event.preventDefault();
       var title = document.getElementById("vcardName");
       var description = document.getElementById("vcardDescription");
@@ -1349,9 +1368,12 @@
       createCardForm.querySelectorAll("[data-create-vcard-section]").forEach(function (field) { sections[field.dataset.createVcardSection] = field.value.trim(); });
       var occupation = document.getElementById("occupation");
       if (occupation && occupation.value.trim()) sections["basic-details"] = occupation.value.trim();
-      request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), description: description ? description.value.trim() : "", sections: sections }) })
-        .then(function (data) { window.location.href = "edit-vcard.html?id=" + encodeURIComponent(data.vcard.id); })
-        .catch(function (error) { window.alert(error.message); if (button) button.disabled = false; });
+      try {
+        var profileImageUrl = await readVcardImageInput(document.getElementById("createVcardProfileImage"));
+        var coverImageUrl = await readVcardImageInput(document.getElementById("createVcardCoverImage"));
+        var data = await request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), description: description ? description.value.trim() : "", sections: sections, profileImageUrl: profileImageUrl, coverImageUrl: coverImageUrl }) });
+        window.location.href = "edit-vcard.html?id=" + encodeURIComponent(data.vcard.id);
+      } catch (error) { window.alert(error.message); if (button) button.disabled = false; }
     });
   }
 
@@ -1438,7 +1460,7 @@
   if (userQrCardList) {
     request("/user/vcard-engagement").then(function (data) {
       userQrCardList.innerHTML = data.cards.length ? data.cards.map(function (card) {
-        var destination = card.publicUrl || (new URL("../public-vcard/profile.html?id="+encodeURIComponent(card.id),window.location.href)).href;
+        var destination = card.publicUrl || (card.slug ? (window.location.origin + "/vcard/" + encodeURIComponent(card.slug)) : window.location.origin);
         var qrUrl = API + "/public/vcards/" + encodeURIComponent(card.id) + "/qrcode";
         return '<article class="feature-panel qr-live-card searchable-item" data-search="' + escapeHtml((card.title || "vcard") + " qr") + '">' +
           '<div class="feature-panel-header"><div><h3>' + escapeHtml(card.title || "Untitled VCard") + '</h3><p>Encoded to open this public VCard directly.</p></div><span class="status-pill ' + (card.is_active ? "status-live" : "status-warm") + '">' + (card.is_active ? "Active" : "Paused") + '</span></div>' +

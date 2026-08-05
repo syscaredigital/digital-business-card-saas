@@ -1922,6 +1922,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  async function loadStandaloneVCardTemplates() {
+    if (adminPageSlug !== "templates" || !vcardTemplateGrid) return;
+    try {
+      var apiOrigin = window.SyncVCardApiOrigin || "http://127.0.0.1:5000";
+      var response = await fetch(apiOrigin + "/api/public/vcard-templates");
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.message || "Unable to load templates");
+      renderVCardTemplates(data.data || [], searchInput ? searchInput.value.trim() : "");
+    } catch (error) {
+      vcardTemplateGrid.innerHTML = '<div class="vcard-directory-state"><strong>Templates could not be loaded</strong><span>' + escapeDashboardHtml(error.message) + '</span></div>';
+      console.error("Super admin templates:", error);
+    }
+  }
+
   function setVCardModal(open, templateId) {
     if (!vcardModal || !vcardAdminForm) return;
     vcardModal.hidden = !open;
@@ -2775,6 +2789,36 @@ document.addEventListener("DOMContentLoaded", function () {
     return Number.isNaN(date.getTime()) ? "Not set" : formatDate(date);
   }
 
+  function setPlanAdminSubmitLabel(label) {
+    if (!planAdminForm) return;
+    var button = planAdminForm.querySelector('[type="submit"]');
+    var labelNode = button && button.querySelector("span");
+    if (labelNode) labelNode.textContent = label;
+    else if (button) button.textContent = label;
+  }
+
+  function syncPlanAdminPreview() {
+    if (!planAdminForm) return;
+    var nameNode = document.getElementById("planPreviewName");
+    var priceNode = document.getElementById("planPreviewPrice");
+    var intervalNode = document.getElementById("planPreviewInterval");
+    var statusNode = document.getElementById("planPreviewStatus");
+    var amountInput = planCurrencyPrices && planCurrencyPrices.querySelector("[data-plan-price-amount]");
+    var interval = planAdminForm.elements.billingInterval ? planAdminForm.elements.billingInterval.value : "monthly";
+    var status = planAdminForm.elements.status ? planAdminForm.elements.status.value : "active";
+    var intervalLabels = { monthly: "/ month", yearly: "/ year", weekly: "/ week", daily: "/ day", lifetime: "one time" };
+    var setPreviewText = function (id, value) { var node = document.getElementById(id); if (node) node.textContent = value; };
+
+    if (nameNode) nameNode.textContent = String(planAdminForm.elements.name && planAdminForm.elements.name.value || "").trim() || "Professional";
+    if (priceNode) priceNode.textContent = Number(amountInput && amountInput.value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (intervalNode) intervalNode.textContent = intervalLabels[interval] || "/ " + interval;
+    if (statusNode) { statusNode.textContent = status.charAt(0).toUpperCase() + status.slice(1); statusNode.dataset.status = status; }
+    setPreviewText("planPreviewVcards", planAdminForm.elements.vcardLimit ? planAdminForm.elements.vcardLimit.value || "0" : "0");
+    setPreviewText("planPreviewNfc", planAdminForm.elements.nfcLimit ? planAdminForm.elements.nfcLimit.value || "0" : "0");
+    setPreviewText("planPreviewAnalytics", planAdminForm.elements.analyticsLimit ? planAdminForm.elements.analyticsLimit.value || "0" : "0");
+    setPreviewText("planPreviewStorage", (planAdminForm.elements.storageLimitMb ? planAdminForm.elements.storageLimitMb.value || "0" : "0") + " MB");
+  }
+
   function subscriptionStatusClass(status) {
     status = String(status || "").toLowerCase();
     if (status === "active") return "active";
@@ -2950,6 +2994,8 @@ document.addEventListener("DOMContentLoaded", function () {
     Array.from(planAdminForm.querySelectorAll('input[name="vcardFeatures"]')).forEach(function (input) { input.checked = selectedVcardFeatures.indexOf(input.value) !== -1; });
     Array.from(planAdminForm.querySelectorAll('input[name="templateIds"]')).forEach(function (input) { input.checked = selectedTemplateIds.map(String).indexOf(input.value) !== -1; });
     if (planAdminModalTitle) planAdminModalTitle.textContent = plan ? "Edit Plan" : "New Plan";
+    setPlanAdminSubmitLabel(plan ? "Update billing plan" : "Save billing plan");
+    syncPlanAdminPreview();
     if (planAdminFeedback) { planAdminFeedback.hidden = true; planAdminFeedback.textContent = ""; }
     planAdminModal.hidden = false;
     document.body.style.overflow = "hidden";
@@ -2965,6 +3011,10 @@ document.addEventListener("DOMContentLoaded", function () {
   if (resetPlanAdminFormButton) resetPlanAdminFormButton.addEventListener("click", function () { setPlanAdminModal(false); });
   if (addPlanCurrencyPriceButton) addPlanCurrencyPriceButton.hidden = true;
   if (planCurrencyPrices) planCurrencyPrices.addEventListener("click", function (event) { var button = event.target.closest("[data-remove-plan-price]"); if (button && planCurrencyPrices.children.length > 1) button.closest(".plan-currency-price-row").remove(); });
+  if (planAdminForm) {
+    planAdminForm.addEventListener("input", syncPlanAdminPreview);
+    planAdminForm.addEventListener("change", syncPlanAdminPreview);
+  }
 
   if (subscriptionAdminForm) {
     subscriptionAdminForm.addEventListener("submit", async function (event) {
@@ -3022,7 +3072,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var submitButton = planAdminForm.querySelector('[type="submit"]');
       try {
         submitButton.disabled = true;
-        submitButton.textContent = "Saving...";
+        setPlanAdminSubmitLabel("Saving plan...");
         var response = await fetch("http://127.0.0.1:5000/api/super-admin/plans" + (planId ? "/" + encodeURIComponent(planId) : ""), {
           method: planId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
@@ -3037,7 +3087,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (planAdminFeedback) { planAdminFeedback.hidden = false; planAdminFeedback.textContent = error.message; }
       } finally {
         submitButton.disabled = false;
-        submitButton.textContent = "Save Plan";
+        setPlanAdminSubmitLabel(planId ? "Update billing plan" : "Save billing plan");
       }
     });
   }
@@ -5371,6 +5421,7 @@ document.addEventListener("DOMContentLoaded", function () {
   loadSuperAdminDashboard();
   loadSuperAdminUsers();
   loadSuperAdminVCards();
+  loadStandaloneVCardTemplates();
   loadSuperAdminNfc();
   loadSuperAdminSubscriptions();
   loadSuperAdminCashPayments();

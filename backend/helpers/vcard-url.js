@@ -36,10 +36,14 @@ function publicVcardUrl(req, slug) {
   return `${requestOrigin(req)}/vcard/${encodeURIComponent(slug)}`;
 }
 
-function frontendVcardUrl(id, source) {
-  const frontend = String(process.env.FRONTEND_URL || "").trim().replace(/\/+$/, "");
-  const path = String(process.env.PUBLIC_VCARD_PATH || "/pages/public-vcard/profile.html");
-  const base = frontend || "http://127.0.0.1:5500";
+function frontendVcardUrl(req, id, source, templatePreviewUrl) {
+  const configuredPath = String(process.env.PUBLIC_VCARD_PATH || "/pages/public-vcard/final-10-corporate.html");
+  const previewPath = String(templatePreviewUrl || "").trim();
+  const finalizedMatch = previewPath.match(/(?:^|\/)public-vcard\/(final-[a-z0-9-]+\.html)$/i);
+  const path = finalizedMatch ? `/pages/public-vcard/${finalizedMatch[1]}` : configuredPath;
+  // Public VCards are served by this application so a client never depends on
+  // a developer-only frontend port such as 3000 or 5500 being available.
+  const base = requestOrigin(req);
   const target = new URL(path.startsWith("/") ? path : `/${path}`, `${base}/`);
   target.searchParams.set("id", id);
   if (source) target.searchParams.set("source", source);

@@ -624,7 +624,7 @@ exports.listVCards = async (req, res, next) => {
       pool.query(`
         SELECT id, name, description, preview_url, template_json, is_public
         FROM vcard_templates
-        ORDER BY is_public DESC, name
+        ORDER BY is_public DESC, id
       `),
     ]);
 
@@ -1366,7 +1366,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
           'LKR' AS revenue_currency
         FROM subscriptions s LEFT JOIN plans p ON p.id = s.plan_id
       `),
-      pool.query(`SELECT id,name,description,preview_url FROM vcard_templates WHERE is_public=TRUE ORDER BY name,id`),
+      pool.query(`SELECT id,name,description,preview_url FROM vcard_templates WHERE is_public=TRUE ORDER BY id`),
     ]);
 
     res.json({
