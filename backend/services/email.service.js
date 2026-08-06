@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 
 let transporter;
+const DEFAULT_MAIL_FROM = "Sync E-Card <info@syncecard.lk>";
 
 function getTransporter() {
   if (transporter) return transporter;
@@ -34,6 +35,77 @@ function appointmentDate(value) {
   }).format(new Date(value));
 }
 
+function mailFrom() {
+  return process.env.MAIL_FROM || DEFAULT_MAIL_FROM;
+}
+
+function ensureMailConfigured() {
+  if (!process.env.MAIL_HOST) {
+    throw new Error("Email delivery is not configured");
+  }
+}
+
+async function sendVcardEnquiry({
+  to,
+  ownerName,
+  vcardTitle,
+  enquirerName,
+  enquirerEmail,
+  enquirerPhone,
+  company,
+  message,
+}) {
+  if (!to) throw new Error("The VCard owner does not have an email address");
+  ensureMailConfigured();
+
+  const ownerLabel = ownerName || "there";
+  const cardLabel = vcardTitle || "your VCard";
+  const contactLines = [
+    enquirerEmail ? `Email: ${enquirerEmail}` : "",
+    enquirerPhone ? `Phone: ${enquirerPhone}` : "",
+    company ? `Company: ${company}` : "",
+  ].filter(Boolean);
+
+  return getTransporter().sendMail({
+    from: mailFrom(),
+    to,
+    replyTo: enquirerEmail || undefined,
+    subject: `New enquiry for ${cardLabel}`,
+    text: [
+      `Hello ${ownerLabel},`,
+      "",
+      `${enquirerName} sent a new enquiry through ${cardLabel}.`,
+      ...contactLines,
+      "",
+      "Message:",
+      message,
+      "",
+      enquirerEmail
+        ? "You can reply directly to this email to contact the enquirer."
+        : "Use the phone number above to contact the enquirer.",
+      "",
+      "Sync E-Card",
+    ].join("\n"),
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#172033">
+        <h2 style="color:#16865b">New VCard enquiry</h2>
+        <p>Hello ${escapeHtml(ownerLabel)},</p>
+        <p><strong>${escapeHtml(enquirerName)}</strong> sent a new enquiry through <strong>${escapeHtml(cardLabel)}</strong>.</p>
+        <table style="width:100%;border-collapse:collapse;margin:22px 0">
+          ${enquirerEmail ? `<tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Email</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(enquirerEmail)}</td></tr>` : ""}
+          ${enquirerPhone ? `<tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Phone</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(enquirerPhone)}</td></tr>` : ""}
+          ${company ? `<tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Company</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(company)}</td></tr>` : ""}
+        </table>
+        <div style="padding:16px;background:#f8fafc;border-left:4px solid #16865b;white-space:pre-wrap">${escapeHtml(message)}</div>
+        <p>${enquirerEmail
+    ? "Reply directly to this email to contact the enquirer."
+    : "Use the phone number above to contact the enquirer."}</p>
+        <p>Sync E-Card</p>
+      </div>
+    `,
+  });
+}
+
 async function sendAppointmentApproved({
   to,
   customerName,
@@ -44,9 +116,7 @@ async function sendAppointmentApproved({
   meetingMode,
 }) {
   if (!to) throw new Error("The customer does not have an email address");
-  if (!process.env.MAIL_HOST || !process.env.MAIL_FROM) {
-    throw new Error("Email delivery is not configured");
-  }
+  ensureMailConfigured();
 
   const startLabel = appointmentDate(startsAt);
   const endLabel = endsAt
@@ -68,7 +138,7 @@ async function sendAppointmentApproved({
   const timeLabel = endLabel ? `${startLabel} – ${endLabel}` : startLabel;
 
   return getTransporter().sendMail({
-    from: process.env.MAIL_FROM,
+    from: mailFrom(),
     to,
     subject,
     text: [
@@ -107,4 +177,4 @@ async function sendAppointmentApproved({
   });
 }
 
-module.exports = { sendAppointmentApproved };
+module.exports = { sendAppointmentApproved, sendVcardEnquiry };

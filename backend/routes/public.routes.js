@@ -6,6 +6,7 @@ const { normalizePlanFeatures } = require("../config/vcard-features");
 const { currencyName, normalizeCurrency } = require("../config/currencies");
 const { BASE_CURRENCY, getRate, supportedCurrencies, convertFromLkr } = require("../services/exchange-rate.service");
 const { publicVcardUrl } = require("../helpers/vcard-url");
+const { sendVcardEnquiry } = require("../services/email.service");
 
 const router = express.Router();
 
@@ -160,7 +161,11 @@ router.get("/vcards/:id", async (req, res, next) => {
       SELECT v.id,v.slug,v.title,v.description,v.website_url,v.phone,v.email,v.address,v.social_links,v.settings,
              t.id AS template_id,t.name AS template_name,t.preview_url,t.template_json,
              u.name AS owner_name,u.avatar_url,c.name AS company_name,p.features AS plan_features,
-             COALESCE(us.contact_capture_required,TRUE) AS contact_capture_required
+             COALESCE(
+               CASE WHEN jsonb_typeof(v.settings->'contactCaptureRequired')='boolean'
+                 THEN (v.settings->>'contactCaptureRequired')::boolean END,
+               us.contact_capture_required,TRUE
+             ) AS contact_capture_required
       FROM vcards v
       LEFT JOIN vcard_templates t ON t.id=v.template_id
       LEFT JOIN users u ON u.id=v.user_id
@@ -259,7 +264,11 @@ router.get("/vcards/:id/contact.vcf", async (req, res, next) => {
   try {
     const result = await pool.query(
       `SELECT v.id,v.title,v.email,v.phone,v.website_url,v.address,u.name AS owner_name,c.name AS company_name,
-              COALESCE(us.contact_capture_required,TRUE) AS contact_capture_required
+              COALESCE(
+                CASE WHEN jsonb_typeof(v.settings->'contactCaptureRequired')='boolean'
+                  THEN (v.settings->>'contactCaptureRequired')::boolean END,
+                us.contact_capture_required,TRUE
+              ) AS contact_capture_required
        FROM vcards v
        LEFT JOIN users u ON u.id=v.user_id
        LEFT JOIN user_settings us ON us.user_id=v.user_id
@@ -312,16 +321,55 @@ router.post("/vcards/:id/enquiries", async (req, res, next) => {
   const message = String(req.body?.message || "").trim().slice(0, 5000);
   if (!name || (!email && !phone) || !message) return res.status(400).json({ message: "Name, message, and an email or phone number are required" });
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: "Enter a valid email address" });
+  const client = await pool.connect();
   try {
-    const card = await pool.query("SELECT id FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
-    if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
-    await pool.query(
+    await client.query("BEGIN");
+    const cardResult = await client.query(
+      `SELECT v.id,v.title,u.name AS owner_name,u.email AS owner_email
+       FROM vcards v
+       JOIN users u ON u.id=v.user_id
+       WHERE v.id=$1 AND v.is_active=TRUE
+       FOR SHARE OF v,u`,
+      [id]
+    );
+    if (!cardResult.rowCount) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "VCard not found" });
+    }
+    const card = cardResult.rows[0];
+    await client.query(
       `INSERT INTO contacts (vcard_id, name, email, phone, company, message, source)
        VALUES ($1,$2,$3,$4,$5,$6,'Public VCard enquiry')`,
       [id, name, email || null, phone || null, company || null, message]
     );
-    res.status(201).json({ message: "Your enquiry has been sent successfully" });
-  } catch (error) { next(error); }
+    let notificationDelivered = true;
+    try {
+      await sendVcardEnquiry({
+        to: card.owner_email,
+        ownerName: card.owner_name,
+        vcardTitle: card.title,
+        enquirerName: name,
+        enquirerEmail: email || null,
+        enquirerPhone: phone || null,
+        company: company || null,
+        message,
+      });
+    } catch (mailError) {
+      notificationDelivered = false;
+      console.error("VCard enquiry email notification failed:", mailError.message);
+    }
+    await client.query("COMMIT");
+    res.status(201).json({
+      message: notificationDelivered
+        ? "Your enquiry has been sent successfully"
+        : "Your enquiry has been received successfully",
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    next(error);
+  } finally {
+    client.release();
+  }
 });
 
 router.post("/vcards/:id/appointments", async (req, res, next) => {

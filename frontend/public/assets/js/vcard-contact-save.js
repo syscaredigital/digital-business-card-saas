@@ -7,7 +7,7 @@
   var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
   var source = params.get("source") === "qr" ? "qr" : "direct";
   var contactCaptureRequired = true;
-  fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id))
+  var contactPreferenceReady = fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id))
     .then(function (response) { return response.ok ? response.json() : {}; })
     .then(function (data) { contactCaptureRequired = !data.vcard || data.vcard.contactCaptureRequired !== false; })
     .catch(function () {});
@@ -78,11 +78,13 @@
     if (open) setTimeout(function () { form.elements.name.focus(); }, 0);
   }
   function saveContact() {
-    if (!contactCaptureRequired) {
-      window.location.assign(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/contact.vcf");
-      return;
-    }
-    setOpen(true);
+    contactPreferenceReady.then(function () {
+      if (!contactCaptureRequired) {
+        window.location.assign(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/contact.vcf");
+        return;
+      }
+      setOpen(true);
+    });
   }
   shell.querySelector(".vcard-save-trigger").addEventListener("click", saveContact);
   document.querySelectorAll("a,button").forEach(function (node) {

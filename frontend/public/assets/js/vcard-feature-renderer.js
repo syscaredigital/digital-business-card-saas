@@ -52,8 +52,10 @@
   }
 
   function image(url, alt, className) {
-    var src = safeUrl(url);
-    if (!src || (!/\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(src) && !/(?:images\.unsplash\.com|images\.pexels\.com|res\.cloudinary\.com)/i.test(src))) return null;
+    var input = String(url || "").trim();
+    var dataImage = /^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=\s]+$/i.test(input);
+    var src = dataImage ? input : safeUrl(input);
+    if (!src || (!dataImage && !/\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(src) && !/(?:images\.unsplash\.com|images\.pexels\.com|res\.cloudinary\.com)/i.test(src))) return null;
     var img = el("img", className || "");
     img.src = src;
     img.alt = alt || "";
@@ -63,7 +65,7 @@
 
   function findUrl(values) {
     for (var index = values.length - 1; index >= 0; index -= 1) {
-      if (safeUrl(values[index])) return values[index];
+      if (safeUrl(values[index]) || /^data:image\/(?:png|jpe?g|webp);base64,/i.test(values[index])) return values[index];
     }
     return "";
   }
@@ -77,9 +79,9 @@
   function renderCards(body, content, type) {
     var grid = el("div", "vfeature-card-grid");
     lines(content).forEach(function (line, index) {
-      var value = parts(line), title = value[0] || "Item " + (index + 1), url = findUrl(value);
-      var card = el(url ? "a" : "article", "vfeature-item-card");
-      if (url && card.tagName === "A") { card.href = safeUrl(url); card.target = "_blank"; card.rel = "noopener noreferrer"; }
+      var value = parts(line), title = value[0] || "Item " + (index + 1), url = findUrl(value), clickableUrl = safeUrl(url);
+      var card = el(clickableUrl ? "a" : "article", "vfeature-item-card");
+      if (clickableUrl) { card.href = clickableUrl; card.target = "_blank"; card.rel = "noopener noreferrer"; }
       var media = image(url, title, "vfeature-item-image");
       if (media) card.appendChild(media);
       else card.appendChild(el("span", "vfeature-item-icon", type === "products" ? "◇" : type === "blogs" ? "✎" : "✦"));

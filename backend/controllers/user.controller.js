@@ -41,7 +41,14 @@ function normalizeSections(value, allowedKeys) {
   for (const [key, content] of Object.entries(value)) {
     if (!allowedKeys.has(key)) continue;
     const text = typeof content === "string" ? content.trim() : JSON.stringify(content);
-    if (text && text.length <= 20000) sections[key] = text;
+    // Uploaded section images are data URLs. The request limit and the plan
+    // storage check below provide the real bounds for this JSON content.
+    if (text && Buffer.byteLength(text) > 8 * 1024 * 1024) {
+      const error = new Error("A VCard section is too large. Remove some images and try again.");
+      error.statusCode = 413;
+      throw error;
+    }
+    if (text) sections[key] = text;
   }
   return sections;
 }
@@ -1147,12 +1154,18 @@ exports.markNotificationsRead = async (req, res, next) => {
 exports.getVcard = async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id,slug,template_id,title,description,website_url,phone,email,address,social_links,settings,is_active
-       FROM vcards WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]
+      `SELECT v.id,v.slug,v.template_id,v.title,v.description,v.website_url,v.phone,v.email,v.address,v.social_links,v.settings,v.is_active,
+              COALESCE(
+                CASE WHEN jsonb_typeof(v.settings->'contactCaptureRequired')='boolean'
+                  THEN (v.settings->>'contactCaptureRequired')::boolean END,
+                us.contact_capture_required,TRUE
+              ) AS contact_capture_required
+       FROM vcards v LEFT JOIN user_settings us ON us.user_id=v.user_id
+       WHERE v.id = $1 AND v.user_id = $2`, [req.params.id, req.user.id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Card not found" });
     const entitlements = await loadVcardEntitlements(pool, req.user.id);
-    res.json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) }, entitlements });
+    res.json({ vcard: { ...result.rows[0], contactCaptureRequired: result.rows[0].contact_capture_required, publicUrl: publicVcardUrl(req, result.rows[0].slug) }, entitlements });
   } catch (error) { next(error); }
 };
 
@@ -1186,6 +1199,7 @@ exports.createVcard = async (req, res, next) => {
     const sections = normalizeSections(req.body.sections, allowedKeys);
     const profileImageUrl=normalizeVcardImage(req.body.profileImageUrl);
     const coverImageUrl=normalizeVcardImage(req.body.coverImageUrl);
+    const contactCaptureRequired=req.body.contactCaptureRequired !== false;
     const storage=await getStorageSummary(pool,req.user.id);
     if(storage.usedBytes+vcardPayloadBytes({...req.body,title,sections,profileImageUrl,coverImageUrl})>storage.limitBytes){
       return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Delete unused content or upgrade your plan.`});
@@ -1194,7 +1208,7 @@ exports.createVcard = async (req, res, next) => {
       `INSERT INTO vcards (user_id,template_id,title,slug,description,website_url,phone,email,address,settings)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)
        RETURNING id,slug,template_id,title,description,website_url,phone,email,address,settings,is_active,created_at`,
-       [req.user.id, templateId, title, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections, profileImageUrl, coverImageUrl })]
+       [req.user.id, templateId, title, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections, profileImageUrl, coverImageUrl, contactCaptureRequired })]
     );
     res.status(201).json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
   } catch (error) { if(error.code==="23505")return res.status(409).json({message:"That VCard URL name is already in use. Choose another one."}); next(error); }
@@ -1217,7 +1231,8 @@ exports.updateVcard = async (req, res, next) => {
     const current=existing.rows[0],storage=await getStorageSummary(pool,req.user.id);
     const profileImageUrl=Object.prototype.hasOwnProperty.call(req.body,"profileImageUrl")?normalizeVcardImage(req.body.profileImageUrl):current.settings?.profileImageUrl||null;
     const coverImageUrl=Object.prototype.hasOwnProperty.call(req.body,"coverImageUrl")?normalizeVcardImage(req.body.coverImageUrl):current.settings?.coverImageUrl||null;
-    const nextSettings={...(current.settings||{}),sections,profileImageUrl,coverImageUrl};
+    const contactCaptureRequired=typeof req.body.contactCaptureRequired === "boolean" ? req.body.contactCaptureRequired : current.settings?.contactCaptureRequired !== false;
+    const nextSettings={...(current.settings||{}),sections,profileImageUrl,coverImageUrl,contactCaptureRequired};
     const currentBytes=Buffer.byteLength(JSON.stringify(current));
     const proposedBytes=vcardPayloadBytes({...req.body,title,sections,profileImageUrl,coverImageUrl});
     if(storage.usedBytes-currentBytes+proposedBytes>storage.limitBytes){

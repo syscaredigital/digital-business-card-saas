@@ -192,16 +192,16 @@
 
   var vcardFeatureGuides = {
     "business-hours": ["One day per line", "Monday | 9:00 AM - 5:00 PM"],
-    services: ["One service per line: name | description | optional image URL", "Property valuation | Accurate local market valuation | https://example.com/image.jpg"],
-    products: ["One product per line: name | price | description | optional image URL", "Modern family home | $350,000 | Three bedrooms with garden | https://example.com/home.jpg"],
-    galleries: ["One image per line: caption | image URL", "Recent project | https://example.com/project.jpg"],
-    "instagram-embed": ["One post image per line: caption | image URL", "Behind the scenes | https://example.com/post.jpg"],
+    services: ["One service per line: name | description. Add its photo below.", "Property valuation | Accurate local market valuation"],
+    products: ["One product per line: name | price | description. Add its photo below.", "Modern family home | $350,000 | Three bedrooms with garden"],
+    galleries: ["One caption per line, then upload the matching images below.", "Recent project"],
+    "instagram-embed": ["One caption per line, then upload the matching images below.", "Behind the scenes"],
     blogs: ["One article per line: title | summary | image or article URL", "Buying your first home | Five useful steps | https://example.com/article"],
-    testimonials: ["One review per line: quote | customer name | role | optional avatar URL", "Wonderful service from start to finish | Alex Morgan | Customer | https://example.com/alex.jpg"],
+    testimonials: ["One review per line: quote | customer name | role. Add the customer photo below.", "Wonderful service from start to finish | Alex Morgan | Customer"],
     appointments: ["Title | duration in minutes; customers choose office or online", "Book a consultation | 30"],
     "social-links": ["One link per line: network name | full URL", "LinkedIn | https://linkedin.com/in/your-name"],
     "custom-links": ["One link per line: link name | full URL", "View my portfolio | https://example.com/portfolio"],
-    banners: ["Add an image URL, or title | image URL", "Summer offer | https://example.com/banner.jpg"],
+    banners: ["Add a title, then upload the banner image below.", "Summer offer"],
     iframes: ["Add a title and full content URL", "Watch my introduction | https://example.com/video"],
     "qrcode-customize": ["Add the destination or QR image URL", "https://example.com/contact"],
     advanced: ["Add each important detail on a new line", "Languages: English, Sinhala"],
@@ -210,12 +210,100 @@
     "manage-section": ["Add each extra detail on a new line", "Additional information"]
   };
 
+  var vcardImageSections = new Set(["services", "products", "galleries", "instagram-embed", "testimonials", "banners"]);
+  var vcardStoragePromise;
+
+  function vcardSectionUpload(key) {
+    if (!vcardImageSections.has(key)) return "";
+    return '<div class="vcard-section-image-editor" data-section-image-editor="' + escapeHtml(key) + '">' +
+      '<div class="vcard-section-upload-row"><label class="vcard-section-upload"><input type="file" accept="image/png,image/jpeg,image/webp" multiple><span>+ Upload images</span></label><small data-section-storage>PNG, JPG or WebP · 1 MB each</small></div>' +
+      '<div class="vcard-section-image-list" aria-live="polite"></div></div>';
+  }
+
   function vcardFeatureField(feature, savedValue, createMode) {
     var guide = vcardFeatureGuides[feature.key] || ["Add the content to show in this section", "Add section content"];
     var dataName = createMode ? "data-create-vcard-section" : "data-vcard-section";
     var idPrefix = createMode ? "create-vcard-section-" : "vcard-section-";
     return '<section class="vcard-feature-field"><label for="' + idPrefix + escapeHtml(feature.key) + '">' + escapeHtml(feature.label) + '</label>' +
-      '<small class="vcard-feature-guide">' + escapeHtml(guide[0]) + '</small><textarea id="' + idPrefix + escapeHtml(feature.key) + '" ' + dataName + '="' + escapeHtml(feature.key) + '" rows="4" placeholder="' + escapeHtml(guide[1]) + '">' + escapeHtml(savedValue || "") + '</textarea></section>';
+      '<small class="vcard-feature-guide">' + escapeHtml(guide[0]) + '</small><textarea id="' + idPrefix + escapeHtml(feature.key) + '" ' + dataName + '="' + escapeHtml(feature.key) + '" rows="4" placeholder="' + escapeHtml(guide[1]) + '">' + escapeHtml(savedValue || "") + '</textarea>' + vcardSectionUpload(feature.key) + '</section>';
+  }
+
+  function sectionImageValue(value) {
+    return /^data:image\/(?:png|jpe?g|webp);base64,/i.test(value) || /^https?:\/\//i.test(value) ? value : "";
+  }
+
+  function initializeVcardImageEditors(root) {
+    if (!root) return;
+    if (!vcardStoragePromise) vcardStoragePromise = request("/user/storage").catch(function () { return null; });
+    vcardStoragePromise.then(function (storage) {
+      if (!storage) return;
+      var available = Number(storage.availableBytes || 0) / (1024 * 1024);
+      root.querySelectorAll("[data-section-storage]").forEach(function (label) {
+        label.textContent = "PNG, JPG or WebP · 1 MB each · " + available.toFixed(available < 10 ? 1 : 0) + " MB plan space available";
+      });
+    });
+    root.querySelectorAll("[data-section-image-editor]").forEach(function (editor) {
+      var textarea = editor.parentElement.querySelector("textarea");
+      var input = editor.querySelector('input[type="file"]');
+      var list = editor.querySelector(".vcard-section-image-list");
+      if (!textarea || !input || textarea._sectionImageReady) return;
+      var images = [];
+      var cleanLines = String(textarea.value || "").split(/\r?\n/).map(function (line, index) {
+        var values = line.split(/\s*\|\s*/);
+        var candidate = sectionImageValue(values[values.length - 1] || "");
+        if (candidate) { images[index] = candidate; values.pop(); }
+        return values.join(" | ");
+      });
+      textarea.value = cleanLines.join("\n");
+      textarea._sectionImages = images;
+      textarea._sectionImageReady = true;
+
+      function renderImages() {
+        var lines = String(textarea.value || "").split(/\r?\n/);
+        list.innerHTML = images.map(function (src, index) {
+          if (!src) return "";
+          return '<article><img src="' + escapeHtml(src) + '" alt=""><span>' + escapeHtml((lines[index] || "Image " + (index + 1)).split("|")[0].trim()) + '</span><button type="button" data-remove-section-image="' + index + '" aria-label="Remove image">×</button></article>';
+        }).join("");
+      }
+
+      list.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-remove-section-image]");
+        if (!button) return;
+        images[Number(button.dataset.removeSectionImage)] = "";
+        renderImages();
+      });
+      input.addEventListener("change", function () {
+        var files = Array.from(input.files || []);
+        var invalid = files.find(function (file) { return !/^image\/(?:png|jpeg|webp)$/i.test(file.type) || file.size > 1024 * 1024; });
+        if (invalid) { window.alert("Choose PNG, JPG, or WebP images no larger than 1 MB each."); input.value = ""; return; }
+        Promise.all(files.map(function (file) { return new Promise(function (resolve, reject) {
+          var reader = new FileReader(); reader.onload = function () { resolve({ name: file.name, src: String(reader.result || "") }); }; reader.onerror = reject; reader.readAsDataURL(file);
+        }); })).then(function (uploads) {
+          var lines = String(textarea.value || "").split(/\r?\n/).filter(function (line) { return line.trim(); });
+          uploads.forEach(function (upload) {
+            var target = images.findIndex(function (image, index) { return !image && lines[index]; });
+            if (target < 0) { target = lines.length; lines.push(upload.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ")); }
+            images[target] = upload.src;
+          });
+          textarea.value = lines.join("\n");
+          input.value = "";
+          renderImages();
+        }).catch(function () { window.alert("One of the selected images could not be read."); });
+      });
+      renderImages();
+    });
+  }
+
+  function collectVcardSections(form, selector) {
+    var sections = {};
+    form.querySelectorAll(selector).forEach(function (field) {
+      var lines = String(field.value || "").split(/\r?\n/);
+      var images = field._sectionImages || [];
+      sections[field.getAttribute(selector.slice(1, -1).split("=")[0])] = lines.map(function (line, index) {
+        return line.trim() && images[index] ? line.trim() + " | " + images[index] : line.trim();
+      }).filter(Boolean).join("\n");
+    });
+    return sections;
   }
 
   function renderDashboard(data) {
@@ -313,6 +401,7 @@
       (entitlements.features || []).filter(function (feature) { return feature.key !== "basic-details"; }).map(function (feature) {
         return vcardFeatureField(feature, "", true);
       }).join("") || '<p>Basic details are the only editable feature in this plan.</p>';
+    initializeVcardImageEditors(createFeatureEditor);
     if (createAllowance) {
       createAllowance.textContent = limitReached ? "Plan limit reached" : (cardLimit - usedCards) + " slot" + (cardLimit - usedCards === 1 ? "" : "s") + " left";
       createAllowance.classList.toggle("active", !limitReached);
@@ -1072,9 +1161,35 @@
 
   var enquiriesBody = document.getElementById("enquiriesTableBody");
   if (enquiriesBody) {
+    var exportEnquiriesButton = document.getElementById("exportEnquiries");
+    var loadedEnquiries = [];
+    if (exportEnquiriesButton) exportEnquiriesButton.addEventListener("click", function () {
+      if (!loadedEnquiries.length) return;
+      function enquiryCsvCell(value) {
+        var safe = String(value == null ? "" : value).replace(/\r?\n/g, " ");
+        if (/^[=+\-@]/.test(safe)) safe = "'" + safe;
+        return '"' + safe.replace(/"/g, '""') + '"';
+      }
+      var csv = [["VCard", "Name", "Email", "Phone", "Company", "Message", "Submitted at"]]
+        .concat(loadedEnquiries.map(function (item) {
+          return [item.vcard_name || "Digital card", item.name || "", item.email || "", item.phone || "", item.company || "", item.message || "", item.contacted_at || ""];
+        }))
+        .map(function (row) { return row.map(enquiryCsvCell).join(","); }).join("\r\n");
+      var url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = "all-enquiries-" + new Date().toISOString().slice(0, 10) + ".csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    });
     enquiriesBody.innerHTML = '<tr><td colspan="7" class="light-empty-cell">Loading enquiries...</td></tr>';
     request("/user/enquiries").then(function (data) {
       var rows = data.enquiries || [];
+      loadedEnquiries = rows;
+      if (exportEnquiriesButton) exportEnquiriesButton.disabled = !rows.length;
+      setText("exportEnquiriesCount", rows.length);
       var now = new Date();
       var monthlyEnquiries = rows.filter(function (item) {
         var created = new Date(item.contacted_at);
@@ -1090,7 +1205,7 @@
         return '<tr class="enquiry-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name || "—") + '</td><td data-label="Email">' + (item.email ? '<a href="mailto:' + escapeHtml(item.email) + '">' + escapeHtml(item.email) + "</a>" : "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Message"><div class="client-enquiry-message">' + escapeHtml(message) + '</div></td><td data-label="Created On">' + escapeHtml(formatDate(item.contacted_at)) + '</td><td data-label="Action">' + reply + '</td></tr>';
       }).join("") : '<tr><td colspan="7" class="light-empty-cell">No enquiries yet. New contact requests will appear here.</td></tr>';
       setText("enquiriesResults", "Showing " + rows.length + " result" + (rows.length === 1 ? "" : "s"));
-    }).catch(function (error) { enquiriesBody.innerHTML = '<tr><td colspan="7" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>"; });
+    }).catch(function (error) { if (exportEnquiriesButton) exportEnquiriesButton.disabled = true; enquiriesBody.innerHTML = '<tr><td colspan="7" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>"; });
   }
 
   var appointmentsBody = document.getElementById("appointmentsTableBody");
@@ -1309,6 +1424,7 @@
         editor.elements.websiteUrl.value = card.website_url || "";
         editor.elements.address.value = card.address || "";
         editor.elements.description.value = card.description || "";
+        editor.elements.contactCaptureRequired.checked = card.contactCaptureRequired !== false;
         savedProfileImage = card.settings && card.settings.profileImageUrl || null;
         savedCoverImage = card.settings && card.settings.coverImageUrl || null;
         editor.elements.occupation.value = card.settings && card.settings.sections ? (card.settings.sections["basic-details"] || "") : "";
@@ -1324,6 +1440,7 @@
           (entitlements.features || []).filter(function (feature) { return feature.key !== "basic-details"; }).map(function (feature) {
             return vcardFeatureField(feature, savedSections[feature.key], false);
           }).join("") || '<p>Basic details are the only editable feature in this plan.</p>';
+        initializeVcardImageEditors(featureEditor);
         editorStatus.textContent = "Loaded from your account";
       }).catch(function (error) { editorStatus.textContent = error.message; });
       editor.addEventListener("submit", async function (event) {
@@ -1331,11 +1448,10 @@
         var button = editor.querySelector('button[type="submit"]');
         button.disabled = true; editorStatus.textContent = "Saving...";
         try {
-          var sections = {};
-          editor.querySelectorAll("[data-vcard-section]").forEach(function (field) { sections[field.dataset.vcardSection] = field.value.trim(); });
+          var sections = collectVcardSections(editor, "[data-vcard-section]");
           var newProfileImage = await readVcardImageInput(document.getElementById("editCardProfileImage"));
           var newCoverImage = await readVcardImageInput(document.getElementById("editCardCoverImage"));
-          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, isActive: editor.elements.isActive.checked }) });
+          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
           if (newProfileImage) savedProfileImage = newProfileImage;
           if (newCoverImage) savedCoverImage = newCoverImage;
           editorStatus.textContent = "Saved successfully";
@@ -1364,14 +1480,14 @@
       var button = createCardForm.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
       var template = document.getElementById("createVcardTemplate");
-      var sections = {};
-      createCardForm.querySelectorAll("[data-create-vcard-section]").forEach(function (field) { sections[field.dataset.createVcardSection] = field.value.trim(); });
+      var sections = collectVcardSections(createCardForm, "[data-create-vcard-section]");
       var occupation = document.getElementById("occupation");
       if (occupation && occupation.value.trim()) sections["basic-details"] = occupation.value.trim();
       try {
         var profileImageUrl = await readVcardImageInput(document.getElementById("createVcardProfileImage"));
         var coverImageUrl = await readVcardImageInput(document.getElementById("createVcardCoverImage"));
-        var data = await request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), description: description ? description.value.trim() : "", sections: sections, profileImageUrl: profileImageUrl, coverImageUrl: coverImageUrl }) });
+        var contactCapture = document.getElementById("createVcardContactCapture");
+        var data = await request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), description: description ? description.value.trim() : "", sections: sections, profileImageUrl: profileImageUrl, coverImageUrl: coverImageUrl, contactCaptureRequired: !contactCapture || contactCapture.checked }) });
         window.location.href = "edit-vcard.html?id=" + encodeURIComponent(data.vcard.id);
       } catch (error) { window.alert(error.message); if (button) button.disabled = false; }
     });

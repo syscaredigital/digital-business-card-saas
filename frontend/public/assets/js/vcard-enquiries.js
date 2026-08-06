@@ -1,13 +1,16 @@
 (function () {
   "use strict";
   var id = new URLSearchParams(window.location.search).get("id");
-  document.querySelectorAll(".message-panel").forEach(function (panel) {
+  function bindEnquiryForms() {
+    document.querySelectorAll(".message-panel").forEach(function (panel) {
+    if (panel.dataset.enquiryBound === "true") return;
     var button = panel.querySelector(".submit-button");
     var name = panel.querySelector('input[type="text"]');
     var email = panel.querySelector('input[type="email"]');
     var phone = panel.querySelector('input[type="tel"]');
     var message = panel.querySelector("textarea");
     if (!button || !name || !message) return;
+    panel.dataset.enquiryBound = "true";
     var status = document.createElement("p");
     status.className = "vcard-enquiry-status";
     status.setAttribute("role", "status");
@@ -52,5 +55,10 @@
         status.textContent = error.message;
       }).finally(function () { button.disabled = false; });
     });
-  });
+    });
+  }
+
+  bindEnquiryForms();
+  var observer = new MutationObserver(bindEnquiryForms);
+  observer.observe(document.body, { childList: true, subtree: true });
 }());
