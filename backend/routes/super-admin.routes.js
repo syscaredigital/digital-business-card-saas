@@ -2,6 +2,7 @@ const express = require("express");
 const authenticate = require("../middlewares/auth.middleware");
 const authorize = require("../middlewares/role.middleware");
 const superAdminController = require("../controllers/superAdmin.controller");
+const paymentSlipUpload = require("../middlewares/payment-slip-upload.middleware");
 
 const router = express.Router();
 
@@ -158,6 +159,8 @@ router.post("/payouts", authenticate, authorize("super_admin"), superAdminContro
 router.patch("/payouts/:id", authenticate, authorize("super_admin"), superAdminController.updatePayout);
 router.delete("/payouts/:id", authenticate, authorize("super_admin"), superAdminController.deletePayout);
 router.get("/withdrawals", authenticate, authorize("super_admin"), superAdminController.listWithdrawals);
+router.get("/withdrawals/:id/receipt", authenticate, authorize("super_admin"), superAdminController.downloadWithdrawalReceipt);
+router.post("/withdrawals/:id/receipt", authenticate, authorize("super_admin"), paymentSlipUpload.single("receipt"), superAdminController.uploadWithdrawalReceipt);
 router.post("/withdrawals", authenticate, authorize("super_admin"), superAdminController.createWithdrawal);
 router.patch("/withdrawals/:id", authenticate, authorize("super_admin"), superAdminController.updateWithdrawal);
 router.delete("/withdrawals/:id", authenticate, authorize("super_admin"), superAdminController.deleteWithdrawal);

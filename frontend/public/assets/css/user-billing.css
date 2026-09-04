@@ -102,6 +102,20 @@
 
 .user-billing-page .manual-payment-modal { backdrop-filter: blur(8px); }.user-billing-page .manual-payment-dialog { color: #fff; background: #121214; border: 1px solid var(--billing-line); border-radius: 24px; box-shadow: 0 30px 90px rgba(0,0,0,.65); }.user-billing-page .manual-payment-dialog h2 { color: #fff; }.user-billing-page .manual-payment-dialog input { color: #fff; background: #1a1a1d; border-color: var(--billing-line); }.user-billing-page .manual-bank-details, .user-billing-page .checkout-coupon { background: #18181b; border-color: var(--billing-line); }.user-billing-page .manual-payment-submit, .user-billing-page #applyPaymentCoupon { background: var(--billing-red); }
 
+.checkout-available-offers { display: grid; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--billing-line); }
+.checkout-available-offers > span { color: #aaaab2; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+#paymentAvailableOfferList { display: grid; gap: 8px; }
+.checkout-offer-state { display: block; padding: 11px 12px; color: #85858e; background: rgba(255,255,255,.025); border-radius: 9px; line-height: 1.45; }
+.checkout-offer-state.is-error { color: #ff8b8b; }
+.checkout-offer-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px; background: #131315; border: 1px solid rgba(255,255,255,.08); border-radius: 11px; }
+.checkout-offer-card > div { display: grid; gap: 4px; min-width: 0; }
+.checkout-offer-card > div:last-child { justify-items: end; flex: 0 0 auto; }
+.checkout-offer-card strong { color: #fff; font-size: 12px; }
+.checkout-offer-card code { width: fit-content; padding: 3px 7px; color: #ff8585; background: rgba(240,68,68,.11); border-radius: 5px; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+.checkout-offer-card small { color: #7f7f88; font-size: 9px; }
+.checkout-offer-card span { color: #fff; font-size: 12px; font-weight: 800; }
+.checkout-offer-card button { padding: 7px 10px; color: #fff; background: var(--billing-red); border: 0; border-radius: 7px; font: inherit; font-size: 9px; font-weight: 800; cursor: pointer; }
+
 @media (max-width: 1120px) {
   .billing-command-hero { grid-template-columns: minmax(0,1fr) 320px; gap: 32px; }
   .billing-plan-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -120,6 +134,7 @@
   .billing-metric-grid { grid-template-columns: 1fr; }.billing-metric-grid article { min-height: 125px; }
   .billing-hero-actions, .billing-primary-action, .billing-refresh-action { width: 100%; }.billing-primary-action, .billing-refresh-action { justify-content: center; }
   .billing-catalog-shell, .billing-history-panel, .billing-support-panel { padding: 22px 18px; border-radius: 18px; }
+  .checkout-offer-card { align-items: stretch; flex-direction: column; }.checkout-offer-card > div:last-child { grid-template-columns: 1fr auto; align-items: center; justify-items: start; }.checkout-offer-card > div:last-child button { justify-self: end; }
 }
 
 @media (prefers-reduced-motion: reduce) {

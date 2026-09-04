@@ -110,13 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  document.querySelectorAll(".login-social-btn").forEach((button) => {
-    button.addEventListener("click", () => {
-      const provider = button.dataset.provider || "social";
-      alert(`${provider} sign-in is coming soon.`);
-    });
-  });
-
   const forgotPasswordForm = document.getElementById("forgotPasswordForm");
   if (forgotPasswordForm) {
     forgotPasswordForm.addEventListener("submit", (event) => {

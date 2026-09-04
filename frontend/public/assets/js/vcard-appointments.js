@@ -14,6 +14,13 @@
     }
   });
 
+  document.addEventListener("change", function (event) {
+    if (!event.target.matches('[data-vcard-appointment-form] select[name="serviceName"]')) return;
+    var form = event.target.closest("[data-vcard-appointment-form]");
+    var option = event.target.options[event.target.selectedIndex];
+    if (form && option) form.dataset.durationMinutes = option.dataset.duration || "30";
+  });
+
   document.addEventListener("submit", function (event) {
     var form = event.target.closest("[data-vcard-appointment-form]");
     if (!form) return;
@@ -25,6 +32,7 @@
     var name = String(data.get("name") || "").trim();
     var email = String(data.get("email") || "").trim();
     var phone = String(data.get("phone") || "").trim();
+    var serviceName = String(data.get("serviceName") || "").trim();
     var date = String(data.get("date") || "");
     var time = String(data.get("time") || "");
     var meetingMode = String(data.get("meetingMode") || "");
@@ -34,8 +42,8 @@
       status.textContent = "Customer bookings become active after this template is published as a VCard.";
       return;
     }
-    if (!name || !email || !date || !time || !meetingMode) {
-      status.textContent = "Enter your name, email, date, time, and meeting type.";
+    if (!serviceName || !name || !email || !date || !time || !meetingMode) {
+      status.textContent = "Choose a service, then enter your name, email, date, time, and meeting type.";
       status.classList.add("is-error");
       return;
     }
@@ -55,6 +63,7 @@
         name: name,
         email: email,
         phone: phone,
+        serviceName: serviceName,
         startsAt: startsAt.toISOString(),
         durationMinutes: Number(form.dataset.durationMinutes || 30),
         appointmentType: meetingMode,

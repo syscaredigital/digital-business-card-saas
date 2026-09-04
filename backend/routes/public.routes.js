@@ -6,9 +6,46 @@ const { normalizePlanFeatures } = require("../config/vcard-features");
 const { currencyName, normalizeCurrency } = require("../config/currencies");
 const { BASE_CURRENCY, getRate, supportedCurrencies, convertFromLkr } = require("../services/exchange-rate.service");
 const { publicVcardUrl } = require("../helpers/vcard-url");
-const { sendVcardEnquiry } = require("../services/email.service");
+const { sendVcardEnquiry, sendWebsiteContact } = require("../services/email.service");
 
 const router = express.Router();
+
+router.post("/contact", async (req, res, next) => {
+  const name = String(req.body.name || "").trim();
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const company = String(req.body.company || "").trim() || null;
+  const subject = String(req.body.subject || "General enquiry").trim();
+  const message = String(req.body.message || "").trim();
+  const sourcePage = String(req.body.sourcePage || "").trim().slice(0, 255) || null;
+  const website = String(req.body.website || "").trim();
+  if (website) return res.status(200).json({ message: "Thank you. Your message has been received." });
+  if (name.length < 2 || name.length > 150) return res.status(400).json({ message: "Enter your name" });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) return res.status(400).json({ message: "Enter a valid email address" });
+  if (company && company.length > 255) return res.status(400).json({ message: "Company name is too long" });
+  if (subject.length < 2 || subject.length > 200) return res.status(400).json({ message: "Enter a valid subject" });
+  if (message.length < 10 || message.length > 5000) return res.status(400).json({ message: "Enter a message between 10 and 5,000 characters" });
+  const hash = visitorHash(req);
+  try {
+    const recent = await pool.query(`SELECT COUNT(*)::int AS count FROM website_contact_messages
+      WHERE visitor_hash=$1 AND created_at > NOW() - INTERVAL '15 minutes'`, [hash]);
+    if (Number(recent.rows[0].count) >= 5) return res.status(429).json({ message: "Too many messages were submitted. Please try again later." });
+    const recipientResult = await pool.query("SELECT value FROM settings WHERE key='site_email' LIMIT 1");
+    const recipient = String(recipientResult.rows[0]?.value || process.env.CONTACT_EMAIL || process.env.MAIL_USER || "").trim();
+    const saved = await pool.query(`INSERT INTO website_contact_messages(name,email,company,subject,message,source_page,visitor_hash)
+      VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`, [name,email,company,subject,message,sourcePage,hash]);
+    try {
+      await sendWebsiteContact({ to:recipient,name,email,company,subject,message,sourcePage });
+      await pool.query("UPDATE website_contact_messages SET delivery_status='sent',delivered_at=NOW() WHERE id=$1", [saved.rows[0].id]);
+      return res.status(201).json({ message: "Thank you. Your message was sent successfully." });
+    } catch (mailError) {
+      await pool.query("UPDATE website_contact_messages SET delivery_status='failed',delivery_error=$1 WHERE id=$2", [String(mailError.message || "Email delivery failed").slice(0,500),saved.rows[0].id]);
+      const error = new Error("Your message was saved, but email delivery is temporarily unavailable. Please contact us directly at " + (recipient || "our support address") + ".");
+      error.status = 502;
+      error.publicMessage = error.message;
+      return next(error);
+    }
+  } catch (error) { next(error); }
+});
 
 function visitorHash(req) {
   const address = String(req.ip || req.socket?.remoteAddress || "");
@@ -23,6 +60,23 @@ function vcfEscape(value) {
     .replace(/\r?\n/g, "\\n")
     .replace(/,/g, "\\,")
     .replace(/;/g, "\\;");
+}
+
+function appointmentServices(content) {
+  return String(content || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 50)
+    .map((line) => {
+      const parts = line.split(/\s*\|\s*/).map((part) => part.trim());
+      const name = String(parts[0] || "").slice(0, 150);
+      const durationMatch = parts.slice(1).join(" ").match(/\b(\d{1,3})\b/);
+      if (!name) return null;
+      const requested = durationMatch ? Number(durationMatch[1]) : 30;
+      return { name, durationMinutes: Math.min(Math.max(requested, 15), 480) };
+    })
+    .filter(Boolean);
 }
 
 router.get("/plans", async (req, res, next) => {
@@ -127,7 +181,11 @@ router.get("/vcards/:id/qrcode", async (req, res, next) => {
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const destination = `${publicVcardUrl(req, result.rows[0].slug)}?source=qr`;
     const svg = await QRCode.toString(destination, { type: "svg", errorCorrectionLevel: "M", margin: 4, width: 512, color: { dark: "#111827", light: "#ffffff" } });
-    res.set({ "Cache-Control": "public, max-age=3600", "X-VCard-URL": destination }).type("image/svg+xml").send(svg);
+    res.set({
+      "Cache-Control": "public, max-age=3600",
+      "Cross-Origin-Resource-Policy": "cross-origin",
+      "X-VCard-URL": destination,
+    }).type("image/svg+xml").send(svg);
   } catch (error) { next(error); }
 });
 
@@ -158,7 +216,7 @@ router.get("/vcards/:id", async (req, res, next) => {
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
   try {
     const result = await pool.query(`
-      SELECT v.id,v.slug,v.title,v.description,v.website_url,v.phone,v.email,v.address,v.social_links,v.settings,
+      SELECT v.id,v.slug,v.title,v.qualifications,v.description,v.website_url,v.phone,v.email,v.address,v.social_links,v.settings,
              t.id AS template_id,t.name AS template_name,t.preview_url,t.template_json,
              u.name AS owner_name,u.avatar_url,c.name AS company_name,p.features AS plan_features,
              COALESCE(
@@ -181,7 +239,7 @@ router.get("/vcards/:id", async (req, res, next) => {
     const allowedFeatures = new Set(normalizePlanFeatures(card.plan_features).vcardFeatures);
     const visibleSections = Object.fromEntries(Object.entries(card.settings?.sections || {}).filter(([key]) => allowedFeatures.has(key)));
     res.json({ vcard: {
-      id: card.id, slug: card.slug, publicUrl: publicVcardUrl(req, card.slug), title: card.title, description: card.description, websiteUrl: card.website_url,
+      id: card.id, slug: card.slug, publicUrl: publicVcardUrl(req, card.slug), title: card.title, qualifications: card.qualifications || "", description: card.description, websiteUrl: card.website_url,
       phone: card.phone, email: card.email, address: card.address, socialLinks: card.social_links || [],
       sections: visibleSections, ownerName: card.owner_name,
       avatarUrl: card.settings?.profileImageUrl || card.avatar_url,
@@ -200,7 +258,7 @@ router.post("/vcards/:id/events", async (req, res, next) => {
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
   if (!["qr_scan", "vcard_view", "link_click", "share"].includes(eventType)) return res.status(400).json({ message: "Invalid event type" });
   try {
-    const card = await pool.query("SELECT id FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    const card = await pool.query("SELECT id,user_id,title FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
     if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
     const hash = visitorHash(req);
     const result = await pool.query(
@@ -214,6 +272,13 @@ router.post("/vcards/:id/events", async (req, res, next) => {
        RETURNING id`,
       [id, eventType, source, hash, String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000), ["link_click", "share"].includes(eventType) ? 10 : 1800]
     );
+    if (eventType === "qr_scan" && result.rowCount) {
+      await pool.query(
+        `INSERT INTO notifications(user_id,title,message,type,metadata)
+         VALUES($1,'QR code scanned',$2,'qr_scan',$3::jsonb)`,
+        [card.rows[0].user_id, `${card.rows[0].title || "Your VCard"} received a new QR scan.`, JSON.stringify({ vcardId: id })]
+      );
+    }
     res.status(result.rowCount ? 201 : 200).json({ recorded: Boolean(result.rowCount) });
   } catch (error) { next(error); }
 });
@@ -230,7 +295,7 @@ router.post("/vcards/:id/contact-saves", async (req, res, next) => {
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: "Enter a valid email address" });
   if (!consent) return res.status(400).json({ message: "Consent is required before sharing your details" });
   try {
-    const card = await pool.query("SELECT id FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    const card = await pool.query("SELECT id,user_id,title FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
     if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
     const result = await pool.query(
       `WITH existing AS (
@@ -247,9 +312,17 @@ router.post("/vcards/:id/contact-saves", async (req, res, next) => {
          WHERE NOT EXISTS (SELECT 1 FROM existing)
          RETURNING id
        )
-       SELECT id FROM inserted UNION ALL SELECT id FROM existing LIMIT 1`,
+       SELECT id,TRUE AS created FROM inserted
+       UNION ALL SELECT id,FALSE AS created FROM existing LIMIT 1`,
       [id, name, email || null, phone || null, company || null]
     );
+    if (result.rows[0]?.created) {
+      await pool.query(
+        `INSERT INTO notifications(user_id,title,message,type,metadata)
+         VALUES($1,'New contact saved',$2,'contact',$3::jsonb)`,
+        [card.rows[0].user_id, `${name} saved ${card.rows[0].title || "your VCard"}.`, JSON.stringify({ vcardId: id, contactId: result.rows[0].id })]
+      );
+    }
     res.status(201).json({
       message: "Your details were shared. The contact is ready to save.",
       downloadUrl: `/api/public/vcards/${id}/contact.vcf?capture=${result.rows[0].id}`,
@@ -325,7 +398,7 @@ router.post("/vcards/:id/enquiries", async (req, res, next) => {
   try {
     await client.query("BEGIN");
     const cardResult = await client.query(
-      `SELECT v.id,v.title,u.name AS owner_name,u.email AS owner_email
+      `SELECT v.id,v.title,v.user_id,u.name AS owner_name,u.email AS owner_email
        FROM vcards v
        JOIN users u ON u.id=v.user_id
        WHERE v.id=$1 AND v.is_active=TRUE
@@ -337,10 +410,15 @@ router.post("/vcards/:id/enquiries", async (req, res, next) => {
       return res.status(404).json({ message: "VCard not found" });
     }
     const card = cardResult.rows[0];
-    await client.query(
+    const contact = await client.query(
       `INSERT INTO contacts (vcard_id, name, email, phone, company, message, source)
-       VALUES ($1,$2,$3,$4,$5,$6,'Public VCard enquiry')`,
+       VALUES ($1,$2,$3,$4,$5,$6,'Public VCard enquiry') RETURNING id`,
       [id, name, email || null, phone || null, company || null, message]
+    );
+    await client.query(
+      `INSERT INTO notifications(user_id,title,message,type,metadata)
+       VALUES($1,'New VCard enquiry',$2,'enquiry',$3::jsonb)`,
+      [card.user_id, `${name} sent an enquiry through ${card.title || "your VCard"}.`, JSON.stringify({ vcardId: id, contactId: contact.rows[0].id })]
     );
     let notificationDelivered = true;
     try {
@@ -380,11 +458,9 @@ router.post("/vcards/:id/appointments", async (req, res, next) => {
   const email = String(req.body?.email || "").trim().slice(0, 255);
   const phone = String(req.body?.phone || "").trim().slice(0, 50);
   const notes = String(req.body?.notes || "").trim().slice(0, 2000);
+  const serviceName = String(req.body?.serviceName || "").trim().slice(0, 150);
   const appointmentType = String(req.body?.appointmentType || "").trim().toLowerCase();
   const requestedDuration = Number.parseInt(req.body?.durationMinutes, 10);
-  const durationMinutes = Number.isInteger(requestedDuration)
-    ? Math.min(Math.max(requestedDuration, 15), 480)
-    : 30;
   const startsAt = new Date(req.body?.startsAt);
 
   if (!name || !email) {
@@ -402,13 +478,11 @@ router.post("/vcards/:id/appointments", async (req, res, next) => {
   if (startsAt.getTime() < Date.now() + 5 * 60 * 1000) {
     return res.status(400).json({ message: "Appointments must be booked at least 5 minutes in advance" });
   }
-  const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
-
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const cardResult = await client.query(
-      "SELECT id,user_id FROM vcards WHERE id=$1 AND is_active=TRUE FOR SHARE",
+      "SELECT id,user_id,settings FROM vcards WHERE id=$1 AND is_active=TRUE FOR SHARE",
       [id]
     );
     if (!cardResult.rowCount) {
@@ -416,6 +490,19 @@ router.post("/vcards/:id/appointments", async (req, res, next) => {
       return res.status(404).json({ message: "VCard not found" });
     }
     const card = cardResult.rows[0];
+    const configuredServices = appointmentServices(card.settings?.sections?.appointments);
+    const selectedService = configuredServices.find((service) => service.name.toLowerCase() === serviceName.toLowerCase());
+    if (configuredServices.length && !selectedService) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ message: "Choose a valid appointment service from this VCard" });
+    }
+    const durationMinutes = selectedService
+      ? selectedService.durationMinutes
+      : Number.isInteger(requestedDuration)
+        ? Math.min(Math.max(requestedDuration, 15), 480)
+        : 30;
+    const savedServiceName = selectedService?.name || serviceName || null;
+    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
     await client.query("SELECT pg_advisory_xact_lock($1)", [card.user_id]);
     const conflict = await client.query(
       `SELECT id FROM appointments
@@ -430,10 +517,15 @@ router.post("/vcards/:id/appointments", async (req, res, next) => {
     }
     const result = await client.query(
       `INSERT INTO appointments
-        (user_id,vcard_id,name,email,phone,starts_at,ends_at,status,appointment_type,notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9)
-       RETURNING id,starts_at,ends_at,status`,
-      [card.user_id, id, name, email || null, phone || null, startsAt.toISOString(), endsAt.toISOString(), appointmentType, notes || null]
+        (user_id,vcard_id,name,email,phone,starts_at,ends_at,status,appointment_type,service_name,notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9,$10)
+       RETURNING id,starts_at,ends_at,status,service_name`,
+      [card.user_id, id, name, email || null, phone || null, startsAt.toISOString(), endsAt.toISOString(), appointmentType, savedServiceName, notes || null]
+    );
+    await client.query(
+      `INSERT INTO notifications(user_id,title,message,type,metadata)
+       VALUES($1,'New appointment request',$2,'appointment',$3::jsonb)`,
+      [card.user_id, `${name} requested${savedServiceName ? ` ${savedServiceName}` : " an appointment"}.`, JSON.stringify({ vcardId: id, appointmentId: result.rows[0].id, serviceName: savedServiceName })]
     );
     await client.query("COMMIT");
     res.status(201).json({

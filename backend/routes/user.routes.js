@@ -30,14 +30,18 @@ router.get("/affiliations", controller.affiliations);
 router.post("/affiliations/apply", controller.applyForAffiliate);
 router.patch("/affiliations/payout", controller.updateAffiliatePayout);
 router.post("/affiliations/withdrawals", controller.requestAffiliateWithdrawal);
+router.get("/affiliations/withdrawals/:id/receipt", controller.downloadAffiliateWithdrawalReceipt);
 router.get("/plans", controller.plans);
 router.post("/coupons/preview", controller.previewCoupon);
+router.get("/coupons/available", controller.availableCoupons);
 router.post("/subscriptions/upgrade", controller.requestPlanUpgrade);
 router.post("/subscriptions/manual-payment", paymentSlipUpload.single("slip"), controller.submitManualPayment);
 router.get("/vcards/:id", controller.getVcard);
 router.post("/vcards", controller.createVcard);
 router.patch("/vcards/:id", controller.updateVcard);
 router.delete("/vcards/:id", controller.deleteVcard);
+router.get("/notifications", controller.notifications);
 router.patch("/notifications/read", controller.markNotificationsRead);
+router.patch("/notifications/:id/read", controller.markNotificationRead);
 
 module.exports = router;

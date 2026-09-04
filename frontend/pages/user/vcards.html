@@ -189,70 +189,65 @@
                 <span class="status-badge active" id="createVcardAllowance">Checking plan limit...</span>
               </div>
 
-              <form class="client-vcard-form">
+              <form class="client-vcard-form" novalidate>
                 <div class="form-field form-field-wide" id="createVcardPlanSummary"></div>
-                <div class="form-field form-field-wide">
-                  <label for="createVcardTemplate">VCard Template:<span class="required-mark">*</span></label>
-                  <select id="createVcardTemplate" name="templateId" required><option value="">Loading your plan templates...</option></select>
-                  <div class="vcard-template-picker" id="createVcardTemplateGallery" aria-label="Available templates"></div>
-                </div>
-                <div class="form-field form-field-wide">
-                  <label for="urlAlias">Public URL name:<span class="required-mark">*</span> <span class="field-help">?</span></label>
-                  <div class="alias-input-group">
-                    <input id="urlAlias" type="text" placeholder="my-vcard-page-url" minlength="3" maxlength="100" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
-                    <button type="button" aria-label="Generate URL alias">↻</button>
+
+                <section class="vcard-form-section form-field-wide" aria-labelledby="vcardStyleHeading">
+                  <div class="vcard-form-section-heading"><span>1</span><div><h4 id="vcardStyleHeading">Choose a style</h4><p>Pick a template included with your current plan.</p></div></div>
+                  <div class="form-field">
+                    <label for="createVcardTemplate">VCard template <span class="required-mark">*</span></label>
+                    <select id="createVcardTemplate" name="templateId" required><option value="">Loading your plan templates...</option></select>
+                    <div class="vcard-template-picker" id="createVcardTemplateGallery" aria-label="Available templates"></div>
                   </div>
-                  <small>Your link will use your domain and this name, for example: your-domain.com/vcard/my-vcard-page-url</small>
-                </div>
+                </section>
 
-                <div class="form-field">
-                  <label for="vcardName">VCard Name:<span class="required-mark">*</span></label>
-                  <input id="vcardName" type="text" placeholder="Enter VCard Name" required />
-                </div>
+                <section class="vcard-form-section form-field-wide" aria-labelledby="vcardIdentityHeading">
+                  <div class="vcard-form-section-heading"><span>2</span><div><h4 id="vcardIdentityHeading">Basic information</h4><p>Add the details visitors should see first. Only the name and public URL are required.</p></div></div>
+                  <div class="vcard-form-grid">
+                    <div class="form-field"><label for="vcardName">Full name <span class="required-mark">*</span></label><input id="vcardName" name="title" type="text" autocomplete="name" placeholder="e.g. Nabeela Siahm" required /></div>
+                    <div class="form-field">
+                      <label for="qualifications">Qualifications <span class="field-optional">Optional</span></label>
+                      <input id="qualifications" name="qualifications" type="text" maxlength="500" placeholder="e.g. BSc (Hons), MBA, PMP" aria-describedby="qualificationsHelp" />
+                      <small id="qualificationsHelp" class="vcard-field-help"><span>Shown below the name.</span><span id="qualificationsCount">0 / 500</span></small>
+                    </div>
+                    <div class="form-field"><label for="occupation">Position <span class="field-optional">Optional</span></label><input id="occupation" name="occupation" type="text" autocomplete="organization-title" placeholder="e.g. Managing Director" /></div>
+                    <div class="form-field">
+                      <label for="urlAlias">Public URL name <span class="required-mark">*</span></label>
+                      <div class="alias-input-group"><input id="urlAlias" name="slug" type="text" placeholder="nabeela-siahm" minlength="3" maxlength="100" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="urlAliasHelp" required /><button type="button" aria-label="Generate URL name" title="Generate from full name">&#8635;</button></div>
+                      <small id="urlAliasHelp">This becomes your easy-to-share public link.</small>
+                    </div>
+                    <div class="form-field form-field-wide client-description-field"><label for="vcardDescription">About <span class="field-optional">Optional</span></label><textarea id="vcardDescription" name="description" rows="4" placeholder="Write a short, friendly introduction about this person or business."></textarea></div>
+                  </div>
+                </section>
 
-                <div class="form-field">
-                  <label for="occupation">Occupation:</label>
-                  <input id="occupation" type="text" placeholder="Enter Occupation" />
-                </div>
+                <section class="vcard-form-section form-field-wide" aria-labelledby="vcardContactHeading">
+                  <div class="vcard-form-section-heading"><span>3</span><div><h4 id="vcardContactHeading">Contact details</h4><p>These are optional. Add only the ways you want visitors to contact you.</p></div></div>
+                  <div class="vcard-form-grid">
+                    <div class="form-field"><label for="vcardEmail">Email <span class="field-optional">Optional</span></label><input id="vcardEmail" name="email" type="email" autocomplete="email" placeholder="name@example.com" /></div>
+                    <div class="form-field"><label for="vcardPhone">Phone <span class="field-optional">Optional</span></label><input id="vcardPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="e.g. +94 77 123 4567" /></div>
+                    <div class="form-field"><label for="vcardWebsite">Website <span class="field-optional">Optional</span></label><input id="vcardWebsite" name="websiteUrl" type="url" autocomplete="url" inputmode="url" placeholder="https://example.com" /></div>
+                    <div class="form-field"><label for="vcardAddress">Address <span class="field-optional">Optional</span></label><input id="vcardAddress" name="address" type="text" autocomplete="street-address" placeholder="City, region or full address" /></div>
+                  </div>
+                </section>
 
-                <div class="form-field client-description-field">
-                  <label for="vcardDescription">Description:</label>
-                  <div class="client-editor-toolbar" aria-hidden="true"><strong>B</strong><em>I</em><u>U</u><span>S</span><span>”</span><span>&lt;/&gt;</span><span>Normal</span><span>A</span></div>
-                  <textarea id="vcardDescription" placeholder="Enter Description of Your VCard"></textarea>
-                </div>
+                <section class="vcard-form-section form-field-wide" aria-labelledby="vcardMediaHeading">
+                  <div class="vcard-form-section-heading"><span>4</span><div><h4 id="vcardMediaHeading">Photos</h4><p>Personalize the card now, or add images later from the editor.</p></div></div>
+                  <div class="vcard-form-grid">
+                    <div class="form-field client-upload-field"><label>Profile image <span class="field-optional">Optional</span></label><label class="client-image-upload"><input id="createVcardProfileImage" type="file" accept="image/png,image/jpeg,image/webp" /><span class="profile-placeholder"></span><small>&#9998;</small></label><p>PNG, JPG or WebP, up to 2 MB.</p></div>
+                    <div class="form-field client-upload-field"><label>Cover image <span class="field-optional">Optional</span></label><label class="client-cover-upload"><input id="createVcardCoverImage" type="file" accept="image/png,image/jpeg,image/webp" /><span></span><small>&#9998;</small></label><p>PNG, JPG or WebP, up to 2 MB.</p></div>
+                  </div>
+                </section>
 
-                <div class="form-field form-field-wide vcard-feature-editor" id="createVcardFeatureEditor"></div>
-
-                <div class="form-field client-upload-field">
-                  <label>Profile Image:</label>
-                  <label class="client-image-upload">
-                    <input id="createVcardProfileImage" type="file" accept="image/png,image/jpeg,image/webp" />
-                    <span class="profile-placeholder"></span>
-                    <small>✎</small>
-                  </label>
-                  <p>Allowed file types: png, jpg, jpeg.</p>
-                </div>
-
-                <div class="form-field client-upload-field">
-                  <label>Cover Profile:</label>
-                  <label class="client-cover-upload">
-                    <input id="createVcardCoverImage" type="file" accept="image/png,image/jpeg,image/webp" />
-                    <span></span>
-                    <small>✎</small>
-                  </label>
-                  <p>Allowed file types: png, jpg, jpeg, webp. Maximum 2 MB.</p>
-                </div>
-
-                <label class="client-order-toggle form-field-wide vcard-contact-capture-toggle">
-                  <span class="vcard-toggle-copy"><strong>Contact save experience</strong><small>Ask visitors for their details before they save your contact.</small></span>
-                  <input id="createVcardContactCapture" name="contactCaptureRequired" type="checkbox" checked />
-                  <i></i>
-                  <b class="vcard-toggle-state" aria-hidden="true"></b>
-                </label>
+                <section class="vcard-form-section form-field-wide" aria-labelledby="vcardExtrasHeading">
+                  <div class="vcard-form-section-heading"><span>5</span><div><h4 id="vcardExtrasHeading">Extra sections</h4><p>Your plan may include social links, services, appointments and other card sections.</p></div></div>
+                  <div class="form-field vcard-feature-editor" id="createVcardFeatureEditor"></div>
+                  <label class="client-order-toggle vcard-contact-capture-toggle"><span class="vcard-toggle-copy"><strong>Contact save experience</strong><small>Ask visitors for their details before they save your contact.</small></span><input id="createVcardContactCapture" name="contactCaptureRequired" type="checkbox" checked /><i></i><b class="vcard-toggle-state" aria-hidden="true"></b></label>
+                </section>
 
                 <div class="form-actions form-field-wide">
-                  <button class="btn-share" type="submit">Save and continue</button>
-                  <button class="btn-preview" type="reset">Discard</button>
+                  <p>Required fields are marked with <span class="required-mark">*</span>. You can change every detail later.</p>
+                  <button class="btn-preview" type="reset">Clear form</button>
+                  <button class="btn-share" type="submit">Create VCard and continue</button>
                 </div>
               </form>
             </article>

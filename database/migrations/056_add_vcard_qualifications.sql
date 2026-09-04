@@ -1,0 +1,2 @@
+ALTER TABLE vcards
+  ADD COLUMN IF NOT EXISTS qualifications VARCHAR(500);

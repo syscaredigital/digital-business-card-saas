@@ -63,8 +63,8 @@
 
               <section class="client-settings-panel tab-panel" id="settingsBillingPanel">
                 <header class="settings-panel-heading">
-                  <div><span>Billing configuration</span><h2>Manual payment instructions</h2><p>Customers see these exact details when submitting subscription payments.</p></div>
-                  <span class="settings-panel-count">7 settings</span>
+                  <div><span>Billing configuration</span><h2>Payments and NFC delivery</h2><p>Manage the bank-transfer instructions and delivery charges customers see before submitting payment.</p></div>
+                  <span class="settings-panel-count">8 settings</span>
                 </header>
                 <div class="settings-form-card">
                   <label class="settings-modern-field" for="settingBankName"><span><strong>Bank name</strong><small>Receiving financial institution.</small></span><input id="settingBankName" name="bank_name" type="text" maxlength="150" required /></label>
@@ -72,7 +72,8 @@
                   <label class="settings-modern-field" for="settingBankAccountNumber"><span><strong>Account number</strong><small>Receiving bank account number.</small></span><input id="settingBankAccountNumber" name="bank_account_number" type="text" maxlength="100" required /></label>
                   <label class="settings-modern-field" for="settingBankBranch"><span><strong>Branch</strong><small>Bank branch or location.</small></span><input id="settingBankBranch" name="bank_branch" type="text" maxlength="150" required /></label>
                   <label class="settings-modern-field" for="settingBankSwift"><span><strong>SWIFT / routing code</strong><small>Optional for international transfers.</small></span><input id="settingBankSwift" name="bank_swift_code" type="text" maxlength="50" /></label>
-                  <label class="settings-modern-field" for="settingInternationalNfcShipping"><span><strong>Overseas NFC shipping (LKR)</strong><small>Flat delivery charge added when the destination country is outside Sri Lanka.</small></span><input id="settingInternationalNfcShipping" name="international_nfc_shipping_lkr" type="number" min="0" max="9999999999.99" step="0.01" required /></label>
+                  <label class="settings-modern-field" for="settingDomesticNfcShipping"><span><strong>Sri Lanka NFC delivery (LKR)</strong><small>Flat delivery charge added to every NFC order delivered within Sri Lanka.</small></span><input id="settingDomesticNfcShipping" name="domestic_nfc_shipping_lkr" type="number" min="0.01" max="9999999999.99" step="0.01" required /></label>
+                  <label class="settings-modern-field" for="settingInternationalNfcShipping"><span><strong>Overseas NFC delivery (LKR)</strong><small>Flat delivery charge added when the destination country is outside Sri Lanka.</small></span><input id="settingInternationalNfcShipping" name="international_nfc_shipping_lkr" type="number" min="0.01" max="9999999999.99" step="0.01" required /></label>
                   <label class="settings-modern-field" for="settingAffiliateMinimum"><span><strong>Minimum affiliate withdrawal</strong><small>Minimum approved balance required before withdrawal.</small></span><input id="settingAffiliateMinimum" name="affiliate_minimum_withdrawal" type="number" min="0.01" max="9999999999.99" step="0.01" required /></label>
                 </div>
               </section>

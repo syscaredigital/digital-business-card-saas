@@ -2160,7 +2160,7 @@ exports.deleteTransaction = async (req, res, next) => {
 };
 
 const payoutStatuses = ["pending", "processing", "paid", "failed", "cancelled"];
-const payoutMethods = ["bank_transfer", "paypal", "cash", "other"];
+const payoutMethods = ["bank_transfer"];
 
 function normalizePayoutPayload(body) {
   return {
@@ -2426,7 +2426,7 @@ function withdrawalValidationMessage(withdrawal) {
   if (withdrawal.accountName && withdrawal.accountName.length > 500) return "Account details must not exceed 500 characters";
   if (withdrawal.requestNote && withdrawal.requestNote.length > 3000) return "Request note must not exceed 3,000 characters";
   if (withdrawal.adminNote && withdrawal.adminNote.length > 3000) return "Admin note must not exceed 3,000 characters";
-  if (withdrawal.method !== "cash" && ["approved", "processing", "completed"].includes(withdrawal.status) && !withdrawal.accountName) return "Account details are required before approving this withdrawal";
+  if (["approved", "processing", "completed"].includes(withdrawal.status) && !withdrawal.accountName) return "Bank account details are required before approving this withdrawal";
   if (["rejected", "cancelled"].includes(withdrawal.status) && !withdrawal.adminNote) return "Add an admin note explaining why this withdrawal was declined";
   return null;
 }
@@ -2451,6 +2451,12 @@ function withdrawalPayoutStatus(status) {
   return "cancelled";
 }
 
+function withdrawalBankLabel(details) {
+  if (!details || typeof details !== "object") return "";
+  if (details.accountName) return String(details.accountName);
+  return [details.accountHolder, details.bankName, details.accountNumber, details.branch, details.swiftCode].filter(Boolean).join(" | ");
+}
+
 async function syncWithdrawalPayout(client, withdrawal, reviewerId) {
   if (!withdrawal.payoutId && ["pending", "rejected", "cancelled"].includes(withdrawal.status)) return null;
   const userResult = await client.query("SELECT name, email FROM users WHERE id = $1", [withdrawal.userId]);
@@ -2464,21 +2470,21 @@ async function syncWithdrawalPayout(client, withdrawal, reviewerId) {
     const payoutResult = await client.query(
       `UPDATE payouts SET user_id = $1, withdrawal_id = $2, payee_name = $3, payee_email = $4,
        amount = $5, currency = $6, method = $7, status = $8::varchar, reference = $9,
-       account_details = $10::jsonb, notes = $11,
+       account_details = $10::jsonb, notes = $11, transfer_receipt_url = $12,
        paid_at = CASE WHEN $8::varchar = 'paid' THEN COALESCE(paid_at, NOW()) ELSE NULL END,
-       reviewed_by = $12, reviewed_at = NOW(), updated_at = NOW()
-       WHERE id = $13 RETURNING transaction_id`,
-      [withdrawal.userId, withdrawal.id, user.name, user.email, withdrawal.amount, withdrawal.currency, withdrawal.method, payoutStatus, reference, JSON.stringify({ accountName: withdrawal.accountName, withdrawalId: withdrawal.id }), payoutNotes, reviewerId, payoutId]
+       reviewed_by = $13, reviewed_at = NOW(), updated_at = NOW()
+       WHERE id = $14 RETURNING transaction_id`,
+      [withdrawal.userId, withdrawal.id, user.name, user.email, withdrawal.amount, withdrawal.currency, withdrawal.method, payoutStatus, reference, JSON.stringify({ ...(withdrawal.accountDetails || { accountName: withdrawal.accountName }), withdrawalId: withdrawal.id }), payoutNotes, withdrawal.receiptUrl || null, reviewerId, payoutId]
     );
     transactionId = payoutResult.rows[0].transaction_id;
   } else {
     const payoutResult = await client.query(
       `INSERT INTO payouts (user_id, withdrawal_id, payee_name, payee_email, amount, currency,
-       method, status, reference, account_details, notes, paid_at, reviewed_by, reviewed_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::varchar, $9, $10::jsonb, $11,
-       CASE WHEN $8::varchar = 'paid' THEN NOW() ELSE NULL END, $12, NOW())
+       method, status, reference, account_details, notes, transfer_receipt_url, paid_at, reviewed_by, reviewed_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::varchar, $9, $10::jsonb, $11, $12,
+       CASE WHEN $8::varchar = 'paid' THEN NOW() ELSE NULL END, $13, NOW())
        RETURNING id, transaction_id`,
-      [withdrawal.userId, withdrawal.id, user.name, user.email, withdrawal.amount, withdrawal.currency, withdrawal.method, payoutStatus, reference, JSON.stringify({ accountName: withdrawal.accountName, withdrawalId: withdrawal.id }), payoutNotes, reviewerId]
+      [withdrawal.userId, withdrawal.id, user.name, user.email, withdrawal.amount, withdrawal.currency, withdrawal.method, payoutStatus, reference, JSON.stringify({ ...(withdrawal.accountDetails || { accountName: withdrawal.accountName }), withdrawalId: withdrawal.id }), payoutNotes, withdrawal.receiptUrl || null, reviewerId]
     );
     payoutId = payoutResult.rows[0].id;
     transactionId = payoutResult.rows[0].transaction_id;
@@ -2511,8 +2517,8 @@ exports.listWithdrawals = async (req, res, next) => {
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const [withdrawalsResult, usersResult, summaryResult, pendingResult, processedResult] = await Promise.all([
       pool.query(
-        `SELECT w.id, w.user_id, w.payout_id, w.amount, w.currency, w.method, w.status,
-                w.account_details, w.request_note, w.admin_note, w.reviewed_at, w.processed_at,
+        `SELECT w.id, w.user_id, w.affiliate_id, w.payout_id, w.amount, w.currency, w.method, w.status,
+                 w.account_details, w.request_note, w.admin_note, w.transfer_receipt_url, w.reviewed_at, w.processed_at,
                 w.created_at, w.updated_at, u.name AS user_name, u.email AS user_email,
                 reviewer.name AS reviewer_name, po.transaction_id
          FROM withdrawals w JOIN users u ON u.id = w.user_id
@@ -2535,11 +2541,13 @@ exports.listWithdrawals = async (req, res, next) => {
       withdrawals: withdrawalsResult.rows.map((withdrawal) => ({
         id: withdrawal.id,
         user: { id: withdrawal.user_id, name: withdrawal.user_name, email: withdrawal.user_email },
+        affiliateId: withdrawal.affiliate_id || null, affiliateManaged: Boolean(withdrawal.affiliate_id),
         payoutId: withdrawal.payout_id || null, transactionId: withdrawal.transaction_id || null,
         amount: number(withdrawal.amount), currency: withdrawal.currency, method: withdrawal.method,
         status: withdrawal.status,
-        accountName: withdrawal.account_details && withdrawal.account_details.accountName ? withdrawal.account_details.accountName : null,
+        accountName: withdrawalBankLabel(withdrawal.account_details) || null, bankDetails: withdrawal.account_details || {},
         requestNote: withdrawal.request_note || null, adminNote: withdrawal.admin_note || null,
+        receiptAvailable: Boolean(withdrawal.transfer_receipt_url), receiptUrl: withdrawal.transfer_receipt_url || null,
         reviewerName: withdrawal.reviewer_name || null, reviewedAt: withdrawal.reviewed_at || null,
         processedAt: withdrawal.processed_at || null, createdAt: withdrawal.created_at, updatedAt: withdrawal.updated_at,
       })),
@@ -2550,6 +2558,46 @@ exports.listWithdrawals = async (req, res, next) => {
         processedByCurrency: processedResult.rows.map((row) => ({ currency: row.currency, amount: number(row.amount) })),
       },
     });
+  } catch (error) { next(error); }
+};
+
+exports.uploadWithdrawalReceipt = async (req, res, next) => {
+  const withdrawalId = positiveIntegerParam(req);
+  if (!withdrawalId) return res.status(400).json({ message: "Invalid withdrawal ID" });
+  if (!req.file) return res.status(400).json({ message: "Upload a JPG, PNG, WebP, or PDF transfer receipt" });
+  const receiptUrl = `/uploads/payment-slips/${req.file.filename}`;
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query("BEGIN");
+    const existing = await client.query("SELECT id,payout_id,status FROM withdrawals WHERE id=$1 FOR UPDATE", [withdrawalId]);
+    if (!existing.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Withdrawal not found" }); }
+    if (!["approved", "processing", "completed"].includes(existing.rows[0].status)) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "Approve the withdrawal before uploading its transfer receipt" });
+    }
+    await client.query("UPDATE withdrawals SET transfer_receipt_url=$1,updated_at=NOW() WHERE id=$2", [receiptUrl, withdrawalId]);
+    if (existing.rows[0].payout_id) await client.query("UPDATE payouts SET transfer_receipt_url=$1,updated_at=NOW() WHERE id=$2", [receiptUrl, existing.rows[0].payout_id]);
+    await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata)
+      VALUES($1,'withdrawal.receipt_uploaded','withdrawal',$2,$3::jsonb)`, [req.user.id, withdrawalId, JSON.stringify({ receiptUrl })]);
+    await client.query("COMMIT");
+    res.json({ message: "Bank transfer receipt uploaded", receiptAvailable: true });
+  } catch (error) { if (client) await client.query("ROLLBACK").catch(() => {}); next(error); }
+  finally { if (client) client.release(); }
+};
+
+exports.downloadWithdrawalReceipt = async (req, res, next) => {
+  const withdrawalId = positiveIntegerParam(req);
+  if (!withdrawalId) return res.status(400).json({ message: "Invalid withdrawal ID" });
+  try {
+    const result = await pool.query("SELECT transfer_receipt_url FROM withdrawals WHERE id=$1", [withdrawalId]);
+    if (!result.rowCount || !result.rows[0].transfer_receipt_url) return res.status(404).json({ message: "Transfer receipt is not available" });
+    const receiptUrl = result.rows[0].transfer_receipt_url;
+    if (!/^\/uploads\/payment-slips\/[A-Za-z0-9._-]+$/.test(receiptUrl)) return res.status(400).json({ message: "Invalid receipt path" });
+    const uploadRoot = path.resolve(__dirname, "..", "uploads", "payment-slips");
+    const filePath = path.resolve(uploadRoot, path.basename(receiptUrl));
+    if (!filePath.startsWith(uploadRoot + path.sep)) return res.status(400).json({ message: "Invalid receipt path" });
+    res.download(filePath, `withdrawal-${withdrawalId}-receipt${path.extname(filePath)}`);
   } catch (error) { next(error); }
 };
 
@@ -2575,6 +2623,7 @@ exports.createWithdrawal = async (req, res, next) => {
     );
     withdrawal.id = result.rows[0].id;
     withdrawal.payoutId = null;
+    withdrawal.accountDetails = { accountName: withdrawal.accountName };
     await client.query("UPDATE withdrawals SET affiliate_id = (SELECT id FROM affiliate_profiles WHERE user_id = $1) WHERE id = $2", [withdrawal.userId, withdrawal.id]);
     const payoutId = await syncWithdrawalPayout(client, withdrawal, req.user.id);
     await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,'Withdrawal request received',$2,'withdrawal')`,
@@ -2602,10 +2651,15 @@ exports.updateWithdrawal = async (req, res, next) => {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    const existing = await client.query(`SELECT id,user_id,payout_id,amount,currency,method,status,account_details
+    const existing = await client.query(`SELECT id,user_id,affiliate_id,payout_id,amount,currency,method,status,account_details,transfer_receipt_url
       FROM withdrawals WHERE id=$1 FOR UPDATE`, [withdrawalId]);
     if (!existing.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Withdrawal not found" }); }
     const previous = existing.rows[0];
+    withdrawal.accountDetails = previous.affiliate_id ? previous.account_details : { accountName: withdrawal.accountName };
+    if (withdrawal.status === "completed" && !previous.transfer_receipt_url) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ message: "Upload the bank transfer receipt before completing this withdrawal" });
+    }
     if (withdrawal.status !== previous.status && !(withdrawalTransitions[previous.status] || []).includes(withdrawal.status)) {
       await client.query("ROLLBACK");
       return res.status(409).json({ message: `A ${previous.status} withdrawal cannot move to ${withdrawal.status}` });
@@ -2616,6 +2670,10 @@ exports.updateWithdrawal = async (req, res, next) => {
     }
     const financialDetailsChanged = Number(previous.user_id) !== withdrawal.userId || number(previous.amount) !== withdrawal.amount ||
       previous.currency !== withdrawal.currency || previous.method !== withdrawal.method;
+    if (previous.affiliate_id && financialDetailsChanged) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ message: "Affiliate withdrawal user, amount, currency, and method are fixed by the original request" });
+    }
     if (previous.status !== "pending" && financialDetailsChanged) {
       await client.query("ROLLBACK");
       return res.status(409).json({ message: "User, amount, currency, and method cannot change after approval" });
@@ -2628,10 +2686,11 @@ exports.updateWithdrawal = async (req, res, next) => {
        reviewed_at = CASE WHEN $5::varchar <> 'pending' THEN NOW() ELSE NULL END,
        processed_at = CASE WHEN $5::varchar = 'completed' THEN COALESCE(processed_at, NOW()) ELSE NULL END,
        updated_at = NOW() WHERE id = $10 RETURNING id, payout_id`,
-      [withdrawal.userId, withdrawal.amount, withdrawal.currency, withdrawal.method, withdrawal.status, JSON.stringify({ accountName: withdrawal.accountName }), withdrawal.requestNote, withdrawal.adminNote, req.user.id, withdrawalId]
+       [withdrawal.userId, withdrawal.amount, withdrawal.currency, withdrawal.method, withdrawal.status, JSON.stringify(withdrawal.accountDetails), withdrawal.requestNote, withdrawal.adminNote, req.user.id, withdrawalId]
     );
     withdrawal.id = withdrawalId;
     withdrawal.payoutId = result.rows[0].payout_id;
+    withdrawal.receiptUrl = previous.transfer_receipt_url || null;
     await client.query("UPDATE withdrawals SET affiliate_id = (SELECT id FROM affiliate_profiles WHERE user_id = $1) WHERE id = $2", [withdrawal.userId, withdrawalId]);
     const payoutId = await syncWithdrawalPayout(client, withdrawal, req.user.id);
     if (withdrawal.status !== previous.status) await client.query(
@@ -2724,6 +2783,17 @@ async function backfillAffiliateCommissionsForReferral(client, referralId) {
   for (const payment of payments.rows) await createAffiliateCommissionForPayment(client, payment.id);
 }
 
+function normalizeAffiliateBankDetails(body) {
+  const source = body?.bankDetails && typeof body.bankDetails === "object" ? body.bankDetails : body || {};
+  return {
+    accountHolder: String(source.accountHolder || "").trim().slice(0, 150),
+    bankName: String(source.bankName || "").trim().slice(0, 150),
+    accountNumber: String(source.accountNumber || "").trim().slice(0, 100),
+    branch: String(source.branch || "").trim().slice(0, 150),
+    swiftCode: String(source.swiftCode || "").trim().toUpperCase().slice(0, 20),
+  };
+}
+
 function normalizeAffiliateProfilePayload(body) {
   return {
     userId: Number(body.userId),
@@ -2731,7 +2801,7 @@ function normalizeAffiliateProfilePayload(body) {
     commissionType: String(body.commissionType || "percentage").trim().toLowerCase(),
     commissionValue: Number(body.commissionValue),
     paymentMethod: String(body.paymentMethod || "bank_transfer").trim().toLowerCase(),
-    payoutDetails: String(body.payoutDetails || "").trim() || null,
+    bankDetails: normalizeAffiliateBankDetails(body),
     status: String(body.status || "active").trim().toLowerCase(),
   };
 }
@@ -2743,7 +2813,9 @@ function affiliateProfileValidationMessage(profile) {
   if (!Number.isFinite(profile.commissionValue) || profile.commissionValue < 0 || profile.commissionValue > 9999999999.99) return "Enter a valid commission value";
   if (profile.commissionType === "percentage" && profile.commissionValue > 100) return "Percentage commission cannot exceed 100";
   if (!payoutMethods.includes(profile.paymentMethod)) return "Invalid affiliate payment method";
-  if (profile.payoutDetails && profile.payoutDetails.length > 500) return "Payout details must not exceed 500 characters";
+  if (!profile.bankDetails.accountHolder) return "Enter the bank account holder name";
+  if (!profile.bankDetails.bankName) return "Enter the bank name";
+  if (!profile.bankDetails.accountNumber) return "Enter the bank account number or IBAN";
   if (!affiliateProfileStatuses.includes(profile.status)) return "Invalid affiliate status";
   return null;
 }
@@ -2803,7 +2875,7 @@ exports.listAffiliations = async (req, res, next) => {
         id: profile.id, user: { id: profile.user_id, name: profile.user_name, email: profile.user_email },
         referralCode: profile.referral_code, commissionType: profile.commission_type,
         commissionValue: number(profile.commission_value), paymentMethod: profile.payment_method,
-        payoutDetails: profile.payout_details && profile.payout_details.label ? profile.payout_details.label : null,
+        bankDetails: normalizeAffiliateBankDetails(profile.payout_details || {}),
         status: profile.status, referrals: profile.referral_count, qualified: profile.qualified_count,
         createdAt: profile.created_at, updatedAt: profile.updated_at,
       })),
@@ -2839,7 +2911,7 @@ exports.createAffiliatePartner = async (req, res, next) => {
     const result = await client.query(
       `INSERT INTO affiliate_profiles (user_id, referral_code, commission_type, commission_value, payment_method, payout_details, status)
        VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7) RETURNING id, referral_code, status`,
-      [profile.userId, profile.referralCode, profile.commissionType, profile.commissionValue, profile.paymentMethod, JSON.stringify({ label: profile.payoutDetails }), profile.status]
+      [profile.userId, profile.referralCode, profile.commissionType, profile.commissionValue, profile.paymentMethod, JSON.stringify(profile.bankDetails), profile.status]
     );
     await client.query(`INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata) VALUES ($1, 'affiliate.created', 'affiliate', $2, $3::jsonb)`, [req.user.id, result.rows[0].id, JSON.stringify({ userId: profile.userId, referralCode: profile.referralCode })]);
     await client.query(`INSERT INTO notifications(user_id,title,message,type) VALUES($1,$2,$3,'affiliate')`,
@@ -2867,7 +2939,7 @@ exports.updateAffiliatePartner = async (req, res, next) => {
     const result = await client.query(
       `UPDATE affiliate_profiles SET user_id=$1, referral_code=$2, commission_type=$3, commission_value=$4,
        payment_method=$5, payout_details=$6::jsonb, status=$7, updated_at=NOW() WHERE id=$8 RETURNING id, referral_code, status`,
-      [profile.userId, profile.referralCode, profile.commissionType, profile.commissionValue, profile.paymentMethod, JSON.stringify({ label: profile.payoutDetails }), profile.status, affiliateId]
+      [profile.userId, profile.referralCode, profile.commissionType, profile.commissionValue, profile.paymentMethod, JSON.stringify(profile.bankDetails), profile.status, affiliateId]
     );
     if (profile.status !== previous.rows[0].status) await client.query(`INSERT INTO notifications(user_id,title,message,type)
       VALUES($1,$2,$3,'affiliate')`, [profile.userId, profile.status === "active" ? "Affiliate application approved" : "Affiliate account updated",
@@ -3049,6 +3121,7 @@ function normalizeCouponPayload(body) {
     startsAt: nullableCouponDate(body.startsAt),
     expiresAt: nullableCouponDate(body.expiresAt),
     status: String(body.status || "active").toLowerCase(),
+    isPublic: body.isPublic !== false && String(body.isPublic).toLowerCase() !== "false",
   };
 }
 
@@ -3083,7 +3156,7 @@ function mapCoupon(row) {
     usedCount, remaining: row.usage_limit === null ? null : Math.max(Number(row.usage_limit) - usedCount, 0),
     minimumAmount: number(row.minimum_amount), planId: row.applicable_plan_id || null,
     planName: row.plan_name || null, startsAt: row.starts_at, expiresAt: row.expires_at,
-    status: row.status, effectiveStatus, createdAt: row.created_at, updatedAt: row.updated_at,
+    status: row.status, isPublic: Boolean(row.is_public), effectiveStatus, createdAt: row.created_at, updatedAt: row.updated_at,
   };
 }
 
@@ -3164,10 +3237,10 @@ async function saveCoupon(req, res, next, couponId) {
       const plan = await client.query("SELECT id FROM plans WHERE id=$1", [coupon.planId]);
       if (!plan.rowCount) { await client.query("ROLLBACK"); return res.status(400).json({ message: "Selected plan was not found" }); }
     }
-    const values = [coupon.code,coupon.name,coupon.discountType,coupon.discountValue,coupon.currency,coupon.usageLimit,coupon.perUserLimit,coupon.minimumAmount,coupon.planId,coupon.startsAt,coupon.expiresAt,coupon.status];
+    const values = [coupon.code,coupon.name,coupon.discountType,coupon.discountValue,coupon.currency,coupon.usageLimit,coupon.perUserLimit,coupon.minimumAmount,coupon.planId,coupon.startsAt,coupon.expiresAt,coupon.status,coupon.isPublic];
     const result = couponId
-      ? await client.query(`UPDATE coupon_codes SET code=$1,name=$2,discount_type=$3,discount_value=$4,currency=$5,usage_limit=$6,per_user_limit=$7,minimum_amount=$8,applicable_plan_id=$9,starts_at=$10,expires_at=$11,status=$12,updated_at=NOW() WHERE id=$13 RETURNING id,code,status`, [...values,couponId])
-      : await client.query(`INSERT INTO coupon_codes(code,name,discount_type,discount_value,currency,usage_limit,per_user_limit,minimum_amount,applicable_plan_id,starts_at,expires_at,status,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id,code,status`, [...values,req.user.id]);
+      ? await client.query(`UPDATE coupon_codes SET code=$1,name=$2,discount_type=$3,discount_value=$4,currency=$5,usage_limit=$6,per_user_limit=$7,minimum_amount=$8,applicable_plan_id=$9,starts_at=$10,expires_at=$11,status=$12,is_public=$13,updated_at=NOW() WHERE id=$14 RETURNING id,code,status,is_public`, [...values,couponId])
+      : await client.query(`INSERT INTO coupon_codes(code,name,discount_type,discount_value,currency,usage_limit,per_user_limit,minimum_amount,applicable_plan_id,starts_at,expires_at,status,is_public,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id,code,status,is_public`, [...values,req.user.id]);
     if (!result.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Coupon not found" }); }
     await client.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata) VALUES($1,$2,'coupon',$3,$4::jsonb)`, [req.user.id,couponId?"coupon.updated":"coupon.created",result.rows[0].id,JSON.stringify({ code: coupon.code, status: coupon.status })]);
     await client.query("COMMIT"); res.status(couponId ? 200 : 201).json({ coupon: result.rows[0] });
@@ -3322,7 +3395,8 @@ const platformSettingDefinitions = {
   bank_account_number: { category:"billing",description:"Account number receiving manual subscription payments",defaultValue:"",type:"text",maxLength:100 },
   bank_branch: { category:"billing",description:"Bank branch receiving manual subscription payments",defaultValue:"",type:"text",maxLength:150 },
   bank_swift_code: { category:"billing",description:"Optional SWIFT or routing code for manual payments",defaultValue:"",type:"text",maxLength:50,optional:true },
-  international_nfc_shipping_lkr: { category:"billing",description:"Flat shipping charge for NFC orders delivered outside Sri Lanka (LKR)",defaultValue:"0",type:"decimal",min:0,max:9999999999.99 },
+  domestic_nfc_shipping_lkr: { category:"billing",description:"Flat delivery charge for NFC orders delivered within Sri Lanka (LKR)",defaultValue:"0",type:"decimal",min:0.01,max:9999999999.99 },
+  international_nfc_shipping_lkr: { category:"billing",description:"Flat delivery charge for NFC orders delivered outside Sri Lanka (LKR)",defaultValue:"0",type:"decimal",min:0.01,max:9999999999.99 },
   affiliate_minimum_withdrawal: { category:"billing",description:"Minimum approved balance required for affiliate withdrawals",defaultValue:"10",type:"decimal",min:0.01,max:9999999999.99 },
   maintenance_mode: { category:"access",description:"Temporarily restrict public platform access",defaultValue:"false",type:"boolean" },
   manual_signup_review: { category:"access",description:"Require administrator approval for new accounts",defaultValue:"false",type:"boolean" },

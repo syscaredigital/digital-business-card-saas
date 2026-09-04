@@ -54,3 +54,11 @@
 \i migrations/052_add_vcard_public_slugs.sql
 \i migrations/053_prefer_readable_vcard_slugs.sql
 \i migrations/054_replace_with_final_vcard_templates.sql
+\i migrations/055_optimize_user_notifications.sql
+\i migrations/056_add_vcard_qualifications.sql
+\i migrations/057_add_appointment_service.sql
+\i migrations/058_add_withdrawal_transfer_receipts.sql
+\i migrations/059_normalize_active_withdrawals_to_bank_transfer.sql
+\i migrations/060_add_domestic_nfc_delivery_fee.sql
+\i migrations/061_add_website_contact_messages.sql
+\i migrations/062_add_coupon_user_visibility.sql

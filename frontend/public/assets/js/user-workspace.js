@@ -11,8 +11,54 @@
   }
 
   document.body.classList.add("user-workspace");
+  var currentUserPage = (window.location.pathname.split("/").pop() || "dashboard.html").toLowerCase();
+  var navigationAliases = {
+    "edit-vcard.html": "vcards.html",
+    "my-vcard.html": "vcards.html",
+    "contacts.html": "enquiries.html",
+    "nfc-request.html": "my-nfc-cards.html",
+    "manage-subscription.html": "payments.html"
+  };
+  var activeUserPage = navigationAliases[currentUserPage] || currentUserPage;
+  var userNavigation = [
+    ["dashboard.html", "Overview"],
+    ["vcards.html", "My cards"],
+    ["qr-code.html", "QR codes"],
+    ["enquiries.html", "Enquiries"],
+    ["appointments.html", "Appointments"],
+    ["product-orders.html", "Orders"],
+    ["affiliations.html", "Affiliations"],
+    ["my-nfc-cards.html", "NFC cards"],
+    ["nfc-backgrounds.html", "Backgrounds"],
+    ["storage.html", "Storage"],
+    ["settings.html", "Settings"],
+    ["payments.html", "Billing"]
+  ];
+  document.querySelectorAll(".sidebar-nav").forEach(function (navigation) {
+    navigation.setAttribute("aria-label", "User workspace navigation");
+    navigation.innerHTML = userNavigation.map(function (item) {
+      return '<a href="' + item[0] + '" class="nav-item' + (activeUserPage === item[0] ? ' active' : '') + '">' + item[1] + '</a>';
+    }).join("");
+  });
   document.querySelectorAll(".sidebar-logo").forEach(function (logo) {
+    logo.href = "dashboard.html";
+    logo.setAttribute("aria-label", "Sync E-Card dashboard");
     logo.innerHTML = '<img src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card">';
+  });
+  document.querySelectorAll(".notif-btn").forEach(function (button) {
+    if (!button.querySelector("svg")) {
+      button.insertAdjacentHTML("afterbegin", '<svg class="notification-bell-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"></path><path d="M10 21h4"></path></svg>');
+    }
+    button.setAttribute("aria-label", "Notifications");
+  });
+  document.querySelectorAll(".notification-panel-header").forEach(function (header) {
+    var markAllButton = header.querySelector('[data-action="clear-notifications"]');
+    if (!markAllButton) {
+      header.insertAdjacentHTML("beforeend", '<button type="button" class="notification-clear-btn" data-action="clear-notifications">Mark all read</button>');
+    } else markAllButton.textContent = "Mark all read";
+  });
+  document.querySelectorAll(".notification-list").forEach(function (list) {
+    list.setAttribute("aria-live", "polite");
   });
   document.querySelectorAll('a[href="manage-subscription.html"]').forEach(function (link) {
     link.href = "payments.html";
@@ -52,6 +98,43 @@
 
   function setText(id, value) { var node = document.getElementById(id); if (node) node.textContent = value; }
   function money(value) { return new Intl.NumberFormat(undefined, { style: "currency", currency: "LKR" }).format(Number(value || 0)); }
+
+  function notificationTime(value) {
+    if (!value) return "";
+    var date = new Date(value), seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+    if (!Number.isFinite(seconds)) return "";
+    if (seconds < 60) return "Just now";
+    if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+    if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+    if (seconds < 604800) return Math.floor(seconds / 86400) + "d ago";
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
+  }
+
+  function renderUserNotifications(data) {
+    var list = document.getElementById("notificationList");
+    var badge = document.getElementById("notificationCount");
+    var items = data.notifications || [];
+    var unread = Number(data.unreadCount != null ? data.unreadCount : data.notificationUnreadCount || 0);
+    if (badge) {
+      badge.textContent = unread > 99 ? "99+" : String(unread);
+      badge.hidden = unread < 1;
+      badge.setAttribute("aria-label", unread + " unread notification" + (unread === 1 ? "" : "s"));
+    }
+    if (!list) return;
+    if (data.enabled === false) {
+      list.innerHTML = '<div class="notification-empty"><strong>Dashboard notifications are off</strong><span>You can enable them in Settings.</span></div>';
+      return;
+    }
+    list.innerHTML = items.length ? items.map(function (item) {
+      return '<button type="button" class="notification-item' + (item.is_read ? '' : ' is-unread') + '" data-notification-id="' + item.id + '">' +
+        '<span class="notification-type-dot" aria-hidden="true"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><time>' + escapeHtml(notificationTime(item.created_at)) + '</time></span></button>';
+    }).join("") : '<div class="notification-empty"><strong>All caught up</strong><span>No notifications yet.</span></div>';
+  }
+
+  function refreshNotifications() {
+    if (!document.getElementById("notificationList")) return Promise.resolve();
+    return request("/user/notifications").then(renderUserNotifications).catch(function () {});
+  }
 
   var currencyPreferenceForm = document.getElementById("currencyPreferenceForm");
   if (currencyPreferenceForm) {
@@ -341,12 +424,7 @@
       return '<a class="user-card-item" href="vcards.html"><span class="user-card-mark">' + escapeHtml((card.title || "C").charAt(0).toUpperCase()) + '</span><span class="user-card-copy"><strong>' + escapeHtml(card.title || "Untitled card") + '</strong><span>' + escapeHtml(card.email || card.phone || "Ready to complete") + '</span></span><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + "</span></a>";
     }).join("") : '<div class="user-empty">No cards yet. Create your first digital card to get started.</div>';
 
-    var notifications = document.getElementById("notificationList");
-    var unread = (data.notifications || []).filter(function (item) { return !item.is_read; }).length;
-    setText("notificationCount", unread);
-    if (notifications) notifications.innerHTML = data.notifications && data.notifications.length ? data.notifications.map(function (item) {
-      return '<div class="notification-item"><strong>' + escapeHtml(item.title) + '</strong><p>' + escapeHtml(item.message) + "</p></div>";
-    }).join("") : '<div class="user-empty">You are all caught up.</div>';
+    renderUserNotifications({ notifications: data.notifications || [], unreadCount: data.notificationUnreadCount || 0, enabled: data.notificationsEnabled !== false });
 
     var vcardTable = document.querySelector("#vcardListPanel .client-vcard-table-shell");
     if (vcardTable) {
@@ -781,9 +859,16 @@
     function updateLiveNfcTotal() {
       var product = liveNfcData.products.find(function(item){return Number(item.id)===Number(liveNfcProductSelect.value);});
       var country=String(document.getElementById("nfcDestinationCountry").value || "LK").trim().toUpperCase();
-      var shipping=country && country!=="LK" ? Number(liveNfcData.internationalShipping || 0) : 0;
-      setText("nfcOrderTotal", nfcMoney((product ? product.price : 0) * Math.max(1,Number(liveNfcQuantity.value || 1)) + shipping));
-      setText("nfcOrderTotalCopy", "Card price × quantity" + (shipping ? " + " + nfcMoney(shipping) + " overseas shipping" : ""));
+      var domestic=country==="LK";
+      var configured=domestic ? Boolean(liveNfcData.domesticShippingConfigured) : Boolean(liveNfcData.internationalShippingConfigured);
+      var shipping=domestic ? Number(liveNfcData.domesticShipping || 0) : Number(liveNfcData.internationalShipping || 0);
+      var subtotal=(product ? product.price : 0) * Math.max(1,Number(liveNfcQuantity.value || 1));
+      var submit=liveNfcOrderForm.querySelector('[type="submit"]');
+      setText("nfcDeliveryFee", configured ? nfcMoney(shipping) : "Not configured");
+      setText("nfcDeliveryFeeHelp", configured ? (domestic ? "Sri Lanka delivery rate set by super admin." : "International delivery rate set by super admin.") : "A super admin must set this delivery rate before an order can be submitted.");
+      setText("nfcOrderTotal", configured ? nfcMoney(subtotal + shipping) : "Awaiting delivery fee");
+      setText("nfcOrderTotalCopy", configured ? "Cards " + nfcMoney(subtotal) + " + delivery " + nfcMoney(shipping) : "Card subtotal calculated; delivery fee is required");
+      if(submit){submit.disabled=!configured;submit.title=configured?"":"Delivery fee is not configured";}
     }
     function renderLiveNfc(data) {
       liveNfcData = data;
@@ -823,7 +908,7 @@
     liveNfcProductSelect.addEventListener("change",updateLiveNfcTotal);liveNfcQuantity.addEventListener("input",updateLiveNfcTotal);document.getElementById("nfcDestinationCountry").addEventListener("input",updateLiveNfcTotal);
     liveNfcOrderForm.addEventListener("reset",function(){window.setTimeout(updateLiveNfcTotal,0);});
     document.addEventListener("click",function(event){var button=event.target.closest("[data-user-nfc-product]");if(!button)return;liveNfcProductSelect.value=button.dataset.userNfcProduct;updateLiveNfcTotal();document.getElementById("openNfcOrderModal").click();});
-    liveNfcOrderForm.addEventListener("submit",function(event){event.preventDefault();var submit=liveNfcOrderForm.querySelector('[type="submit"]'),feedback=document.getElementById("nfcOrderFeedback");submit.disabled=true;submit.textContent="Uploading payment...";feedback.textContent="Submitting your order securely...";request("/user/nfc/orders",{method:"POST",body:new FormData(liveNfcOrderForm)}).then(function(data){feedback.textContent=data.message;liveNfcOrderForm.reset();updateLiveNfcTotal();return loadLiveNfc();}).then(function(){setTimeout(function(){document.getElementById("closeNfcOrderModal").click();},800);}).catch(function(error){feedback.textContent=error.message;}).finally(function(){submit.disabled=false;submit.textContent="Submit payment & order";});});
+    liveNfcOrderForm.addEventListener("submit",function(event){event.preventDefault();var submit=liveNfcOrderForm.querySelector('[type="submit"]'),feedback=document.getElementById("nfcOrderFeedback");submit.disabled=true;submit.textContent="Uploading payment...";feedback.textContent="Submitting your order securely...";request("/user/nfc/orders",{method:"POST",body:new FormData(liveNfcOrderForm)}).then(function(data){feedback.textContent=data.message;liveNfcOrderForm.reset();updateLiveNfcTotal();return loadLiveNfc();}).then(function(){setTimeout(function(){document.getElementById("closeNfcOrderModal").click();},800);}).catch(function(error){feedback.textContent=error.message;}).finally(function(){submit.textContent="Submit payment & order";updateLiveNfcTotal();});});
   }
 
   var billingPlansGrid = document.getElementById("billingPlansGrid");
@@ -837,6 +922,7 @@
     var couponRemoveButton = document.getElementById("removePaymentCoupon");
     var couponResult = document.getElementById("paymentCouponResult");
     var couponFeedback = document.getElementById("paymentCouponFeedback");
+    var availableOfferList = document.getElementById("paymentAvailableOfferList");
     var refreshBillingButton = document.getElementById("refreshBilling");
     var refreshBillingLabel = document.getElementById("refreshBillingLabel");
     var billingData = null;
@@ -871,6 +957,23 @@
       setCouponPaymentRequirements(false);
       if (selectedPaymentPlan) setText("paymentPlanAmount", billingMoney(selectedPaymentPlan.price, billingData.currency));
     }
+    function loadAvailableCoupons(plan) {
+      if (!availableOfferList) return Promise.resolve();
+      availableOfferList.innerHTML = '<small class="checkout-offer-state">Checking eligible offers...</small>';
+      return request("/user/coupons/available?planId=" + encodeURIComponent(plan.id)).then(function (data) {
+        var offers = Array.isArray(data.coupons) ? data.coupons : [];
+        if (!offers.length) {
+          availableOfferList.innerHTML = '<small class="checkout-offer-state">No public offers are available for this plan. You can still enter a private code.</small>';
+          return;
+        }
+        availableOfferList.innerHTML = offers.map(function (offer) {
+          var expiry = offer.expiresAt ? "Ends " + billingDate(offer.expiresAt, false) : "No expiry date";
+          return '<article class="checkout-offer-card" data-offer-code="' + escapeHtml(offer.code) + '"><div><strong>' + escapeHtml(offer.name) + '</strong><code>' + escapeHtml(offer.code) + '</code><small>Save ' + escapeHtml(billingMoney(offer.discountAmount, offer.currency)) + ' · ' + escapeHtml(expiry) + '</small></div><div><span>' + escapeHtml(billingMoney(offer.finalAmount, offer.currency)) + '</span><button type="button" data-available-coupon="' + escapeHtml(offer.code) + '">Use code</button></div></article>';
+        }).join("");
+      }).catch(function (error) {
+        availableOfferList.innerHTML = '<small class="checkout-offer-state is-error">Offers could not be loaded. You can enter a code manually.</small>';
+      });
+    }
     function openPaymentModal(plan) {
       selectedPaymentPlan = plan;
       paymentForm.reset();
@@ -882,6 +985,7 @@
       document.getElementById("paymentPlanId").value = plan.id;
       paymentFeedback.textContent = billingData.bankConfigured ? "" : "Bank transfer details are not configured. You can continue only with a coupon that covers the full price.";
       paymentModal.hidden = false;
+      loadAvailableCoupons(plan);
       couponInput.focus();
     }
     function billingDate(value, includeTime) {
@@ -1007,11 +1111,11 @@
         setText("couponOriginalAmount", billingMoney(data.originalAmount, data.currency));
         setText("couponDiscountAmount", "−" + billingMoney(data.discountAmount, data.currency));
         setText("couponFinalAmount", billingMoney(data.finalAmount, data.currency));
-        setText("paymentPlanAmount", billingMoney(data.finalAmount, data.currency));
         couponResult.hidden = false;
         couponFeedback.className = "billing-plan-feedback is-success";
         couponFeedback.textContent = data.coupon.name + " applied.";
         setCouponPaymentRequirements(Number(data.finalAmount) === 0);
+        setText("paymentPlanAmount", billingMoney(data.finalAmount, data.currency));
       }).catch(function (error) {
         clearPaymentCoupon(false);
         couponFeedback.className = "billing-plan-feedback is-error";
@@ -1022,6 +1126,12 @@
       });
     });
     if (couponRemoveButton) couponRemoveButton.addEventListener("click", function () { clearPaymentCoupon(true); });
+    if (availableOfferList) availableOfferList.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-available-coupon]");
+      if (!button) return;
+      couponInput.value = button.getAttribute("data-available-coupon");
+      couponButton.click();
+    });
     if (couponInput) couponInput.addEventListener("input", function () {
       couponInput.value = couponInput.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "");
       if (couponPreview && couponInput.value !== couponPreview.coupon.code) clearPaymentCoupon(false);
@@ -1096,8 +1206,9 @@
       affiliateTables.hidden = !profile;
       affiliatePayoutForm.hidden = !profile;
       if (!profile) { affiliateNotice.hidden = true; return; }
-      affiliatePayoutForm.elements.paymentMethod.value = profile.paymentMethod;
-      affiliatePayoutForm.elements.payoutDetails.value = profile.payoutDetails || "";
+      affiliatePayoutForm.elements.paymentMethod.value = "bank_transfer";
+      var savedBank = profile.bankDetails || {};
+      ["accountHolder","bankName","accountNumber","branch","swiftCode"].forEach(function (field) { affiliatePayoutForm.elements[field].value = savedBank[field] || ""; });
       affiliateNotice.hidden = profile.status === "active";
       affiliateNotice.textContent = profile.status === "pending" ? "Your affiliate application is waiting for super-admin approval. Your referral link will become usable after approval." : "Your affiliate account is " + profile.status + ". Contact support if you need help.";
       // Build from the page currently serving the dashboard so local development
@@ -1120,8 +1231,30 @@
       setText("affiliateBalanceCurrency", profile.status === "active" ? "Available now" : "Account " + profile.status);
       setText("affiliateMinimumWithdrawal", "Minimum withdrawal: " + affiliateMoney(data.minimumWithdrawal, primary.currency));
       var currencySelect = document.getElementById("affiliateWithdrawalCurrency");
-      currencySelect.innerHTML = balances.length ? balances.map(function (item) { return '<option value="' + escapeHtml(item.currency) + '">' + escapeHtml(item.currency) + ' — ' + escapeHtml(affiliateMoney(item.available, item.currency)) + '</option>'; }).join("") : '<option value="USD">USD — no approved balance</option>';
-      document.getElementById("affiliateWithdrawalForm").querySelector('button[type="submit"]').disabled = profile.status !== "active" || !balances.some(function (item) { return item.available >= data.minimumWithdrawal; });
+      var withdrawalForm = document.getElementById("affiliateWithdrawalForm");
+      var withdrawalAmount = document.getElementById("affiliateWithdrawalAmount");
+      var withdrawalButton = withdrawalForm.querySelector('button[type="submit"]');
+      function updateWithdrawalCurrency() {
+        var balance = balances.find(function (item) { return item.currency === currencySelect.value; });
+        var available = balance ? Number(balance.available) : 0;
+        withdrawalAmount.max = available > 0 ? String(available) : "0";
+        withdrawalAmount.min = String(data.minimumWithdrawal);
+        setText("affiliateWithdrawalLimit", balance ? "Available: " + affiliateMoney(available, balance.currency) + " · Minimum: " + affiliateMoney(data.minimumWithdrawal, balance.currency) : "No approved balance is available to withdraw.");
+        withdrawalButton.disabled = profile.status !== "active" || available < Number(data.minimumWithdrawal);
+      }
+      currencySelect.onchange = updateWithdrawalCurrency;
+      var renderWithdrawalCurrencies = function (currencies) {
+        var balanceByCurrency = Object.fromEntries(balances.map(function (item) { return [item.currency, item]; }));
+        currencySelect.innerHTML = currencies.map(function (item) {
+          var code = String(item.code || item).toUpperCase(), balance = balanceByCurrency[code], available = balance ? Number(balance.available) : 0;
+          return '<option value="' + escapeHtml(code) + '">' + escapeHtml(code) + ' — ' + escapeHtml(affiliateMoney(available, code)) + ' available</option>';
+        }).join("");
+        var eligible = balances.find(function (item) { return Number(item.available) >= Number(data.minimumWithdrawal); });
+        currencySelect.value = eligible ? eligible.currency : profile.preferredCurrency || "LKR";
+        updateWithdrawalCurrency();
+      };
+      if (window.SyncCurrencies) window.SyncCurrencies.load().then(renderWithdrawalCurrencies);
+      else renderWithdrawalCurrencies(["LKR","USD","EUR","GBP","AUD","CAD","INR","JPY","CNY","SGD","AED"]);
 
       var referralsBody = document.getElementById("affiliateUsersTableBody");
       referralsBody.innerHTML = referrals.length ? referrals.map(function (referral) {
@@ -1136,19 +1269,21 @@
       setText("affiliateTransactionsResults", "Showing " + commissions.length + " result" + (commissions.length === 1 ? "" : "s"));
       var withdrawalsBody = document.getElementById("affiliateWithdrawalsTableBody");
       withdrawalsBody.innerHTML = withdrawals.length ? withdrawals.map(function (withdrawal) {
-        return '<tr><td><strong>' + escapeHtml(affiliateMoney(withdrawal.amount,withdrawal.currency)) + '</strong></td><td>' + escapeHtml(withdrawal.method.replace(/_/g," ")) + '</td><td>' + affiliateStatus(withdrawal.status) + '</td><td>' + escapeHtml(formatDate(withdrawal.createdAt)) + '</td><td>' + escapeHtml(withdrawal.adminNote || "—") + '</td></tr>';
+        var receipt = withdrawal.receiptAvailable ? '<button type="button" class="affiliate-receipt-link" data-affiliate-receipt="' + withdrawal.id + '">Download receipt</button>' : "";
+        return '<tr><td><strong>' + escapeHtml(affiliateMoney(withdrawal.amount,withdrawal.currency)) + '</strong></td><td>Bank transfer</td><td>' + affiliateStatus(withdrawal.status) + receipt + '</td><td>' + escapeHtml(formatDate(withdrawal.createdAt)) + '</td><td>' + escapeHtml(withdrawal.adminNote || "—") + '</td></tr>';
       }).join("") : '<tr><td colspan="5" class="light-empty-cell">No withdrawal requests yet.</td></tr>';
     }
-    function loadUserAffiliations() { request("/user/affiliations").then(renderUserAffiliations).catch(function (error) { affiliateNotice.hidden=false;affiliateNotice.textContent=error.message; }); }
+    function loadUserAffiliations() { return request("/user/affiliations").then(renderUserAffiliations).catch(function (error) { affiliateNotice.hidden=false;affiliateNotice.textContent=error.message; }); }
     loadUserAffiliations();
     affiliateApplicationForm.addEventListener("submit", function (event) {
       event.preventDefault(); var button=affiliateApplicationForm.querySelector('button[type="submit"]'),fd=new FormData(affiliateApplicationForm),feedback=document.getElementById("affiliateApplicationFeedback");
       button.disabled=true;feedback.textContent="Submitting...";
-      request("/user/affiliations/apply",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({referralCode:fd.get("referralCode"),paymentMethod:fd.get("paymentMethod"),payoutDetails:fd.get("payoutDetails")})})
+      request("/user/affiliations/apply",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({referralCode:fd.get("referralCode"),paymentMethod:"bank_transfer",bankDetails:{accountHolder:fd.get("accountHolder"),bankName:fd.get("bankName"),accountNumber:fd.get("accountNumber"),branch:fd.get("branch"),swiftCode:fd.get("swiftCode")}})})
         .then(function(data){feedback.textContent=data.message;loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;}).finally(function(){button.disabled=false;});
     });
-    affiliatePayoutForm.addEventListener("submit",function(event){event.preventDefault();var button=affiliatePayoutForm.querySelector("button"),fd=new FormData(affiliatePayoutForm),feedback=document.getElementById("affiliatePayoutFeedback");button.disabled=true;request("/user/affiliations/payout",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentMethod:fd.get("paymentMethod"),payoutDetails:fd.get("payoutDetails")})}).then(function(data){feedback.textContent=data.message;loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;}).finally(function(){button.disabled=false;});});
-    document.getElementById("affiliateWithdrawalForm").addEventListener("submit",function(event){event.preventDefault();var form=event.currentTarget,button=form.querySelector("button"),fd=new FormData(form),feedback=document.getElementById("affiliateWithdrawalFeedback");button.disabled=true;feedback.textContent="Submitting...";request("/user/affiliations/withdrawals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:Number(fd.get("amount")),currency:fd.get("currency"),note:fd.get("note")})}).then(function(data){feedback.textContent=data.message;form.reset();loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;button.disabled=false;});});
+    affiliatePayoutForm.addEventListener("submit",function(event){event.preventDefault();var button=affiliatePayoutForm.querySelector("button"),fd=new FormData(affiliatePayoutForm),feedback=document.getElementById("affiliatePayoutFeedback");button.disabled=true;request("/user/affiliations/payout",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentMethod:"bank_transfer",bankDetails:{accountHolder:fd.get("accountHolder"),bankName:fd.get("bankName"),accountNumber:fd.get("accountNumber"),branch:fd.get("branch"),swiftCode:fd.get("swiftCode")}})}).then(function(data){feedback.textContent=data.message;loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;}).finally(function(){button.disabled=false;});});
+    document.getElementById("affiliateWithdrawalForm").addEventListener("submit",function(event){event.preventDefault();var form=event.currentTarget,button=form.querySelector('button[type="submit"]'),fd=new FormData(form),feedback=document.getElementById("affiliateWithdrawalFeedback"),amount=Number(fd.get("amount")),currency=String(fd.get("currency")||"");if(!form.checkValidity()){form.reportValidity();return;}var balance=(affiliateData.balances||[]).find(function(item){return item.currency===currency;});if(!balance||amount>Number(balance.available)||amount<Number(affiliateData.minimumWithdrawal)){feedback.textContent="Enter an amount between the minimum and your available " + currency + " balance.";return;}button.disabled=true;feedback.textContent="Submitting...";request("/user/affiliations/withdrawals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:amount,currency:currency,note:fd.get("note")})}).then(function(data){feedback.textContent=data.message;form.reset();return loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;button.disabled=false;});});
+    document.addEventListener("click",function(event){var receiptButton=event.target.closest("[data-affiliate-receipt]");if(!receiptButton)return;receiptButton.disabled=true;fetch(API+"/user/affiliations/withdrawals/"+encodeURIComponent(receiptButton.dataset.affiliateReceipt)+"/receipt",{headers:{Authorization:"Bearer "+token}}).then(function(response){if(!response.ok)return response.json().then(function(data){throw new Error(data.message||"Unable to download receipt")});return response.blob();}).then(function(blob){var url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="withdrawal-receipt";link.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);}).catch(function(error){window.alert(error.message);}).finally(function(){receiptButton.disabled=false;});});
     document.addEventListener("click",function(event){
       var copy=event.target.closest('[data-action="copy-link"]');
       if(!copy)return;
@@ -1228,7 +1363,7 @@
   }
   function loadAppointments() {
     if (!appointmentsBody) return;
-    appointmentsBody.innerHTML = '<tr><td colspan="8" class="light-empty-cell">Loading appointments...</td></tr>';
+    appointmentsBody.innerHTML = '<tr><td colspan="9" class="light-empty-cell">Loading appointments...</td></tr>';
     request("/user/appointments" + appointmentQuery()).then(function (data) {
       var rows = data.appointments || [];
       var summary = data.summary || {};
@@ -1237,15 +1372,21 @@
       setText("appointmentMetricApproved", summary.approved == null ? rows.filter(function (item) { return item.status === "approved"; }).length : summary.approved);
       setText("appointmentMetricOnline", summary.online == null ? rows.filter(function (item) { return item.appointment_type === "online"; }).length : summary.online);
       appointmentsBody.innerHTML = rows.length ? rows.map(function (item) {
-        var searchable = [item.vcard_name, item.name, item.email, item.phone, item.status, item.appointment_type].join(" ");
+        var searchable = [item.vcard_name, item.name, item.email, item.phone, item.service_name, item.status, item.appointment_type].join(" ");
         var action = item.status === "pending"
           ? '<div class="client-appointment-actions"><button class="client-appointment-approve" type="button" data-appointment-status="approved" data-appointment-id="' + item.id + '"' + (item.email ? "" : " disabled title=\"Customer email is missing\"") + '>Approve</button><button class="client-appointment-reject" type="button" data-appointment-status="rejected" data-appointment-id="' + item.id + '">Reject</button></div>'
           : '<span class="client-appointment-complete">✓ ' + escapeHtml(item.status) + '</span>';
         return '<tr class="appointment-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name) + '</td><td data-label="Email">' + escapeHtml(item.email || "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Appointment Time"><span class="appointment-time-pill">' + escapeHtml(formatAppointmentRange(item.starts_at, item.ends_at)) + '</span></td><td data-label="Status"><span class="appointment-status-pill status-' + escapeHtml(item.status) + '">' + escapeHtml(item.status) + '</span></td><td data-label="Meeting Mode"><span class="appointment-type-pill">' + escapeHtml(formatMeetingMode(item.appointment_type)) + '</span></td><td data-label="Action">' + action + '</td></tr>';
-      }).join("") : '<tr><td colspan="8" class="light-empty-cell">No appointments match the selected filters.</td></tr>';
+      }).join("") : '<tr><td colspan="9" class="light-empty-cell">No appointments match the selected filters.</td></tr>';
+      appointmentsBody.querySelectorAll(".appointment-row").forEach(function (row, index) {
+        var serviceCell = document.createElement("td");
+        serviceCell.dataset.label = "Service";
+        serviceCell.textContent = rows[index].service_name || "Appointment";
+        if (row.children[3]) row.children[3].after(serviceCell);
+      });
       setText("appointmentsResults", "Showing " + rows.length + " result" + (rows.length === 1 ? "" : "s"));
     }).catch(function (error) {
-      appointmentsBody.innerHTML = '<tr><td colspan="8" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>";
+      appointmentsBody.innerHTML = '<tr><td colspan="9" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>";
       appointmentFeedback(error.message, true);
     });
   }
@@ -1419,6 +1560,7 @@
         var card = data.vcard;
         var entitlements = data.entitlements || {};
         editor.elements.title.value = card.title || "";
+        editor.elements.qualifications.value = card.qualifications || "";
         editor.elements.email.value = card.email || "";
         editor.elements.phone.value = card.phone || "";
         editor.elements.websiteUrl.value = card.website_url || "";
@@ -1451,7 +1593,7 @@
           var sections = collectVcardSections(editor, "[data-vcard-section]");
           var newProfileImage = await readVcardImageInput(document.getElementById("editCardProfileImage"));
           var newCoverImage = await readVcardImageInput(document.getElementById("editCardCoverImage"));
-          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
+          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), qualifications: editor.elements.qualifications.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
           if (newProfileImage) savedProfileImage = newProfileImage;
           if (newCoverImage) savedCoverImage = newCoverImage;
           editorStatus.textContent = "Saved successfully";
@@ -1472,10 +1614,27 @@
       var generateSlugButton=createVcardSlugInput.parentElement.querySelector("button");
       if(generateSlugButton)generateSlugButton.addEventListener("click",function(){createVcardSlugInput.dataset.custom="false";createVcardSlugInput.value=slugifyVcardName(createVcardNameInput.value);createVcardSlugInput.focus();});
     }
+    var qualificationsInput = document.getElementById("qualifications");
+    var qualificationsCount = document.getElementById("qualificationsCount");
+    var updateQualificationsCount = function () {
+      if (qualificationsInput && qualificationsCount) qualificationsCount.textContent = qualificationsInput.value.length + " / 500";
+    };
+    if (qualificationsInput) qualificationsInput.addEventListener("input", updateQualificationsCount);
+    createCardForm.addEventListener("reset", function () {
+      window.setTimeout(function () {
+        if (createVcardSlugInput) createVcardSlugInput.dataset.custom = "false";
+        updateQualificationsCount();
+      }, 0);
+    });
     createCardForm.addEventListener("submit", async function (event) {
       event.preventDefault();
+      if (!createCardForm.checkValidity()) {
+        createCardForm.reportValidity();
+        return;
+      }
       var title = document.getElementById("vcardName");
       var description = document.getElementById("vcardDescription");
+      var qualifications = document.getElementById("qualifications");
       if (!title || !title.value.trim()) return;
       var button = createCardForm.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
@@ -1487,7 +1646,7 @@
         var profileImageUrl = await readVcardImageInput(document.getElementById("createVcardProfileImage"));
         var coverImageUrl = await readVcardImageInput(document.getElementById("createVcardCoverImage"));
         var contactCapture = document.getElementById("createVcardContactCapture");
-        var data = await request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), description: description ? description.value.trim() : "", sections: sections, profileImageUrl: profileImageUrl, coverImageUrl: coverImageUrl, contactCaptureRequired: !contactCapture || contactCapture.checked }) });
+        var data = await request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), qualifications: qualifications ? qualifications.value.trim() : "", slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), email: document.getElementById("vcardEmail").value.trim(), phone: document.getElementById("vcardPhone").value.trim(), websiteUrl: document.getElementById("vcardWebsite").value.trim(), address: document.getElementById("vcardAddress").value.trim(), description: description ? description.value.trim() : "", sections: sections, profileImageUrl: profileImageUrl, coverImageUrl: coverImageUrl, contactCaptureRequired: !contactCapture || contactCapture.checked }) });
         window.location.href = "edit-vcard.html?id=" + encodeURIComponent(data.vcard.id);
       } catch (error) { window.alert(error.message); if (button) button.disabled = false; }
     });
@@ -1551,8 +1710,30 @@
   document.addEventListener("click", function (event) {
     var button = event.target.closest('[data-action="clear-notifications"]');
     if (!button) return;
-    request("/user/notifications/read", { method: "PATCH" }).then(function () { setText("notificationCount", "0"); });
+    button.disabled = true;
+    request("/user/notifications/read", { method: "PATCH" })
+      .then(refreshNotifications)
+      .finally(function () { button.disabled = false; });
   });
+
+  document.addEventListener("click", function (event) {
+    var item = event.target.closest("[data-notification-id]");
+    if (!item || !item.classList.contains("is-unread")) return;
+    item.disabled = true;
+    request("/user/notifications/" + encodeURIComponent(item.dataset.notificationId) + "/read", { method: "PATCH" })
+      .then(refreshNotifications)
+      .finally(function () { item.disabled = false; });
+  });
+
+  var notificationToggle = document.getElementById("notificationToggle");
+  if (notificationToggle) {
+    notificationToggle.addEventListener("click", function () {
+      if (notificationToggle.getAttribute("aria-expanded") !== "true") refreshNotifications();
+    });
+    window.setInterval(function () {
+      if (document.visibilityState === "visible") refreshNotifications();
+    }, 30000);
+  }
 
   var userContactList = document.getElementById("userContactList");
   if (userContactList) {

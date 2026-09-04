@@ -48,23 +48,25 @@
           <div>
             <h2>Send a Message</h2>
             <p>Tell us what you are building with Sync E-Card.</p>
-            <form class="contact-form">
+            <form class="contact-form" novalidate>
               <div class="row g-3">
-                <div class="col-md-6"><input type="text" class="form-control custom-input" placeholder="Your Name" required></div>
-                <div class="col-md-6"><input type="email" class="form-control custom-input" placeholder="Your Email" required></div>
-                <div class="col-md-6"><input type="text" class="form-control custom-input" placeholder="Company Name"></div>
-                <div class="col-md-6"><input type="text" class="form-control custom-input" placeholder="Subject"></div>
-                <div class="col-12"><textarea class="form-control custom-input" rows="5" placeholder="Your Message" required></textarea></div>
+                <div class="col-md-6"><input name="name" type="text" class="form-control custom-input" minlength="2" maxlength="150" autocomplete="name" placeholder="Your Name" required></div>
+                <div class="col-md-6"><input name="email" type="email" class="form-control custom-input" maxlength="255" autocomplete="email" placeholder="Your Email" required></div>
+                <div class="col-md-6"><input name="company" type="text" class="form-control custom-input" maxlength="255" autocomplete="organization" placeholder="Company Name"></div>
+                <div class="col-md-6"><input name="subject" type="text" class="form-control custom-input" minlength="2" maxlength="200" placeholder="Subject" required></div>
+                <div class="col-12"><textarea name="message" class="form-control custom-input" rows="5" minlength="10" maxlength="5000" placeholder="Your Message" required></textarea></div>
+                <div aria-hidden="true" hidden><label>Website<input name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
                 <div class="col-12"><button type="submit" class="btn btn-red w-100">Send Message</button></div>
+                <div class="col-12"><p class="contact-form-feedback" aria-live="polite"></p></div>
               </div>
             </form>
           </div>
           <div class="contact-info-card">
             <h3>Contact Information</h3>
-            <p><strong>Email</strong><br>hello@syncecard.com</p>
-            <p><strong>Phone</strong><br>+1 (555) 123-4567</p>
-            <p><strong>Address</strong><br>123 Business Ave, New York, NY 10001, USA</p>
-            <p><strong>Website</strong><br>www.syncecard.com</p>
+            <p><strong>Email</strong><br><a href="mailto:info@syncecard.lk">info@syncecard.lk</a></p>
+            <p><strong>Phone</strong><br><a href="tel:+94764545756">076 454 5756</a></p>
+            <p><strong>Address</strong><br>109/4 Manning Pl, Colombo 00600, Sri Lanka</p>
+            <p><strong>Website</strong><br>syncecard.lk</p>
           </div>
         </div>
       </div>

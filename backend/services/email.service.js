@@ -106,6 +106,46 @@ async function sendVcardEnquiry({
   });
 }
 
+async function sendWebsiteContact({ to, name, email, company, subject, message, sourcePage }) {
+  if (!to) throw new Error("The website contact recipient is not configured");
+  ensureMailConfigured();
+  const subjectLabel = String(subject || "General enquiry").trim();
+  return getTransporter().sendMail({
+    from: mailFrom(),
+    to,
+    replyTo: email,
+    subject: `[Website contact] ${subjectLabel}`,
+    text: [
+      "A new message was submitted through the Sync E-Card website.",
+      "",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      company ? `Company: ${company}` : "",
+      `Subject: ${subjectLabel}`,
+      sourcePage ? `Source page: ${sourcePage}` : "",
+      "",
+      "Message:",
+      message,
+      "",
+      "Reply directly to this email to contact the sender.",
+    ].filter(Boolean).join("\n"),
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033">
+        <h2 style="color:#e52b38">New website contact message</h2>
+        <table style="width:100%;border-collapse:collapse;margin:22px 0">
+          <tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Name</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(name)}</td></tr>
+          <tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Email</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(email)}</td></tr>
+          ${company ? `<tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Company</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(company)}</td></tr>` : ""}
+          <tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Subject</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(subjectLabel)}</td></tr>
+          ${sourcePage ? `<tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Source</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(sourcePage)}</td></tr>` : ""}
+        </table>
+        <div style="padding:16px;background:#f8fafc;border-left:4px solid #e52b38;white-space:pre-wrap">${escapeHtml(message)}</div>
+        <p>Reply directly to this email to contact <strong>${escapeHtml(name)}</strong>.</p>
+      </div>
+    `,
+  });
+}
+
 async function sendAppointmentApproved({
   to,
   customerName,
@@ -114,6 +154,7 @@ async function sendAppointmentApproved({
   startsAt,
   endsAt,
   meetingMode,
+  serviceName,
 }) {
   if (!to) throw new Error("The customer does not have an email address");
   ensureMailConfigured();
@@ -147,6 +188,7 @@ async function sendAppointmentApproved({
       `Your appointment with ${hostLabel} has been approved.`,
       `Date and time: ${timeLabel}`,
       `Meeting mode: ${modeLabel}`,
+      serviceName ? `Service: ${serviceName}` : "",
       "",
       normalizedMode === "online"
         ? "The host will provide the online meeting details separately."
@@ -165,6 +207,7 @@ async function sendAppointmentApproved({
         <table style="width:100%;border-collapse:collapse;margin:22px 0">
           <tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Date and time</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(timeLabel)}</td></tr>
           <tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Meeting mode</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(modeLabel)}</td></tr>
+          ${serviceName ? `<tr><td style="padding:10px;border:1px solid #e2e8f0"><strong>Service</strong></td><td style="padding:10px;border:1px solid #e2e8f0">${escapeHtml(serviceName)}</td></tr>` : ""}
         </table>
         <p>${normalizedMode === "online"
     ? "The host will provide the online meeting details separately."
@@ -177,4 +220,4 @@ async function sendAppointmentApproved({
   });
 }
 
-module.exports = { sendAppointmentApproved, sendVcardEnquiry };
+module.exports = { sendAppointmentApproved, sendVcardEnquiry, sendWebsiteContact };

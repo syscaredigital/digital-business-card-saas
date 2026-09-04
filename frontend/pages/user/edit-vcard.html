@@ -40,9 +40,10 @@
       <header class="topbar"><a class="user-secondary-btn" href="vcards.html">← Back to cards</a><div class="topbar-right"><button class="logout-btn" id="logoutButton" type="button">Sign out</button><div class="user-profile"><div class="user-avatar-placeholder">U</div><div class="user-info"><div class="user-name">My account</div><div class="user-plan">Card editor</div></div></div></div></header>
       <main class="page-content"><div class="page-header"><div><span class="user-kicker">Digital identity</span><h1>Edit your card</h1><p>Only the editor sections and templates included in your active billing plan are shown.</p></div></div>
         <section class="user-dashboard-card"><form id="userVcardEditor" class="client-vcard-form">
-          <div class="form-field"><label for="editCardTitle">Card name *</label><input id="editCardTitle" name="title" required /></div>
+          <div class="form-field"><label for="editCardTitle">Full name *</label><input id="editCardTitle" name="title" required /></div>
           <div class="form-field"><label for="editCardTemplate">VCard template *</label><select id="editCardTemplate" name="templateId" required></select></div>
-          <div class="form-field"><label for="editCardOccupation">Occupation</label><input id="editCardOccupation" name="occupation" data-vcard-section="basic-details" /></div>
+          <div class="form-field"><label for="editCardQualifications">Qualifications</label><input id="editCardQualifications" name="qualifications" maxlength="500" placeholder="e.g. BSc (Hons), MBA, PMP" /></div>
+          <div class="form-field"><label for="editCardOccupation">Position</label><input id="editCardOccupation" name="occupation" data-vcard-section="basic-details" placeholder="e.g. Managing Director" /></div>
           <div class="form-field"><label for="editCardEmail">Email</label><input id="editCardEmail" name="email" type="email" /></div>
           <div class="form-field"><label for="editCardPhone">Phone</label><input id="editCardPhone" name="phone" /></div>
           <div class="form-field"><label for="editCardWebsite">Website</label><input id="editCardWebsite" name="websiteUrl" type="url" /></div>

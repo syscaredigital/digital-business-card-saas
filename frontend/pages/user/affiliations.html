@@ -99,13 +99,26 @@
           <div><span class="affiliate-page-kicker"><i></i> Join the program</span><h2>Turn your network into rewards.</h2><p>Choose a memorable referral code and tell us where you would like to receive payouts. Your workspace becomes active after review.</p><div class="affiliate-application-points"><span>Personal referral link</span><span>Transparent commission tracking</span><span>Secure withdrawal review</span></div></div>
           <form id="affiliateApplicationForm">
             <label>Preferred referral code<input name="referralCode" minlength="3" maxlength="80" pattern="[A-Za-z0-9_-]+" required placeholder="YOURCODE" /></label>
-            <label>Payment method<select name="paymentMethod"><option value="bank_transfer">Bank transfer</option><option value="paypal">PayPal</option><option value="cash">Cash</option><option value="other">Other</option></select></label>
-            <label class="affiliate-form-wide">Payout account details<input name="payoutDetails" maxlength="500" placeholder="Account holder, bank and account number" /></label>
+            <input name="paymentMethod" type="hidden" value="bank_transfer" />
+            <label>Account holder<input name="accountHolder" maxlength="150" required placeholder="Name shown on the bank account" /></label>
+            <label>Bank name<input name="bankName" maxlength="150" required placeholder="Bank name" /></label>
+            <label>Account number<input name="accountNumber" maxlength="100" required placeholder="Bank account number" /></label>
+            <label>Branch<input name="branch" maxlength="150" placeholder="Branch name or code" /></label>
+            <label class="affiliate-form-wide">SWIFT / BIC code<input name="swiftCode" maxlength="20" placeholder="Required for international transfers" /></label>
             <button type="submit">Submit application</button><p id="affiliateApplicationFeedback" aria-live="polite"></p>
           </form>
         </section>
         <p class="affiliate-account-notice" id="affiliateAccountNotice" hidden></p>
-        <form class="affiliate-payout-settings" id="affiliatePayoutForm" hidden><div class="affiliate-payout-heading"><span>PD</span><div><strong>Payout destination</strong><small>Keep your payment details current</small></div></div><label><small>Method</small><select name="paymentMethod"><option value="bank_transfer">Bank transfer</option><option value="paypal">PayPal</option><option value="cash">Cash</option><option value="other">Other</option></select></label><label><small>Account details</small><input name="payoutDetails" maxlength="500" required placeholder="Payout account details" /></label><button type="submit">Save details</button><span id="affiliatePayoutFeedback" aria-live="polite"></span></form>
+        <form class="affiliate-payout-settings" id="affiliatePayoutForm" hidden>
+          <div class="affiliate-payout-heading"><span>BT</span><div><strong>Bank-transfer destination</strong><small>Transfers will only be sent to these verified details</small></div></div>
+          <input name="paymentMethod" type="hidden" value="bank_transfer" />
+          <label><small>Account holder</small><input name="accountHolder" maxlength="150" required placeholder="Account holder" /></label>
+          <label><small>Bank name</small><input name="bankName" maxlength="150" required placeholder="Bank name" /></label>
+          <label><small>Account number</small><input name="accountNumber" maxlength="100" required placeholder="Account number" /></label>
+          <label><small>Branch</small><input name="branch" maxlength="150" placeholder="Branch" /></label>
+          <label><small>SWIFT / BIC</small><input name="swiftCode" maxlength="20" placeholder="SWIFT / BIC" /></label>
+          <button type="submit">Save bank details</button><span id="affiliatePayoutFeedback" aria-live="polite"></span>
+        </form>
 
         <section class="client-dashboard-grid" id="affiliateDashboardContent" hidden>
           <article class="affiliate-profile-strip" aria-label="Affiliate account details">
@@ -158,10 +171,11 @@
               <small id="affiliateMinimumWithdrawal">Loading withdrawal rules...</small>
             </div>
             <form class="affiliate-withdrawal-form" id="affiliateWithdrawalForm"><span class="affiliate-withdrawal-label">Request a payout</span>
-              <input name="amount" type="number" min="0.01" step="0.01" required placeholder="Amount" />
-              <select name="currency" id="affiliateWithdrawalCurrency" required></select>
+              <input name="amount" id="affiliateWithdrawalAmount" type="number" min="0.01" step="0.01" required placeholder="Amount" aria-describedby="affiliateWithdrawalLimit" />
+              <select name="currency" id="affiliateWithdrawalCurrency" required aria-label="Withdrawal currency"></select>
               <input name="note" maxlength="3000" placeholder="Optional note" />
-              <button type="submit">Request withdrawal</button><p id="affiliateWithdrawalFeedback" aria-live="polite"></p>
+              <button type="submit">Request withdrawal</button>
+              <small id="affiliateWithdrawalLimit">Select an available currency.</small><p id="affiliateWithdrawalFeedback" aria-live="polite"></p>
             </form>
           </article>
         </section>
@@ -300,6 +314,7 @@
   </div>
 
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+  <script src="../../public/assets/js/currency-catalog.js"></script>
   <script src="../../public/assets/js/dashboard.js"></script>
   <script src="../../public/assets/js/user-workspace.js"></script>
 </body>

@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const header = document.querySelector(".site-header");
-  const contactForms = document.querySelectorAll(".contact-form, .newsletter-form");
+  const contactForms = document.querySelectorAll(".contact-form");
+  const newsletterForms = document.querySelectorAll(".newsletter-form");
   const counters = document.querySelectorAll(".count-up");
   const featuredVcardsRow = document.querySelector("[data-featured-templates]");
   const templatePreviousButton = document.querySelector("[data-template-prev]");
@@ -72,10 +73,51 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   contactForms.forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      const button = form.querySelector('[type="submit"]');
+      let feedback = form.querySelector(".contact-form-feedback");
+      if (!feedback) {
+        feedback = document.createElement("p");
+        feedback.className = "contact-form-feedback";
+        feedback.setAttribute("aria-live", "polite");
+        form.appendChild(feedback);
+      }
+      const originalLabel = button ? button.innerHTML : "";
+      const fields = new FormData(form);
+      const payload = Object.fromEntries(fields.entries());
+      payload.sourcePage = window.location.pathname || window.location.href;
+      try {
+        if (button) { button.disabled = true; button.textContent = "Sending..."; }
+        feedback.className = "contact-form-feedback is-pending";
+        feedback.textContent = "Sending your message securely...";
+        const response = await fetch(getApiBaseUrl() + "/api/public/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "Unable to send your message");
+        feedback.className = "contact-form-feedback is-success";
+        feedback.textContent = data.message || "Thank you. Your message was sent successfully.";
+        form.reset();
+      } catch (error) {
+        feedback.className = "contact-form-feedback is-error";
+        feedback.textContent = error.message;
+      } finally {
+        if (button) { button.disabled = false; button.innerHTML = originalLabel; }
+      }
+    });
+  });
+
+  newsletterForms.forEach((form) => {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      alert("Thank you. We will get back to you shortly.");
-      form.reset();
+      alert("Newsletter subscriptions are coming soon.");
     });
   });
 
