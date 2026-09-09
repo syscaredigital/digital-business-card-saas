@@ -16,3 +16,22 @@ test('separate frontend hosting can configure an explicit API origin', () => {
   vm.runInNewContext(source, { window, document: { querySelector: () => null } });
   assert.equal(window.SyncVCardApiOrigin, 'https://api.example.test');
 });
+for (const host of ['127.0.0.1', 'localhost', '[::1]']) {
+  for (const port of [5500, 5501]) {
+    test(`Live Server on ${host}:${port} uses the backend`, () => {
+      const window = { location: new URL(`http://${host}:${port}/frontend/pages/auth/login.html`) };
+      vm.runInNewContext(source, { window, document: { querySelector: () => null } });
+      assert.equal(window.SyncVCardApiOrigin, `http://${host}:5000`);
+    });
+  }
+}
+test('production hostname on port 5501 remains same-origin', () => {
+  const window = { location: new URL('https://cards.example.test:5501') };
+  vm.runInNewContext(source, { window, document: { querySelector: () => null } });
+  assert.equal(window.SyncVCardApiOrigin, 'https://cards.example.test:5501');
+});
+test('explicit meta configuration overrides Live Server detection', () => {
+  const window = { location: new URL('http://127.0.0.1:5501') };
+  vm.runInNewContext(source, { window, document: { querySelector: () => ({ content: 'http://127.0.0.1:5123/' }) } });
+  assert.equal(window.SyncVCardApiOrigin, 'http://127.0.0.1:5123');
+});
