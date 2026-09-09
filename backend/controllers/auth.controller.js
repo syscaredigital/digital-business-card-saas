@@ -27,12 +27,13 @@ function toSafeUser(row) {
     role: row.role || "user",
     status: row.status,
     createdAt: row.created_at,
+    authVersion: row.auth_version || 0,
   };
 }
 
 function createToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role || "user", jti: crypto.randomUUID() },
+    { id: user.id, email: user.email, role: user.role || "user", version: user.authVersion || 0, jti: crypto.randomUUID() },
     process.env.JWT_SECRET || "devsecret",
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
   );
@@ -184,7 +185,7 @@ exports.login = async (req, res, next) => {
     }
 
     const result = await pool.query(
-      `SELECT u.id, u.name, u.email, u.password, u.phone, u.status,
+      `SELECT u.id, u.name, u.email, u.password, u.phone, u.status, u.auth_version,
               u.created_at,u.preferred_currency,r.name AS role,c.name AS company_name
        FROM users u
        LEFT JOIN roles r ON r.id = u.role_id

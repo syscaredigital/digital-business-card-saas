@@ -1,11 +1,7 @@
 (function () {
   "use strict";
   var cache = null;
-  function apiBase() {
-    if (location.protocol === "file:") return "http://localhost:5000";
-    if (location.port && location.port !== "5000") return location.protocol + "//" + location.hostname + ":5000";
-    return location.origin;
-  }
+  function apiBase() { return window.SyncVCardApiOrigin; }
   function fallback() {
     return ["LKR", "USD", "EUR", "GBP", "AUD", "CAD", "INR", "JPY", "CNY", "SGD", "AED"].map(function (code) { return { code: code, name: code }; });
   }

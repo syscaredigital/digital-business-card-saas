@@ -30,7 +30,7 @@ module.exports = async function authenticate(req, res, next) {
 
     if (hasPostgresIntegerId) {
       result = await pool.query(
-        `SELECT u.id, u.email, u.name, u.status, r.name AS role
+        `SELECT u.id, u.email, u.name, u.status, u.auth_version, r.name AS role
          FROM users u
          LEFT JOIN roles r ON r.id = u.role_id
          WHERE u.id = $1
@@ -43,7 +43,7 @@ module.exports = async function authenticate(req, res, next) {
     // timestamp IDs. Their signed email safely resolves the migrated account.
     if ((!result || !result.rowCount) && payload.email) {
       result = await pool.query(
-        `SELECT u.id, u.email, u.name, u.status, r.name AS role
+        `SELECT u.id, u.email, u.name, u.status, u.auth_version, r.name AS role
          FROM users u
          LEFT JOIN roles r ON r.id = u.role_id
          WHERE LOWER(u.email) = LOWER($1)
@@ -56,6 +56,9 @@ module.exports = async function authenticate(req, res, next) {
 
     if (!user || user.status !== "active") {
       return res.status(401).json({ message: "Account is unavailable" });
+    }
+    if ((payload.version || 0) !== user.auth_version) {
+      return res.status(401).json({ message: "Password has changed. Please sign in again." });
     }
 
     req.user = user;

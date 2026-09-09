@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test ../tests/frontend-deployment.test.js ../tests/password-recovery.test.js",
     "start": "node server.js",
     "seed:super-admin": "node seed-super-admin.js",
     "migrate:json-users": "node migrate-json-users.js"

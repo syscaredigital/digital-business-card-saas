@@ -1793,7 +1793,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/users?limit=100&search=" + encodeURIComponent(search), {
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users?limit=100&search=") + encodeURIComponent(search), {
         headers: { Authorization: "Bearer " + token }
       });
       var data = await response.json().catch(function () { return {}; });
@@ -1905,7 +1905,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards?search=") + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load VCards");
       renderSuperAdminVCards(data.vcards || [], search ? (data.vcards || []).length : (data.summary ? data.summary.total : 0));
@@ -1922,7 +1922,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function loadStandaloneVCardTemplates() {
     if (adminPageSlug !== "templates" || !vcardTemplateGrid) return;
     try {
-      var apiOrigin = window.SyncVCardApiOrigin || "http://127.0.0.1:5000";
+      var apiOrigin = window.SyncVCardApiOrigin;
       var response = await fetch(apiOrigin + "/api/public/vcard-templates");
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load templates");
@@ -1948,7 +1948,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var token = localStorage.getItem("token");
     try {
       if (input) input.disabled = true;
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards/" + encodeURIComponent(cardId) + "/status", {
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards/") + encodeURIComponent(cardId) + "/status", {
         method: "PATCH",
         headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: isActive })
@@ -1969,7 +1969,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var token = localStorage.getItem("token");
     try {
       if (button) { button.disabled = true; button.textContent = "Deleting..."; }
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards/" + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards/") + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + token } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to delete VCard");
       await loadSuperAdminVCards();
@@ -2103,7 +2103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc?search=") + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load NFC management data");
       renderNfcProducts(data.products || [], search);
@@ -2183,7 +2183,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!window.confirm("Permanently delete " + (product ? product.name : "this NFC product") + "?")) return;
     try {
       button.disabled = true; button.textContent = "Deleting...";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/products/" + encodeURIComponent(productId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/products/") + encodeURIComponent(productId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to delete NFC product");
       await loadSuperAdminNfc();
@@ -2219,7 +2219,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!window.confirm("Permanently delete " + (card ? card.label : "this NFC card") + " from the registry?")) return;
     try {
       if (button) { button.disabled = true; button.textContent = "Deleting..."; }
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/cards/" + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/cards/") + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to delete NFC card");
       await loadSuperAdminNfc();
@@ -2237,7 +2237,7 @@ document.addEventListener("DOMContentLoaded", function () {
         button.disabled = true;
         button.textContent = "Saving...";
       }
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/orders/" + encodeURIComponent(orderId), {
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/orders/") + encodeURIComponent(orderId), {
         method: "PATCH",
         headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -2291,7 +2291,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function openNfcOrderProof(orderId, button) {
     try {
       if(button){button.disabled=true;button.textContent="Opening...";}
-      var response=await fetch("http://127.0.0.1:5000/api/super-admin/nfc/orders/"+encodeURIComponent(orderId)+"/proof",{headers:{Authorization:"Bearer "+localStorage.getItem("token")}});
+      var response=await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/orders/")+encodeURIComponent(orderId)+"/proof",{headers:{Authorization:"Bearer "+localStorage.getItem("token")}});
       if(!response.ok){var data=await response.json().catch(function(){return {};});throw new Error(data.message||"Unable to open payment slip");}
       var url=URL.createObjectURL(await response.blob());window.open(url,"_blank","noopener");window.setTimeout(function(){URL.revokeObjectURL(url);},60000);
     }catch(error){showToast("Payment slip unavailable",error.message);}finally{if(button){button.disabled=false;button.textContent="View slip";}}
@@ -2396,7 +2396,7 @@ document.addEventListener("DOMContentLoaded", function () {
       button.textContent = "Saving...";
     }
     try {
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/users/" + encodeURIComponent(userId) + "/status", {
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users/") + encodeURIComponent(userId) + "/status", {
         method: "PATCH",
         headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
         body: JSON.stringify({ status: status })
@@ -2425,7 +2425,7 @@ document.addEventListener("DOMContentLoaded", function () {
       button.textContent = "Deleting...";
     }
     try {
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/users/" + encodeURIComponent(userId), {
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users/") + encodeURIComponent(userId), {
         method: "DELETE",
         headers: { Authorization: "Bearer " + token }
       });
@@ -2598,7 +2598,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var submitButton = vcardAdminForm.querySelector('[type="submit"]');
       try {
         if (submitButton) { submitButton.disabled = true; submitButton.textContent = "Creating..."; }
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/vcards", {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards"), {
           method: "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2679,7 +2679,7 @@ document.addEventListener("DOMContentLoaded", function () {
         submitButton.disabled = true; submitButton.textContent = "Saving...";
         var frontImage = await readNfcProductImage(nfcProductForm.elements.frontImage, nfcProductFrontPreview);
         var backImage = await readNfcProductImage(nfcProductForm.elements.backImage, nfcProductBackPreview);
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/products" + (productId ? "/" + encodeURIComponent(productId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/products") + (productId ? "/" + encodeURIComponent(productId) : ""), {
           method: productId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), category: formData.get("category"), description: formData.get("description").trim(), frontImage: frontImage, backImage: backImage, isActive: formData.get("isActive") === "on" })
@@ -2708,7 +2708,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var submitButton = nfcRegistryForm.querySelector('[type="submit"]');
       try {
         if (submitButton) { submitButton.disabled = true; submitButton.textContent = "Saving..."; }
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/nfc/cards" + (cardId ? "/" + encodeURIComponent(cardId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/cards") + (cardId ? "/" + encodeURIComponent(cardId) : ""), {
           method: cardId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2925,7 +2925,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/subscriptions?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions?search=") + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load subscriptions");
       renderSubscriptionAdmin(data.subscriptions || []);
@@ -3026,7 +3026,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/subscriptions" + (subscriptionId ? "/" + encodeURIComponent(subscriptionId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions") + (subscriptionId ? "/" + encodeURIComponent(subscriptionId) : ""), {
           method: subscriptionId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({ userId: Number(formData.get("userId")), planId: Number(formData.get("planId")), status: formData.get("status"), startDate: formData.get("startDate"), endDate: formData.get("endDate") || null, autoRenew: formData.get("autoRenew") === "on", cancelReason: formData.get("cancelReason").trim() })
@@ -3070,7 +3070,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         setPlanAdminSubmitLabel("Saving plan...");
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/plans" + (planId ? "/" + encodeURIComponent(planId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/plans") + (planId ? "/" + encodeURIComponent(planId) : ""), {
           method: planId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({ name: formData.get("name").trim(), prices: prices, billingInterval: formData.get("billingInterval"), vcardLimit: Number(formData.get("vcardLimit")), nfcLimit: Number(formData.get("nfcLimit")), analyticsLimit: Number(formData.get("analyticsLimit")), storageLimitMb: Number(formData.get("storageLimitMb")), benefits: formData.get("features").split(",").map(function (feature) { return feature.trim(); }).filter(Boolean), vcardFeatures: vcardFeatures, templateIds: templateIds, status: formData.get("status") })
@@ -3098,7 +3098,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (subscriptionButton.getAttribute("data-live-subscription-action") === "delete" && window.confirm("Delete this subscription record?")) {
         try {
           subscriptionButton.disabled = true;
-          var response = await fetch("http://127.0.0.1:5000/api/super-admin/subscriptions/" + encodeURIComponent(subscriptionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+          var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions/") + encodeURIComponent(subscriptionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
           var data = await response.json().catch(function () { return {}; });
           if (!response.ok) throw new Error(data.message || "Unable to delete subscription");
           await loadSuperAdminSubscriptions();
@@ -3113,7 +3113,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (planButton.getAttribute("data-live-plan-action") === "delete" && window.confirm("Delete " + (plan ? plan.name : "this plan") + "?")) {
         try {
           planButton.disabled = true;
-          var planResponse = await fetch("http://127.0.0.1:5000/api/super-admin/plans/" + encodeURIComponent(planId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+          var planResponse = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/plans/") + encodeURIComponent(planId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
           var planData = await planResponse.json().catch(function () { return {}; });
           if (!planResponse.ok) throw new Error(planData.message || "Unable to delete plan");
           await loadSuperAdminSubscriptions();
@@ -3221,7 +3221,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       var search = searchInput ? searchInput.value.trim() : "";
       var status = cashPaymentStatusFilter ? cashPaymentStatusFilter.value : "";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load cash payments");
       superAdminCashSubscriptions = data.subscriptions || [];
@@ -3278,7 +3278,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       button.disabled = true;
       button.textContent = status === "approved" ? "Approving..." : "Rejecting...";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments/" + encodeURIComponent(payment.id), {
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(payment.id), {
         method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(cashPaymentPayload(payment, status))
       });
       var data = await response.json().catch(function () { return {}; });
@@ -3312,7 +3312,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments" + (paymentId ? "/" + encodeURIComponent(paymentId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments") + (paymentId ? "/" + encodeURIComponent(paymentId) : ""), {
           method: paymentId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -3340,7 +3340,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (proofButton) {
       try {
         proofButton.disabled = true;
-        var proofResponse = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments/" + encodeURIComponent(proofButton.dataset.paymentProofId) + "/proof", { headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var proofResponse = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(proofButton.dataset.paymentProofId) + "/proof", { headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
         if (!proofResponse.ok) { var proofError = await proofResponse.json().catch(function () { return {}; }); throw new Error(proofError.message || "Unable to open payment proof"); }
         var proofObjectUrl = URL.createObjectURL(await proofResponse.blob());
         window.open(proofObjectUrl, "_blank", "noopener,noreferrer");
@@ -3361,7 +3361,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         button.disabled = true;
         button.textContent = "Deleting...";
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/cash-payments/" + encodeURIComponent(paymentId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(paymentId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to delete cash payment");
         await loadSuperAdminCashPayments();
@@ -3455,7 +3455,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var search = searchInput ? searchInput.value.trim() : "";
       var status = transactionStatusFilter ? transactionStatusFilter.value : "";
       var type = transactionTypeFilter ? transactionTypeFilter.value : "";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/transactions?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status) + "&type=" + encodeURIComponent(type), { headers: { Authorization: "Bearer " + token } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status) + "&type=" + encodeURIComponent(type), { headers: { Authorization: "Bearer " + token } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load transactions");
       populateTransactionUsers(data.users || []);
@@ -3514,7 +3514,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/transactions" + (transactionId ? "/" + encodeURIComponent(transactionId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions") + (transactionId ? "/" + encodeURIComponent(transactionId) : ""), {
           method: transactionId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({ userId: Number(formData.get("userId")), type: formData.get("type"), amount: Number(formData.get("amount")), currency: formData.get("currency"), status: formData.get("status"), gateway: formData.get("gateway").trim(), reference: formData.get("reference").trim(), note: formData.get("note").trim() })
@@ -3544,7 +3544,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         button.disabled = true;
         button.textContent = "Deleting...";
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/transactions/" + encodeURIComponent(transactionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions/") + encodeURIComponent(transactionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to delete transaction");
         await loadSuperAdminTransactions();
@@ -3633,7 +3633,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       var search = searchInput ? searchInput.value.trim() : "";
       var status = payoutStatusFilter ? payoutStatusFilter.value : "";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load payouts");
       populatePayoutUsers(data.users || []);
@@ -3693,7 +3693,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       button.disabled = true;
       button.textContent = "Saving...";
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts/" + encodeURIComponent(payout.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(payoutPayload(payout, status)) });
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts/") + encodeURIComponent(payout.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(payoutPayload(payout, status)) });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to update payout status");
       await loadSuperAdminPayouts();
@@ -3724,7 +3724,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts" + (payoutId ? "/" + encodeURIComponent(payoutId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts") + (payoutId ? "/" + encodeURIComponent(payoutId) : ""), {
           method: payoutId ? "PATCH" : "POST",
           headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
           body: JSON.stringify({ userId: formData.get("userId") ? Number(formData.get("userId")) : null, payeeName: formData.get("payeeName").trim(), payeeEmail: formData.get("payeeEmail").trim(), accountName: formData.get("accountName").trim(), amount: Number(formData.get("amount")), currency: formData.get("currency"), method: formData.get("method"), status: formData.get("status"), scheduledAt: formData.get("scheduledAt") || null, reference: formData.get("reference").trim(), notes: formData.get("notes").trim() })
@@ -3755,7 +3755,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         button.disabled = true;
         button.textContent = "Deleting...";
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/payouts/" + encodeURIComponent(payoutId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts/") + encodeURIComponent(payoutId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to delete payout");
         await loadSuperAdminPayouts();
@@ -4250,7 +4250,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if(reportTabButtons.length)reportTabButtons.forEach(function(button){button.addEventListener("click",function(){var id=button.getAttribute("data-report-tab-target");reportTabButtons.forEach(function(item){item.classList.remove("active");item.setAttribute("aria-selected","false");});Array.from(document.querySelectorAll("#savedReportsPanel,#reportRunsPanel")).forEach(function(panel){panel.classList.remove("active");});button.classList.add("active");button.setAttribute("aria-selected","true");var panel=document.getElementById(id);if(panel)panel.classList.add("active");});});
 
   function updateSettingsPageSummary(summary,settings){var cards=document.querySelectorAll(".admin-page-settings .admin-page-stats article");if(cards.length<3)return;var maintenance=(settings||[]).find(function(item){return item.key==="maintenance_mode";}),last=summary.last_updated?new Date(summary.last_updated):null;cards[0].querySelector("span").textContent="System status";cards[0].querySelector("strong").textContent=maintenance&&maintenance.value==="true"?"Maintenance":"Operational";cards[0].querySelector("small").textContent=maintenance&&maintenance.value==="true"?"Public access restricted":"Platform access enabled";cards[1].querySelector("span").textContent="Stored settings";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.stored_settings);cards[1].querySelector("small").textContent="Validated database values";cards[2].querySelector("span").textContent="Last updated";cards[2].querySelector("strong").textContent=last?cashPaymentDate(last):"Defaults";cards[2].querySelector("small").textContent=last?"Latest persisted change":"Using application defaults";}
-  function superAdminApiOrigin(){if(window.location.protocol==="file:")return"http://127.0.0.1:5000";if(window.location.port&&window.location.port!=="5000")return window.location.protocol+"//"+window.location.hostname+":5000";return window.location.origin;}
+  function superAdminApiOrigin(){return window.SyncVCardApiOrigin;}
   function readPlatformSettingsForm(){var values={};if(!platformSettingsForm)return values;Array.from(platformSettingsForm.elements).forEach(function(field){if(!field.name)return;values[field.name]=field.type==="checkbox"?String(field.checked):String(field.value).trim();});return values;}
   function setSettingsDirtyState(){if(!platformSettingsForm)return;var values=readPlatformSettingsForm(),dirty=Object.keys(values).some(function(key){return values[key]!==platformSettingsSnapshot[key];}),state=document.getElementById("settingsSaveState"),save=document.getElementById("savePlatformSettings"),reset=document.getElementById("resetPlatformSettings");if(save)save.disabled=!dirty;if(reset)reset.disabled=!dirty;if(state){state.classList.toggle("is-dirty",dirty);state.classList.toggle("is-synced",!dirty);state.innerHTML=dirty?"<i></i>Unsaved changes":"<i></i>Synced with PostgreSQL";}}
   function fillPlatformSettings(settings){if(!platformSettingsForm)return;platformSettingsSnapshot={};settings.forEach(function(setting){var field=platformSettingsForm.elements[setting.key];if(!field)return;if(field.type==="checkbox")field.checked=setting.value==="true";else field.value=setting.value;platformSettingsSnapshot[setting.key]=String(setting.value);});setSettingsDirtyState();}
@@ -4265,7 +4265,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function logActionLabel(action){return String(action||"event").split(".").map(function(part){return transactionTypeLabel(part);}).join(" · ");}
   function renderSystemLogs(logs,pagination){if(!systemLogBody)return;superAdminSystemLogsById={};var count=document.getElementById("systemLogCount"),label=document.getElementById("systemLogPageLabel"),previous=document.getElementById("systemLogPrevious"),next=document.getElementById("systemLogNext");systemLogPage=pagination.page||1;systemLogPages=pagination.pages||1;if(count)count.textContent=formatDashboardNumber(pagination.total)+(pagination.total===1?" event":" events");if(label)label.textContent="Page "+systemLogPage+" of "+systemLogPages;if(previous)previous.disabled=systemLogPage<=1;if(next)next.disabled=systemLogPage>=systemLogPages;if(!logs.length){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>No audit events found</strong><span>Adjust the search or date filters.</span></div></td></tr>';return;}systemLogBody.innerHTML=logs.map(function(log){superAdminSystemLogsById[String(log.id)]=log;var actor=log.actor||{name:"System",email:"Automated or deleted actor"};return '<tr><td><div class="log-event-cell"><span class="log-severity '+log.severity+'"></span><div><strong>'+escapeDashboardHtml(logActionLabel(log.action))+'</strong><small>Event #'+log.id+'</small></div></div></td><td><strong>'+escapeDashboardHtml(actor.name)+'</strong><div class="subtle-handle">'+escapeDashboardHtml(actor.email)+'</div></td><td><span class="log-resource-pill">'+escapeDashboardHtml(log.resourceType||"system")+'</span><div class="subtle-handle">'+(log.resourceId?"ID "+log.resourceId:"No resource ID")+'</div></td><td><span>'+escapeDashboardHtml(log.ipAddress||"Not captured")+'</span><div class="subtle-handle log-agent">'+escapeDashboardHtml(log.userAgent||"No user agent")+'</div></td><td>'+escapeDashboardHtml(cashPaymentDate(log.createdAt))+'</td><td><button class="user-action-btn edit" type="button" data-system-log-detail="'+log.id+'">Inspect</button></td></tr>';}).join("");}
   function populateSystemLogFilters(actors,types){if(systemLogActor){var current=systemLogActor.value;systemLogActor.innerHTML='<option value="">All actors</option>'+actors.map(function(actor){return '<option value="'+actor.id+'">'+escapeDashboardHtml(actor.name+" — "+actor.email)+'</option>';}).join("");systemLogActor.value=current;}if(systemLogResource){var selected=systemLogResource.value;systemLogResource.innerHTML='<option value="">All resources</option>'+types.map(function(type){return '<option value="'+escapeDashboardHtml(type)+'">'+escapeDashboardHtml(transactionTypeLabel(type))+'</option>';}).join("");systemLogResource.value=selected;}}
-  async function loadSuperAdminSystemLogs(){if(adminPageSlug!=="system-logs"||!systemLogBody)return;var token=localStorage.getItem("token");if(!token){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to review audit activity.</span></div></td></tr>';return;}try{var params=new URLSearchParams({page:String(systemLogPage),limit:"25"});if(searchInput&&searchInput.value.trim())params.set("search",searchInput.value.trim());if(systemLogResource&&systemLogResource.value)params.set("resourceType",systemLogResource.value);if(systemLogActor&&systemLogActor.value)params.set("actorId",systemLogActor.value);var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from&&from.value)params.set("from",from.value);if(to&&to.value)params.set("to",to.value);var response=await fetch("http://127.0.0.1:5000/api/super-admin/system-logs?"+params.toString(),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load system logs");renderSystemLogs(data.logs||[],data.pagination||{});populateSystemLogFilters(data.actors||[],data.resourceTypes||[]);updateSystemLogsSummary(data.summary||{});}catch(error){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Audit logs unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load logs",error.message);}}
+  async function loadSuperAdminSystemLogs(){if(adminPageSlug!=="system-logs"||!systemLogBody)return;var token=localStorage.getItem("token");if(!token){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to review audit activity.</span></div></td></tr>';return;}try{var params=new URLSearchParams({page:String(systemLogPage),limit:"25"});if(searchInput&&searchInput.value.trim())params.set("search",searchInput.value.trim());if(systemLogResource&&systemLogResource.value)params.set("resourceType",systemLogResource.value);if(systemLogActor&&systemLogActor.value)params.set("actorId",systemLogActor.value);var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from&&from.value)params.set("from",from.value);if(to&&to.value)params.set("to",to.value);var response=await fetch((window.SyncVCardApiOrigin + "/api/super-admin/system-logs?")+params.toString(),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load system logs");renderSystemLogs(data.logs||[],data.pagination||{});populateSystemLogFilters(data.actors||[],data.resourceTypes||[]);updateSystemLogsSummary(data.summary||{});}catch(error){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Audit logs unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load logs",error.message);}}
   function setSystemLogModal(open,log){var modal=document.getElementById("systemLogModal"),detail=document.getElementById("systemLogDetail"),title=document.getElementById("systemLogModalTitle");if(!modal)return;if(!open){modal.hidden=true;document.body.style.overflow="";return;}var actor=log.actor||{name:"System",email:"Automated or deleted actor"};if(title)title.textContent=logActionLabel(log.action);if(detail)detail.innerHTML='<dl><div><dt>Event ID</dt><dd>#'+log.id+'</dd></div><div><dt>Timestamp</dt><dd>'+escapeDashboardHtml(cashPaymentDate(log.createdAt))+'</dd></div><div><dt>Actor</dt><dd>'+escapeDashboardHtml(actor.name+" · "+actor.email)+'</dd></div><div><dt>Resource</dt><dd>'+escapeDashboardHtml((log.resourceType||"system")+(log.resourceId?" #"+log.resourceId:""))+'</dd></div><div><dt>IP address</dt><dd>'+escapeDashboardHtml(log.ipAddress||"Not captured")+'</dd></div><div><dt>User agent</dt><dd>'+escapeDashboardHtml(log.userAgent||"Not captured")+'</dd></div></dl><div class="log-metadata-block"><span>Metadata</span><pre>'+escapeDashboardHtml(JSON.stringify(log.metadata||{},null,2))+'</pre></div>';modal.hidden=false;document.body.style.overflow="hidden";}
   document.addEventListener("click",function(event){var detailButton=event.target.closest("[data-system-log-detail]");if(detailButton)setSystemLogModal(true,superAdminSystemLogsById[String(detailButton.getAttribute("data-system-log-detail"))]);});[document.getElementById("closeSystemLogModal"),document.getElementById("systemLogModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setSystemLogModal(false);});});var applyLogs=document.getElementById("applySystemLogFilters"),clearLogs=document.getElementById("clearSystemLogFilters"),refreshLogs=document.getElementById("refreshSystemLogs"),previousLogs=document.getElementById("systemLogPrevious"),nextLogs=document.getElementById("systemLogNext");if(applyLogs)applyLogs.addEventListener("click",function(){systemLogPage=1;loadSuperAdminSystemLogs();});if(refreshLogs)refreshLogs.addEventListener("click",loadSuperAdminSystemLogs);if(clearLogs)clearLogs.addEventListener("click",function(){if(systemLogResource)systemLogResource.value="";if(systemLogActor)systemLogActor.value="";var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from)from.value="";if(to)to.value="";if(searchInput)searchInput.value="";systemLogPage=1;loadSuperAdminSystemLogs();});if(previousLogs)previousLogs.addEventListener("click",function(){if(systemLogPage>1){systemLogPage-=1;loadSuperAdminSystemLogs();}});if(nextLogs)nextLogs.addEventListener("click",function(){if(systemLogPage<systemLogPages){systemLogPage+=1;loadSuperAdminSystemLogs();}});
 
@@ -4984,7 +4984,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       try {
-        var response = await fetch("http://127.0.0.1:5000/api/super-admin/users" + (editingUserId ? "/" + encodeURIComponent(editingUserId) : ""), {
+        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users") + (editingUserId ? "/" + encodeURIComponent(editingUserId) : ""), {
           method: editingUserId ? "PATCH" : "POST",
           headers: {
             Authorization: "Bearer " + token,
@@ -5235,7 +5235,7 @@ document.addEventListener("DOMContentLoaded", function () {
       logoutButton.innerHTML = '<span class="admin-logout-spinner" aria-hidden="true"></span> Signing out...';
       try {
         if (token) {
-          var response = await fetch("http://127.0.0.1:5000/api/auth/logout", {
+          var response = await fetch((window.SyncVCardApiOrigin + "/api/auth/logout"), {
             method: "POST",
             headers: { Authorization: "Bearer " + token }
           });
@@ -5349,7 +5349,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     try {
-      var response = await fetch("http://127.0.0.1:5000/api/super-admin/dashboard", {
+      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/dashboard"), {
         headers: { Authorization: "Bearer " + token },
       });
       if (!response.ok) {

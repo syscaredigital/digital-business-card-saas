@@ -5,7 +5,7 @@
   var catalogPlans = [];
   var rateDate = "";
   function escapeHtml(value) { return String(value == null ? "" : value).replace(/[&<>'"]/g, function (char) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]; }); }
-  function apiBase() { if (location.protocol === "file:") return "http://localhost:5000"; if (location.port && location.port !== "5000") return location.protocol + "//" + location.hostname + ":5000"; return location.origin; }
+  function apiBase() { return window.SyncVCardApiOrigin; }
   function selectedCurrency() {
     var currency = String(localStorage.getItem("preferredCurrency") || "LKR").toUpperCase();
     return /^[A-Z]{3}$/.test(currency) ? currency : "LKR";

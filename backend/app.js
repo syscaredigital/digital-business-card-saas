@@ -8,6 +8,7 @@ const morgan = require("morgan");
 const { requirePlatformAvailable } = require("./middlewares/platform-access.middleware");
 const pool = require("./config/database.config");
 const { frontendVcardUrl } = require("./helpers/vcard-url");
+const frontendHeaders = require("./helpers/frontend-headers");
 const app = express();
 
 app.use(helmet());
@@ -19,8 +20,11 @@ app.use(morgan("dev"));
 // Serve the public VCard portal and its browser assets from the live API
 // process. This keeps public links and QR scans on one reachable origin.
 const frontendRoot = path.resolve(__dirname, "..", "frontend");
-app.use("/public", express.static(path.join(frontendRoot, "public"), { index: false, fallthrough: true }));
-app.use("/pages/public-vcard", express.static(path.join(frontendRoot, "pages", "public-vcard"), { index: false, fallthrough: true }));
+app.use("/public", express.static(path.join(frontendRoot, "public"), { index: false, fallthrough: true, setHeaders: frontendHeaders }));
+app.get("/", (req, res) => res.redirect("/pages/website/home.html"));
+app.use("/pages", express.static(path.join(frontendRoot, "pages"), { index: false, fallthrough: true, setHeaders: frontendHeaders }));
+app.use("/components", express.static(path.join(frontendRoot, "components"), { index: false, fallthrough: true }));
+app.use("/layouts", express.static(path.join(frontendRoot, "layouts"), { index: false, fallthrough: true }));
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });

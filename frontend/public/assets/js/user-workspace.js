@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  var API = window.location.protocol + "//" + window.location.hostname + ":5000/api";
+  var API = window.SyncVCardApiOrigin + "/api";
   var token = localStorage.getItem("token");
   var user;
   try { user = JSON.parse(localStorage.getItem("user") || "null"); } catch (_) { user = null; }

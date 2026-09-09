@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currencyWrap.innerHTML = '<span>Currency</span><select><option value="LKR">LKR</option></select>';
     const select = currencyWrap.querySelector("select");
     select.value = websiteCurrency;
-    const currencyApiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000") ? "http://localhost:5000" : window.location.origin;
+    const currencyApiOrigin = window.SyncVCardApiOrigin;
     fetch(currencyApiOrigin + "/api/public/currencies").then((response) => response.ok ? response.json() : Promise.reject()).then((payload) => {
       const currencies = Array.isArray(payload.data) ? payload.data : [];
       if (!currencies.length) return;
@@ -40,8 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.dispatchEvent(new CustomEvent("sync:currency-change", { detail: { currency: websiteCurrency } }));
       const token = localStorage.getItem("token");
       if (token) {
-        const apiOrigin = window.location.protocol === "file:" || (window.location.port && window.location.port !== "5000")
-          ? "http://localhost:5000" : window.location.origin;
+        const apiOrigin = window.SyncVCardApiOrigin;
         fetch(apiOrigin + "/api/user/preferences", {
           method: "PATCH",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
@@ -169,9 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const getApiBaseUrl = () => {
-    if (window.location.protocol === "file:") return "http://localhost:5000";
-    if (window.location.port && window.location.port !== "5000") return "http://localhost:5000";
-    return window.location.origin;
+    return window.SyncVCardApiOrigin;
   };
 
   const getInitials = (name) => {

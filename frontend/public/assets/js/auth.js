@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const apiBase = "http://127.0.0.1:5000";
+        const apiBase = window.SyncVCardApiOrigin;
         const res = await fetch(`${apiBase}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -105,14 +105,14 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = dest;
       } catch (err) {
         console.error(err);
-        alert("Unable to contact server on http://127.0.0.1:5000. Please ensure the backend is running.");
+        alert("Unable to contact the server. Please try again.");
       }
     });
   }
 
   const forgotPasswordForm = document.getElementById("forgotPasswordForm");
   if (forgotPasswordForm) {
-    forgotPasswordForm.addEventListener("submit", (event) => {
+    forgotPasswordForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const email = document.getElementById("forgotEmail");
 
@@ -121,12 +121,25 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      alert("Password reset link sent successfully.");
-      forgotPasswordForm.reset();
+      const button = forgotPasswordForm.querySelector('[type="submit"]');
+      if (button) button.disabled = true;
+      try {
+        const response = await fetch(window.SyncVCardApiOrigin + "/api/auth/forgot-password", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.value.trim() }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Unable to request password recovery.");
+        alert(data.message);
+        forgotPasswordForm.reset();
+      } catch (error) { alert(error.message || "Unable to contact the server."); }
+      finally { if (button) button.disabled = false; }
     });
   }
 
   const resetPasswordForm = document.getElementById("resetPasswordForm");
+  const resetToken = new URLSearchParams(window.location.hash.slice(1)).get("token") || "";
+  if (resetToken) window.history.replaceState(null, "", window.location.pathname + window.location.search);
   const newPassword = document.getElementById("newPassword");
   const confirmPassword = document.getElementById("confirmPassword");
   const strengthText = document.getElementById("strengthText");
@@ -166,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (resetPasswordForm) {
-    resetPasswordForm.addEventListener("submit", (event) => {
+    resetPasswordForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       if (!newPassword || !confirmPassword || newPassword.value !== confirmPassword.value) {
@@ -174,9 +187,25 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      alert("Password reset successfully.");
-      resetPasswordForm.reset();
-      updateStrength();
+      if (!resetToken) { alert("Open the reset link from your email, or request a new link."); return; }
+      if (newPassword.value.length < 12 || new TextEncoder().encode(newPassword.value).length > 72) {
+        alert("Use at least 12 characters and no more than 72 bytes for your password."); return;
+      }
+      const button = resetPasswordForm.querySelector('[type="submit"]');
+      if (button) button.disabled = true;
+      try {
+        const response = await fetch(window.SyncVCardApiOrigin + "/api/auth/reset-password", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: resetToken, password: newPassword.value }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Unable to reset password.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        alert(data.message);
+        window.location.replace("login.html");
+      } catch (error) { alert(error.message || "Unable to contact the server."); }
+      finally { if (button) button.disabled = false; }
     });
   }
 
@@ -268,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       try {
-        const apiBase = `${window.location.protocol}//${window.location.hostname}:5000`;
+        const apiBase = window.SyncVCardApiOrigin;
         const res = await fetch(`${apiBase}/api/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

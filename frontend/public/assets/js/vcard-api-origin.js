@@ -12,17 +12,8 @@
     if (configured) return configured;
     if (window.location.protocol === "file:") return "http://localhost:5000";
 
-    // When Express serves the public portal, its API is always same-origin,
-    // including development instances running on a non-default port.
-    if (/^\/pages\/public-vcard(?:\/|$)/.test(window.location.pathname)) {
-      return window.location.origin;
-    }
-
-    var host = window.location.hostname;
-    var localPreview = /^(?:localhost|127\.0\.0\.1|\[::1\])$/i.test(host);
-    if (localPreview && window.location.port && window.location.port !== "5000") {
-      return window.location.protocol + "//" + host + ":5000";
-    }
+    // Same-origin works behind HTTPS proxies and on any server port. Separate
+    // static preview servers can opt in via SYNC_API_ORIGIN or the meta tag.
     return window.location.origin;
   }
 

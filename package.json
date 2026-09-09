@@ -8,7 +8,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "check:deployment": "node tests/deployment-check.js",
+    "test": "node --test tests/frontend-deployment.test.js tests/password-recovery.test.js",
     "db:migrate": "node database/run-db.js migrate",
     "db:migrate:one": "node database/run-single-migration.js",
     "db:seed": "node database/run-db.js seed",

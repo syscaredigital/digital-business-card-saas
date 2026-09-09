@@ -20,9 +20,7 @@
   }
 
   function apiBaseUrl() {
-    if (window.location.protocol === "file:") return "http://localhost:5000";
-    if (window.location.port && window.location.port !== "5000") return "http://localhost:5000";
-    return window.location.origin;
+    return window.SyncVCardApiOrigin;
   }
 
   function formatPrice(price) {

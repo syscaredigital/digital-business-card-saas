@@ -220,4 +220,13 @@ async function sendAppointmentApproved({
   });
 }
 
-module.exports = { sendAppointmentApproved, sendVcardEnquiry, sendWebsiteContact };
+async function sendPasswordReset({ to, resetUrl }) {
+  ensureMailConfigured();
+  return getTransporter().sendMail({
+    from: mailFrom(), to, subject: "Reset your Sync E-Card password",
+    text: `Reset your password using this link (valid for 30 minutes):\n${resetUrl}\n\nIf you did not request this, ignore this email.`,
+    html: `<p><a href="${escapeHtml(resetUrl)}">Reset your password</a></p><p>This link expires in 30 minutes and can be used once.</p><p>If you did not request this, ignore this email.</p>`,
+  });
+}
+
+module.exports = { sendAppointmentApproved, sendVcardEnquiry, sendWebsiteContact, sendPasswordReset };
