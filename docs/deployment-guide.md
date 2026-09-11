@@ -1,3 +1,5 @@
+For the current production procedure, use [Namecheap VPS deployment](namecheap-vps-deployment.md) and [current status](deployment-status.md). The notes below describe local setup; migration 064 is also required for revenue reporting.
+
 The backend serves the frontend and API on one origin. Open `/` through the Node server or an HTTPS reverse proxy. Local VS Code Live Server previews on HTTP ports 5500 and 5501 automatically use the backend on port 5000; the backend must be running. Other separate preview ports need an explicit API origin as described below.
 
 From the repository root:

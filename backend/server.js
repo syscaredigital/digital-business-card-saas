@@ -18,6 +18,7 @@ async function start() {
   validateEnvironment();
   await pool.query('SELECT auth_version FROM users LIMIT 0');
   await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
+  await pool.query('SELECT amount_lkr FROM revenue_lkr_entries LIMIT 0');
   const app = require('./app');
   server = app.listen(Number(process.env.PORT || 5000), () => {
     console.log('Server listening on port ' + (process.env.PORT || 5000));

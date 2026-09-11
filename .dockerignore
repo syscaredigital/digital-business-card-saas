@@ -12,3 +12,4 @@ tests
 test-results
 playwright-report
 deploy/production.env
+.release

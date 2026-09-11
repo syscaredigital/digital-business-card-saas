@@ -1,4 +1,5 @@
 const { currentSubscription } = require('../services/subscription-policy');
+const { captureRevenueRate } = require('../services/revenue.service');
 const pool = require("../config/database.config");
 const bcrypt = require("bcrypt");
 const fs = require("fs/promises");
@@ -1205,6 +1206,7 @@ exports.submitManualPayment = async (req, res, next) => {
       [subscription.rows[0].id, req.user.id, payableAmount, purchaseCurrency,
         fullyDiscounted ? "coupon" : "bank_transfer", fullyDiscounted ? "approved" : "pending",
         paymentReference, proofUrl, couponCalculation ? `Coupon ${couponCalculation.coupon.code} applied` : "Submitted by user for manual review"]);
+    await captureRevenueRate(client, 'payment', payment.rows[0].id, exchange);
     await client.query(`INSERT INTO transactions(payment_id,user_id,transaction_type,amount,currency,reference,gateway,status,metadata)
       VALUES($1,$2,'cash_payment',$3,$4,$5,'manual','pending',$6::jsonb)`,
       [payment.rows[0].id, req.user.id, payableAmount, purchaseCurrency, paymentReference,

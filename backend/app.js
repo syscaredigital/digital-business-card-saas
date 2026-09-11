@@ -38,6 +38,7 @@ app.get('/ready', async (req, res) => {
   try {
     await pool.query('SELECT auth_version FROM users LIMIT 0');
     await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
+    await pool.query('SELECT amount_lkr FROM revenue_lkr_entries LIMIT 0');
     res.json({ status: 'ready' });
   } catch (_) { res.status(503).json({ status: 'unavailable' }); }
 });

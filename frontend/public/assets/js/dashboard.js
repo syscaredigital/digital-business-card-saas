@@ -5275,9 +5275,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function formatDashboardMoney(value) {
+    if (value == null) return "Unavailable";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "LKR",
       minimumFractionDigits: 2,
     }).format(Number(value || 0));
   }
@@ -5360,7 +5361,37 @@ document.addEventListener("DOMContentLoaded", function () {
       var metrics = data.metrics || {};
       var growth = metrics.growth || {};
 
-      setDashboardMetric("revenue", formatDashboardMoney(metrics.monthlyRevenue), growth.revenue, "Revenue recorded this month");
+      var conversion = data.revenueConversion || {};
+      var revenueNote = conversion.missing ? conversion.missing + " sales need an exchange rate; total unavailable"
+        : conversion.estimated ? "LKR gross receipts; " + conversion.estimated + " historical conversions estimated (see CSV)"
+        : "Approved subscription and NFC receipts in LKR";
+      setDashboardMetric("revenue", formatDashboardMoney(metrics.monthlyRevenue), growth.revenue, revenueNote);
+      var revenuePanel = document.querySelector(".admin-revenue-panel");
+      if (revenuePanel) {
+        var description = revenuePanel.querySelector(".admin-panel-heading p");
+        if (description) description.textContent = revenueNote;
+        if (!document.getElementById("downloadRevenueLkr")) {
+          var exportButton = document.createElement("button");
+          exportButton.id = "downloadRevenueLkr";
+          exportButton.type = "button";
+          exportButton.className = "btn btn-outline-light btn-sm";
+          exportButton.textContent = "Download LKR revenue CSV";
+          exportButton.addEventListener("click", async function () {
+            exportButton.disabled = true;
+            try {
+              var exported = await fetch(window.SyncVCardApiOrigin + "/api/super-admin/revenue/export", { headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+              if (!exported.ok) throw new Error("Unable to download revenue report");
+              var blobUrl = URL.createObjectURL(await exported.blob());
+              var link = document.createElement("a");
+              link.href = blobUrl; link.download = "revenue-lkr.csv";
+              document.body.appendChild(link); link.click(); link.remove();
+              setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 1000);
+            } catch (error) { showToast("Download failed", error.message); }
+            finally { exportButton.disabled = false; }
+          });
+          revenuePanel.querySelector(".admin-panel-heading").appendChild(exportButton);
+        }
+      }
       setDashboardMetric("users", formatDashboardNumber(metrics.totalUsers), growth.users, formatDashboardNumber(metrics.activeUsers) + " active accounts");
       setDashboardMetric("subscriptions", formatDashboardNumber(metrics.activeSubscriptions), growth.subscriptions, "Active database subscriptions");
       setDashboardMetric("cards", formatDashboardNumber(metrics.publishedCards), growth.cards, "Published database VCards");
@@ -5380,7 +5411,7 @@ document.addEventListener("DOMContentLoaded", function () {
       renderDashboardUsers(data.recentUsers || []);
       renderDashboardPlans(data.planDistribution || []);
 
-      if (Array.isArray(data.revenueSeries) && data.revenueSeries.length) {
+      if (!conversion.missing && Array.isArray(data.revenueSeries) && data.revenueSeries.length) {
         analyticsSeries["30"] = {
           label: "Last 30 Days",
           labels: data.revenueSeries.map(function (point) {

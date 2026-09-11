@@ -64,3 +64,5 @@
 \ir migrations/062_add_coupon_user_visibility.sql
 
 \ir migrations/063_add_password_recovery.sql
+
+\ir migrations/064_add_lkr_revenue_reporting.sql

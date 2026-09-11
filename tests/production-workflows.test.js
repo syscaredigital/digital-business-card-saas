@@ -105,6 +105,33 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal((await request(route, 'PATCH', { status: 'shipped', trackingNumber: 'TEST123' }, adminToken)).status, 200);
       assert.equal((await request(route, 'PATCH', { status: 'completed' }, adminToken)).status, 200);
     });
+    await t.test('mixed-currency revenue uses fixed LKR conversions and includes NFC without double counting', async () => {
+      const { captureRevenueRate } = require('../backend/services/revenue.service');
+      const usd = (await db.query("INSERT INTO payments(user_id,amount,currency,method,status,paid_at) VALUES($1,10,'USD','cash','approved',NOW()) RETURNING id", [first.body.user.id])).rows[0];
+      await captureRevenueRate(db, 'payment', usd.id, { rate: 1 / 300, rateDate: '2026-09-10' });
+      // A duplicate transaction ledger entry must not duplicate a receipt.
+      await db.query("INSERT INTO transactions(payment_id,user_id,transaction_type,amount,currency,status) VALUES($1,$2,'cash_payment',10,'USD','completed')", [usd.id, first.body.user.id]);
+      const eur = (await db.query("INSERT INTO payments(user_id,amount,currency,method,status,paid_at) VALUES($1,20,'EUR','cash','approved',NOW()) RETURNING id", [first.body.user.id])).rows[0];
+      await captureRevenueRate(db, 'payment', eur.id, { rate: 0.003, rateDate: '2026-09-10' });
+      // Re-reading a sale with a different live quote must not change history.
+      await captureRevenueRate(db, 'payment', usd.id, { rate: 1 / 400, rateDate: '2026-09-11' });
+      const dashboard = await request('/api/super-admin/dashboard', 'GET', null, adminToken);
+      assert.equal(dashboard.status, 200, JSON.stringify(dashboard.body));
+      assert.equal(dashboard.body.revenueCurrency, 'LKR');
+      assert.equal(dashboard.body.metrics.monthlyRevenue, 11766.67); // 1000 + NFC 1100 + USD 3000 + EUR 6666.67
+      const csvResponse = await fetch(origin + '/api/super-admin/revenue/export', { headers: { Authorization: `Bearer ${adminToken}` } });
+      const csv = await csvResponse.text();
+      assert.equal(csvResponse.status, 200);
+      assert.ok(csv.includes('amount_lkr'));
+      assert.ok(csv.includes('3000.00'));
+      assert.ok(csv.includes('6666.67'));
+      assert.equal((await request('/api/super-admin/revenue/export', 'GET', null, first.body.token)).status, 403);
+      await db.query("INSERT INTO payments(user_id,amount,currency,method,status,paid_at) VALUES($1,15,'GBP','cash','approved',NOW())", [first.body.user.id]);
+      const incomplete = await request('/api/super-admin/dashboard', 'GET', null, adminToken);
+      assert.equal(incomplete.body.metrics.monthlyRevenue, null);
+      assert.equal(incomplete.body.revenueConversion.missing, 1);
+      await db.query("DELETE FROM payments WHERE currency='GBP'");
+    });
     if (process.argv.includes('--browser')) await t.test('real browser login and user/admin dashboard navigation', async () => {
       const browser = await require('../backend/node_modules/playwright').chromium.launch({ channel: 'msedge', headless: true });
       const folder = path.resolve(__dirname, '../test-results');
@@ -123,6 +150,13 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
           await page.waitForURL(`**/pages/${account.role}/dashboard.html`, { timeout: 15000 });
           await page.waitForLoadState('networkidle');
           assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('user')).email), account.email);
+          if (account.role === 'super-admin') {
+            assert.match(await page.locator('[data-dashboard-metric="revenue"] > strong').innerText(), /LKR.*11,766\.67/);
+            const downloadPromise = page.waitForEvent('download');
+            await page.click('#downloadRevenueLkr');
+            const download = await downloadPromise;
+            await download.saveAs(path.join(folder, 'browser-revenue-lkr.csv'));
+          }
           await page.screenshot({ path: path.join(folder, account.role + '-dashboard-390.png') });
           assert.deepEqual(errors, []);
           await context.close();

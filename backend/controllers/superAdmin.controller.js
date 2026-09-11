@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const path = require("path");
 const { VCARD_FEATURES, normalizePlanFeatures } = require("../config/vcard-features");
 const { normalizeCurrency } = require("../config/currencies");
+const { captureRevenueRate, reportingSummary } = require('../services/revenue.service');
 
 function number(value) {
   return Number(value || 0);
@@ -19,7 +20,7 @@ function percentChange(current, previous) {
 exports.getDashboard = async (req, res, next) => {
   const startedAt = Date.now();
   try {
-    const [summaryResult, comparisonResult, recentUsersResult, revenueSeriesResult, plansResult] =
+    const [summaryResult, comparisonResult, recentUsersResult, revenueSeriesResult, plansResult, revenueState] =
       await Promise.all([
         pool.query(`
           SELECT
@@ -29,9 +30,9 @@ exports.getDashboard = async (req, res, next) => {
              WHERE COALESCE(r.name, 'user') <> 'super_admin' AND u.status = 'active') AS active_users,
             (SELECT COUNT(*) FROM subscriptions WHERE status = 'active') AS active_subscriptions,
             (SELECT COUNT(*) FROM vcards WHERE is_active = TRUE) AS published_cards,
-            (SELECT COALESCE(SUM(amount), 0) FROM payments
+            (SELECT COALESCE(SUM(amount_lkr), 0) FROM revenue_lkr_entries
              WHERE status IN ('completed', 'paid', 'approved')
-               AND COALESCE(paid_at, created_at) >= DATE_TRUNC('month', CURRENT_DATE)) AS monthly_revenue,
+               AND received_at >= DATE_TRUNC('month', CURRENT_DATE)) AS monthly_revenue,
             (SELECT COUNT(*) FROM nfc_orders WHERE status = 'pending') AS pending_nfc_orders,
             (SELECT COUNT(*) FROM payments WHERE status = 'pending') AS pending_payments
         `),
@@ -44,13 +45,13 @@ exports.getDashboard = async (req, res, next) => {
              WHERE COALESCE(r.name, 'user') <> 'super_admin'
                AND u.created_at >= NOW() - INTERVAL '60 days'
                AND u.created_at < NOW() - INTERVAL '30 days') AS users_previous,
-            (SELECT COALESCE(SUM(amount), 0) FROM payments
+            (SELECT COALESCE(SUM(amount_lkr), 0) FROM revenue_lkr_entries
              WHERE status IN ('completed', 'paid', 'approved')
-               AND COALESCE(paid_at, created_at) >= NOW() - INTERVAL '30 days') AS revenue_current,
-            (SELECT COALESCE(SUM(amount), 0) FROM payments
+               AND received_at >= NOW() - INTERVAL '30 days') AS revenue_current,
+            (SELECT COALESCE(SUM(amount_lkr), 0) FROM revenue_lkr_entries
              WHERE status IN ('completed', 'paid', 'approved')
-               AND COALESCE(paid_at, created_at) >= NOW() - INTERVAL '60 days'
-               AND COALESCE(paid_at, created_at) < NOW() - INTERVAL '30 days') AS revenue_previous,
+               AND received_at >= NOW() - INTERVAL '60 days'
+               AND received_at < NOW() - INTERVAL '30 days') AS revenue_previous,
             (SELECT COUNT(*) FROM subscriptions WHERE created_at >= NOW() - INTERVAL '30 days') AS subscriptions_current,
             (SELECT COUNT(*) FROM subscriptions
              WHERE created_at >= NOW() - INTERVAL '60 days'
@@ -79,14 +80,14 @@ exports.getDashboard = async (req, res, next) => {
           LIMIT 5
         `),
         pool.query(`
-          SELECT days.day::date AS date, COALESCE(SUM(p.amount), 0) AS amount
+          SELECT days.day::date AS date, COALESCE(SUM(p.amount_lkr), 0) AS amount
           FROM GENERATE_SERIES(
             CURRENT_DATE - INTERVAL '29 days',
             CURRENT_DATE,
             INTERVAL '1 day'
           ) days(day)
-          LEFT JOIN payments p
-            ON COALESCE(p.paid_at, p.created_at)::date = days.day::date
+          LEFT JOIN revenue_lkr_entries p
+            ON p.received_at::date = days.day::date
            AND p.status IN ('completed', 'paid', 'approved')
           GROUP BY days.day
           ORDER BY days.day
@@ -99,6 +100,7 @@ exports.getDashboard = async (req, res, next) => {
           GROUP BY COALESCE(p.name, 'Free')
           ORDER BY count DESC
         `),
+        reportingSummary(pool),
       ]);
 
     const summary = summaryResult.rows[0];
@@ -107,8 +109,10 @@ exports.getDashboard = async (req, res, next) => {
 
     res.json({
       generatedAt: new Date().toISOString(),
+      revenueCurrency: 'LKR',
+      revenueConversion: { missing: revenueState.missing, estimated: revenueState.estimated },
       metrics: {
-        monthlyRevenue: number(summary.monthly_revenue),
+        monthlyRevenue: revenueState.missing ? null : number(summary.monthly_revenue),
         totalUsers: number(summary.total_users),
         activeUsers: number(summary.active_users),
         activeSubscriptions: number(summary.active_subscriptions),
@@ -133,7 +137,7 @@ exports.getDashboard = async (req, res, next) => {
       })),
       revenueSeries: revenueSeriesResult.rows.map((point) => ({
         date: point.date,
-        amount: number(point.amount),
+        amount: revenueState.missing ? null : number(point.amount),
       })),
       planDistribution: plansResult.rows.map((plan) => ({
         name: plan.name,
@@ -1216,6 +1220,7 @@ exports.updateNfcOrder = async (req, res, next) => {
     }
     const existing = existingResult.rows[0];
     const paymentStatus = requestedPaymentStatus || existing.payment_status || "pending";
+    await captureRevenueRate(client, 'nfc', orderId);
     let status = requestedStatus || existing.status;
     let trackingNumber = hasTrackingNumber ? requestedTrackingNumber : existing.tracking_number;
     const adminNote = hasAdminNote ? requestedAdminNote : existing.admin_note;
@@ -1714,6 +1719,7 @@ async function validateCashPaymentRelations(client, payment) {
 }
 
 async function syncCashPaymentTransaction(client, payment) {
+  await captureRevenueRate(client, 'payment', payment.id);
   const transactionStatus = payment.status === "approved" ? "completed" : payment.status;
   const existing = await client.query(
     "SELECT id FROM transactions WHERE payment_id = $1 ORDER BY id LIMIT 1",
@@ -3360,7 +3366,7 @@ exports.updateReport=(req,res,next)=>{const id=positiveIntegerParam(req);if(!id)
 exports.deleteReport=async(req,res,next)=>{const id=positiveIntegerParam(req);if(!id)return res.status(400).json({message:"Invalid report ID"});try{const result=await pool.query("DELETE FROM saved_reports WHERE id=$1 RETURNING id,name",[id]);if(!result.rowCount)return res.status(404).json({message:"Report not found"});await pool.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata) VALUES($1,'report.deleted','saved_report',$2,$3::jsonb)`,[req.user.id,id,JSON.stringify(result.rows[0])]);res.json({message:"Report and its export history were deleted"});}catch(error){next(error);}};
 
 async function generateReportRows(client,type,days){
-  if(type==="revenue")return(await client.query(`SELECT created_at::date date,currency,COUNT(*)::int transactions,COALESCE(SUM(amount),0) total_amount FROM transactions WHERE created_at>=NOW()-($1::integer*INTERVAL '1 day') AND status IN ('completed','paid','approved','successful') GROUP BY created_at::date,currency ORDER BY date DESC,currency`,[days])).rows;
+  if(type==="revenue")return(await client.query(`SELECT source_type,source_id,received_at,amount AS original_amount,currency AS original_currency,lkr_per_unit,rate_date,amount_lkr,conversion_basis FROM revenue_lkr_entries WHERE received_at>=NOW()-($1::integer*INTERVAL '1 day') ORDER BY received_at DESC`,[days])).rows;
   if(type==="subscriptions")return(await client.query(`SELECT p.name plan,p.billing_interval,COUNT(s.id)::int subscriptions,COUNT(s.id) FILTER(WHERE s.status='active')::int active,COUNT(s.id) FILTER(WHERE s.status='cancelled')::int cancelled FROM plans p LEFT JOIN subscriptions s ON s.plan_id=p.id AND s.created_at>=NOW()-($1::integer*INTERVAL '1 day') GROUP BY p.id ORDER BY active DESC`,[days])).rows;
   if(type==="platform")return(await client.query(`SELECT d.day::date date,
     (SELECT COUNT(*) FROM users u WHERE u.created_at>=d.day AND u.created_at<d.day+INTERVAL '1 day')::int new_users,

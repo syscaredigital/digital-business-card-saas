@@ -7,6 +7,7 @@ const pool = require('./config/database.config');
   try {
     await pool.query('SELECT auth_version FROM users LIMIT 0');
     await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
+    await pool.query('SELECT amount_lkr FROM revenue_lkr_entries LIMIT 0');
     const free = await pool.query("SELECT id FROM plans WHERE price=0 AND status='active' LIMIT 1");
     if (!free.rowCount) throw new Error('An active free plan is required for registration');
     console.log('PASS database and registration plan');

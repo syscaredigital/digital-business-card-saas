@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "node --test ../tests/frontend-deployment.test.js ../tests/password-recovery.test.js",
+    "test": "node --test ../tests/frontend-deployment.test.js ../tests/password-recovery.test.js ../tests/security-config.test.js ../tests/production-workflows.test.js",
     "start": "node server.js",
     "seed:super-admin": "node seed-super-admin.js",
     "migrate:json-users": "node migrate-json-users.js"

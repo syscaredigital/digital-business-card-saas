@@ -5,6 +5,7 @@ const superAdminController = require("../controllers/superAdmin.controller");
 const paymentSlipUpload = require("../middlewares/payment-slip-upload.middleware");
 
 const router = express.Router();
+router.get('/revenue/export', authenticate, authorize('super_admin'), require('../controllers/revenue.controller').exportCsv);
 
 router.get(
   "/dashboard",
