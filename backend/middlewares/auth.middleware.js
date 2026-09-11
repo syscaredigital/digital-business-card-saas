@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("../config/database.config");
+const { signingSecret } = require('../config/environment');
 
 module.exports = async function authenticate(req, res, next) {
   try {
@@ -13,7 +14,7 @@ module.exports = async function authenticate(req, res, next) {
     const rawToken = match[1];
     const payload = jwt.verify(
       rawToken,
-      process.env.JWT_SECRET || "devsecret"
+      signingSecret(), { algorithms: ['HS256'] }
     );
     const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
     const revoked = await pool.query(

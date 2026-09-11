@@ -1,0 +1,61 @@
+services:
+  app:
+    build: .
+    init: true
+    restart: unless-stopped
+    env_file: ./deploy/production.env
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_SSL: "false"
+      TRUST_PROXY: "172.30.0.2"
+    expose:
+      - "5000"
+    volumes:
+      - uploads:/app/backend/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - private
+  db:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    env_file: ./deploy/production.env
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - private
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    env_file: ./deploy/production.env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      private:
+        ipv4_address: 172.30.0.2
+    depends_on:
+      - app
+volumes:
+  uploads:
+  database:
+  caddy_data:
+  caddy_config:
+networks:
+  private:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

@@ -43,7 +43,7 @@ async function main() {
     const overdue = await pool.query("SELECT COUNT(*)::int AS count FROM subscriptions WHERE status='active' AND end_date < NOW()");
     record('No expired subscriptions marked active', overdue.rows[0].count === 0, `${overdue.rows[0].count} overdue active subscriptions`);
     const checks = [
-      ['/health', 200], ['/', 200], ['/pages/website/home.html', 200],
+      ['/health', 200], ['/ready', 200], ['/', 200], ['/pages/website/home.html', 200],
       ['/pages/auth/login.html', 200], ['/pages/user/dashboard.html', 200],
       ['/pages/super-admin/dashboard.html', 200], ['/pages/public-vcard/final-10-corporate.html', 200],
       ['/api/public/plans', 200], ['/api/public/currencies', 200],

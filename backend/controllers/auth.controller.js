@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("../config/database.config");
+const { signingSecret } = require('../config/environment');
 const { normalizeCurrency } = require("../config/currencies");
 const { getRate } = require("../services/exchange-rate.service");
 
@@ -34,7 +35,7 @@ function toSafeUser(row) {
 function createToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role || "user", version: user.authVersion || 0, jti: crypto.randomUUID() },
-    process.env.JWT_SECRET || "devsecret",
+    signingSecret(),
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
   );
 }

@@ -9366,3 +9366,10 @@ input {
     transition-duration: 0.01ms !important;
   }
 }
+/* Keep account actions above promotional content on small screens. */
+@media (max-width: 640px) {
+  .login-v2 .login-v2-story,
+  .register-v2 .register-v2-story { display: none; }
+  .login-v2 .login-v2-layout,
+  .register-v2 .register-v2-layout { padding-top: 20px; gap: 0; }
+}

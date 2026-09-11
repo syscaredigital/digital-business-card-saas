@@ -2,7 +2,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_schema='public' AND table_name='plans' AND column_name='storage_limit_mb'
+    WHERE table_schema=current_schema() AND table_name='plans' AND column_name='storage_limit_mb'
   ) THEN
     ALTER TABLE plans ADD COLUMN storage_limit_mb INTEGER NOT NULL DEFAULT 100;
     UPDATE plans

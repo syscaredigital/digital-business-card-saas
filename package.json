@@ -9,11 +9,13 @@
   },
   "scripts": {
     "check:deployment": "node tests/deployment-check.js",
-    "test": "node --test tests/frontend-deployment.test.js tests/password-recovery.test.js",
-    "db:migrate": "node database/run-db.js migrate",
+    "test": "node --test tests/frontend-deployment.test.js tests/password-recovery.test.js tests/security-config.test.js tests/production-workflows.test.js",
+    "check:browser": "node tests/browser-check.js",
+    "check:production": "node backend/preflight.js",
+    "db:migrate": "node database/migrate.js",
     "db:migrate:one": "node database/run-single-migration.js",
     "db:seed": "node database/run-db.js seed",
-    "db:setup": "node database/run-db.js setup"
+    "db:setup": "node database/migrate.js --seed"
   },
   "repository": {
     "type": "git",

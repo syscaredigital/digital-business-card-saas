@@ -1,3 +1,4 @@
+const { currentSubscription } = require('../services/subscription-policy');
 const pool = require("../config/database.config");
 const bcrypt = require("bcrypt");
 const fs = require("fs/promises");
@@ -17,7 +18,7 @@ async function loadVcardEntitlements(db, userId) {
   const [planResult, templateResult] = await Promise.all([
     db.query(`SELECT p.id,p.name,p.vcard_limit,p.features
       FROM subscriptions s JOIN plans p ON p.id=s.plan_id
-      WHERE s.user_id=$1 AND s.status='active'
+      WHERE s.user_id=$1 AND ${currentSubscription()}
       ORDER BY s.created_at DESC LIMIT 1`, [userId]),
     db.query(`SELECT id,name,description,preview_url,template_json FROM vcard_templates WHERE is_public=TRUE ORDER BY id`),
   ]);
@@ -86,7 +87,7 @@ exports.dashboard = async (req, res, next) => {
         `SELECT s.status, s.start_date, s.end_date, s.auto_renew,
                 p.name AS plan_name, p.vcard_limit, p.nfc_limit, p.analytics_limit, p.features
          FROM subscriptions s LEFT JOIN plans p ON p.id = s.plan_id
-         WHERE s.user_id = $1 AND s.status = 'active'
+         WHERE s.user_id = $1 AND ${currentSubscription()}
          ORDER BY s.created_at DESC LIMIT 1`, [userId]
       ),
       pool.query(
@@ -384,7 +385,7 @@ exports.accountSettings = async (req, res, next) => {
         contact_capture_required,updated_at FROM user_settings WHERE user_id=$1`,[req.user.id]),
       pool.query(`SELECT p.id,p.name,p.billing_interval,s.start_date,s.end_date
         FROM subscriptions s JOIN plans p ON p.id=s.plan_id
-        WHERE s.user_id=$1 AND s.status='active' ORDER BY s.updated_at DESC,s.id DESC LIMIT 1`,[req.user.id]),
+        WHERE s.user_id=$1 AND ${currentSubscription()} ORDER BY s.updated_at DESC,s.id DESC LIMIT 1`,[req.user.id]),
       pool.query(`SELECT COUNT(*)::int active_sessions,MAX(issued_at) last_session
         FROM auth_sessions WHERE user_id=$1 AND revoked_at IS NULL AND expires_at>NOW()`,[req.user.id]),
       getStorageSummary(pool,req.user.id),
@@ -924,8 +925,8 @@ exports.plans = async (req, res, next) => {
         pay.status AS payment_status,pay.gateway_reference
         FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
         LEFT JOIN LATERAL (SELECT status,gateway_reference FROM payments WHERE subscription_id=s.id ORDER BY created_at DESC LIMIT 1) pay ON TRUE
-        WHERE s.user_id=$1 AND s.status IN ('active','pending','trial')
-        ORDER BY (s.status='active') DESC,s.created_at DESC`, [req.user.id]),
+        WHERE s.user_id=$1 AND s.status IN ('active','pending','trial') AND (s.status='pending' OR (s.start_date<=CURRENT_DATE AND (s.end_date IS NULL OR s.end_date>=CURRENT_DATE)))
+        ORDER BY (${currentSubscription()}) DESC,s.created_at DESC`, [req.user.id]),
       pool.query(`SELECT pay.id,pay.amount,pay.currency,pay.status,pay.gateway_reference,pay.proof_url,
         pay.created_at,pay.reviewed_at,p.name AS plan_name,c.code AS coupon_code,
         cr.original_amount,cr.discount_amount
@@ -1125,7 +1126,7 @@ exports.submitManualPayment = async (req, res, next) => {
       client.query(`SELECT p.id,p.name,p.price,p.billing_interval FROM plans p
         WHERE p.id=$1 AND p.status='active' FOR SHARE OF p`, [planId]),
       client.query(`SELECT s.id,s.plan_id,COALESCE(p.price,0) price FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
-        WHERE s.user_id=$1 AND s.status='active' ORDER BY s.created_at DESC LIMIT 1 FOR UPDATE OF s`, [req.user.id]),
+        WHERE s.user_id=$1 AND ${currentSubscription()} ORDER BY s.created_at DESC LIMIT 1 FOR UPDATE OF s`, [req.user.id]),
       client.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch"]]),
       client.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
     ]);
@@ -1186,7 +1187,7 @@ exports.submitManualPayment = async (req, res, next) => {
         WHERE user_id=$1 AND status='active'`, [req.user.id]);
     }
     const subscription = await client.query(`INSERT INTO subscriptions(user_id,plan_id,status,start_date,end_date,auto_renew,cancel_reason)
-      VALUES($1,$2,$3,CURRENT_DATE,
+      VALUES($1,$2,$3::varchar,CURRENT_DATE,
         CASE WHEN $3='active' AND LOWER(COALESCE($4,'')) IN ('year','yearly','annual') THEN (CURRENT_DATE + INTERVAL '1 year')::date
              WHEN $3='active' AND LOWER(COALESCE($4,'')) IN ('week','weekly') THEN (CURRENT_DATE + INTERVAL '1 week')::date
              WHEN $3='active' AND LOWER(COALESCE($4,'')) IN ('day','daily') THEN (CURRENT_DATE + INTERVAL '1 day')::date
@@ -1200,7 +1201,7 @@ exports.submitManualPayment = async (req, res, next) => {
       ? `COUPON-${couponCalculation.coupon.id}-${req.user.id}-${Date.now()}`
       : reference;
     const payment = await client.query(`INSERT INTO payments(subscription_id,user_id,amount,currency,method,status,gateway_reference,proof_url,notes,paid_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,CASE WHEN $6='approved' THEN NOW() ELSE NULL END) RETURNING id,status,amount,currency`,
+      VALUES($1,$2,$3,$4,$5,$6::varchar,$7,$8,$9,CASE WHEN $6::varchar='approved' THEN NOW() ELSE NULL END) RETURNING id,status,amount,currency`,
       [subscription.rows[0].id, req.user.id, payableAmount, purchaseCurrency,
         fullyDiscounted ? "coupon" : "bank_transfer", fullyDiscounted ? "approved" : "pending",
         paymentReference, proofUrl, couponCalculation ? `Coupon ${couponCalculation.coupon.code} applied` : "Submitted by user for manual review"]);
@@ -1332,7 +1333,7 @@ exports.createVcard = async (req, res, next) => {
       `SELECT COALESCE(p.vcard_limit, 1)::int AS card_limit,
               (SELECT COUNT(*)::int FROM vcards v WHERE v.user_id = $1) AS card_count
        FROM users u
-       LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
+       LEFT JOIN subscriptions s ON s.user_id = u.id AND ${currentSubscription()}
        LEFT JOIN plans p ON p.id = s.plan_id
        WHERE u.id = $1 ORDER BY s.created_at DESC NULLS LAST LIMIT 1`, [req.user.id]
     );

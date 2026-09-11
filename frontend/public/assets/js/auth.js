@@ -225,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (/[^A-Za-z0-9]/.test(value)) score += 1;
 
     registerStrength.dataset.score = String(score);
-    if (!value) registerStrengthText.textContent = "Use 8+ characters, a number, and a symbol";
+    if (!value) registerStrengthText.textContent = "Use at least 12 characters";
     else if (score <= 1) registerStrengthText.textContent = "Weak — add more character variety";
     else if (score === 2) registerStrengthText.textContent = "Fair — add a number or symbol";
     else if (score === 3) registerStrengthText.textContent = "Strong password";
@@ -270,8 +270,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (password.value.length < 8) {
-        alert("Your password must contain at least 8 characters.");
+      if (password.value.length < 12 || new TextEncoder().encode(password.value).length > 72) {
+        alert("Use at least 12 characters and no more than 72 bytes for your password.");
         return;
       }
 

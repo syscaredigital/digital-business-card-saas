@@ -1,6 +1,5 @@
-﻿require("dotenv").config();
+require('./config/environment');
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -10,9 +9,13 @@ const pool = require("./config/database.config");
 const { frontendVcardUrl } = require("./helpers/vcard-url");
 const frontendHeaders = require("./helpers/frontend-headers");
 const app = express();
+if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY.split(',').map(value => value.trim()));
 
 app.use(helmet());
-app.use(cors());
+const allowedOrigins = [process.env.PUBLIC_APP_URL, ...(process.env.CORS_ORIGINS || '').split(',')].filter(Boolean).map(value => value.replace(/\/$/, ''));
+app.use(cors({ origin(origin, callback) {
+  callback(null, !origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin));
+} }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(morgan("dev"));
@@ -31,6 +34,15 @@ app.get("/health", (req, res) => {
 });
 
 // Register routes
+app.get('/ready', async (req, res) => {
+  try {
+    await pool.query('SELECT auth_version FROM users LIMIT 0');
+    await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
+    res.json({ status: 'ready' });
+  } catch (_) { res.status(503).json({ status: 'unavailable' }); }
+});
+const publicRateLimit = require('./middlewares/rate-limit.middleware')({ limit: 120 });
+app.use('/api/public', (req, res, next) => req.method === 'POST' ? publicRateLimit(req, res, next) : next());
 app.post("/api/auth/register", requirePlatformAvailable);
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/public", requirePlatformAvailable, require("./routes/public.routes"));
@@ -60,11 +72,15 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error('Request error:', err.code || err.name);
   if (err.name === "MulterError") {
     return res.status(400).json({ message: err.code === "LIMIT_FILE_SIZE" ? "Payment slip must be 5 MB or smaller" : "Unable to upload the payment slip" });
   }
-  res.status(err.status || err.statusCode || 500).json({ message: err.publicMessage || err.message || "Internal Server Error" });
+  const proposedStatus = Number(err.status || err.statusCode || 500);
+  const status = proposedStatus >= 400 && proposedStatus <= 599 ? proposedStatus : 500;
+  res.status(status).json({ message: status >= 500 && process.env.NODE_ENV === 'production'
+    ? 'The request could not be completed. Please try again later.'
+    : err.publicMessage || err.message || 'Internal Server Error' });
 });
 
 module.exports = app;

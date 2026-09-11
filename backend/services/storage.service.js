@@ -45,7 +45,7 @@ async function getStorageSummary(db, userId) {
   if (!plan) {
     const fallback = await db.query(
       `SELECT id,name,storage_limit_mb FROM plans
-       WHERE status='active' ORDER BY CASE WHEN LOWER(name)='free' THEN 0 ELSE 1 END,price,id LIMIT 1`
+       WHERE status='active' AND price=0 ORDER BY CASE WHEN LOWER(name)='free' THEN 0 ELSE 1 END,price,id LIMIT 1`
     );
     plan = fallback.rows[0] || { id:null,name:"Free",storage_limit_mb:DEFAULT_STORAGE_LIMIT_MB };
   }

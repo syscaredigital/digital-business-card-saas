@@ -18,7 +18,7 @@
   };
   function esc(v){return String(v==null?"":v).replace(/[&<>'"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]})}
   function url(v){try{var input=String(v||"").trim();if(!input)return"";var u=new URL(input,location.href);return /^(https?:)$/.test(u.protocol)?u.href:""}catch(_){return""}}
-  function imageUrl(v){var value=String(v||"").trim();if(/^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=\s]+$/i.test(value))return value;return url(value)}
+  function imageUrl(v){var value=String(v||"").trim();if(/^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=\s]+$/i.test(value))return value;if(!/^(?:https?:\/\/|\/|\.\.?\/)/i.test(value)&&!/^\S+\.(?:png|jpe?g|webp|gif|svg)(?:[?#].*)?$/i.test(value))return"";return url(value)}
   function lines(v){return String(v||"").split(/\r?\n/).map(function(x){return x.trim()}).filter(Boolean)}
   function parts(v){return String(v||"").split(/\s*\|\s*/).map(function(x){return x.trim()})}
   function lastUrl(v){for(var i=v.length-1;i>=0;i--){var found=imageUrl(v[i]);if(found)return found}return""}

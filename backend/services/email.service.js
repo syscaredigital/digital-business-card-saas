@@ -10,6 +10,9 @@ function getTransporter() {
     host: process.env.MAIL_HOST,
     port,
     secure: port === 465,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
     auth: process.env.MAIL_USER && process.env.MAIL_PASS
       ? { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
       : undefined,
@@ -229,4 +232,8 @@ async function sendPasswordReset({ to, resetUrl }) {
   });
 }
 
-module.exports = { sendAppointmentApproved, sendVcardEnquiry, sendWebsiteContact, sendPasswordReset };
+async function verifyConnection() {
+  ensureMailConfigured();
+  return getTransporter().verify();
+}
+module.exports = { sendAppointmentApproved, sendVcardEnquiry, sendWebsiteContact, sendPasswordReset, verifyConnection };

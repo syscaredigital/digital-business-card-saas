@@ -26,8 +26,8 @@ function loadEnvFile(filePath) {
 function getEnv() {
   const rootEnvPath = path.resolve(__dirname, "..", "backend", ".env");
   return {
-    ...process.env,
     ...loadEnvFile(rootEnvPath),
+    ...process.env,
   };
 }
 

@@ -1,0 +1,14 @@
+.git
+.env
+**/.env
+**/.env.*
+**/node_modules
+backend/data
+backend/uploads
+logs
+storage
+backups
+tests
+test-results
+playwright-report
+deploy/production.env
