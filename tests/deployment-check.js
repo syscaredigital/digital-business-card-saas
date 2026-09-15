@@ -40,7 +40,7 @@ async function main() {
   try {
     await pool.query({ text: 'SELECT 1', query_timeout: 5000 });
     record('Database connection', true);
-    const overdue = await pool.query("SELECT COUNT(*)::int AS count FROM subscriptions WHERE status='active' AND end_date < NOW()");
+    const overdue = await pool.query("SELECT COUNT(*)::int AS count FROM subscriptions WHERE status='active' AND end_date < CURRENT_DATE");
     record('No expired subscriptions marked active', overdue.rows[0].count === 0, `${overdue.rows[0].count} overdue active subscriptions`);
     const checks = [
       ['/health', 200], ['/ready', 200], ['/', 200], ['/pages/website/home.html', 200],

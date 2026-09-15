@@ -1,4 +1,21 @@
-Status as of 11 September 2026: application fixes and deployment files are prepared; the public VPS launch has not been performed or verified.
+Status as of 14 September 2026: local regression and browser checks pass, but production preflight fails. The project is not yet cleared for public launch; the VPS deployment has not been performed or verified.
+
+Latest deployment review (14 September 2026):
+
+- `npm test`: 35 tests passed, zero failures. Tests used disposable schemas in the local development database.
+- `npm run check:deployment`: 25 checks passed; 120 JavaScript scripts parsed. The expiry smoke check now uses `CURRENT_DATE`, matching the application's inclusive final subscription day, instead of incorrectly treating subscriptions ending today as overdue.
+- `npm run check:browser`: all seven selected public/auth/template pages passed at 1440px and 390px, with no detected local HTTP failures, JavaScript exceptions, CSP errors, or horizontal overflow.
+- `node tests/production-workflows.test.js --browser`: 11 tests passed, including actual user/admin login, dashboards, and the LKR revenue CSV download.
+- `npm --prefix backend audit --omit=dev --json`: the online registry audit reported zero known production dependency vulnerabilities.
+- `node backend/preflight.js --smtp`: failed on the configured public URL and missing domestic NFC shipping fee. Database/schema, free registration plan, bank details, and SMTP connection/authentication passed. No email was sent.
+- `deploy/production.env` is absent on this workstation. The example supplies `https://syncecard.lk`, but the actual private production file and VPS configuration still need to be supplied. The development environment was left unchanged.
+- Docker is still unavailable here, so the image build, Linux runtime, DNS/HTTPS, backup restoration, and real-domain email delivery remain unverified.
+
+Confirmed feature gaps: newsletter forms only show a "coming soon" alert (`frontend/public/assets/js/main.js`); company-admin routes/controllers and payment-reminder/email-notification jobs are empty. Company-admin login still points at company-admin pages. Do not treat these features as implemented or include them in a full-feature launch without further work. Affiliate withdrawals and the full appointment/email flows were not covered by this review.
+
+Additional observations: the public NFC product response is approximately 3.7 MB before proxy compression, which merits testing on a slow mobile connection. Git still tracks 3,048 files under `backend/node_modules`; the provided Docker/release exclusions prevent copying them, and production must install from the lockfile. Workflow tests also emit a PostgreSQL client concurrent-query deprecation warning; they pass with the currently installed version.
+
+The historical verification details and outstanding launch requirements below remain applicable.
 
 Implemented and verified:
 
