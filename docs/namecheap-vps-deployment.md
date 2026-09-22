@@ -1,12 +1,14 @@
-Deployment target: Namecheap VPS/dedicated server, https://syncecard.lk.
+Alternative Docker/VPS procedure. For the current cPanel hosting target, use [the cPanel guide](cpanel-deployment.md).
+
+Deployment target: Namecheap VPS/dedicated server, https://test.syncecard.com.
 
 The supplied Compose setup runs Node, PostgreSQL, and Caddy. Caddy manages certificates after the domain resolves to the VPS and ports 80/443 are reachable. Only the proxy publishes public ports; PostgreSQL and Node stay on the Docker network. Uploads, database files, and certificates use persistent volumes.
 
 Before starting:
 
 1. Install Docker Engine and the Compose plugin on the Linux VPS. This workstation has no Docker executable, so the container build still needs verification there.
-2. Point the `syncecard.lk` DNS A record to the VPS IPv4 address. Only publish an AAAA record if IPv6 is configured. Allow inbound 80/443 and restrict SSH access appropriately.
-3. Extract the release outside any publicly served directory. Copy `deploy/production.env.example` to `deploy/production.env`; keep it private (`chmod 600 deploy/production.env`). The example already uses `syncecard.lk`.
+2. Point the `test.syncecard.com` DNS A record to the VPS IPv4 address. Only publish an AAAA record if IPv6 is configured. Allow inbound 80/443 and restrict SSH access appropriately.
+3. Extract the release outside any publicly served directory. Copy `deploy/production.env.example` to `deploy/production.env`; keep it private (`chmod 600 deploy/production.env`). The example already uses `test.syncecard.com`.
 4. Generate a unique production signing secret and database password. Set identical values for `DB_PASSWORD` and `POSTGRES_PASSWORD`, and matching database/user names in their two sets of variables. Set SMTP credentials for the production mail service. Rotate credentials that previously existed in Git history; removing files from tracking does not erase historical copies.
 
 From the extracted project directory on the VPS:
@@ -38,7 +40,7 @@ docker compose run --rm app node backend/preflight.js --smtp
 docker compose up -d app proxy
 docker compose ps
 docker compose logs --tail=100 app proxy
-curl --fail https://syncecard.lk/ready
+curl --fail https://test.syncecard.com/ready
 ```
 
 The preflight checks production settings, database/schema, registration plan, bank transfer details, domestic NFC delivery fee, and SMTP authentication without sending mail. It must pass. Then use a disposable account on the real domain to verify registration/login, receipt of password-reset email, a public VCard link/QR code, and payment/NFC approval. Test messages and payments should use your own designated test accounts; do not initiate payments or email real customers during verification.

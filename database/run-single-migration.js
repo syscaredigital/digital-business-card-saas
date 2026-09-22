@@ -1,10 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { Pool } = require("../backend/node_modules/pg");
-
-require("../backend/node_modules/dotenv").config({
-  path: path.resolve(__dirname, "../backend/.env"),
-});
+const pool = require("../backend/config/database.config");
 
 const filename = path.basename(process.argv[2] || "");
 if (!/^\d{3}_[a-z0-9_-]+\.sql$/i.test(filename)) {
@@ -17,14 +13,6 @@ if (!fs.existsSync(migrationPath)) {
   console.error(`Migration not found: ${filename}`);
   process.exit(1);
 }
-
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
 
 (async () => {
   try {

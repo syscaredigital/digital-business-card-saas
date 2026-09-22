@@ -19,7 +19,7 @@ function Copy-ReleaseDirectory([string]$Source, [string]$Destination) {
 foreach ($directory in @('backend','frontend','database','deploy','docs')) {
   Copy-ReleaseDirectory (Join-Path $projectRoot $directory) (Join-Path $stageRoot $directory)
 }
-foreach ($file in @('Dockerfile','docker-compose.yml','.dockerignore','README.md')) {
+foreach ($file in @('app.js','package.json','package-lock.json','Dockerfile','docker-compose.yml','.dockerignore','README.md')) {
   Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination (Join-Path $stageRoot $file)
 }
 if (Get-ChildItem -LiteralPath $stageRoot -Recurse -File -Force | Where-Object { $_.Name -in @('.env','production.env','users.json') }) {
