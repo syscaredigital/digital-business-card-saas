@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const apiBase = window.SyncVCardApiOrigin;
-        const res = await fetch(`${apiBase}/api/auth/login`, {
+        const res = await window.SyncSession.fetch(`${apiBase}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email.value.trim(), password: password.value }),
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const data = await res.json();
-        if (data.token) localStorage.setItem("token", data.token);
+        if (data.authenticated) localStorage.setItem("sessionActive", "true");
         if (data.user) {
           localStorage.setItem("user", JSON.stringify(data.user));
           if (data.user.preferredCurrency) localStorage.setItem("preferredCurrency", data.user.preferredCurrency);
@@ -99,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const role = (data.user && data.user.role) || "user";
         let dest = "../user/dashboard.html";
         const r = String(role).toLowerCase();
-        if (r.includes("company") || (r.includes("admin") && r.includes("company"))) dest = "../company-admin/dashboard.html";
         if (r === "super_admin" || r === "super-admin" || r === "superadmin" || r === "super" || r === "admin") dest = "../super-admin/dashboard.html";
 
         window.location.href = dest;
@@ -124,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const button = forgotPasswordForm.querySelector('[type="submit"]');
       if (button) button.disabled = true;
       try {
-        const response = await fetch(window.SyncVCardApiOrigin + "/api/auth/forgot-password", {
+        const response = await window.SyncSession.fetch(window.SyncVCardApiOrigin + "/api/auth/forgot-password", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email.value.trim() }),
         });
@@ -138,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const resetPasswordForm = document.getElementById("resetPasswordForm");
-  const resetToken = new URLSearchParams(window.location.hash.slice(1)).get("token") || "";
+  const resetToken = new URLSearchParams(window.location.hash.slice(1)).get("sessionActive") || "";
   if (resetToken) window.history.replaceState(null, "", window.location.pathname + window.location.search);
   const newPassword = document.getElementById("newPassword");
   const confirmPassword = document.getElementById("confirmPassword");
@@ -194,13 +193,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const button = resetPasswordForm.querySelector('[type="submit"]');
       if (button) button.disabled = true;
       try {
-        const response = await fetch(window.SyncVCardApiOrigin + "/api/auth/reset-password", {
+        const response = await window.SyncSession.fetch(window.SyncVCardApiOrigin + "/api/auth/reset-password", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: resetToken, password: newPassword.value }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Unable to reset password.");
-        localStorage.removeItem("token");
+        localStorage.removeItem("sessionActive");
         localStorage.removeItem("user");
         alert(data.message);
         window.location.replace("login.html");
@@ -298,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         const apiBase = window.SyncVCardApiOrigin;
-        const res = await fetch(`${apiBase}/api/auth/register`, {
+        const res = await window.SyncSession.fetch(`${apiBase}/api/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -307,12 +306,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (res.ok) {
           const data = await res.json();
           if (data.requiresReview) {
-            localStorage.removeItem("token");
+            localStorage.removeItem("sessionActive");
             alert(data.message || "Your account is waiting for administrator approval.");
             window.location.href = "login.html?review=pending";
             return;
           }
-          if (data.token) localStorage.setItem("token", data.token);
+          if (data.authenticated) localStorage.setItem("sessionActive", "true");
           if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
           localStorage.setItem("preferredCurrency", payload.currency);
           sessionStorage.removeItem("affiliate_referral_code");

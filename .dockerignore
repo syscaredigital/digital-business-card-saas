@@ -13,3 +13,8 @@ test-results
 playwright-report
 deploy/production.env
 .release
+
+**/*.env
+**/*.pem
+**/*.key
+**/*.dump

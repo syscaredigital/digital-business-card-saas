@@ -25,3 +25,18 @@
 
   window.SyncVCardApiOrigin = resolveOrigin();
 })();
+
+(function () {
+  "use strict";
+  // Remove bearer tokens left behind by older releases. This marker is only UI state.
+  if (window.localStorage) window.localStorage.removeItem("token");
+  window.SyncSession = {
+    fetch: function (url, options) {
+      var target = new URL(url, window.location.href);
+      if (target.origin !== new URL(window.SyncVCardApiOrigin).origin) throw new Error("Unexpected API origin");
+      options = Object.assign({}, options, { credentials: "include" });
+      options.headers = Object.assign({}, options.headers, { "X-Session-Mode": "cookie", "X-Requested-With": "SyncECard" });
+      return window.fetch(url, options);
+    }
+  };
+})();

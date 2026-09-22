@@ -456,24 +456,31 @@ exports.updateAccountPreferences = async (req,res,next) => {
 };
 
 exports.changeAccountPassword = async (req,res,next) => {
+  let client;
   try {
     const currentPassword=String(req.body.currentPassword || ""),newPassword=String(req.body.newPassword || "");
-    if(newPassword.length<8 || newPassword.length>128 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)){
-      return res.status(400).json({message:"New password must be 8 to 128 characters with uppercase, lowercase, and a number"});
+    if(newPassword.length<12 || Buffer.byteLength(newPassword,"utf8")>72){
+      return res.status(400).json({message:"New password must be at least 12 characters and no more than 72 UTF-8 bytes"});
     }
     if(currentPassword===newPassword)return res.status(400).json({message:"Choose a password different from your current password"});
-    const current=await pool.query("SELECT password FROM users WHERE id=$1",[req.user.id]);
-    if(!current.rowCount || !(await bcrypt.compare(currentPassword,current.rows[0].password)))return res.status(403).json({message:"Current password is incorrect"});
+    client=await pool.connect();
+    await client.query("BEGIN");
+    const current=await client.query("SELECT password,auth_version FROM users WHERE id=$1 FOR UPDATE",[req.user.id]);
+    if(!current.rowCount || current.rows[0].auth_version!==req.user.auth_version || !(await bcrypt.compare(currentPassword,current.rows[0].password))){
+      await client.query("ROLLBACK");
+      return res.status(403).json({message:"Current password is incorrect or your session has changed"});
+    }
     const hash=await bcrypt.hash(newPassword,10);
-    await pool.query("UPDATE users SET password=$1,updated_at=NOW() WHERE id=$2",[hash,req.user.id]);
-    await pool.query(`UPDATE auth_sessions SET revoked_at=NOW()
-      WHERE user_id=$1 AND token_hash<>$2 AND revoked_at IS NULL`,[req.user.id,req.authTokenHash || ""]);
-    await pool.query(`INSERT INTO notifications(user_id,title,message,type)
-      VALUES($1,'Password changed','Your account password was changed. Other signed-in sessions were closed.','security')`,[req.user.id]);
-    await pool.query(`INSERT INTO activity_logs(user_id,action,resource_type,resource_id,ip_address,user_agent)
-      VALUES($1,'account.password_changed','user',$1,$2,$3)`,[req.user.id,req.ip || null,req.get("user-agent") || null]);
-    res.json({message:"Password changed successfully. Other sessions have been signed out."});
-  } catch(error){next(error);}
+    await client.query("UPDATE users SET password=$1,auth_version=auth_version+1,updated_at=NOW() WHERE id=$2",[hash,req.user.id]);
+    await client.query("UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL",[req.user.id]);
+    await client.query("DELETE FROM password_reset_tokens WHERE user_id=$1",[req.user.id]);
+    await client.query("INSERT INTO notifications(user_id,title,message,type) VALUES($1,'Password changed','Your account password was changed. All signed-in sessions were closed.','security')",[req.user.id]);
+    await client.query("INSERT INTO activity_logs(user_id,action,resource_type,resource_id,ip_address,user_agent) VALUES($1,'account.password_changed','user',$1,$2,$3)",[req.user.id,req.ip || null,req.get("user-agent") || null]);
+    await client.query("COMMIT");
+    require("../helpers/browser-session").clear(res);
+    res.json({message:"Password changed successfully. Please sign in again.",requiresLogin:true});
+  } catch(error){if(client)await client.query("ROLLBACK").catch(()=>{});next(error);}
+  finally {if(client)client.release();}
 };
 
 exports.getPreferences = async (req, res, next) => {
@@ -1123,14 +1130,11 @@ exports.submitManualPayment = async (req, res, next) => {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    const [planResult, activeResult, settingsResult, userResult] = await Promise.all([
-      client.query(`SELECT p.id,p.name,p.price,p.billing_interval FROM plans p
-        WHERE p.id=$1 AND p.status='active' FOR SHARE OF p`, [planId]),
-      client.query(`SELECT s.id,s.plan_id,COALESCE(p.price,0) price FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
-        WHERE s.user_id=$1 AND ${currentSubscription()} ORDER BY s.created_at DESC LIMIT 1 FOR UPDATE OF s`, [req.user.id]),
-      client.query(`SELECT key,value FROM settings WHERE key=ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch"]]),
-      client.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
-    ]);
+    const userResult = await client.query("SELECT preferred_currency FROM users WHERE id=$1 FOR UPDATE",[req.user.id]);
+    const planResult = await client.query("SELECT id,name,price,billing_interval FROM plans WHERE id=$1 AND status='active' FOR SHARE",[planId]);
+    const activeResult = await client.query(`SELECT s.id,s.plan_id,COALESCE(p.price,0) price FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
+      WHERE s.user_id=$1 AND ${currentSubscription()} ORDER BY s.created_at DESC LIMIT 1 FOR UPDATE OF s`,[req.user.id]);
+    const settingsResult = await client.query("SELECT key,value FROM settings WHERE key=ANY($1::text[])",[["default_currency","bank_name","bank_account_name","bank_account_number","bank_branch"]]);
     const plan = planResult.rows[0];
     if (!plan) { await client.query("ROLLBACK"); await discardUpload(); return res.status(404).json({ message: "Plan not found" }); }
     if (number(plan.price) < 0.01) { await client.query("ROLLBACK"); await discardUpload(); return res.status(400).json({ message: "The free plan does not require payment" }); }
@@ -1325,13 +1329,17 @@ function vcardPayloadBytes(payload) {
 }
 
 exports.createVcard = async (req, res, next) => {
+  let client, committed = false;
   try {
     const title = String(req.body.title || "").trim();
     const qualifications = String(req.body.qualifications || "").trim();
     const slug = normalizeCustomSlug(req.body.slug);
     if (!title) return res.status(400).json({ message: "Card name is required" });
     if (qualifications.length > 500) return res.status(400).json({ message: "Qualifications must be 500 characters or fewer" });
-    const allowance = await pool.query(
+    client = await pool.connect();
+    await client.query("BEGIN");
+    await client.query("SELECT id FROM users WHERE id=$1 FOR UPDATE", [req.user.id]);
+    const allowance = await client.query(
       `SELECT COALESCE(p.vcard_limit, 1)::int AS card_limit,
               (SELECT COUNT(*)::int FROM vcards v WHERE v.user_id = $1) AS card_count
        FROM users u
@@ -1341,7 +1349,7 @@ exports.createVcard = async (req, res, next) => {
     );
     const limit = allowance.rows[0]?.card_limit || 1;
     if ((allowance.rows[0]?.card_count || 0) >= limit) return res.status(403).json({ message: "Your plan's card limit has been reached" });
-    const entitlements = await loadVcardEntitlements(pool, req.user.id);
+    const entitlements = await loadVcardEntitlements(client, req.user.id);
     const templateId = Number(req.body.templateId || entitlements.templates[0]?.id);
     if (!entitlements.templates.some((template) => Number(template.id) === templateId)) return res.status(403).json({ message: "This VCard template is not included in your plan" });
     const allowedKeys = new Set(entitlements.features.map((feature) => feature.key));
@@ -1349,18 +1357,21 @@ exports.createVcard = async (req, res, next) => {
     const profileImageUrl=normalizeVcardImage(req.body.profileImageUrl);
     const coverImageUrl=normalizeVcardImage(req.body.coverImageUrl);
     const contactCaptureRequired=req.body.contactCaptureRequired !== false;
-    const storage=await getStorageSummary(pool,req.user.id);
+    const storage=await getStorageSummary(client,req.user.id);
     if(storage.usedBytes+vcardPayloadBytes({...req.body,title,sections,profileImageUrl,coverImageUrl})>storage.limitBytes){
       return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Delete unused content or upgrade your plan.`});
     }
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO vcards (user_id,template_id,title,qualifications,slug,description,website_url,phone,email,address,settings)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb)
        RETURNING id,slug,template_id,title,qualifications,description,website_url,phone,email,address,settings,is_active,created_at`,
        [req.user.id, templateId, title, qualifications || null, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections, profileImageUrl, coverImageUrl, contactCaptureRequired })]
     );
+    await client.query("COMMIT");
+    committed = true;
     res.status(201).json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
   } catch (error) { if(error.code==="23505")return res.status(409).json({message:"That VCard URL name is already in use. Choose another one."}); next(error); }
+  finally { if(client) { if(!committed) await client.query("ROLLBACK").catch(()=>{}); client.release(); } }
 };
 
 exports.updateVcard = async (req, res, next) => {

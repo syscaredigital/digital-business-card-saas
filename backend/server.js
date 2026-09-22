@@ -16,13 +16,16 @@ async function shutdown(code = 0) {
 }
 async function start() {
   validateEnvironment();
+  await require('../database/migrate').verifyMigrations(pool);
   await pool.query('SELECT auth_version FROM users LIMIT 0');
   await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
   await pool.query('SELECT amount_lkr FROM revenue_lkr_entries LIMIT 0');
   const app = require('./app');
   server = app.listen(Number(process.env.PORT || 5000), () => {
     console.log('Server listening on port ' + (process.env.PORT || 5000));
-    stopJobs = require('./jobs/subscription-expiry.job').startSubscriptionExpiry();
+    const stopExpiry = require('./jobs/subscription-expiry.job').startSubscriptionExpiry();
+    const stopNotifications = process.env.NOTIFICATION_JOBS === 'true' ? require('./jobs/run-jobs').startNotificationJobs() : () => {};
+    stopJobs = () => { stopExpiry(); stopNotifications(); };
   });
   server.on('error', error => { console.error('Server error:', error.code); shutdown(1); });
 }

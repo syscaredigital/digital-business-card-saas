@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const header = document.querySelector(".site-header");
   const contactForms = document.querySelectorAll(".contact-form");
-  const newsletterForms = document.querySelectorAll(".newsletter-form");
   const counters = document.querySelectorAll(".count-up");
   const featuredVcardsRow = document.querySelector("[data-featured-templates]");
   const templatePreviousButton = document.querySelector("[data-template-prev]");
@@ -22,10 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const select = currencyWrap.querySelector("select");
     select.value = websiteCurrency;
     const currencyApiOrigin = window.SyncVCardApiOrigin;
-    fetch(currencyApiOrigin + "/api/public/currencies").then((response) => response.ok ? response.json() : Promise.reject()).then((payload) => {
+    window.SyncSession.fetch(currencyApiOrigin + "/api/public/currencies").then((response) => response.ok ? response.json() : Promise.reject()).then((payload) => {
       const currencies = Array.isArray(payload.data) ? payload.data : [];
       if (!currencies.length) return;
-      select.innerHTML = currencies.map((item) => '<option value="' + item.code + '">' + item.code + ' — ' + item.name + '</option>').join("");
+      select.replaceChildren(...currencies.filter((item) => /^[A-Z]{3}$/.test(item.code)).map((item) => {
+        const option = document.createElement("option"); option.value = item.code; option.textContent = item.code + " - " + item.name; return option;
+      }));
       select.value = currencies.some((item) => item.code === websiteCurrency) ? websiteCurrency : "LKR";
     }).catch(() => {});
     navActions.prepend(currencyWrap);
@@ -38,12 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
         link.href = target.href;
       });
       window.dispatchEvent(new CustomEvent("sync:currency-change", { detail: { currency: websiteCurrency } }));
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("sessionActive");
       if (token) {
         const apiOrigin = window.SyncVCardApiOrigin;
-        fetch(apiOrigin + "/api/user/preferences", {
+        window.SyncSession.fetch(apiOrigin + "/api/user/preferences", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          headers: { "Content-Type": "application/json", "X-Requested-With": "SyncECard" },
           body: JSON.stringify({ currency: websiteCurrency }),
         }).catch(() => {});
       }
@@ -94,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (button) { button.disabled = true; button.textContent = "Sending..."; }
         feedback.className = "contact-form-feedback is-pending";
         feedback.textContent = "Sending your message securely...";
-        const response = await fetch(getApiBaseUrl() + "/api/public/contact", {
+        const response = await window.SyncSession.fetch(getApiBaseUrl() + "/api/public/contact", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -113,12 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  newsletterForms.forEach((form) => {
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      alert("Newsletter subscriptions are coming soon.");
-    });
-  });
 
   const animateCounter = (counter) => {
     if (counter.dataset.counted === "true") return;
@@ -208,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   if (publicTemplateGrid) {
-    fetch(`${getApiBaseUrl()}/api/public/vcard-templates`)
+    window.SyncSession.fetch(`${getApiBaseUrl()}/api/public/vcard-templates`)
       .then((response) => { if (!response.ok) throw new Error("Unable to load templates"); return response.json(); })
       .then((data) => {
         const templates = data.data || [];
@@ -316,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!featuredVcardsRow) return;
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/public/vcard-templates`);
+      const response = await window.SyncSession.fetch(`${getApiBaseUrl()}/api/public/vcard-templates`);
       if (!response.ok) return;
 
       const payload = await response.json();

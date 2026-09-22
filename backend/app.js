@@ -13,18 +13,26 @@ if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY.spli
 
 app.use(helmet());
 const allowedOrigins = [process.env.PUBLIC_APP_URL, ...(process.env.CORS_ORIGINS || '').split(',')].filter(Boolean).map(value => value.replace(/\/$/, ''));
-app.use(cors({ origin(origin, callback) {
+app.use(cors({ credentials: true, origin(origin, callback) {
   callback(null, !origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin));
 } }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(morgan("dev"));
+app.use('/api', require('./helpers/browser-session').protect);
+morgan.token('safe-path', req => req.originalUrl.split('?')[0]);
+app.use(morgan(':method :safe-path :status :response-time ms'));
 
 // Serve the public VCard portal and its browser assets from the live API
 // process. This keeps public links and QR scans on one reachable origin.
 const frontendRoot = path.resolve(__dirname, "..", "frontend");
 app.use("/public", express.static(path.join(frontendRoot, "public"), { index: false, fallthrough: true, setHeaders: frontendHeaders }));
 app.get("/", (req, res) => res.redirect("/pages/website/home.html"));
+app.use('/pages', (req,res,next) => {
+  let pathname;
+  try { pathname = decodeURIComponent(req.path); } catch (_) { return res.sendStatus(400); }
+  if (/^\/company-admin(?:\/|$)/i.test(pathname)) return res.status(404).send('Company management is not available in this release.');
+  next();
+});
 app.use("/pages", express.static(path.join(frontendRoot, "pages"), { index: false, fallthrough: true, setHeaders: frontendHeaders }));
 app.use("/components", express.static(path.join(frontendRoot, "components"), { index: false, fallthrough: true }));
 app.use("/layouts", express.static(path.join(frontendRoot, "layouts"), { index: false, fallthrough: true }));
@@ -36,13 +44,15 @@ app.get("/health", (req, res) => {
 // Register routes
 app.get('/ready', async (req, res) => {
   try {
+    await pool.query('SELECT bucket_key FROM rate_limit_buckets LIMIT 0');
+    await pool.query('SELECT status FROM email_outbox LIMIT 0');
     await pool.query('SELECT auth_version FROM users LIMIT 0');
     await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
     await pool.query('SELECT amount_lkr FROM revenue_lkr_entries LIMIT 0');
     res.json({ status: 'ready' });
   } catch (_) { res.status(503).json({ status: 'unavailable' }); }
 });
-const publicRateLimit = require('./middlewares/rate-limit.middleware')({ limit: 120 });
+const publicRateLimit = require('./middlewares/rate-limit.middleware')({ limit: 120, scope: "public" });
 app.use('/api/public', (req, res, next) => req.method === 'POST' ? publicRateLimit(req, res, next) : next());
 app.post("/api/auth/register", requirePlatformAvailable);
 app.use("/api/auth", require("./routes/auth.routes"));

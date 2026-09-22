@@ -1,3 +1,5 @@
+Current source remediation update (22 September 2026): see [audit-remediation.md](audit-remediation.md). The feature gaps and per-process rate-limit descriptions below are historical; this change addresses them or explicitly disables the feature. Production verification and credential rotation remain separate gates.
+
 Deployment target updated on 15 September 2026 to https://test.syncecard.com on cPanel Setup Node.js App. Follow [the cPanel deployment guide](cpanel-deployment.md). Root `app.js`, a root dependency manifest/lockfile, and a cPanel environment example are now included in the release. The migration utility uses the shared database configuration, including TLS. The cPanel target supersedes the VPS-specific requirements below; historical test results and outstanding business/credential checks still apply. No live deployment has been performed or verified.
 
 Review as of 14 September 2026: local regression and browser checks pass, but production preflight fails. The project is not yet cleared for public launch.

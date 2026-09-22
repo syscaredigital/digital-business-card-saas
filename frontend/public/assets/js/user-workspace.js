@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   var API = window.SyncVCardApiOrigin + "/api";
-  var token = localStorage.getItem("token");
+  var token = localStorage.getItem("sessionActive");
   var user;
   try { user = JSON.parse(localStorage.getItem("user") || "null"); } catch (_) { user = null; }
 
@@ -72,7 +72,7 @@
   });
 
   window.addEventListener("storage", function (event) {
-    if (event.key === "token" && !event.newValue) window.location.replace("../auth/login.html");
+    if (event.key === "sessionActive" && !event.newValue) window.location.replace("../auth/login.html");
   });
 
   function escapeHtml(value) {
@@ -83,11 +83,11 @@
 
   function request(path, options) {
     options = options || {};
-    options.headers = Object.assign({}, options.headers, { Authorization: "Bearer " + token });
-    return fetch(API + path, options).then(async function (response) {
+    options.headers = Object.assign({}, options.headers, { "X-Requested-With": "SyncECard" });
+    return window.SyncSession.fetch(API + path, options).then(async function (response) {
       var data = await response.json().catch(function () { return {}; });
       if (response.status === 401) {
-        localStorage.removeItem("token"); localStorage.removeItem("user");
+        localStorage.removeItem("sessionActive"); localStorage.removeItem("user");
         window.location.replace("../auth/login.html?expired=1");
         throw new Error("Your session has expired");
       }
@@ -266,7 +266,7 @@
       button.disabled=true;button.textContent="Updating…";settingsFeedback("accountPasswordFeedback","Updating your password…");
       request("/user/account-settings/password",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({
         currentPassword:accountPasswordForm.elements.currentPassword.value,newPassword:accountPasswordForm.elements.newPassword.value
-      })}).then(function(data){accountPasswordForm.reset();setText("settingsActiveSessions","1");settingsFeedback("accountPasswordFeedback",data.message);})
+      })}).then(function(data){accountPasswordForm.reset();localStorage.removeItem("sessionActive");localStorage.removeItem("user");window.location.href="../auth/login.html";})
         .catch(function(error){settingsFeedback("accountPasswordFeedback",error.message,true);})
         .finally(function(){button.disabled=false;button.textContent="Change password";});
     });
@@ -1283,7 +1283,7 @@
     });
     affiliatePayoutForm.addEventListener("submit",function(event){event.preventDefault();var button=affiliatePayoutForm.querySelector("button"),fd=new FormData(affiliatePayoutForm),feedback=document.getElementById("affiliatePayoutFeedback");button.disabled=true;request("/user/affiliations/payout",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentMethod:"bank_transfer",bankDetails:{accountHolder:fd.get("accountHolder"),bankName:fd.get("bankName"),accountNumber:fd.get("accountNumber"),branch:fd.get("branch"),swiftCode:fd.get("swiftCode")}})}).then(function(data){feedback.textContent=data.message;loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;}).finally(function(){button.disabled=false;});});
     document.getElementById("affiliateWithdrawalForm").addEventListener("submit",function(event){event.preventDefault();var form=event.currentTarget,button=form.querySelector('button[type="submit"]'),fd=new FormData(form),feedback=document.getElementById("affiliateWithdrawalFeedback"),amount=Number(fd.get("amount")),currency=String(fd.get("currency")||"");if(!form.checkValidity()){form.reportValidity();return;}var balance=(affiliateData.balances||[]).find(function(item){return item.currency===currency;});if(!balance||amount>Number(balance.available)||amount<Number(affiliateData.minimumWithdrawal)){feedback.textContent="Enter an amount between the minimum and your available " + currency + " balance.";return;}button.disabled=true;feedback.textContent="Submitting...";request("/user/affiliations/withdrawals",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:amount,currency:currency,note:fd.get("note")})}).then(function(data){feedback.textContent=data.message;form.reset();return loadUserAffiliations();}).catch(function(error){feedback.textContent=error.message;button.disabled=false;});});
-    document.addEventListener("click",function(event){var receiptButton=event.target.closest("[data-affiliate-receipt]");if(!receiptButton)return;receiptButton.disabled=true;fetch(API+"/user/affiliations/withdrawals/"+encodeURIComponent(receiptButton.dataset.affiliateReceipt)+"/receipt",{headers:{Authorization:"Bearer "+token}}).then(function(response){if(!response.ok)return response.json().then(function(data){throw new Error(data.message||"Unable to download receipt")});return response.blob();}).then(function(blob){var url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="withdrawal-receipt";link.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);}).catch(function(error){window.alert(error.message);}).finally(function(){receiptButton.disabled=false;});});
+    document.addEventListener("click",function(event){var receiptButton=event.target.closest("[data-affiliate-receipt]");if(!receiptButton)return;receiptButton.disabled=true;window.SyncSession.fetch(API+"/user/affiliations/withdrawals/"+encodeURIComponent(receiptButton.dataset.affiliateReceipt)+"/receipt",{headers:{"X-Requested-With": "SyncECard"}}).then(function(response){if(!response.ok)return response.json().then(function(data){throw new Error(data.message||"Unable to download receipt")});return response.blob();}).then(function(blob){var url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="withdrawal-receipt";link.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);}).catch(function(error){window.alert(error.message);}).finally(function(){receiptButton.disabled=false;});});
     document.addEventListener("click",function(event){
       var copy=event.target.closest('[data-action="copy-link"]');
       if(!copy)return;
@@ -1792,7 +1792,7 @@
     button.disabled = true;
     var original = button.textContent;
     button.textContent = "Downloading…";
-    fetch(button.dataset.downloadQr).then(function (response) {
+    window.SyncSession.fetch(button.dataset.downloadQr).then(function (response) {
       if (!response.ok) throw new Error("Unable to download QR code");
       return response.blob();
     }).then(function (blob) {
@@ -1816,7 +1816,7 @@
   if (logout) logout.addEventListener("click", async function () {
     logout.disabled = true;
     try { await request("/auth/logout", { method: "POST" }); } catch (_) {}
-    localStorage.removeItem("token"); localStorage.removeItem("user"); sessionStorage.clear();
+    localStorage.removeItem("sessionActive"); localStorage.removeItem("user"); sessionStorage.clear();
     window.location.replace("../auth/login.html?loggedOut=1");
   });
 

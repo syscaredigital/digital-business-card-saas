@@ -13,3 +13,10 @@ playwright-report/
 *.log
 deploy/production.env
 .release/
+
+# All environment credentials (including cPanel exports)
+*.env
+!*.env.example
+*.dump
+*.pem
+*.key

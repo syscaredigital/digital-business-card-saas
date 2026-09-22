@@ -5,6 +5,7 @@ const pool = require("../config/database.config");
 const { signingSecret } = require('../config/environment');
 const { normalizeCurrency } = require("../config/currencies");
 const { getRate } = require("../services/exchange-rate.service");
+const browserSession = require('../helpers/browser-session');
 
 function splitName(name) {
   const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -40,12 +41,12 @@ function createToken(user) {
   );
 }
 
-async function recordSession(token, userId, req) {
+async function recordSession(token, userId, req, db = pool) {
   const payload = jwt.decode(token) || {};
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
   const issuedAt = payload.iat ? new Date(payload.iat * 1000) : new Date();
   const expiresAt = payload.exp ? new Date(payload.exp * 1000) : new Date(Date.now() + 7 * 86400000);
-  await pool.query(
+  await db.query(
     `INSERT INTO auth_sessions (user_id, token_hash, issued_at, expires_at, ip_address, user_agent)
      VALUES ($1, $2, $3, $4, $5, $6)
      ON CONFLICT (token_hash) DO NOTHING`,
@@ -150,19 +151,20 @@ exports.register = async (req, res, next) => {
         VALUES($1,'New affiliate referral',$2,'affiliate')`, [affiliate.rows[0].user_id, `${fullName} registered using your referral link.`]);
     }
 
-    await client.query("COMMIT");
-
     const user = toSafeUser({
       ...result.rows[0],
       company_name: companyName ? String(companyName).trim() : null,
       role: "user",
     });
+    const token = requiresReview ? null : createToken(user);
+    if (token) await recordSession(token, user.id, req, client);
+    await client.query("COMMIT");
     res.status(201).json({
       user,
       subscription: { name: freePlan.rows[0].name, status: "active" },
       referral,
       requiresReview,
-      token: requiresReview ? null : createToken(user),
+      ...browserSession.issue(req, res, token),
       message: requiresReview
         ? "Your account was created and is waiting for administrator approval."
         : "Your account was created successfully.",
@@ -211,7 +213,7 @@ exports.login = async (req, res, next) => {
     const user = toSafeUser(userRow);
     const token = createToken(user);
     await recordSession(token, user.id, req);
-    res.json({ user, token });
+    res.json({ user, ...browserSession.issue(req, res, token) });
   } catch (err) {
     next(err);
   }
@@ -239,6 +241,7 @@ exports.logout = async (req, res, next) => {
     );
     await client.query("DELETE FROM auth_sessions WHERE expires_at < NOW() - INTERVAL '30 days'");
     await client.query("COMMIT");
+    browserSession.clear(res);
     res.json({ message: "Signed out successfully" });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});

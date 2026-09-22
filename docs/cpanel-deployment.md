@@ -35,7 +35,7 @@ Open cPanel Terminal/SSH and activate the Node environment using the exact comma
 node database/migrate.js --seed
 ```
 
-For an existing database, restore a verified backup and matching `backend/uploads` files instead. Do not replay all migrations or seed over an existing untracked database. Apply only reviewed missing migrations. Preserve uploads and make the uploads directory writable by the application user. Back up database and uploads together before changes.
+For an existing database, restore a verified backup and matching `backend/uploads` files instead. Do not replay all migrations or seed over an existing untracked database. Follow the [audit upgrade procedure](audit-remediation.md): review historical migration checksums, explicitly baseline them if needed, then apply pending migrations 065?067. Migration 067 deliberately stops if duplicate manual-payment transaction rows need reconciliation. Startup now refuses an incomplete or changed migration ledger. Preserve uploads and make the uploads directory writable by the application user. Stop Passenger and external cron writers while backing up database and uploads together.
 
 To bootstrap a new installation, temporarily configure `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` (at least 12 characters), then run `node backend/seed-super-admin.js`. Remove the bootstrap variables afterwards. Terminal commands must have the same environment variables as the web application; if the host only injects them into Passenger, use the private `backend/.env` option for these commands.
 
@@ -46,10 +46,14 @@ node backend/preflight.js --smtp
 curl --fail https://test.syncecard.com/ready
 ```
 
-Then verify login, a public card/QR link, password-reset email delivery, and a test payment/NFC workflow on the real domain. SMTP authentication alone does not prove inbox delivery. The previous feature gaps in `deployment-status.md` still apply. Passenger may stop idle application processes; in-process reminder/expiry scheduling is not a guaranteed always-running scheduler, although entitlement queries independently enforce subscription dates.
+Then verify login, a public card/QR link, password-reset email delivery, and a test payment/NFC workflow on the real domain. SMTP authentication alone does not prove inbox delivery. See the current [audit remediation checklist](audit-remediation.md) for completed source fixes and remaining live gates. Company management and newsletter signup are unavailable. Passenger may stop idle processes: leave `NOTIFICATION_JOBS=false` and schedule `node backend/jobs/run-jobs.js` every minute through cPanel Cron Jobs, using the activated Node environment and application root. Validate SMTP first and monitor `email_outbox` failures. Pause this cron during maintenance. Subscription entitlement queries independently enforce expiry dates.
 
 Keep application source, private files, backups, and uploads outside any independently served static document root. If cPanel maps the application root directly as a static document root, ask the host to ensure private paths are denied. Verify `/.env`, `/backend/.env`, `/package.json`, and `/uploads/payment-slips/nonexistent.pdf` are not publicly served before launch.
 
 The local release is prepared for this layout; the actual cPanel installation, PostgreSQL access, certificate, and live domain have not been verified. Use designated test accounts and test payment references. Existing QR codes or links already shared using a previous domain will still reference that old domain; regenerate them or retain a redirect if needed.
 
 Reference: [Namecheap's Setup Node.js App guide](https://www.namecheap.com/support/knowledgebase/article.aspx/10047/2182/how-to-work-with-nodejs-app/).
+
+Browser sessions now use Secure HttpOnly cookies. Keep frontend and API on this HTTPS origin, deploy them together, and sign in again after upgrading. Cookies require the exact `PUBLIC_APP_URL`; configure explicit `CORS_ORIGINS` only for approved same-site frontend origins. Set `TRUST_PROXY` to the actual Passenger/reverse-proxy address supplied by the host; do not trust arbitrary forwarded headers.
+
+This Passenger deployment does not require Docker or Caddy. If using Docker behind WHM/Apache instead, leave the `standalone` Compose profile disabled, proxy the domain to `127.0.0.1:5000`, and keep WHM in control of ports 80/443 and TLS. Inspect listeners before enabling any standalone proxy.

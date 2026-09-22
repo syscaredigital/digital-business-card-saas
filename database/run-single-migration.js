@@ -1,27 +1,14 @@
-const fs = require("fs");
-const path = require("path");
-const pool = require("../backend/config/database.config");
-
-const filename = path.basename(process.argv[2] || "");
-if (!/^\d{3}_[a-z0-9_-]+\.sql$/i.test(filename)) {
-  console.error("Usage: node database/run-single-migration.js 050_migration_name.sql");
-  process.exit(1);
-}
-
-const migrationPath = path.resolve(__dirname, "migrations", filename);
-if (!fs.existsSync(migrationPath)) {
-  console.error(`Migration not found: ${filename}`);
-  process.exit(1);
-}
-
+const path = require('path');
+const pool = require('../backend/config/database.config');
+const { migrate } = require('./migrate');
+const filename = process.argv[2] || '';
 (async () => {
+  let client;
   try {
-    await pool.query(fs.readFileSync(migrationPath, "utf8"));
-    console.log(`Applied ${filename}`);
-  } catch (error) {
-    console.error(`Migration failed: ${error.message}`);
-    process.exitCode = 1;
-  } finally {
-    await pool.end();
-  }
+    if (path.basename(filename) !== filename || !/^\d{3}_[a-z0-9_-]+\.sql$/i.test(filename)) throw new Error('Supply a migration filename');
+    client = await pool.connect();
+    await migrate(client, { only: filename });
+    console.log('Migration verified/applied: ' + filename);
+  } catch (error) { console.error(error.message); process.exitCode = 1; }
+  finally { if (client) client.release(); await pool.end(); }
 })();

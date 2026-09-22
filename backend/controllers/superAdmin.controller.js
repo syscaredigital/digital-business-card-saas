@@ -275,8 +275,8 @@ exports.createUser = async (req, res, next) => {
     if (!normalizedFirstName || !normalizedLastName || !normalizedEmail || !password) {
       return res.status(400).json({ message: "First name, last name, email, and password are required" });
     }
-    if (String(password).length < 8) {
-      return res.status(400).json({ message: "Password must contain at least 8 characters" });
+    if (String(password).length < 12) {
+      return res.status(400).json({ message: "Password must contain at least 12 characters" });
     }
     if (Buffer.byteLength(String(password), "utf8") > 72) {
       return res.status(400).json({ message: "Password must not exceed 72 bytes" });
@@ -393,8 +393,8 @@ exports.updateUser = async (req, res, next) => {
     if (`${normalizedFirstName} ${normalizedLastName}`.length > 150 || normalizedEmail.length > 255 || (normalizedPhone && normalizedPhone.length > 50)) {
       return res.status(400).json({ message: "User name, email, or phone number is too long" });
     }
-    if (password && (String(password).length < 8 || Buffer.byteLength(String(password), "utf8") > 72)) {
-      return res.status(400).json({ message: "New password must contain 8 to 72 bytes" });
+    if (password && (String(password).length < 12 || Buffer.byteLength(String(password), "utf8") > 72)) {
+      return res.status(400).json({ message: "New password must contain at least 12 characters and no more than 72 bytes" });
     }
 
     await client.query("BEGIN");
@@ -430,7 +430,7 @@ exports.updateUser = async (req, res, next) => {
     let passwordUpdate = "";
     if (password) {
       values.push(await bcrypt.hash(String(password), 10));
-      passwordUpdate = `, password = $${values.length}`;
+      passwordUpdate = `, password = $${values.length}, auth_version = auth_version + 1`;
     }
     values.push(userId);
 
@@ -442,6 +442,10 @@ exports.updateUser = async (req, res, next) => {
       values
     );
     const user = updatedResult.rows[0];
+    if (password || normalizedStatus !== "active") {
+      await client.query("UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL",[userId]);
+      await client.query("DELETE FROM password_reset_tokens WHERE user_id=$1",[userId]);
+    }
     await client.query(
       `INSERT INTO activity_logs (user_id, action, resource_type, resource_id, metadata, ip_address, user_agent)
        VALUES ($1, 'user.updated', 'user', $2, $3::jsonb, $4, $5)`,
@@ -481,7 +485,7 @@ exports.updateUserStatus = async (req, res, next) => {
     await client.query("BEGIN");
     const result = await client.query(
       `UPDATE users u
-       SET status = $1, updated_at = NOW()
+       SET status = $1, auth_version = auth_version + 1, updated_at = NOW()
        FROM roles r
        WHERE u.id = $2 AND r.id = u.role_id AND r.name <> 'super_admin'
        RETURNING u.id, u.name, u.email, u.status`,
@@ -793,6 +797,13 @@ function positiveIntegerParam(req) {
 
 const nfcCardStatuses = ["inactive", "active", "assigned", "disabled"];
 const nfcOrderStatuses = ["pending", "processing", "shipped", "completed", "cancelled"];
+const nfcOrderTransitions = {
+  pending: ['processing','shipped','cancelled'],
+  processing: ['shipped','cancelled'],
+  shipped: ['completed'],
+  completed: [],
+  cancelled: [],
+};
 const nfcPaymentStatuses = ["pending", "approved", "rejected"];
 
 function mapAdminNfcCard(card) {
@@ -1220,6 +1231,18 @@ exports.updateNfcOrder = async (req, res, next) => {
     }
     const existing = existingResult.rows[0];
     const paymentStatus = requestedPaymentStatus || existing.payment_status || "pending";
+    if (paymentStatus !== existing.payment_status && existing.payment_status !== 'pending') {
+      await client.query('ROLLBACK');
+      return res.status(409).json({message:'Reviewed NFC payments are final. Record corrections separately.'});
+    }
+    if (requestedStatus && requestedStatus !== existing.status && !(nfcOrderTransitions[existing.status] || []).includes(requestedStatus)) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({message:`A ${existing.status} NFC order cannot move to ${requestedStatus}`});
+    }
+    if (existing.status === 'cancelled' && paymentStatus !== existing.payment_status) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({message:'Cancelled NFC orders cannot accept payment approval'});
+    }
     await captureRevenueRate(client, 'nfc', orderId);
     let status = requestedStatus || existing.status;
     let trackingNumber = hasTrackingNumber ? requestedTrackingNumber : existing.tracking_number;
@@ -1246,8 +1269,8 @@ exports.updateNfcOrder = async (req, res, next) => {
       payment_reviewed_at=CASE WHEN $4::boolean THEN NOW() ELSE payment_reviewed_at END,
       admin_note=$6,updated_at=NOW() WHERE id=$7
       RETURNING id,status,tracking_number,payment_status,payment_reviewed_at`,
-      [status,trackingNumber,paymentStatus,Boolean(requestedPaymentStatus),req.user.id,adminNote,orderId]);
-    if (requestedPaymentStatus === "approved") {
+      [status,trackingNumber,paymentStatus,Boolean(requestedPaymentStatus && requestedPaymentStatus !== existing.payment_status),req.user.id,adminNote,orderId]);
+    if (requestedPaymentStatus === "approved" && existing.payment_status !== 'approved') {
       await client.query(`INSERT INTO transactions(user_id,transaction_type,amount,currency,reference,gateway,status,metadata)
         SELECT $1,'nfc_order',$2,$3,$4,'manual','completed',$5::jsonb
         WHERE NOT EXISTS(SELECT 1 FROM transactions WHERE transaction_type='nfc_order' AND metadata @> $5::jsonb)
@@ -1859,6 +1882,7 @@ exports.downloadCashPaymentProof = async (req, res, next) => {
     const uploadRoot = path.resolve(__dirname, "..", "uploads", "payment-slips");
     const filePath = path.resolve(uploadRoot, path.basename(proofUrl));
     if (!filePath.startsWith(uploadRoot + path.sep)) return res.status(400).json({ message: "Invalid payment proof path" });
+    res.set({ "Content-Disposition": "attachment; filename=\"payment-receipt" + path.extname(filePath) + "\"", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
     return res.sendFile(filePath, { dotfiles: "deny" }, (error) => {
       if (error && !res.headersSent) next(Object.assign(error, { status: error.status || 404 }));
     });
@@ -1910,6 +1934,18 @@ exports.updateCashPayment = async (req, res, next) => {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
+    await client.query("SELECT id FROM users WHERE id IN ($1,(SELECT user_id FROM payments WHERE id=$2)) ORDER BY id FOR UPDATE",[payment.userId,paymentId]);
+    const previousResult = await client.query("SELECT * FROM payments WHERE id=$1 AND LOWER(COALESCE(method,''))=ANY($2::text[]) FOR UPDATE",[paymentId,cashPaymentMethods]);
+    if (!previousResult.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({message:"Cash payment not found"}); }
+    const previous = previousResult.rows[0];
+    if (["approved","rejected"].includes(previous.status)) {
+      const identical = previous.status===payment.status && Number(previous.user_id)===payment.userId &&
+        Number(previous.subscription_id || 0)===Number(payment.subscriptionId || 0) && Number(previous.amount)===payment.amount &&
+        previous.currency===payment.currency && (previous.gateway_reference || null)===(payment.reference || null) &&
+        (previous.proof_url || null)===(payment.proofUrl || null) && (previous.notes || null)===(payment.notes || null);
+      await client.query("ROLLBACK");
+      return identical ? res.json({payment:{id:paymentId,status:previous.status}}) : res.status(409).json({message:"Reviewed payments are final. Record corrections separately."});
+    }
     const relationError = await validateCashPaymentRelations(client, payment);
     if (relationError) { await client.query("ROLLBACK"); return res.status(400).json({ message: relationError }); }
     const result = await client.query(
@@ -1950,6 +1986,7 @@ exports.deleteCashPayment = async (req, res, next) => {
       [paymentId, cashPaymentMethods]
     );
     if (!existing.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "Cash payment not found" }); }
+    if (existing.rows[0].status === "approved") { await client.query("ROLLBACK"); return res.status(409).json({message:"Approved payments must be retained for the audit trail"}); }
     await client.query("UPDATE coupon_redemptions SET status='cancelled' WHERE payment_id=$1 AND status='pending'", [paymentId]);
     await client.query("DELETE FROM transactions WHERE payment_id = $1", [paymentId]);
     await client.query("DELETE FROM payments WHERE id = $1", [paymentId]);

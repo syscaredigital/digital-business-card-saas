@@ -5,7 +5,7 @@ function startSubscriptionExpiry() {
   const tick = async () => {
     if (running) return;
     running = true;
-    try { await expireSubscriptions(pool); }
+    try { await expireSubscriptions(pool); await pool.query('DELETE FROM rate_limit_buckets WHERE expires_at < NOW()'); }
     catch (error) { console.error('Subscription expiry failed:', error.code || error.name); }
     finally { running = false; }
   };

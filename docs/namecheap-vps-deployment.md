@@ -2,7 +2,7 @@ Alternative Docker/VPS procedure. For the current cPanel hosting target, use [th
 
 Deployment target: Namecheap VPS/dedicated server, https://test.syncecard.com.
 
-The supplied Compose setup runs Node, PostgreSQL, and Caddy. Caddy manages certificates after the domain resolves to the VPS and ports 80/443 are reachable. Only the proxy publishes public ports; PostgreSQL and Node stay on the Docker network. Uploads, database files, and certificates use persistent volumes.
+The supplied Compose setup runs Node, PostgreSQL, and Caddy. Caddy manages certificates after the domain resolves to the VPS and ports 80/443 are reachable. Only the optional proxy publishes public ports; Node also binds a loopback-only port for a host reverse proxy. PostgreSQL stays on the Docker network. Caddy is disabled unless the `standalone` Compose profile is selected. Do not enable that profile on a WHM/cPanel host already serving ports 80/443. Uploads, database files, and certificates use persistent volumes.
 
 Before starting:
 
@@ -20,7 +20,7 @@ docker compose up -d db
 
 Choose exactly one database path:
 
-- **Keep the existing business data:** export the current database with `pg_dump -Fc`, securely transfer the dump and existing `backend/uploads` contents, and restore into the new database. Do not run `db:setup` over the restored database. Migration 063 and 064 are required; apply only those that the restored backup lacks. Migration 064 and its revenue backfill have already been applied to the database used in this workspace.
+- **Keep the existing business data:** export the current database with `pg_dump -Fc`, securely transfer the dump and existing `backend/uploads` contents, and restore into the new database. Do not run `db:setup` over the restored database. Review the migration ledger/checksum baseline and apply reviewed missing migrations through 067; follow [the audit upgrade procedure](audit-remediation.md). Do not guess which migrations the restored database has applied.
 - **Start a new empty database:** run `docker compose run --rm app node database/migrate.js --seed`. This installs all migrations and a free registration plan, without sample paid products or default administrator credentials. Set `SUPER_ADMIN_EMAIL` and a strong `SUPER_ADMIN_PASSWORD` temporarily in the private environment file, then run `docker compose run --rm app node backend/seed-super-admin.js`. Remove those two bootstrap variables afterwards. Configure paid plans, NFC products, bank details, and shipping rates in super admin before accepting orders.
 
 Example restore commands for a new empty database (substitute your actual database/user names):
@@ -37,7 +37,7 @@ Validate before exposing the site:
 
 ```sh
 docker compose run --rm app node backend/preflight.js --smtp
-docker compose up -d app proxy
+docker compose --profile standalone up -d app proxy
 docker compose ps
 docker compose logs --tail=100 app proxy
 curl --fail https://test.syncecard.com/ready
@@ -47,8 +47,8 @@ The preflight checks production settings, database/schema, registration plan, ba
 
 The remaining business input is the local and international NFC delivery charge. Display currency support does not supply a shipping price. Do not invent that charge; configure the approved LKR base values in super admin. The application converts these values for foreign-currency customers.
 
-Run `sh deploy/backup.sh` regularly and retain encrypted copies off the VPS. Test restoring a backup into a separate empty database before relying on it. Back up database and uploads together during a quiet period. For rollback, retain the previous release and a pre-migration backup; restore both database and uploads if a migration cannot be safely reversed.
+Run `sh deploy/backup.sh` regularly and retain encrypted copies off the VPS. Test restoring a backup into a separate empty database before relying on it. The script stops the app for a consistent database/upload bundle; stop external workers and cron as well. Run `sh deploy/restore-check.sh backups/TIMESTAMP` against each selected recovery-test bundle. For rollback, retain the previous release and a pre-migration backup; restore both database and uploads if a migration cannot be safely reversed.
 
-Notes: the expiry job runs in the Node process, while entitlement queries independently enforce dates. HTTP limits are per process; add a shared edge limit before scaling to multiple replicas. The default network uses `172.30.0.0/24`; change it and the trusted proxy address together if it conflicts with the VPS network.
+Notes: the expiry job runs in the Node process, while entitlement queries independently enforce dates. HTTP limits use shared PostgreSQL buckets. Enable `NOTIFICATION_JOBS=true` for scheduled reminders and outbox delivery after SMTP verification. The default network uses `172.30.0.0/24`; change it and the trusted proxy address together if it conflicts with the VPS network.
 
 References: [Namecheap VPS Node hosting](https://www.namecheap.com/support/knowledgebase/article.aspx/10202/48/how-to-install-nodejs-on-a-vps-or-a-dedicated-server/), [Caddy automatic HTTPS](https://caddyserver.com/docs/automatic-https/).

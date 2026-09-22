@@ -32,6 +32,7 @@ test('password recovery lifecycle against isolated PostgreSQL tables', async t =
     `);
     await isolated.query(fs.readFileSync(path.join(__dirname, '../database/migrations/033_create_auth_sessions_table.sql'), 'utf8'));
     await isolated.query(fs.readFileSync(path.join(__dirname, '../database/migrations/063_add_password_recovery.sql'), 'utf8'));
+    await isolated.query(fs.readFileSync(path.join(__dirname, '../database/migrations/065_create_rate_limit_buckets.sql'), 'utf8'));
     await isolated.query("INSERT INTO users(id,role_id,name,email,password,status) VALUES(1,1,'Test User','recovery@example.test',$1,'active')", [await bcrypt.hash('Original password 123!', 4)]);
     pool.query = isolated.query.bind(isolated);
     pool.connect = isolated.connect.bind(isolated);

@@ -5,6 +5,9 @@ const pool = require('./config/database.config');
   try { validateEnvironment({ ...process.env, NODE_ENV: 'production' }); console.log('PASS production environment'); }
   catch (error) { failed = true; console.error('FAIL production environment:', error.message); }
   try {
+    await require('../database/migrate').verifyMigrations(pool);
+    await pool.query('SELECT bucket_key FROM rate_limit_buckets LIMIT 0');
+    await pool.query('SELECT status FROM email_outbox LIMIT 0');
     await pool.query('SELECT auth_version FROM users LIMIT 0');
     await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
     await pool.query('SELECT amount_lkr FROM revenue_lkr_entries LIMIT 0');

@@ -117,10 +117,10 @@
               <div class="account-settings-panel-head"><div><span>Account protection</span><h1>Password & security</h1><p>Use a strong password and review how many active sessions are connected.</p></div><div class="account-security-score"><strong id="settingsActiveSessions">—</strong><span>active sessions</span></div></div>
               <form class="account-settings-form" id="accountPasswordForm">
                 <div class="account-settings-field account-settings-wide"><label for="settingsCurrentPassword">Current password</label><input id="settingsCurrentPassword" name="currentPassword" type="password" autocomplete="current-password" required /></div>
-                <div class="account-settings-field"><label for="settingsNewPassword">New password</label><input id="settingsNewPassword" name="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required /></div>
-                <div class="account-settings-field"><label for="settingsConfirmPassword">Confirm new password</label><input id="settingsConfirmPassword" name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required /></div>
-                <div class="account-password-rules account-settings-wide"><strong>Password requirements</strong><span>8–128 characters</span><span>Uppercase and lowercase letters</span><span>At least one number</span></div>
-                <div class="account-security-note account-settings-wide"><strong>Other sessions will be signed out</strong><p>After changing your password, this browser remains active and all other authenticated sessions are revoked.</p></div>
+                <div class="account-settings-field"><label for="settingsNewPassword">New password</label><input id="settingsNewPassword" name="newPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" required /></div>
+                <div class="account-settings-field"><label for="settingsConfirmPassword">Confirm new password</label><input id="settingsConfirmPassword" name="confirmPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" required /></div>
+                <div class="account-password-rules account-settings-wide"><strong>Password requirements</strong><span>At least 12 characters</span><span>Up to 72 UTF-8 bytes</span><span>Use a unique passphrase</span></div>
+                <div class="account-security-note account-settings-wide"><strong>All sessions will be signed out</strong><p>After changing your password, sign in again on this browser and your other devices.</p></div>
                 <div class="account-settings-actions"><p id="accountPasswordFeedback" aria-live="polite"></p><button type="submit">Change password</button></div>
               </form>
             </section>

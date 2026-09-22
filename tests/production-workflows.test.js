@@ -33,7 +33,7 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
     async function upload(route, fields, token) {
       const body = new FormData();
       for (const [key, value] of Object.entries(fields)) body.append(key, String(value));
-      body.append('slip', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII=', 'base64')], { type: 'image/png' }), 'test.png');
+      body.append('slip', new Blob([await require('../backend/node_modules/sharp')({create:{width:2,height:2,channels:3,background:'white'}}).png().toBuffer()], { type: 'image/png' }), 'test.png');
       const response = await fetch(origin + route, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body });
       return { status: response.status, body: await response.json() };
     }
@@ -85,11 +85,16 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal(submitted.status, 201, JSON.stringify(submitted.body));
       assert.equal(submitted.body.subscription.status, 'pending');
       assert.equal((await upload('/api/user/subscriptions/manual-payment', { planId: plan.id, transactionNumber: 'TEST-PAYMENT-001' }, second.body.token)).status, 409);
-      const approved = await request(`/api/super-admin/cash-payments/${submitted.body.payment.id}`, 'PATCH', {
+      const approval = {
         userId: first.body.user.id, subscriptionId: submitted.body.subscription.id, amount: 1000, currency: 'LKR', status: 'approved', reference: 'TEST-PAYMENT-001',
         proofUrl: (await db.query('SELECT proof_url FROM payments WHERE id=$1', [submitted.body.payment.id])).rows[0].proof_url,
-      }, adminToken);
-      assert.equal(approved.status, 200, JSON.stringify(approved.body));
+      };
+      const approvals = await Promise.all([1,2].map(() => request(`/api/super-admin/cash-payments/${submitted.body.payment.id}`, 'PATCH', approval, adminToken)));
+      for (const approved of approvals) assert.equal(approved.status, 200, JSON.stringify(approved.body));
+      assert.equal((await db.query('SELECT id FROM transactions WHERE payment_id=$1', [submitted.body.payment.id])).rowCount, 1);
+      assert.equal((await db.query("SELECT id FROM notifications WHERE user_id=$1 AND title='Subscription activated'", [first.body.user.id])).rowCount, 1);
+      assert.equal((await request(`/api/super-admin/cash-payments/${submitted.body.payment.id}`, 'PATCH', {...approval,amount:1001},adminToken)).status,409);
+      assert.equal((await request(`/api/super-admin/cash-payments/${submitted.body.payment.id}`, 'DELETE',null,adminToken)).status,409);
       assert.equal((await request('/api/user/plans', 'GET', null, first.body.token)).body.current.planId, plan.id);
       assert.equal((await db.query('SELECT status FROM transactions WHERE payment_id=$1', [submitted.body.payment.id])).rows[0].status, 'completed');
     });
@@ -102,8 +107,14 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       const route = `/api/super-admin/nfc/orders/${order.body.order.id}`;
       assert.equal((await request(route, 'PATCH', { status: 'shipped', trackingNumber: 'TEST123' }, adminToken)).status, 409);
       assert.equal((await request(route, 'PATCH', { paymentStatus: 'approved' }, adminToken)).status, 200);
+      const reviewedAt = (await db.query('SELECT payment_reviewed_at FROM nfc_orders WHERE id=$1',[order.body.order.id])).rows[0].payment_reviewed_at;
+      assert.equal((await request(route, 'PATCH', { paymentStatus: 'approved' }, adminToken)).status, 200);
+      assert.deepEqual((await db.query('SELECT payment_reviewed_at FROM nfc_orders WHERE id=$1',[order.body.order.id])).rows[0].payment_reviewed_at,reviewedAt);
+      assert.equal((await request(route, 'PATCH', { paymentStatus: 'pending' }, adminToken)).status, 409);
       assert.equal((await request(route, 'PATCH', { status: 'shipped', trackingNumber: 'TEST123' }, adminToken)).status, 200);
+      assert.equal((await request(route, 'PATCH', { status: 'pending' }, adminToken)).status, 409);
       assert.equal((await request(route, 'PATCH', { status: 'completed' }, adminToken)).status, 200);
+      assert.equal((await request(route, 'PATCH', { status: 'processing' }, adminToken)).status, 409);
     });
     await t.test('mixed-currency revenue uses fixed LKR conversions and includes NFC without double counting', async () => {
       const { captureRevenueRate } = require('../backend/services/revenue.service');
@@ -162,6 +173,19 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
           await context.close();
         }
       } finally { await browser.close(); }
+    });
+    await t.test('administrator password and status changes invalidate existing sessions',async()=>{
+      const id=second.body.user.id;
+      const changed=await request(`/api/super-admin/users/${id}`,'PATCH',{
+        firstName:'Test',lastName:'Two',email:'two@example.test',password:'Admin replacement password 123!',status:'active',preferredCurrency:'LKR'
+      },adminToken);
+      assert.equal(changed.status,200,JSON.stringify(changed.body));
+      assert.equal((await request('/api/user/dashboard','GET',null,second.body.token)).status,401);
+      const login=await request('/api/auth/login','POST',{email:'two@example.test',password:'Admin replacement password 123!'});
+      assert.equal(login.status,200);
+      assert.equal((await request(`/api/super-admin/users/${id}/status`,'PATCH',{status:'rejected'},adminToken)).status,200);
+      assert.equal((await request(`/api/super-admin/users/${id}/status`,'PATCH',{status:'active'},adminToken)).status,200);
+      assert.equal((await request('/api/user/dashboard','GET',null,login.body.token)).status,401);
     });
     await t.test('logout invalidates the registration token', async () => {
       assert.equal((await request('/api/auth/logout', 'POST', {}, first.body.token)).status, 200);

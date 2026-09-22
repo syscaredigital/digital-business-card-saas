@@ -10,6 +10,7 @@ function Copy-ReleaseDirectory([string]$Source, [string]$Destination) {
   New-Item -ItemType Directory -Path $Destination -Force | Out-Null
   foreach ($entry in Get-ChildItem -LiteralPath $Source -Force) {
     if ($entry.Name -in @('node_modules', 'uploads', 'data', '.env', 'production.env', '.git')) { continue }
+    if (($entry.Name -like '*.env') -or ($entry.Name -like '*.pem') -or ($entry.Name -like '*.key') -or ($entry.Name -like '*.dump')) { continue }
     if ($entry.Name -like '.env.*' -and $entry.Name -ne '.env.example') { continue }
     $target = Join-Path $Destination $entry.Name
     if ($entry.PSIsContainer) { Copy-ReleaseDirectory $entry.FullName $target }

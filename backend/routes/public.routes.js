@@ -434,7 +434,7 @@ router.post("/vcards/:id/enquiries", async (req, res, next) => {
       });
     } catch (mailError) {
       notificationDelivered = false;
-      console.error("VCard enquiry email notification failed:", mailError.message);
+      console.error("VCard enquiry email notification failed:", mailError.code || mailError.name);
     }
     await client.query("COMMIT");
     res.status(201).json({

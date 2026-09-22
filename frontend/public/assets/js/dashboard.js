@@ -1784,7 +1784,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminUsers() {
     if (adminPageSlug !== "users" || !userDirectoryBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       userDirectoryBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to view database users.</span></div></td></tr>';
       updateUserDirectoryCount(0);
@@ -1793,8 +1793,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users?limit=100&search=") + encodeURIComponent(search), {
-        headers: { Authorization: "Bearer " + token }
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/users?limit=100&search=") + encodeURIComponent(search), {
+        headers: { "X-Requested-With": "SyncECard" }
       });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load users");
@@ -1897,7 +1897,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminVCards() {
     if (adminPageSlug !== "vcards" || !vcardDirectory) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       Array.from(vcardDirectory.children).forEach(function (child) { if (!child.classList.contains("vcard-table-head")) child.remove(); });
       vcardDirectory.insertAdjacentHTML("beforeend", '<div class="vcard-directory-state"><strong>Sign in required</strong><span>Log in as a super admin to manage VCards.</span></div>');
@@ -1905,7 +1905,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards?search=") + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards?search=") + encodeURIComponent(search), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load VCards");
       renderSuperAdminVCards(data.vcards || [], search ? (data.vcards || []).length : (data.summary ? data.summary.total : 0));
@@ -1923,7 +1923,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (adminPageSlug !== "templates" || !vcardTemplateGrid) return;
     try {
       var apiOrigin = window.SyncVCardApiOrigin;
-      var response = await fetch(apiOrigin + "/api/public/vcard-templates");
+      var response = await window.SyncSession.fetch(apiOrigin + "/api/public/vcard-templates");
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load templates");
       renderVCardTemplates(data.data || [], searchInput ? searchInput.value.trim() : "");
@@ -1945,12 +1945,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function updateSuperAdminVCardStatus(cardId, isActive, input) {
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     try {
       if (input) input.disabled = true;
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards/") + encodeURIComponent(cardId) + "/status", {
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards/") + encodeURIComponent(cardId) + "/status", {
         method: "PATCH",
-        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: isActive })
       });
       var data = await response.json().catch(function () { return {}; });
@@ -1966,10 +1966,10 @@ document.addEventListener("DOMContentLoaded", function () {
   async function deleteSuperAdminVCard(cardId, button) {
     var card = superAdminVCardsById[String(cardId)];
     if (!window.confirm("Permanently delete " + (card ? card.title : "this VCard") + "?")) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     try {
       if (button) { button.disabled = true; button.textContent = "Deleting..."; }
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards/") + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards/") + encodeURIComponent(cardId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to delete VCard");
       await loadSuperAdminVCards();
@@ -2095,7 +2095,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminNfc() {
     if (adminPageSlug !== "nfc-orders" || !nfcRegistryBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       if (nfcProductsGrid) nfcProductsGrid.innerHTML = '<div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage NFC products.</span></div>';
       nfcRegistryBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage NFC cards.</span></div></td></tr>';
@@ -2103,7 +2103,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc?search=") + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc?search=") + encodeURIComponent(search), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load NFC management data");
       renderNfcProducts(data.products || [], search);
@@ -2183,7 +2183,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!window.confirm("Permanently delete " + (product ? product.name : "this NFC product") + "?")) return;
     try {
       button.disabled = true; button.textContent = "Deleting...";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/products/") + encodeURIComponent(productId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/products/") + encodeURIComponent(productId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to delete NFC product");
       await loadSuperAdminNfc();
@@ -2219,7 +2219,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!window.confirm("Permanently delete " + (card ? card.label : "this NFC card") + " from the registry?")) return;
     try {
       if (button) { button.disabled = true; button.textContent = "Deleting..."; }
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/cards/") + encodeURIComponent(cardId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/cards/") + encodeURIComponent(cardId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to delete NFC card");
       await loadSuperAdminNfc();
@@ -2237,9 +2237,9 @@ document.addEventListener("DOMContentLoaded", function () {
         button.disabled = true;
         button.textContent = "Saving...";
       }
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/orders/") + encodeURIComponent(orderId), {
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/orders/") + encodeURIComponent(orderId), {
         method: "PATCH",
-        headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+        headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       var data = await response.json().catch(function () { return {}; });
@@ -2291,7 +2291,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function openNfcOrderProof(orderId, button) {
     try {
       if(button){button.disabled=true;button.textContent="Opening...";}
-      var response=await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/orders/")+encodeURIComponent(orderId)+"/proof",{headers:{Authorization:"Bearer "+localStorage.getItem("token")}});
+      var response=await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/orders/")+encodeURIComponent(orderId)+"/proof",{headers:{"X-Requested-With": "SyncECard"}});
       if(!response.ok){var data=await response.json().catch(function(){return {};});throw new Error(data.message||"Unable to open payment slip");}
       var url=URL.createObjectURL(await response.blob());window.open(url,"_blank","noopener");window.setTimeout(function(){URL.revokeObjectURL(url);},60000);
     }catch(error){showToast("Payment slip unavailable",error.message);}finally{if(button){button.disabled=false;button.textContent="View slip";}}
@@ -2388,7 +2388,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function changeSuperAdminUserStatus(userId, status, button) {
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) return showToast("Sign in required", "Log in as a super admin to manage users.");
     var originalText = button ? button.textContent : "";
     if (button) {
@@ -2396,9 +2396,9 @@ document.addEventListener("DOMContentLoaded", function () {
       button.textContent = "Saving...";
     }
     try {
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users/") + encodeURIComponent(userId) + "/status", {
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/users/") + encodeURIComponent(userId) + "/status", {
         method: "PATCH",
-        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
         body: JSON.stringify({ status: status })
       });
       var data = await response.json().catch(function () { return {}; });
@@ -2418,16 +2418,16 @@ document.addEventListener("DOMContentLoaded", function () {
     var user = superAdminUsersById[String(userId)];
     var userName = user ? (user.name || user.email) : "this user";
     if (!window.confirm("Permanently delete " + userName + "? This also removes their cards and subscriptions.")) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) return showToast("Sign in required", "Log in as a super admin to manage users.");
     if (button) {
       button.disabled = true;
       button.textContent = "Deleting...";
     }
     try {
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users/") + encodeURIComponent(userId), {
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/users/") + encodeURIComponent(userId), {
         method: "DELETE",
-        headers: { Authorization: "Bearer " + token }
+        headers: { "X-Requested-With": "SyncECard" }
       });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to delete user");
@@ -2598,9 +2598,9 @@ document.addEventListener("DOMContentLoaded", function () {
       var submitButton = vcardAdminForm.querySelector('[type="submit"]');
       try {
         if (submitButton) { submitButton.disabled = true; submitButton.textContent = "Creating..."; }
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards"), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/vcards"), {
           method: "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: Number(formData.get("userId")),
             templateId: formData.get("templateId") ? Number(formData.get("templateId")) : null,
@@ -2679,9 +2679,9 @@ document.addEventListener("DOMContentLoaded", function () {
         submitButton.disabled = true; submitButton.textContent = "Saving...";
         var frontImage = await readNfcProductImage(nfcProductForm.elements.frontImage, nfcProductFrontPreview);
         var backImage = await readNfcProductImage(nfcProductForm.elements.backImage, nfcProductBackPreview);
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/products") + (productId ? "/" + encodeURIComponent(productId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/products") + (productId ? "/" + encodeURIComponent(productId) : ""), {
           method: productId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({ name: formData.get("name").trim(), price: Number(formData.get("price")), category: formData.get("category"), description: formData.get("description").trim(), frontImage: frontImage, backImage: backImage, isActive: formData.get("isActive") === "on" })
         });
         var data = await response.json().catch(function () { return {}; });
@@ -2708,9 +2708,9 @@ document.addEventListener("DOMContentLoaded", function () {
       var submitButton = nfcRegistryForm.querySelector('[type="submit"]');
       try {
         if (submitButton) { submitButton.disabled = true; submitButton.textContent = "Saving..."; }
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/cards") + (cardId ? "/" + encodeURIComponent(cardId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/nfc/cards") + (cardId ? "/" + encodeURIComponent(cardId) : ""), {
           method: cardId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({
             label: formData.get("label").trim(), status: formData.get("status"),
             tagIdentifier: formData.get("tagIdentifier").trim(), serialNumber: formData.get("serialNumber").trim(),
@@ -2914,7 +2914,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminSubscriptions() {
     if (adminPageSlug !== "subscriptions" || !subscriptionAdminBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       subscriptionAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage subscriptions.</span></div></td></tr>';
       if (planAdminBody) planAdminBody.innerHTML = '<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage billing plans.</span></div></td></tr>';
@@ -2925,7 +2925,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions?search=") + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions?search=") + encodeURIComponent(search), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load subscriptions");
       renderSubscriptionAdmin(data.subscriptions || []);
@@ -3026,9 +3026,9 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions") + (subscriptionId ? "/" + encodeURIComponent(subscriptionId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions") + (subscriptionId ? "/" + encodeURIComponent(subscriptionId) : ""), {
           method: subscriptionId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({ userId: Number(formData.get("userId")), planId: Number(formData.get("planId")), status: formData.get("status"), startDate: formData.get("startDate"), endDate: formData.get("endDate") || null, autoRenew: formData.get("autoRenew") === "on", cancelReason: formData.get("cancelReason").trim() })
         });
         var data = await response.json().catch(function () { return {}; });
@@ -3070,9 +3070,9 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         setPlanAdminSubmitLabel("Saving plan...");
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/plans") + (planId ? "/" + encodeURIComponent(planId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/plans") + (planId ? "/" + encodeURIComponent(planId) : ""), {
           method: planId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({ name: formData.get("name").trim(), prices: prices, billingInterval: formData.get("billingInterval"), vcardLimit: Number(formData.get("vcardLimit")), nfcLimit: Number(formData.get("nfcLimit")), analyticsLimit: Number(formData.get("analyticsLimit")), storageLimitMb: Number(formData.get("storageLimitMb")), benefits: formData.get("features").split(",").map(function (feature) { return feature.trim(); }).filter(Boolean), vcardFeatures: vcardFeatures, templateIds: templateIds, status: formData.get("status") })
         });
         var data = await response.json().catch(function () { return {}; });
@@ -3098,7 +3098,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (subscriptionButton.getAttribute("data-live-subscription-action") === "delete" && window.confirm("Delete this subscription record?")) {
         try {
           subscriptionButton.disabled = true;
-          var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions/") + encodeURIComponent(subscriptionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+          var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/subscriptions/") + encodeURIComponent(subscriptionId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
           var data = await response.json().catch(function () { return {}; });
           if (!response.ok) throw new Error(data.message || "Unable to delete subscription");
           await loadSuperAdminSubscriptions();
@@ -3113,7 +3113,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (planButton.getAttribute("data-live-plan-action") === "delete" && window.confirm("Delete " + (plan ? plan.name : "this plan") + "?")) {
         try {
           planButton.disabled = true;
-          var planResponse = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/plans/") + encodeURIComponent(planId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+          var planResponse = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/plans/") + encodeURIComponent(planId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
           var planData = await planResponse.json().catch(function () { return {}; });
           if (!planResponse.ok) throw new Error(planData.message || "Unable to delete plan");
           await loadSuperAdminSubscriptions();
@@ -3211,7 +3211,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminCashPayments() {
     if (adminPageSlug !== "cash-payments" || !cashPaymentAdminBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       cashPaymentAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to review cash payments.</span></div></td></tr>';
       if (cashPaymentAdminCount) cashPaymentAdminCount.textContent = "Sign in required";
@@ -3221,7 +3221,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       var search = searchInput ? searchInput.value.trim() : "";
       var status = cashPaymentStatusFilter ? cashPaymentStatusFilter.value : "";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load cash payments");
       superAdminCashSubscriptions = data.subscriptions || [];
@@ -3278,8 +3278,8 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       button.disabled = true;
       button.textContent = status === "approved" ? "Approving..." : "Rejecting...";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(payment.id), {
-        method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(cashPaymentPayload(payment, status))
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(payment.id), {
+        method: "PATCH", headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" }, body: JSON.stringify(cashPaymentPayload(payment, status))
       });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to review payment");
@@ -3312,9 +3312,9 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments") + (paymentId ? "/" + encodeURIComponent(paymentId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments") + (paymentId ? "/" + encodeURIComponent(paymentId) : ""), {
           method: paymentId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: Number(formData.get("userId")), subscriptionId: formData.get("subscriptionId") ? Number(formData.get("subscriptionId")) : null,
             amount: Number(formData.get("amount")), currency: formData.get("currency"), status: formData.get("status"),
@@ -3340,7 +3340,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (proofButton) {
       try {
         proofButton.disabled = true;
-        var proofResponse = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(proofButton.dataset.paymentProofId) + "/proof", { headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var proofResponse = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(proofButton.dataset.paymentProofId) + "/proof", { headers: { "X-Requested-With": "SyncECard" } });
         if (!proofResponse.ok) { var proofError = await proofResponse.json().catch(function () { return {}; }); throw new Error(proofError.message || "Unable to open payment proof"); }
         var proofObjectUrl = URL.createObjectURL(await proofResponse.blob());
         window.open(proofObjectUrl, "_blank", "noopener,noreferrer");
@@ -3361,7 +3361,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         button.disabled = true;
         button.textContent = "Deleting...";
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(paymentId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/cash-payments/") + encodeURIComponent(paymentId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to delete cash payment");
         await loadSuperAdminCashPayments();
@@ -3444,7 +3444,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminTransactions() {
     if (adminPageSlug !== "transactions" || !transactionAdminBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       transactionAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to view the financial ledger.</span></div></td></tr>';
       if (transactionAdminCount) transactionAdminCount.textContent = "Sign in required";
@@ -3455,7 +3455,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var search = searchInput ? searchInput.value.trim() : "";
       var status = transactionStatusFilter ? transactionStatusFilter.value : "";
       var type = transactionTypeFilter ? transactionTypeFilter.value : "";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status) + "&type=" + encodeURIComponent(type), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status) + "&type=" + encodeURIComponent(type), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load transactions");
       populateTransactionUsers(data.users || []);
@@ -3514,9 +3514,9 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions") + (transactionId ? "/" + encodeURIComponent(transactionId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions") + (transactionId ? "/" + encodeURIComponent(transactionId) : ""), {
           method: transactionId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({ userId: Number(formData.get("userId")), type: formData.get("type"), amount: Number(formData.get("amount")), currency: formData.get("currency"), status: formData.get("status"), gateway: formData.get("gateway").trim(), reference: formData.get("reference").trim(), note: formData.get("note").trim() })
         });
         var data = await response.json().catch(function () { return {}; });
@@ -3544,7 +3544,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         button.disabled = true;
         button.textContent = "Deleting...";
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions/") + encodeURIComponent(transactionId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/transactions/") + encodeURIComponent(transactionId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to delete transaction");
         await loadSuperAdminTransactions();
@@ -3623,7 +3623,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminPayouts() {
     if (adminPageSlug !== "payouts" || !payoutAdminBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       payoutAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage payouts.</span></div></td></tr>';
       if (payoutAdminCount) payoutAdminCount.textContent = "Sign in required";
@@ -3633,7 +3633,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       var search = searchInput ? searchInput.value.trim() : "";
       var status = payoutStatusFilter ? payoutStatusFilter.value : "";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts?search=") + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load payouts");
       populatePayoutUsers(data.users || []);
@@ -3693,7 +3693,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       button.disabled = true;
       button.textContent = "Saving...";
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts/") + encodeURIComponent(payout.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(payoutPayload(payout, status)) });
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts/") + encodeURIComponent(payout.id), { method: "PATCH", headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" }, body: JSON.stringify(payoutPayload(payout, status)) });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to update payout status");
       await loadSuperAdminPayouts();
@@ -3724,9 +3724,9 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts") + (payoutId ? "/" + encodeURIComponent(payoutId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts") + (payoutId ? "/" + encodeURIComponent(payoutId) : ""), {
           method: payoutId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({ userId: formData.get("userId") ? Number(formData.get("userId")) : null, payeeName: formData.get("payeeName").trim(), payeeEmail: formData.get("payeeEmail").trim(), accountName: formData.get("accountName").trim(), amount: Number(formData.get("amount")), currency: formData.get("currency"), method: formData.get("method"), status: formData.get("status"), scheduledAt: formData.get("scheduledAt") || null, reference: formData.get("reference").trim(), notes: formData.get("notes").trim() })
         });
         var data = await response.json().catch(function () { return {}; });
@@ -3755,7 +3755,7 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         button.disabled = true;
         button.textContent = "Deleting...";
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts/") + encodeURIComponent(payoutId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/payouts/") + encodeURIComponent(payoutId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to delete payout");
         await loadSuperAdminPayouts();
@@ -3834,7 +3834,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminWithdrawals() {
     if (adminPageSlug !== "withdrawals" || !withdrawalAdminBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       withdrawalAdminBody.innerHTML = '<tr><td colspan="8"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to review withdrawals.</span></div></td></tr>';
       if (withdrawalAdminCount) withdrawalAdminCount.textContent = "Sign in required";
@@ -3844,7 +3844,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       var search = searchInput ? searchInput.value.trim() : "";
       var status = withdrawalStatusFilter ? withdrawalStatusFilter.value : "";
-      var response = await fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals?search=" + encodeURIComponent(search) + "&status=" + encodeURIComponent(status), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load withdrawals");
       populateWithdrawalUsers(data.users || []);
@@ -3904,7 +3904,7 @@ document.addEventListener("DOMContentLoaded", function () {
       button.disabled = true;
       button.textContent = "Saving...";
       var payload = withdrawalPayload(withdrawal, status); payload.adminNote = reviewNote.trim();
-      var response = await fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals/" + encodeURIComponent(withdrawal.id), { method: "PATCH", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      var response = await window.SyncSession.fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals/" + encodeURIComponent(withdrawal.id), { method: "PATCH", headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to update withdrawal");
       await loadSuperAdminWithdrawals();
@@ -3935,9 +3935,9 @@ document.addEventListener("DOMContentLoaded", function () {
       try {
         submitButton.disabled = true;
         submitButton.textContent = "Saving...";
-        var response = await fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals" + (withdrawalId ? "/" + encodeURIComponent(withdrawalId) : ""), {
+        var response = await window.SyncSession.fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals" + (withdrawalId ? "/" + encodeURIComponent(withdrawalId) : ""), {
           method: withdrawalId ? "PATCH" : "POST",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
+          headers: { "X-Requested-With": "SyncECard", "Content-Type": "application/json" },
           body: JSON.stringify({ userId: Number(formData.get("userId")), amount: Number(formData.get("amount")), currency: formData.get("currency"), method: formData.get("method"), status: formData.get("status"), accountName: formData.get("accountName").trim(), requestNote: formData.get("requestNote").trim(), adminNote: formData.get("adminNote").trim() })
         });
         var data = await response.json().catch(function () { return {}; });
@@ -3963,17 +3963,17 @@ document.addEventListener("DOMContentLoaded", function () {
     if (action === "edit") setWithdrawalAdminModal(true, withdrawal);
     if (action === "receipt" && withdrawal) {
       var receiptInput=document.createElement("input");receiptInput.type="file";receiptInput.accept="image/png,image/jpeg,image/webp,application/pdf";
-      receiptInput.addEventListener("change",async function(){if(!receiptInput.files[0])return;var original=button.textContent;try{button.disabled=true;button.textContent="Uploading...";var formData=new FormData();formData.append("receipt",receiptInput.files[0]);var response=await fetch(superAdminApiOrigin()+"/api/super-admin/withdrawals/"+encodeURIComponent(withdrawalId)+"/receipt",{method:"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token")},body:formData});var data=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(data.message||"Unable to upload receipt");await loadSuperAdminWithdrawals();showToast("Receipt uploaded","The bank transfer evidence is now available to the user.");}catch(error){button.disabled=false;button.textContent=original;showToast("Upload failed",error.message);}});receiptInput.click();
+      receiptInput.addEventListener("change",async function(){if(!receiptInput.files[0])return;var original=button.textContent;try{button.disabled=true;button.textContent="Uploading...";var formData=new FormData();formData.append("receipt",receiptInput.files[0]);var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/withdrawals/"+encodeURIComponent(withdrawalId)+"/receipt",{method:"POST",headers:{"X-Requested-With": "SyncECard"},body:formData});var data=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(data.message||"Unable to upload receipt");await loadSuperAdminWithdrawals();showToast("Receipt uploaded","The bank transfer evidence is now available to the user.");}catch(error){button.disabled=false;button.textContent=original;showToast("Upload failed",error.message);}});receiptInput.click();
     }
     if (action === "view-receipt" && withdrawal) {
-      try{button.disabled=true;var receiptResponse=await fetch(superAdminApiOrigin()+"/api/super-admin/withdrawals/"+encodeURIComponent(withdrawalId)+"/receipt",{headers:{Authorization:"Bearer "+localStorage.getItem("token")}});if(!receiptResponse.ok){var receiptError=await receiptResponse.json().catch(function(){return{}});throw new Error(receiptError.message||"Unable to open receipt");}var receiptBlob=await receiptResponse.blob(),receiptObjectUrl=URL.createObjectURL(receiptBlob);window.open(receiptObjectUrl,"_blank","noopener");setTimeout(function(){URL.revokeObjectURL(receiptObjectUrl);},60000);}catch(error){showToast("Receipt unavailable",error.message);}finally{button.disabled=false;}
+      try{button.disabled=true;var receiptResponse=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/withdrawals/"+encodeURIComponent(withdrawalId)+"/receipt",{headers:{"X-Requested-With": "SyncECard"}});if(!receiptResponse.ok){var receiptError=await receiptResponse.json().catch(function(){return{}});throw new Error(receiptError.message||"Unable to open receipt");}var receiptBlob=await receiptResponse.blob(),receiptObjectUrl=URL.createObjectURL(receiptBlob);window.open(receiptObjectUrl,"_blank","noopener");setTimeout(function(){URL.revokeObjectURL(receiptObjectUrl);},60000);}catch(error){showToast("Receipt unavailable",error.message);}finally{button.disabled=false;}
     }
     if (["approved", "processing", "completed", "rejected", "cancelled"].indexOf(action) !== -1) updateWithdrawalStatus(withdrawal, action, button);
     if (action === "delete" && window.confirm("Permanently delete this withdrawal and all linked payout and transaction records?")) {
       try {
         button.disabled = true;
         button.textContent = "Deleting...";
-        var response = await fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals/" + encodeURIComponent(withdrawalId), { method: "DELETE", headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+        var response = await window.SyncSession.fetch(superAdminApiOrigin() + "/api/super-admin/withdrawals/" + encodeURIComponent(withdrawalId), { method: "DELETE", headers: { "X-Requested-With": "SyncECard" } });
         var data = await response.json().catch(function () { return {}; });
         if (!response.ok) throw new Error(data.message || "Unable to delete withdrawal");
         await loadSuperAdminWithdrawals();
@@ -4103,7 +4103,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadSuperAdminAffiliations() {
     if (adminPageSlug !== "affiliations" || !affiliatePartnerBody) return;
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       affiliatePartnerBody.innerHTML = '<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage affiliates.</span></div></td></tr>';
       if (affiliatePartnerCount) affiliatePartnerCount.textContent = "Sign in required";
@@ -4111,7 +4111,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     try {
       var search = searchInput ? searchInput.value.trim() : "";
-      var response = await fetch(superAdminApiOrigin() + "/api/super-admin/affiliations?search=" + encodeURIComponent(search), { headers: { Authorization: "Bearer " + token } });
+      var response = await window.SyncSession.fetch(superAdminApiOrigin() + "/api/super-admin/affiliations?search=" + encodeURIComponent(search), { headers: { "X-Requested-With": "SyncECard" } });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.message || "Unable to load affiliations");
       renderAffiliatePartners(data.partners || []); renderAffiliateReferrals(data.referrals || []); renderAffiliateCommissions(data.commissions || []);
@@ -4165,7 +4165,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if(kind==="referral") payload={affiliateId:Number(fd.get("affiliateId")),userId:Number(fd.get("userId")),status:fd.get("status")};
     if(kind==="commission") payload={affiliateId:Number(fd.get("affiliateId")),referralId:fd.get("referralId")?Number(fd.get("referralId")):null,amount:Number(fd.get("amount")),currency:fd.get("currency"),status:fd.get("status"),description:fd.get("description").trim()};
     var button=form.querySelector('[type="submit"]');
-    try { button.disabled=true;button.textContent="Saving...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/affiliations/"+basePath+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save record");setAffiliateModal(modal,form,null,false);await loadSuperAdminAffiliations();showToast(id?"Record updated":"Record created","The affiliate program data was saved to PostgreSQL."); }
+    try { button.disabled=true;button.textContent="Saving...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/affiliations/"+basePath+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save record");setAffiliateModal(modal,form,null,false);await loadSuperAdminAffiliations();showToast(id?"Record updated":"Record created","The affiliate program data was saved to PostgreSQL."); }
     catch(error){var feedback=form.querySelector(".form-feedback");if(feedback){feedback.hidden=false;feedback.textContent=error.message;}}
     finally{button.disabled=false;button.textContent=kind==="partner"?"Save Partner":kind==="referral"?"Save Referral":"Save Commission";}
   }
@@ -4181,8 +4181,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if(commissionButton){var commissionId=commissionButton.getAttribute("data-commission-id");var commission=superAdminAffiliateCommissionsById[String(commissionId)];var commissionAction=commissionButton.getAttribute("data-live-affiliate-commission-action");if(commissionAction==="edit")setAffiliateModal(affiliateCommissionModal,affiliateCommissionForm,affiliateCommissionModalTitle,true,commission,"commission");if(["approved","rejected"].indexOf(commissionAction)!==-1)await quickUpdateAffiliateRecord("commissions",commissionId,{affiliateId:commission.affiliateId,referralId:commission.referralId,amount:commission.amount,currency:commission.currency,status:commissionAction,description:commission.description||""},commissionButton);if(commissionAction==="delete"&&window.confirm("Delete this commission record?"))await deleteAffiliateRecord("commissions",commissionId,commissionButton);}
   });
 
-  async function quickUpdateAffiliateRecord(path,id,payload,button){var original=button.textContent;try{button.disabled=true;button.textContent="Saving...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/affiliations/"+path+"/"+encodeURIComponent(id),{method:"PATCH",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update record");await loadSuperAdminAffiliations();showToast("Record updated","The affiliate status was saved.");}catch(error){button.disabled=false;button.textContent=original;showToast("Update failed",error.message);}}
-  async function deleteAffiliateRecord(path,id,button){try{button.disabled=true;button.textContent="Deleting...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/affiliations/"+path+"/"+encodeURIComponent(id),{method:"DELETE",headers:{Authorization:"Bearer "+localStorage.getItem("token")}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to delete record");await loadSuperAdminAffiliations();showToast("Record deleted","The affiliate record was removed.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}
+  async function quickUpdateAffiliateRecord(path,id,payload,button){var original=button.textContent;try{button.disabled=true;button.textContent="Saving...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/affiliations/"+path+"/"+encodeURIComponent(id),{method:"PATCH",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update record");await loadSuperAdminAffiliations();showToast("Record updated","The affiliate status was saved.");}catch(error){button.disabled=false;button.textContent=original;showToast("Update failed",error.message);}}
+  async function deleteAffiliateRecord(path,id,button){try{button.disabled=true;button.textContent="Deleting...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/affiliations/"+path+"/"+encodeURIComponent(id),{method:"DELETE",headers:{"X-Requested-With": "SyncECard"}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to delete record");await loadSuperAdminAffiliations();showToast("Record deleted","The affiliate record was removed.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}
 
   function couponMoney(value, currency) { return cashPaymentMoney(Number(value || 0), currency || "USD"); }
   function couponDate(value) { return value ? cashPaymentDate(value) : "No limit"; }
@@ -4211,8 +4211,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if(couponRedemptionForm){couponRedemptionForm.elements.couponId.innerHTML='<option value="">Select available coupon</option>'+coupons.filter(function(c){return c.effectiveStatus==="active";}).map(function(c){return '<option value="'+c.id+'">'+escapeDashboardHtml(c.code+" — "+c.name)+'</option>';}).join("");couponRedemptionForm.elements.userId.innerHTML='<option value="">Select active user</option>'+userOptions;couponRedemptionForm.elements.planId.innerHTML='<option value="">No plan</option>'+planOptions;}
   }
   async function loadSuperAdminCoupons(){
-    if(adminPageSlug!=="coupon-codes"||!couponAdminBody)return;var token=localStorage.getItem("token");if(!token){couponAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage coupon codes.</span></div></td></tr>';updateCouponsPageSummary({});return;}
-    try{var search=searchInput?searchInput.value.trim():"";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/coupons?search="+encodeURIComponent(search),{headers:{Authorization:"Bearer "+token}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load coupons");renderSuperAdminCoupons(data.coupons||[]);renderCouponRedemptions(data.redemptions||[]);populateCouponOptions(data.coupons||[],data.plans||[],data.users||[]);updateCouponsPageSummary(data.summary||{});}catch(error){couponAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Coupons unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';if(couponAdminCount)couponAdminCount.textContent="Unavailable";updateCouponsPageSummary({});showToast("Could not load coupons",error.message);}
+    if(adminPageSlug!=="coupon-codes"||!couponAdminBody)return;var token=localStorage.getItem("sessionActive");if(!token){couponAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as a super admin to manage coupon codes.</span></div></td></tr>';updateCouponsPageSummary({});return;}
+    try{var search=searchInput?searchInput.value.trim():"";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/coupons?search="+encodeURIComponent(search),{headers:{"X-Requested-With": "SyncECard"}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load coupons");renderSuperAdminCoupons(data.coupons||[]);renderCouponRedemptions(data.redemptions||[]);populateCouponOptions(data.coupons||[],data.plans||[],data.users||[]);updateCouponsPageSummary(data.summary||{});}catch(error){couponAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Coupons unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';if(couponAdminCount)couponAdminCount.textContent="Unavailable";updateCouponsPageSummary({});showToast("Could not load coupons",error.message);}
   }
   function setCouponModal(open,coupon){if(!couponAdminModal||!couponAdminForm)return;if(!open){couponAdminModal.hidden=true;document.body.style.overflow="";return;}couponAdminForm.reset();couponAdminForm.elements.couponId.value=coupon?coupon.id:"";couponAdminForm.elements.isPublic.checked=coupon?coupon.isPublic!==false:true;if(coupon){couponAdminForm.elements.name.value=coupon.name;couponAdminForm.elements.code.value=coupon.code;couponAdminForm.elements.discountType.value=coupon.discountType;couponAdminForm.elements.discountValue.value=coupon.discountValue;couponAdminForm.elements.currency.value=coupon.currency;couponAdminForm.elements.usageLimit.value=coupon.usageLimit===null?"":coupon.usageLimit;couponAdminForm.elements.perUserLimit.value=coupon.perUserLimit;couponAdminForm.elements.minimumAmount.value=coupon.minimumAmount;couponAdminForm.elements.planId.value=coupon.planId||"";couponAdminForm.elements.startsAt.value=payoutDatetimeInput(coupon.startsAt);couponAdminForm.elements.expiresAt.value=payoutDatetimeInput(coupon.expiresAt);couponAdminForm.elements.status.value=coupon.status;}if(couponAdminModalTitle)couponAdminModalTitle.textContent=coupon?"Edit Coupon":"New Coupon";var feedback=couponAdminForm.querySelector(".form-feedback");if(feedback)feedback.hidden=true;couponAdminModal.hidden=false;document.body.style.overflow="hidden";}
   function setCouponRedemptionModal(open){if(!couponRedemptionModal||!couponRedemptionForm)return;if(!open){couponRedemptionModal.hidden=true;document.body.style.overflow="";return;}couponRedemptionForm.reset();var feedback=couponRedemptionForm.querySelector(".form-feedback");if(feedback)feedback.hidden=true;couponRedemptionModal.hidden=false;document.body.style.overflow="hidden";}
@@ -4221,10 +4221,10 @@ document.addEventListener("DOMContentLoaded", function () {
   [document.getElementById("openCouponRedemptionModal")].forEach(function(b){if(b)b.addEventListener("click",function(){setCouponRedemptionModal(true);});});
   [document.getElementById("closeCouponRedemptionModal"),document.getElementById("resetCouponRedemptionForm"),document.getElementById("couponRedemptionModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setCouponRedemptionModal(false);});});
   function couponPayload(c,statusOverride){return {code:c.code,name:c.name,discountType:c.discountType,discountValue:c.discountValue,currency:c.currency,usageLimit:c.usageLimit,perUserLimit:c.perUserLimit,minimumAmount:c.minimumAmount,planId:c.planId,startsAt:c.startsAt,expiresAt:c.expiresAt,status:statusOverride||c.status,isPublic:c.isPublic!==false};}
-  if(couponAdminForm)couponAdminForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=couponAdminForm.querySelector(".form-feedback");if(!couponAdminForm.checkValidity()){feedback.hidden=false;feedback.textContent="Complete all required fields with valid values.";return;}var fd=new FormData(couponAdminForm),id=fd.get("couponId"),button=couponAdminForm.querySelector('[type="submit"]'),payload={name:fd.get("name").trim(),code:fd.get("code").trim(),discountType:fd.get("discountType"),discountValue:Number(fd.get("discountValue")),currency:fd.get("currency"),usageLimit:fd.get("usageLimit")?Number(fd.get("usageLimit")):null,perUserLimit:Number(fd.get("perUserLimit")),minimumAmount:Number(fd.get("minimumAmount")||0),planId:fd.get("planId")?Number(fd.get("planId")):null,startsAt:fd.get("startsAt")||null,expiresAt:fd.get("expiresAt")||null,status:fd.get("status"),isPublic:fd.get("isPublic")==="on"};try{button.disabled=true;button.textContent="Saving...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/coupons"+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save coupon");setCouponModal(false);await loadSuperAdminCoupons();showToast(id?"Coupon updated":"Coupon created","Promotion rules were saved to PostgreSQL.");}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Save Coupon";}});
-  if(couponRedemptionForm)couponRedemptionForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=couponRedemptionForm.querySelector(".form-feedback");if(!couponRedemptionForm.checkValidity()){feedback.hidden=false;feedback.textContent="Select a coupon and customer, then enter an amount.";return;}var fd=new FormData(couponRedemptionForm),button=couponRedemptionForm.querySelector('[type="submit"]'),selectedCoupon=superAdminCouponsById[String(fd.get("couponId"))],currency=selectedCoupon?selectedCoupon.currency:"USD";try{button.disabled=true;button.textContent="Calculating...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/coupon-redemptions",{method:"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({couponId:Number(fd.get("couponId")),userId:Number(fd.get("userId")),planId:fd.get("planId")?Number(fd.get("planId")):null,originalAmount:Number(fd.get("originalAmount"))})});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to apply coupon");setCouponRedemptionModal(false);await loadSuperAdminCoupons();showToast("Coupon applied","Discount: "+couponMoney(data.redemption.discountAmount,currency)+" · Final: "+couponMoney(data.redemption.finalAmount,currency));}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Apply & Record";}});
-  document.addEventListener("click",async function(event){var button=event.target.closest("[data-live-coupon-action]");var redemptionButton=event.target.closest("[data-live-redemption-action]");if(button){var id=button.getAttribute("data-coupon-id"),coupon=superAdminCouponsById[String(id)],action=button.getAttribute("data-live-coupon-action");if(action==="edit")setCouponModal(true,coupon);if(action==="toggle"&&coupon){try{button.disabled=true;button.textContent="Saving...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/coupons/"+encodeURIComponent(id),{method:"PATCH",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify(couponPayload(coupon,coupon.status==="active"?"inactive":"active"))});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update coupon");await loadSuperAdminCoupons();showToast("Coupon updated","Availability was changed.");}catch(error){button.disabled=false;button.textContent="Retry";showToast("Update failed",error.message);}}if(action==="delete"&&window.confirm("Delete this unused coupon? Coupons with redemption history should be deactivated instead.")){await deleteCouponRecord("coupons",id,button);}}if(redemptionButton&&window.confirm("Remove this redemption record? This is intended only for correcting administrative entries.")){await deleteCouponRecord("coupon-redemptions",redemptionButton.getAttribute("data-redemption-id"),redemptionButton);}});
-  async function deleteCouponRecord(path,id,button){try{button.disabled=true;button.textContent="Deleting...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/"+path+"/"+encodeURIComponent(id),{method:"DELETE",headers:{Authorization:"Bearer "+localStorage.getItem("token")}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to delete record");await loadSuperAdminCoupons();showToast("Record removed","The database record was deleted.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}
+  if(couponAdminForm)couponAdminForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=couponAdminForm.querySelector(".form-feedback");if(!couponAdminForm.checkValidity()){feedback.hidden=false;feedback.textContent="Complete all required fields with valid values.";return;}var fd=new FormData(couponAdminForm),id=fd.get("couponId"),button=couponAdminForm.querySelector('[type="submit"]'),payload={name:fd.get("name").trim(),code:fd.get("code").trim(),discountType:fd.get("discountType"),discountValue:Number(fd.get("discountValue")),currency:fd.get("currency"),usageLimit:fd.get("usageLimit")?Number(fd.get("usageLimit")):null,perUserLimit:Number(fd.get("perUserLimit")),minimumAmount:Number(fd.get("minimumAmount")||0),planId:fd.get("planId")?Number(fd.get("planId")):null,startsAt:fd.get("startsAt")||null,expiresAt:fd.get("expiresAt")||null,status:fd.get("status"),isPublic:fd.get("isPublic")==="on"};try{button.disabled=true;button.textContent="Saving...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/coupons"+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify(payload)});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save coupon");setCouponModal(false);await loadSuperAdminCoupons();showToast(id?"Coupon updated":"Coupon created","Promotion rules were saved to PostgreSQL.");}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Save Coupon";}});
+  if(couponRedemptionForm)couponRedemptionForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=couponRedemptionForm.querySelector(".form-feedback");if(!couponRedemptionForm.checkValidity()){feedback.hidden=false;feedback.textContent="Select a coupon and customer, then enter an amount.";return;}var fd=new FormData(couponRedemptionForm),button=couponRedemptionForm.querySelector('[type="submit"]'),selectedCoupon=superAdminCouponsById[String(fd.get("couponId"))],currency=selectedCoupon?selectedCoupon.currency:"USD";try{button.disabled=true;button.textContent="Calculating...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/coupon-redemptions",{method:"POST",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify({couponId:Number(fd.get("couponId")),userId:Number(fd.get("userId")),planId:fd.get("planId")?Number(fd.get("planId")):null,originalAmount:Number(fd.get("originalAmount"))})});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to apply coupon");setCouponRedemptionModal(false);await loadSuperAdminCoupons();showToast("Coupon applied","Discount: "+couponMoney(data.redemption.discountAmount,currency)+" · Final: "+couponMoney(data.redemption.finalAmount,currency));}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Apply & Record";}});
+  document.addEventListener("click",async function(event){var button=event.target.closest("[data-live-coupon-action]");var redemptionButton=event.target.closest("[data-live-redemption-action]");if(button){var id=button.getAttribute("data-coupon-id"),coupon=superAdminCouponsById[String(id)],action=button.getAttribute("data-live-coupon-action");if(action==="edit")setCouponModal(true,coupon);if(action==="toggle"&&coupon){try{button.disabled=true;button.textContent="Saving...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/coupons/"+encodeURIComponent(id),{method:"PATCH",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify(couponPayload(coupon,coupon.status==="active"?"inactive":"active"))});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update coupon");await loadSuperAdminCoupons();showToast("Coupon updated","Availability was changed.");}catch(error){button.disabled=false;button.textContent="Retry";showToast("Update failed",error.message);}}if(action==="delete"&&window.confirm("Delete this unused coupon? Coupons with redemption history should be deactivated instead.")){await deleteCouponRecord("coupons",id,button);}}if(redemptionButton&&window.confirm("Remove this redemption record? This is intended only for correcting administrative entries.")){await deleteCouponRecord("coupon-redemptions",redemptionButton.getAttribute("data-redemption-id"),redemptionButton);}});
+  async function deleteCouponRecord(path,id,button){try{button.disabled=true;button.textContent="Deleting...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/"+path+"/"+encodeURIComponent(id),{method:"DELETE",headers:{"X-Requested-With": "SyncECard"}});var data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to delete record");await loadSuperAdminCoupons();showToast("Record removed","The database record was deleted.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}
 
   function updateAnalyticsPageSummary(metrics) {
     var cards=document.querySelectorAll(".admin-page-analytics .admin-page-stats article"),items=[{label:"Profile views",metric:metrics.pageViews},{label:"Engaged clicks",metric:metrics.clicks},{label:"Contact requests",metric:metrics.contactRequests}];if(cards.length<3)return;
@@ -4234,19 +4234,19 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderAnalyticsSources(sources){if(!analyticsSourceList)return;var total=sources.reduce(function(sum,item){return sum+Number(item.count||0);},0);if(!sources.length){analyticsSourceList.innerHTML='<div class="admin-data-empty"><strong>No contact sources yet</strong><span>Contact submissions in this period will be grouped here.</span></div>';return;}analyticsSourceList.innerHTML=sources.map(function(item,index){var percent=total?item.count/total*100:0;return '<div><span class="analytics-source-rank">'+(index+1)+'</span><div><strong>'+escapeDashboardHtml(item.source)+'</strong><i><b style="width:'+percent.toFixed(1)+'%"></b></i></div><span>'+formatDashboardNumber(item.count)+'</span></div>';}).join("");}
   function renderAnalyticsCards(cards){if(!analyticsCardsBody)return;var count=document.getElementById("analyticsCardCount");if(count)count.textContent=formatDashboardNumber(cards.length)+" ranked";if(!cards.length){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>No card analytics found</strong><span>Daily business-card analytics will appear here once collected.</span></div></td></tr>';return;}analyticsCardsBody.innerHTML=cards.map(function(card){var rate=card.views?card.contacts/card.views*100:0;return '<tr><td><div class="analytics-card-name"><span>'+escapeDashboardHtml(avatarInitials(card.title)||"BC")+'</span><div><strong>'+escapeDashboardHtml(card.title)+'</strong><small>Card #'+card.id+'</small></div></div></td><td>'+escapeDashboardHtml(card.owner)+'</td><td><strong>'+formatDashboardNumber(card.views)+'</strong></td><td>'+formatDashboardNumber(card.clicks)+'</td><td>'+formatDashboardNumber(card.contacts)+'</td><td><span class="analytics-rate-pill">'+rate.toFixed(1)+'%</span></td></tr>';}).join("");}
   function renderAnalyticsHealth(data){var metrics=data.metrics||{},clickRate=Number(metrics.clickRate||0),contactRate=Number(metrics.contactRate||0),clickNode=document.getElementById("analyticsClickRate"),contactNode=document.getElementById("analyticsContactRate"),clickBar=document.getElementById("analyticsClickRateBar"),contactBar=document.getElementById("analyticsContactRateBar");if(clickNode)clickNode.textContent=clickRate.toFixed(1)+"%";if(contactNode)contactNode.textContent=contactRate.toFixed(1)+"%";if(clickBar)clickBar.style.width=Math.min(100,clickRate)+"%";if(contactBar)contactBar.style.width=Math.min(100,contactRate)+"%";var p=data.platform||{},list=document.getElementById("analyticsPlatformList");if(list)list.innerHTML='<div><strong>'+formatDashboardNumber(p.new_users)+'</strong><span>New users</span></div><div><strong>'+formatDashboardNumber(p.new_vcards)+'</strong><span>New VCards</span></div><div><strong>'+formatDashboardNumber(p.contacts)+'</strong><span>Saved contacts</span></div><div><strong>'+formatDashboardNumber(p.qr_scans)+'</strong><span>QR scans</span></div>';}
-  async function loadSuperAdminAnalytics(){if(adminPageSlug!=="analytics"||!analyticsCardsBody)return;var token=localStorage.getItem("token");if(!token){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to view analytics.</span></div></td></tr>';return;}try{var days=analyticsRange?analyticsRange.value:"30",response=await fetch(superAdminApiOrigin()+"/api/super-admin/analytics?days="+encodeURIComponent(days),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load analytics");updateAnalyticsPageSummary(data.metrics||{});renderAnalyticsChart(data.series||[]);renderAnalyticsSources(data.sources||[]);renderAnalyticsCards(data.topCards||[]);renderAnalyticsHealth(data);var updated=document.getElementById("analyticsUpdatedAt");if(updated)updated.textContent="Updated "+new Date(data.generatedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}catch(error){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Analytics unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load analytics",error.message);}}
+  async function loadSuperAdminAnalytics(){if(adminPageSlug!=="analytics"||!analyticsCardsBody)return;var token=localStorage.getItem("sessionActive");if(!token){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to view analytics.</span></div></td></tr>';return;}try{var days=analyticsRange?analyticsRange.value:"30",response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/analytics?days="+encodeURIComponent(days),{headers:{"X-Requested-With": "SyncECard"}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load analytics");updateAnalyticsPageSummary(data.metrics||{});renderAnalyticsChart(data.series||[]);renderAnalyticsSources(data.sources||[]);renderAnalyticsCards(data.topCards||[]);renderAnalyticsHealth(data);var updated=document.getElementById("analyticsUpdatedAt");if(updated)updated.textContent="Updated "+new Date(data.generatedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}catch(error){analyticsCardsBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Analytics unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load analytics",error.message);}}
   if(analyticsRange)analyticsRange.addEventListener("change",loadSuperAdminAnalytics);var refreshAnalytics=document.getElementById("refreshAnalytics");if(refreshAnalytics)refreshAnalytics.addEventListener("click",loadSuperAdminAnalytics);
 
   function updateReportsPageSummary(summary){var cards=document.querySelectorAll(".admin-page-reports .admin-page-stats article");if(cards.length<3)return;cards[0].querySelector("span").textContent="Saved reports";cards[0].querySelector("strong").textContent=formatDashboardNumber(summary.saved_reports);cards[0].querySelector("small").textContent=formatDashboardNumber(summary.active_reports)+" active definitions";cards[1].querySelector("span").textContent="Exports this month";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.exports_this_month);cards[1].querySelector("small").textContent="Database snapshots";cards[2].querySelector("span").textContent="Last export";cards[2].querySelector("strong").textContent=summary.last_export_at?cashPaymentDate(summary.last_export_at):"Never";cards[2].querySelector("small").textContent=summary.last_export_at?"Most recent generation":"Generate your first report";}
   function reportTypeLabel(type){var labels={revenue:"Revenue ledger",subscriptions:"Subscriptions",platform:"Platform activity",coupons:"Coupon performance",affiliates:"Affiliate performance"};return labels[type]||transactionTypeLabel(type);}
   function renderSavedReports(reports){if(!reportAdminBody)return;superAdminReportsById={};if(reportAdminCount)reportAdminCount.textContent=formatDashboardNumber(reports.length)+(reports.length===1?" report":" reports");if(!reports.length){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>No saved reports found</strong><span>Create a report definition to generate a reusable CSV export.</span></div></td></tr>';return;}reportAdminBody.innerHTML=reports.map(function(report){superAdminReportsById[String(report.id)]=report;return '<tr><td><div class="report-name-cell"><span>'+escapeDashboardHtml(reportTypeLabel(report.reportType).slice(0,2).toUpperCase())+'</span><div><strong>'+escapeDashboardHtml(report.name)+'</strong><small>Report #'+report.id+'</small></div></div></td><td><span class="report-type-pill">'+escapeDashboardHtml(reportTypeLabel(report.reportType))+'</span></td><td>Last '+formatDashboardNumber(report.dateRangeDays)+' days</td><td><strong>'+formatDashboardNumber(report.runCount)+'</strong></td><td>'+escapeDashboardHtml(report.lastRunAt?cashPaymentDate(report.lastRunAt):"Not generated")+'</td><td><span class="status-badge '+(report.status==="active"?"active":"inactive")+'">'+escapeDashboardHtml(transactionTypeLabel(report.status))+'</span></td><td><div class="user-row-actions"><button class="user-action-btn approve" type="button" data-live-report-action="run" data-report-id="'+report.id+'" '+(report.status!=="active"?"disabled":"")+'>Export CSV</button><button class="user-action-btn edit" type="button" data-live-report-action="edit" data-report-id="'+report.id+'">Edit</button><button class="user-action-btn delete" type="button" data-live-report-action="delete" data-report-id="'+report.id+'">Delete</button></div></td></tr>';}).join("");}
   function renderReportRuns(runs){if(!reportRunBody)return;if(reportRunCount)reportRunCount.textContent=formatDashboardNumber(runs.length)+(runs.length===1?" export":" exports");if(!runs.length){reportRunBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>No export history</strong><span>Generate a saved report to store its first snapshot.</span></div></td></tr>';return;}reportRunBody.innerHTML=runs.map(function(run){return '<tr><td><strong>'+escapeDashboardHtml(run.reportName)+'</strong><div class="subtle-handle">Run #'+run.id+'</div></td><td>'+escapeDashboardHtml(reportTypeLabel(run.reportType))+'</td><td>'+formatDashboardNumber(run.rowCount)+'</td><td><span class="report-format-pill">'+escapeDashboardHtml(run.format.toUpperCase())+'</span></td><td>'+escapeDashboardHtml(run.generatedBy)+'</td><td>'+escapeDashboardHtml(cashPaymentDate(run.generatedAt))+'</td><td><button class="user-action-btn edit" type="button" data-report-run-download="'+run.id+'" data-report-name="'+escapeDashboardHtml(run.reportName)+'">Download</button></td></tr>';}).join("");}
-  async function loadSuperAdminReports(){if(adminPageSlug!=="reports"||!reportAdminBody)return;var token=localStorage.getItem("token");if(!token){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to manage reports.</span></div></td></tr>';return;}try{var search=searchInput?searchInput.value.trim():"",response=await fetch(superAdminApiOrigin()+"/api/super-admin/reports?search="+encodeURIComponent(search),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load reports");renderSavedReports(data.reports||[]);renderReportRuns(data.runs||[]);updateReportsPageSummary(data.summary||{});}catch(error){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Reports unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load reports",error.message);}}
+  async function loadSuperAdminReports(){if(adminPageSlug!=="reports"||!reportAdminBody)return;var token=localStorage.getItem("sessionActive");if(!token){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to manage reports.</span></div></td></tr>';return;}try{var search=searchInput?searchInput.value.trim():"",response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/reports?search="+encodeURIComponent(search),{headers:{"X-Requested-With": "SyncECard"}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load reports");renderSavedReports(data.reports||[]);renderReportRuns(data.runs||[]);updateReportsPageSummary(data.summary||{});}catch(error){reportAdminBody.innerHTML='<tr><td colspan="7"><div class="admin-data-empty"><strong>Reports unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load reports",error.message);}}
   function setReportModal(open,report){if(!reportAdminModal||!reportAdminForm)return;if(!open){reportAdminModal.hidden=true;document.body.style.overflow="";return;}reportAdminForm.reset();reportAdminForm.elements.reportId.value=report?report.id:"";if(report){reportAdminForm.elements.name.value=report.name;reportAdminForm.elements.reportType.value=report.reportType;reportAdminForm.elements.dateRangeDays.value=String(report.dateRangeDays);reportAdminForm.elements.status.value=report.status;}if(reportAdminModalTitle)reportAdminModalTitle.textContent=report?"Edit Report":"New Report";var feedback=reportAdminForm.querySelector(".form-feedback");if(feedback)feedback.hidden=true;reportAdminModal.hidden=false;document.body.style.overflow="hidden";}
   [document.getElementById("openReportAdminModal")].forEach(function(b){if(b)b.addEventListener("click",function(){setReportModal(true,null);});});[document.getElementById("closeReportAdminModal"),document.getElementById("resetReportAdminForm"),document.getElementById("reportAdminModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setReportModal(false);});});
-  if(reportAdminForm)reportAdminForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=reportAdminForm.querySelector(".form-feedback");if(!reportAdminForm.checkValidity()){feedback.hidden=false;feedback.textContent="Enter a valid report name and reporting period.";return;}var fd=new FormData(reportAdminForm),id=fd.get("reportId"),button=reportAdminForm.querySelector('[type="submit"]');try{button.disabled=true;button.textContent="Saving...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/reports"+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({name:fd.get("name").trim(),reportType:fd.get("reportType"),dateRangeDays:Number(fd.get("dateRangeDays")),status:fd.get("status")})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save report");setReportModal(false);await loadSuperAdminReports();showToast(id?"Report updated":"Report created","The reusable report definition was saved.");}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Save Report";}});
-  async function downloadReportRun(id,name){try{var response=await fetch(superAdminApiOrigin()+"/api/super-admin/report-runs/"+encodeURIComponent(id)+"/download",{headers:{Authorization:"Bearer "+localStorage.getItem("token")}});if(!response.ok){var errorData=await response.json().catch(function(){return{};});throw new Error(errorData.message||"Unable to download report");}var blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement("a"),disposition=response.headers.get("content-disposition")||"",match=disposition.match(/filename="?([^";]+)"?/i);link.href=url;link.download=match?match[1]:String(name||"report").replace(/[^a-z0-9_-]+/gi,"-")+".csv";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);showToast("Report downloaded","The stored CSV snapshot is ready.");}catch(error){showToast("Download failed",error.message);}}
-  document.addEventListener("click",async function(event){var button=event.target.closest("[data-live-report-action]"),download=event.target.closest("[data-report-run-download]");if(download)downloadReportRun(download.getAttribute("data-report-run-download"),download.getAttribute("data-report-name"));if(!button)return;var id=button.getAttribute("data-report-id"),report=superAdminReportsById[String(id)],action=button.getAttribute("data-live-report-action");if(action==="edit")setReportModal(true,report);if(action==="run"){try{button.disabled=true;button.textContent="Generating...";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/reports/"+encodeURIComponent(id)+"/run",{method:"POST",headers:{Authorization:"Bearer "+localStorage.getItem("token")}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to generate report");await loadSuperAdminReports();await downloadReportRun(data.run.id,report.name);}catch(error){button.disabled=false;button.textContent="Export CSV";showToast("Export failed",error.message);}}if(action==="delete"&&window.confirm("Delete this saved report and all of its export history?")){try{button.disabled=true;button.textContent="Deleting...";var deleteResponse=await fetch(superAdminApiOrigin()+"/api/super-admin/reports/"+encodeURIComponent(id),{method:"DELETE",headers:{Authorization:"Bearer "+localStorage.getItem("token")}}),deleteData=await deleteResponse.json().catch(function(){return{};});if(!deleteResponse.ok)throw new Error(deleteData.message||"Unable to delete report");await loadSuperAdminReports();showToast("Report deleted","The definition and its snapshots were removed.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}});
+  if(reportAdminForm)reportAdminForm.addEventListener("submit",async function(event){event.preventDefault();var feedback=reportAdminForm.querySelector(".form-feedback");if(!reportAdminForm.checkValidity()){feedback.hidden=false;feedback.textContent="Enter a valid report name and reporting period.";return;}var fd=new FormData(reportAdminForm),id=fd.get("reportId"),button=reportAdminForm.querySelector('[type="submit"]');try{button.disabled=true;button.textContent="Saving...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/reports"+(id?"/"+encodeURIComponent(id):""),{method:id?"PATCH":"POST",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify({name:fd.get("name").trim(),reportType:fd.get("reportType"),dateRangeDays:Number(fd.get("dateRangeDays")),status:fd.get("status")})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save report");setReportModal(false);await loadSuperAdminReports();showToast(id?"Report updated":"Report created","The reusable report definition was saved.");}catch(error){feedback.hidden=false;feedback.textContent=error.message;}finally{button.disabled=false;button.textContent="Save Report";}});
+  async function downloadReportRun(id,name){try{var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/report-runs/"+encodeURIComponent(id)+"/download",{headers:{"X-Requested-With": "SyncECard"}});if(!response.ok){var errorData=await response.json().catch(function(){return{};});throw new Error(errorData.message||"Unable to download report");}var blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement("a"),disposition=response.headers.get("content-disposition")||"",match=disposition.match(/filename="?([^";]+)"?/i);link.href=url;link.download=match?match[1]:String(name||"report").replace(/[^a-z0-9_-]+/gi,"-")+".csv";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);showToast("Report downloaded","The stored CSV snapshot is ready.");}catch(error){showToast("Download failed",error.message);}}
+  document.addEventListener("click",async function(event){var button=event.target.closest("[data-live-report-action]"),download=event.target.closest("[data-report-run-download]");if(download)downloadReportRun(download.getAttribute("data-report-run-download"),download.getAttribute("data-report-name"));if(!button)return;var id=button.getAttribute("data-report-id"),report=superAdminReportsById[String(id)],action=button.getAttribute("data-live-report-action");if(action==="edit")setReportModal(true,report);if(action==="run"){try{button.disabled=true;button.textContent="Generating...";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/reports/"+encodeURIComponent(id)+"/run",{method:"POST",headers:{"X-Requested-With": "SyncECard"}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to generate report");await loadSuperAdminReports();await downloadReportRun(data.run.id,report.name);}catch(error){button.disabled=false;button.textContent="Export CSV";showToast("Export failed",error.message);}}if(action==="delete"&&window.confirm("Delete this saved report and all of its export history?")){try{button.disabled=true;button.textContent="Deleting...";var deleteResponse=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/reports/"+encodeURIComponent(id),{method:"DELETE",headers:{"X-Requested-With": "SyncECard"}}),deleteData=await deleteResponse.json().catch(function(){return{};});if(!deleteResponse.ok)throw new Error(deleteData.message||"Unable to delete report");await loadSuperAdminReports();showToast("Report deleted","The definition and its snapshots were removed.");}catch(error){button.disabled=false;button.textContent="Delete";showToast("Delete failed",error.message);}}});
   if(reportTabButtons.length)reportTabButtons.forEach(function(button){button.addEventListener("click",function(){var id=button.getAttribute("data-report-tab-target");reportTabButtons.forEach(function(item){item.classList.remove("active");item.setAttribute("aria-selected","false");});Array.from(document.querySelectorAll("#savedReportsPanel,#reportRunsPanel")).forEach(function(panel){panel.classList.remove("active");});button.classList.add("active");button.setAttribute("aria-selected","true");var panel=document.getElementById(id);if(panel)panel.classList.add("active");});});
 
   function updateSettingsPageSummary(summary,settings){var cards=document.querySelectorAll(".admin-page-settings .admin-page-stats article");if(cards.length<3)return;var maintenance=(settings||[]).find(function(item){return item.key==="maintenance_mode";}),last=summary.last_updated?new Date(summary.last_updated):null;cards[0].querySelector("span").textContent="System status";cards[0].querySelector("strong").textContent=maintenance&&maintenance.value==="true"?"Maintenance":"Operational";cards[0].querySelector("small").textContent=maintenance&&maintenance.value==="true"?"Public access restricted":"Platform access enabled";cards[1].querySelector("span").textContent="Stored settings";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.stored_settings);cards[1].querySelector("small").textContent="Validated database values";cards[2].querySelector("span").textContent="Last updated";cards[2].querySelector("strong").textContent=last?cashPaymentDate(last):"Defaults";cards[2].querySelector("small").textContent=last?"Latest persisted change":"Using application defaults";}
@@ -4255,17 +4255,17 @@ document.addEventListener("DOMContentLoaded", function () {
   function setSettingsDirtyState(){if(!platformSettingsForm)return;var values=readPlatformSettingsForm(),dirty=Object.keys(values).some(function(key){return values[key]!==platformSettingsSnapshot[key];}),state=document.getElementById("settingsSaveState"),save=document.getElementById("savePlatformSettings"),reset=document.getElementById("resetPlatformSettings");if(save)save.disabled=!dirty;if(reset)reset.disabled=!dirty;if(state){state.classList.toggle("is-dirty",dirty);state.classList.toggle("is-synced",!dirty);state.innerHTML=dirty?"<i></i>Unsaved changes":"<i></i>Synced with PostgreSQL";}}
   function fillPlatformSettings(settings){if(!platformSettingsForm)return;platformSettingsSnapshot={};settings.forEach(function(setting){var field=platformSettingsForm.elements[setting.key];if(!field)return;if(field.type==="checkbox")field.checked=setting.value==="true";else field.value=setting.value;platformSettingsSnapshot[setting.key]=String(setting.value);});setSettingsDirtyState();}
   function renderRolePermissions(roles){if(!rolePermissionGrid)return;var count=document.getElementById("settingsRoleCount");if(count)count.textContent=formatDashboardNumber(roles.length)+" roles";if(!roles.length){rolePermissionGrid.innerHTML='<div class="admin-data-empty"><strong>No roles configured</strong><span>Seed roles and permissions to manage access.</span></div>';return;}rolePermissionGrid.innerHTML=roles.map(function(role){return '<article class="role-permission-card" data-role-id="'+role.id+'"><div class="role-permission-header"><div><span>'+escapeDashboardHtml(role.name.split("_").map(function(p){return p.charAt(0).toUpperCase();}).join(""))+'</span><div><strong>'+escapeDashboardHtml(transactionTypeLabel(role.name))+'</strong><small>'+escapeDashboardHtml(role.description||"Platform role")+'</small></div></div><span class="status-badge '+(role.locked?"completed":"active")+'">'+(role.locked?"Always enabled":"Editable")+'</span></div><div class="role-permission-options">'+role.permissions.map(function(permission){return '<label><input type="checkbox" value="'+permission.id+'" '+(permission.granted?"checked":"")+' '+(role.locked?"disabled":"")+' /><span><strong>'+escapeDashboardHtml(permission.name)+'</strong><small>'+escapeDashboardHtml(permission.description||permission.key)+'</small></span></label>';}).join("")+'</div>'+(role.locked?'<p class="role-lock-note">Super administrators retain every capability.</p>':'<button class="btn-preview" type="button" data-save-role-permissions="'+role.id+'">Save '+escapeDashboardHtml(transactionTypeLabel(role.name))+'</button>')+'</article>';}).join("");}
-  async function loadSuperAdminSettings(){if(adminPageSlug!=="settings"||!platformSettingsForm)return;var token=localStorage.getItem("token"),state=document.getElementById("settingsSaveState");if(!token){if(state)state.innerHTML="<i></i>Sign in required";return;}try{var response=await fetch(superAdminApiOrigin()+"/api/super-admin/settings",{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load settings");fillPlatformSettings(data.settings||[]);renderRolePermissions(data.roles||[]);updateSettingsPageSummary(data.summary||{},data.settings||[]);var databaseStatus=document.getElementById("settingsDatabaseStatus");if(databaseStatus)databaseStatus.textContent=formatDashboardNumber(data.summary&&data.summary.stored_settings||0)+" validated settings · "+formatDashboardNumber(data.summary&&data.summary.permission_grants||0)+" permission grants";var siteName=(data.settings||[]).find(function(item){return item.key==="site_name";}),siteEmail=(data.settings||[]).find(function(item){return item.key==="site_email";});if(siteName)document.title="Settings · "+siteName.value;if(siteEmail)document.querySelectorAll(".admin-profile-card .subtle-handle").forEach(function(node){node.textContent=siteEmail.value;});}catch(error){if(state){state.className="settings-save-state";state.innerHTML="<i></i>Settings unavailable";}showToast("Could not load settings",error.message);}}
+  async function loadSuperAdminSettings(){if(adminPageSlug!=="settings"||!platformSettingsForm)return;var token=localStorage.getItem("sessionActive"),state=document.getElementById("settingsSaveState");if(!token){if(state)state.innerHTML="<i></i>Sign in required";return;}try{var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/settings",{headers:{"X-Requested-With": "SyncECard"}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load settings");fillPlatformSettings(data.settings||[]);renderRolePermissions(data.roles||[]);updateSettingsPageSummary(data.summary||{},data.settings||[]);var databaseStatus=document.getElementById("settingsDatabaseStatus");if(databaseStatus)databaseStatus.textContent=formatDashboardNumber(data.summary&&data.summary.stored_settings||0)+" validated settings · "+formatDashboardNumber(data.summary&&data.summary.permission_grants||0)+" permission grants";var siteName=(data.settings||[]).find(function(item){return item.key==="site_name";}),siteEmail=(data.settings||[]).find(function(item){return item.key==="site_email";});if(siteName)document.title="Settings · "+siteName.value;if(siteEmail)document.querySelectorAll(".admin-profile-card .subtle-handle").forEach(function(node){node.textContent=siteEmail.value;});}catch(error){if(state){state.className="settings-save-state";state.innerHTML="<i></i>Settings unavailable";}showToast("Could not load settings",error.message);}}
   if(platformSettingsForm)platformSettingsForm.addEventListener("input",setSettingsDirtyState);
   var resetPlatformSettingsButton=document.getElementById("resetPlatformSettings");if(resetPlatformSettingsButton)resetPlatformSettingsButton.addEventListener("click",function(){Object.keys(platformSettingsSnapshot).forEach(function(key){var field=platformSettingsForm.elements[key];if(!field)return;if(field.type==="checkbox")field.checked=platformSettingsSnapshot[key]==="true";else field.value=platformSettingsSnapshot[key];});setSettingsDirtyState();});
-  var savePlatformSettingsButton=document.getElementById("savePlatformSettings");if(savePlatformSettingsButton)savePlatformSettingsButton.addEventListener("click",async function(){if(!platformSettingsForm.checkValidity()){platformSettingsForm.reportValidity();return;}var current=readPlatformSettingsForm(),settings={};Object.keys(current).forEach(function(key){if(current[key]!==platformSettingsSnapshot[key])settings[key]=current[key];});if(!Object.keys(settings).length)return;var state=document.getElementById("settingsSaveState");try{savePlatformSettingsButton.disabled=true;savePlatformSettingsButton.textContent="Saving…";if(state){state.className="settings-save-state";state.innerHTML="<i></i>Validating changes…";}var response=await fetch(superAdminApiOrigin()+"/api/super-admin/settings",{method:"PUT",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({settings:settings})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save settings");await loadSuperAdminSettings();showToast("Settings saved",data.updatedKeys.length+" validated setting"+(data.updatedKeys.length===1?" was":"s were")+" updated in PostgreSQL.");}catch(error){if(state){state.className="settings-save-state is-dirty";state.innerHTML="<i></i>Save failed";}showToast("Settings not saved",error.message);}finally{savePlatformSettingsButton.textContent="Save settings";setSettingsDirtyState();}});
-  document.addEventListener("click",async function(event){var button=event.target.closest("[data-save-role-permissions]");if(!button)return;var roleId=button.getAttribute("data-save-role-permissions"),card=button.closest("[data-role-id]"),permissionIds=Array.from(card.querySelectorAll('input[type="checkbox"]:checked')).map(function(input){return Number(input.value);});try{button.disabled=true;button.textContent="Saving…";var response=await fetch(superAdminApiOrigin()+"/api/super-admin/settings/roles/"+encodeURIComponent(roleId)+"/permissions",{method:"PUT",headers:{Authorization:"Bearer "+localStorage.getItem("token"),"Content-Type":"application/json"},body:JSON.stringify({permissionIds:permissionIds})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update permissions");await loadSuperAdminSettings();showToast("Permissions updated","Role capabilities were saved to the database and audit log.");}catch(error){button.disabled=false;button.textContent="Retry save";showToast("Update failed",error.message);}});
+  var savePlatformSettingsButton=document.getElementById("savePlatformSettings");if(savePlatformSettingsButton)savePlatformSettingsButton.addEventListener("click",async function(){if(!platformSettingsForm.checkValidity()){platformSettingsForm.reportValidity();return;}var current=readPlatformSettingsForm(),settings={};Object.keys(current).forEach(function(key){if(current[key]!==platformSettingsSnapshot[key])settings[key]=current[key];});if(!Object.keys(settings).length)return;var state=document.getElementById("settingsSaveState");try{savePlatformSettingsButton.disabled=true;savePlatformSettingsButton.textContent="Saving…";if(state){state.className="settings-save-state";state.innerHTML="<i></i>Validating changes…";}var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/settings",{method:"PUT",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify({settings:settings})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to save settings");await loadSuperAdminSettings();showToast("Settings saved",data.updatedKeys.length+" validated setting"+(data.updatedKeys.length===1?" was":"s were")+" updated in PostgreSQL.");}catch(error){if(state){state.className="settings-save-state is-dirty";state.innerHTML="<i></i>Save failed";}showToast("Settings not saved",error.message);}finally{savePlatformSettingsButton.textContent="Save settings";setSettingsDirtyState();}});
+  document.addEventListener("click",async function(event){var button=event.target.closest("[data-save-role-permissions]");if(!button)return;var roleId=button.getAttribute("data-save-role-permissions"),card=button.closest("[data-role-id]"),permissionIds=Array.from(card.querySelectorAll('input[type="checkbox"]:checked')).map(function(input){return Number(input.value);});try{button.disabled=true;button.textContent="Saving…";var response=await window.SyncSession.fetch(superAdminApiOrigin()+"/api/super-admin/settings/roles/"+encodeURIComponent(roleId)+"/permissions",{method:"PUT",headers:{"X-Requested-With": "SyncECard","Content-Type":"application/json"},body:JSON.stringify({permissionIds:permissionIds})}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to update permissions");await loadSuperAdminSettings();showToast("Permissions updated","Role capabilities were saved to the database and audit log.");}catch(error){button.disabled=false;button.textContent="Retry save";showToast("Update failed",error.message);}});
 
   function updateSystemLogsSummary(summary){var cards=document.querySelectorAll(".admin-page-system-logs .admin-page-stats article");if(cards.length<3)return;cards[0].querySelector("span").textContent="Total events";cards[0].querySelector("strong").textContent=formatDashboardNumber(summary.total);cards[0].querySelector("small").textContent=formatDashboardNumber(summary.actors)+" recorded actors";cards[1].querySelector("span").textContent="Events today";cards[1].querySelector("strong").textContent=formatDashboardNumber(summary.today);cards[1].querySelector("small").textContent="Since local database midnight";cards[2].querySelector("span").textContent="Needs attention";cards[2].querySelector("strong").textContent=formatDashboardNumber(summary.attention);cards[2].querySelector("small").textContent="Failed, rejected, or deleted events";}
   function logActionLabel(action){return String(action||"event").split(".").map(function(part){return transactionTypeLabel(part);}).join(" · ");}
   function renderSystemLogs(logs,pagination){if(!systemLogBody)return;superAdminSystemLogsById={};var count=document.getElementById("systemLogCount"),label=document.getElementById("systemLogPageLabel"),previous=document.getElementById("systemLogPrevious"),next=document.getElementById("systemLogNext");systemLogPage=pagination.page||1;systemLogPages=pagination.pages||1;if(count)count.textContent=formatDashboardNumber(pagination.total)+(pagination.total===1?" event":" events");if(label)label.textContent="Page "+systemLogPage+" of "+systemLogPages;if(previous)previous.disabled=systemLogPage<=1;if(next)next.disabled=systemLogPage>=systemLogPages;if(!logs.length){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>No audit events found</strong><span>Adjust the search or date filters.</span></div></td></tr>';return;}systemLogBody.innerHTML=logs.map(function(log){superAdminSystemLogsById[String(log.id)]=log;var actor=log.actor||{name:"System",email:"Automated or deleted actor"};return '<tr><td><div class="log-event-cell"><span class="log-severity '+log.severity+'"></span><div><strong>'+escapeDashboardHtml(logActionLabel(log.action))+'</strong><small>Event #'+log.id+'</small></div></div></td><td><strong>'+escapeDashboardHtml(actor.name)+'</strong><div class="subtle-handle">'+escapeDashboardHtml(actor.email)+'</div></td><td><span class="log-resource-pill">'+escapeDashboardHtml(log.resourceType||"system")+'</span><div class="subtle-handle">'+(log.resourceId?"ID "+log.resourceId:"No resource ID")+'</div></td><td><span>'+escapeDashboardHtml(log.ipAddress||"Not captured")+'</span><div class="subtle-handle log-agent">'+escapeDashboardHtml(log.userAgent||"No user agent")+'</div></td><td>'+escapeDashboardHtml(cashPaymentDate(log.createdAt))+'</td><td><button class="user-action-btn edit" type="button" data-system-log-detail="'+log.id+'">Inspect</button></td></tr>';}).join("");}
   function populateSystemLogFilters(actors,types){if(systemLogActor){var current=systemLogActor.value;systemLogActor.innerHTML='<option value="">All actors</option>'+actors.map(function(actor){return '<option value="'+actor.id+'">'+escapeDashboardHtml(actor.name+" — "+actor.email)+'</option>';}).join("");systemLogActor.value=current;}if(systemLogResource){var selected=systemLogResource.value;systemLogResource.innerHTML='<option value="">All resources</option>'+types.map(function(type){return '<option value="'+escapeDashboardHtml(type)+'">'+escapeDashboardHtml(transactionTypeLabel(type))+'</option>';}).join("");systemLogResource.value=selected;}}
-  async function loadSuperAdminSystemLogs(){if(adminPageSlug!=="system-logs"||!systemLogBody)return;var token=localStorage.getItem("token");if(!token){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to review audit activity.</span></div></td></tr>';return;}try{var params=new URLSearchParams({page:String(systemLogPage),limit:"25"});if(searchInput&&searchInput.value.trim())params.set("search",searchInput.value.trim());if(systemLogResource&&systemLogResource.value)params.set("resourceType",systemLogResource.value);if(systemLogActor&&systemLogActor.value)params.set("actorId",systemLogActor.value);var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from&&from.value)params.set("from",from.value);if(to&&to.value)params.set("to",to.value);var response=await fetch((window.SyncVCardApiOrigin + "/api/super-admin/system-logs?")+params.toString(),{headers:{Authorization:"Bearer "+token}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load system logs");renderSystemLogs(data.logs||[],data.pagination||{});populateSystemLogFilters(data.actors||[],data.resourceTypes||[]);updateSystemLogsSummary(data.summary||{});}catch(error){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Audit logs unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load logs",error.message);}}
+  async function loadSuperAdminSystemLogs(){if(adminPageSlug!=="system-logs"||!systemLogBody)return;var token=localStorage.getItem("sessionActive");if(!token){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Sign in required</strong><span>Log in as super admin to review audit activity.</span></div></td></tr>';return;}try{var params=new URLSearchParams({page:String(systemLogPage),limit:"25"});if(searchInput&&searchInput.value.trim())params.set("search",searchInput.value.trim());if(systemLogResource&&systemLogResource.value)params.set("resourceType",systemLogResource.value);if(systemLogActor&&systemLogActor.value)params.set("actorId",systemLogActor.value);var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from&&from.value)params.set("from",from.value);if(to&&to.value)params.set("to",to.value);var response=await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/system-logs?")+params.toString(),{headers:{"X-Requested-With": "SyncECard"}}),data=await response.json().catch(function(){return{};});if(!response.ok)throw new Error(data.message||"Unable to load system logs");renderSystemLogs(data.logs||[],data.pagination||{});populateSystemLogFilters(data.actors||[],data.resourceTypes||[]);updateSystemLogsSummary(data.summary||{});}catch(error){systemLogBody.innerHTML='<tr><td colspan="6"><div class="admin-data-empty"><strong>Audit logs unavailable</strong><span>'+escapeDashboardHtml(error.message)+'</span></div></td></tr>';showToast("Could not load logs",error.message);}}
   function setSystemLogModal(open,log){var modal=document.getElementById("systemLogModal"),detail=document.getElementById("systemLogDetail"),title=document.getElementById("systemLogModalTitle");if(!modal)return;if(!open){modal.hidden=true;document.body.style.overflow="";return;}var actor=log.actor||{name:"System",email:"Automated or deleted actor"};if(title)title.textContent=logActionLabel(log.action);if(detail)detail.innerHTML='<dl><div><dt>Event ID</dt><dd>#'+log.id+'</dd></div><div><dt>Timestamp</dt><dd>'+escapeDashboardHtml(cashPaymentDate(log.createdAt))+'</dd></div><div><dt>Actor</dt><dd>'+escapeDashboardHtml(actor.name+" · "+actor.email)+'</dd></div><div><dt>Resource</dt><dd>'+escapeDashboardHtml((log.resourceType||"system")+(log.resourceId?" #"+log.resourceId:""))+'</dd></div><div><dt>IP address</dt><dd>'+escapeDashboardHtml(log.ipAddress||"Not captured")+'</dd></div><div><dt>User agent</dt><dd>'+escapeDashboardHtml(log.userAgent||"Not captured")+'</dd></div></dl><div class="log-metadata-block"><span>Metadata</span><pre>'+escapeDashboardHtml(JSON.stringify(log.metadata||{},null,2))+'</pre></div>';modal.hidden=false;document.body.style.overflow="hidden";}
   document.addEventListener("click",function(event){var detailButton=event.target.closest("[data-system-log-detail]");if(detailButton)setSystemLogModal(true,superAdminSystemLogsById[String(detailButton.getAttribute("data-system-log-detail"))]);});[document.getElementById("closeSystemLogModal"),document.getElementById("systemLogModalBackdrop")].forEach(function(b){if(b)b.addEventListener("click",function(){setSystemLogModal(false);});});var applyLogs=document.getElementById("applySystemLogFilters"),clearLogs=document.getElementById("clearSystemLogFilters"),refreshLogs=document.getElementById("refreshSystemLogs"),previousLogs=document.getElementById("systemLogPrevious"),nextLogs=document.getElementById("systemLogNext");if(applyLogs)applyLogs.addEventListener("click",function(){systemLogPage=1;loadSuperAdminSystemLogs();});if(refreshLogs)refreshLogs.addEventListener("click",loadSuperAdminSystemLogs);if(clearLogs)clearLogs.addEventListener("click",function(){if(systemLogResource)systemLogResource.value="";if(systemLogActor)systemLogActor.value="";var from=document.getElementById("systemLogFrom"),to=document.getElementById("systemLogTo");if(from)from.value="";if(to)to.value="";if(searchInput)searchInput.value="";systemLogPage=1;loadSuperAdminSystemLogs();});if(previousLogs)previousLogs.addEventListener("click",function(){if(systemLogPage>1){systemLogPage-=1;loadSuperAdminSystemLogs();}});if(nextLogs)nextLogs.addEventListener("click",function(){if(systemLogPage<systemLogPages){systemLogPage+=1;loadSuperAdminSystemLogs();}});
 
@@ -4972,7 +4972,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var fullName = (formData.get("firstName").trim() + " " + formData.get("lastName").trim()).trim();
       var phone = String(formData.get("phone") || "").trim();
       var submitButton = addUserForm.querySelector('[type="submit"]');
-      var token = localStorage.getItem("token");
+      var token = localStorage.getItem("sessionActive");
       if (!token) {
         setUserFormFeedback("Please sign in as a super admin before creating a user.", false);
         return;
@@ -4984,10 +4984,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       try {
-        var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/users") + (editingUserId ? "/" + encodeURIComponent(editingUserId) : ""), {
+        var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/users") + (editingUserId ? "/" + encodeURIComponent(editingUserId) : ""), {
           method: editingUserId ? "PATCH" : "POST",
           headers: {
-            Authorization: "Bearer " + token,
+            "X-Requested-With": "SyncECard",
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
@@ -5229,15 +5229,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (logoutButton) {
     logoutButton.addEventListener("click", async function () {
-      var token = localStorage.getItem("token");
+      var token = localStorage.getItem("sessionActive");
       logoutButton.disabled = true;
       logoutButton.classList.add("is-signing-out");
       logoutButton.innerHTML = '<span class="admin-logout-spinner" aria-hidden="true"></span> Signing out...';
       try {
         if (token) {
-          var response = await fetch((window.SyncVCardApiOrigin + "/api/auth/logout"), {
+          var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/auth/logout"), {
             method: "POST",
-            headers: { Authorization: "Bearer " + token }
+            headers: { "X-Requested-With": "SyncECard" }
           });
           if (!response.ok && response.status !== 401) {
             var data = await response.json().catch(function () { return {}; });
@@ -5247,7 +5247,7 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (error) {
         console.error("Server logout failed:", error);
       } finally {
-        localStorage.removeItem("token");
+        localStorage.removeItem("sessionActive");
         localStorage.removeItem("user");
         sessionStorage.clear();
         window.location.replace("../auth/login.html?loggedOut=1");
@@ -5343,15 +5343,15 @@ document.addEventListener("DOMContentLoaded", function () {
   async function loadSuperAdminDashboard() {
     if (adminPageSlug !== "dashboard") return;
     var statusNode = document.getElementById("dashboardDataStatus");
-    var token = localStorage.getItem("token");
+    var token = localStorage.getItem("sessionActive");
     if (!token) {
       if (statusNode) statusNode.innerHTML = "<i></i> Sign in to load live platform data";
       return;
     }
 
     try {
-      var response = await fetch((window.SyncVCardApiOrigin + "/api/super-admin/dashboard"), {
-        headers: { Authorization: "Bearer " + token },
+      var response = await window.SyncSession.fetch((window.SyncVCardApiOrigin + "/api/super-admin/dashboard"), {
+        headers: { "X-Requested-With": "SyncECard" },
       });
       if (!response.ok) {
         var failure = await response.json().catch(function () { return {}; });
@@ -5379,7 +5379,7 @@ document.addEventListener("DOMContentLoaded", function () {
           exportButton.addEventListener("click", async function () {
             exportButton.disabled = true;
             try {
-              var exported = await fetch(window.SyncVCardApiOrigin + "/api/super-admin/revenue/export", { headers: { Authorization: "Bearer " + localStorage.getItem("token") } });
+              var exported = await window.SyncSession.fetch(window.SyncVCardApiOrigin + "/api/super-admin/revenue/export", { headers: { "X-Requested-With": "SyncECard" } });
               if (!exported.ok) throw new Error("Unable to download revenue report");
               var blobUrl = URL.createObjectURL(await exported.blob());
               var link = document.createElement("a");
