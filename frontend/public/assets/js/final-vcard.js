@@ -26,7 +26,7 @@
   function sectionLines(content,fallback){var values=lines(content);return values.length?values:fallback}
   function imageMarkup(src){var safe=imageUrl(src);return safe?'<img src="'+esc(safe)+'" alt="" loading="lazy">':""}
   function heading(label){return '<h2 class="final-section-title">'+esc(label)+'</h2>'}
-  function itemGrid(content,fallback){return '<div class="final-card-grid">'+sectionLines(content,fallback).map(function(line,index){var p=parts(line),src=lastUrl(p),description=p.slice(1).filter(function(x){return x!==src}).join(" · ");return '<article class="final-item"><div class="final-item-media">'+(imageMarkup(src,p[0])||esc(String(index+1).padStart(2,"0")))+'</div><div class="final-item-copy"><strong>'+esc(p[0]||"Service")+'</strong><p>'+esc(description||"Professional service tailored to your needs.")+'</p></div></article>'}).join("")+"</div>"}
+  function itemGrid(content,fallback){return '<div class="final-card-grid">'+sectionLines(content,fallback).map(function(line,index){var p=parts(line),src=lastUrl(p),description=p.slice(1).filter(function(x){return !src||imageUrl(x)!==src}).join(" · ");return '<article class="final-item"><div class="final-item-media">'+(imageMarkup(src,p[0])||esc(String(index+1).padStart(2,"0")))+'</div><div class="final-item-copy"><strong>'+esc(p[0]||"Service")+'</strong><p>'+esc(description||"Professional service tailored to your needs.")+'</p></div></article>'}).join("")+"</div>"}
   function gallery(content){var values=sectionLines(content,["Portfolio","Project","Experience","Studio"]);return '<div class="final-gallery">'+values.map(function(line){var p=parts(line),src=lastUrl(p);return '<figure>'+imageMarkup(src,p[0])+"</figure>"}).join("")+"</div>"}
   function testimonials(content){return '<div class="final-testimonials">'+sectionLines(content,["Excellent service and a wonderful professional experience. | Sample Client | Customer"]).map(function(line){var p=parts(line),src=lastUrl(p);return '<blockquote class="final-quote"><p>'+esc(p[0])+'</p><footer>'+(src?imageMarkup(src,p[1]):"")+'<span>'+esc(p[1]||"Client")+(p[2]?" · "+esc(p[2]):"")+'</span></footer></blockquote>'}).join("")+"</div>"}
   function hours(content){return '<div class="final-hours">'+sectionLines(content,["Monday | 9:00 AM - 5:00 PM","Tuesday | 9:00 AM - 5:00 PM","Wednesday | 9:00 AM - 5:00 PM","Thursday | 9:00 AM - 5:00 PM","Friday | 9:00 AM - 5:00 PM","Saturday | Closed","Sunday | Closed"]).map(function(line){var p=parts(line);if(p.length===1){var m=line.match(/^([^:]+):\s*(.+)$/);if(m)p=[m[1],m[2]]}return '<div><strong>'+esc(p[0])+'</strong><span>'+esc(p.slice(1).join(" · ")||"Available")+'</span></div>'}).join("")+"</div>"}
@@ -61,6 +61,11 @@
     var coverNode=root.querySelector(".final-cover");if(coverNode&&!coverNode.querySelector(".final-cover-art"))coverNode.insertAdjacentHTML("afterbegin",'<div class="final-cover-art"></div>');
     var avatarNode=root.querySelector(".final-avatar");if(avatarNode&&avatarNode.querySelector("img"))avatarNode.insertAdjacentHTML("afterbegin",'<span class="final-avatar-fallback">'+esc(initials(name))+"</span>");
   }
-  if(!id){render({},true);return}
+  var templateConfig=window.SyncVCardTemplateConfig;
+  if(templateConfig&&templateConfig.theme===theme){
+    var renderBase=render;
+    render=function(card,isDemo){renderBase(card,isDemo);templateConfig.decorate(root,card,isDemo)};
+  }
+  if(!id){render(templateConfig&&templateConfig.theme===theme?templateConfig.demo:{},true);return}
   fetch(api+"/api/public/vcards/"+encodeURIComponent(id)).then(function(r){return r.json().then(function(data){if(!r.ok)throw new Error(data.message||"Unable to load VCard");return data})}).then(function(data){render(data.vcard||{},false)}).catch(function(error){root.innerHTML='<div class="final-loading final-state-error">'+esc(error.message)+"</div>"});
 }());

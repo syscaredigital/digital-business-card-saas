@@ -63,7 +63,7 @@ async function seedFresh(client) {
     SELECT r.id,p.id FROM roles r CROSS JOIN permissions p WHERE r.name='super_admin'
     ON CONFLICT DO NOTHING`);
   await client.query(`INSERT INTO plans(name,price,billing_interval,vcard_limit,nfc_limit,analytics_limit,features,status,storage_limit_mb)
-    SELECT 'Free',0,'monthly',1,0,0,'{"vcardFeatures":["basic-details"],"templateIds":[1,2,3,4,5,6,7,8,9,10]}'::jsonb,'active',50
+    SELECT 'Free',0,'monthly',1,0,0,jsonb_build_object('vcardFeatures',jsonb_build_array('basic-details'),'templateIds',(SELECT COALESCE(jsonb_agg(id ORDER BY id),'[]'::jsonb) FROM vcard_templates WHERE is_public=TRUE)),'active',50
     WHERE NOT EXISTS(SELECT 1 FROM plans WHERE price=0 AND status='active')`);
 }
 async function runCli(args = process.argv.slice(2)) {

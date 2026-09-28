@@ -1,11 +1,11 @@
--- The finalized ten-template catalogue is installed and maintained by
--- migration 054_replace_with_final_vcard_templates.sql. Keep plan access in
+-- The template catalogue is installed and maintained by
+-- migrations 054 and 068. Keep plan access in
 -- sync when seeds are rerun without recreating removed legacy templates.
 UPDATE plans
 SET features=jsonb_set(
   COALESCE(features,'{}'::jsonb),
   '{templateIds}',
-  '[1,2,3,4,5,6,7,8,9,10]'::jsonb,
+  (SELECT COALESCE(jsonb_agg(id ORDER BY id),'[]'::jsonb) FROM vcard_templates WHERE is_public=TRUE),
   TRUE
 )
 WHERE jsonb_typeof(COALESCE(features,'{}'::jsonb))='object';
