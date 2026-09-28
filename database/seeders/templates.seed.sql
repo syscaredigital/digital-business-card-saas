@@ -1,5 +1,5 @@
 -- The template catalogue is installed and maintained by
--- migrations 054 and 068 through 070. Keep plan access in
+-- migrations 054 and 068 through 071. Keep plan access in
 -- sync when seeds are rerun without recreating removed legacy templates.
 UPDATE plans
 SET features=jsonb_set(
