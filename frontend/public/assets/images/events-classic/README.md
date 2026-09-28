@@ -1,0 +1,1 @@
+Preview photographs use the images.unsplash.com photo IDs supplied in the event planner HTML. Each filename maps to `https://images.unsplash.com/<filename without .jpg>`. Images are bundled locally to comply with the same-origin image policy. The portrait is reused from the supplied corporate preview. Published cards use saved owner images.
