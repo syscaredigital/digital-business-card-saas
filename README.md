@@ -3,6 +3,7 @@
 Node.js/PostgreSQL digital business cards, subscription payments, NFC orders, and administration.
 
 - [Current deployment status](docs/deployment-status.md)
+- [Prioritized launch readiness checklist](docs/launch-readiness.md)
 - [cPanel deployment for test.syncecard.com](docs/cpanel-deployment.md)
 - [Alternative VPS deployment](docs/namecheap-vps-deployment.md)
 - [LKR revenue reporting](docs/revenue-reporting.md)
