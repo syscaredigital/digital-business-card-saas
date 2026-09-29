@@ -1,0 +1,1 @@
+Preview photographs use images.unsplash.com photo IDs from the supplied real estate HTML. Filenames map to `https://images.unsplash.com/<filename without .jpg>`. Photos already bundled for prior supplied templates are reused. Local copies comply with the app's same-origin image policy. Published cards use saved owner images.
