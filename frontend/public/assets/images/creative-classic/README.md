@@ -1,0 +1,1 @@
+Preview photographs use images.unsplash.com photo IDs from the supplied creative portfolio HTML. Filenames map to `https://images.unsplash.com/<filename without .jpg>`. Matching photos from previous templates are reused. Local files comply with the app's image security policy. Published cards use saved owner images.

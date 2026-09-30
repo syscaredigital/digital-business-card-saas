@@ -1,0 +1,1 @@
+Preview photos come from the images.unsplash.com photo IDs in the supplied boutique HTML. Filenames map to `https://images.unsplash.com/<filename without .jpg>`. Matching images from previously supplied templates are reused. Bundled images load under the app's same-origin image policy. Published cards use saved owner images.

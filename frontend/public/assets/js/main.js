@@ -234,6 +234,11 @@ document.addEventListener("DOMContentLoaded", () => {
     ["Events Classic", "Purple and pink event planner profile", "final-13-events-classic.html"],
     ["Trainer Classic", "Black and sage corporate trainer profile", "final-14-trainer-classic.html"],
     ["Real Estate Classic", "Light property and real estate profile", "final-15-property-classic.html"],
+    ["Boutique Classic", "Pink fashion and lifestyle profile", "final-16-boutique-classic.html"],
+    ["Creative Classic", "Charcoal and yellow creative portfolio", "final-17-creative-classic.html"],
+    ["Technology Classic", "Dark grid web developer profile", "final-18-technology-classic.html"],
+    ["Medical Classic", "Navy and teal medical profile", "final-19-medical-classic.html"],
+    ["Legal Classic", "Black and gold lawyer profile", "final-20-legal-classic.html"],
   ].map(([name, description, file]) => ({ name, description, previewUrl: `../public-vcard/${file}` })));
 
   const createVcardPreview = (card, index) => {

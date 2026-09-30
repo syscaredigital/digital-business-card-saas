@@ -1,0 +1,78 @@
+html,body{background:#333}
+[data-theme="legal-classic"]{--vc-bg:#151515;--vc-panel:#242424;--vc-panel-2:#393939;--vc-text:#fff;--vc-muted:#bbb;--vc-accent:#cc9558;--vc-line:#a7753f;width:min(100%,390px);color:#fff;font-family:Poppins,Arial,sans-serif}
+[data-theme="legal-classic"] .final-cover{height:145px;background:#292929}
+[data-theme="legal-classic"] .final-cover-art{background:linear-gradient(135deg,#2c241a,#151515)}
+[data-theme="legal-classic"] .final-identity{min-height:155px;padding:7px 25px 20px 164px}
+[data-theme="legal-classic"] .final-avatar{position:absolute;top:-61px;left:32px;width:122px;height:122px;margin:0;border:2px solid #fff;box-shadow:none}
+[data-theme="legal-classic"] .final-name-block{margin:0}
+[data-theme="legal-classic"] .final-name-block h1{color:#cc9558;font:500 21px/1.2 Poppins,Arial,sans-serif;overflow-wrap:anywhere}
+[data-theme="legal-classic"] .final-role{font-size:11px}
+[data-theme="legal-classic"] .final-company{font-size:10px}
+[data-theme="legal-classic"] .final-socials{gap:8px;margin-top:9px}
+[data-theme="legal-classic"] .final-socials a{width:28px;height:28px;border:2px solid #cc9558;color:#cc9558}
+[data-theme="legal-classic"] .final-socials svg{width:14px;height:14px}
+[data-theme="legal-classic"] .final-description{position:relative;left:-139px;width:calc(100% + 139px);margin:24px 0 0;color:#ddd;text-align:center;font-size:10px;line-height:1.45}
+[data-theme="legal-classic"] .final-section{padding:17px 35px}
+[data-theme="legal-classic"] .final-section-title{display:flex;gap:11px;margin:0 0 18px;color:#fff;font:500 11px Poppins,Arial,sans-serif;white-space:nowrap}
+[data-theme="legal-classic"] .final-section-title:before{content:"";position:absolute;z-index:-1}
+[data-theme="legal-classic"] .final-section-title::after{height:1px;background:#a7753f}
+[data-theme="legal-classic"] .final-section-title{width:100%}
+[data-theme="legal-classic"] .final-section-title:not(:empty){text-shadow:0 0 0 #fff}
+[data-theme="legal-classic"] .final-section-title{line-height:28px}
+[data-theme="legal-classic"] .final-section-title:first-letter{color:#fff}
+[data-theme="legal-classic"] .final-section-title{background:linear-gradient(90deg,#cc9558 0 130px,transparent 130px);border-radius:5px;padding-left:10px}
+[data-theme="legal-classic"] [data-classic-section="make-an-appointment"] .final-section-title{background:linear-gradient(90deg,#cc9558 0 177px,transparent 177px)}
+[data-theme="legal-classic"] [data-classic-section="business-hours"] .final-section-title{background:linear-gradient(90deg,#cc9558 0 120px,transparent 120px)}
+[data-theme="legal-classic"] .final-contact-grid{grid-template-columns:1fr;gap:9px}
+[data-theme="legal-classic"] [data-classic-section="contact"]{display:grid;grid-template-columns:115px minmax(0,1fr);column-gap:12px}
+[data-theme="legal-classic"] [data-classic-section="contact"] .final-section-title{grid-column:1/-1}
+[data-theme="legal-classic"] .legal-contact-portrait{width:115px;height:208px;border-radius:10px;object-fit:cover;object-position:top}
+[data-theme="legal-classic"] .final-contact-item{min-height:42px;gap:7px;padding:4px;border:0;border-radius:6px;background:#242424}
+[data-theme="legal-classic"] .final-contact-icon{width:31px;height:31px;flex:0 0 31px;border:0;color:#cc9558;font-size:19px}
+[data-theme="legal-classic"] .final-contact-copy small{color:#cc9558;font-size:9px}
+[data-theme="legal-classic"] .final-contact-copy strong{color:#fff;font-size:9px}
+[data-theme="legal-classic"] [data-classic-section="our-services"] .final-card-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+[data-theme="legal-classic"] [data-classic-section="our-services"] .final-item{min-height:118px;border-radius:10px;background:#fff;color:#222;text-align:center}
+[data-theme="legal-classic"] [data-classic-section="our-services"] .final-item-media{min-height:38px;background:#fff;color:#cc9558}
+[data-theme="legal-classic"] [data-classic-section="our-services"] .final-item-copy{padding:2px 4px 8px}
+[data-theme="legal-classic"] [data-classic-section="our-services"] .final-item-copy strong{font:500 10px Oswald,Arial,sans-serif}
+[data-theme="legal-classic"] [data-classic-section="our-services"] .final-item-copy p{color:#555;font-size:8px;line-height:1.25}
+[data-theme="legal-classic"] .final-gallery{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+[data-theme="legal-classic"] .final-gallery figure,[data-theme="legal-classic"] .final-gallery img{height:65px;min-height:65px;border-radius:8px}
+.legal-gallery-button{display:block;width:100%;height:100%;padding:0;border:0;background:none;cursor:zoom-in}
+.legal-gallery-button img{width:100%;height:100%;object-fit:cover}
+.legal-viewer{max-width:min(95vw,900px);max-height:95vh;padding:16px;border:1px solid #cc9558;background:#151515;color:#fff}
+.legal-viewer::backdrop{background:#000e}
+.legal-viewer img{display:block;max-width:100%;max-height:78vh;object-fit:contain}
+.legal-viewer button{display:block;margin:0 0 12px auto;padding:8px 14px;border:0;border-radius:4px;background:#cc9558;color:#151515;cursor:pointer}
+[data-theme="legal-classic"] .final-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+[data-theme="legal-classic"] .final-form input,[data-theme="legal-classic"] .final-form select,[data-theme="legal-classic"] .final-form textarea{min-height:35px;padding:9px;border:0;border-radius:2px;background:#393939;color:#fff;font:11px Poppins,Arial,sans-serif}
+[data-theme="legal-classic"] .final-form textarea{min-height:75px;grid-column:1/-1}
+[data-theme="legal-classic"] .final-form button,[data-theme="legal-classic"] .final-form-status{grid-column:1/-1}
+[data-theme="legal-classic"] .final-submit{min-height:37px;border-radius:2px;background:#a77948;color:#fff;font-size:11px}
+[data-theme="legal-classic"] .final-testimonials{grid-template-columns:1fr}
+[data-theme="legal-classic"] .final-quote{min-height:115px;padding:15px 90px 15px 20px;border-radius:8px;background:#242424}
+[data-theme="legal-classic"] .final-quote:before{left:18px;top:3px;color:#cc9558;font-size:28px}
+[data-theme="legal-classic"] .final-quote p{padding-left:20px;font-size:11px}
+[data-theme="legal-classic"] .final-quote footer{padding-left:20px;color:#cc9558;font-size:10px}
+[data-theme="legal-classic"] .final-quote footer img{position:absolute;right:14px;top:22px;width:67px;height:67px;border:2px solid #fff;border-radius:50%;object-fit:cover}
+[data-theme="legal-classic"] .final-qr-panel{position:relative;grid-template-columns:1fr;width:min(100%,205px);margin:25px auto 0;padding:43px 15px 15px;border-radius:15px;background:#fff;color:#151515;text-align:center}
+[data-theme="legal-classic"] .final-qr-panel>img:not(.legal-qr-avatar){width:100px;padding:0;border-radius:0}
+[data-theme="legal-classic"] .final-qr-panel .legal-qr-avatar{position:absolute;top:-33px;left:calc(50% - 35px);width:70px;height:70px;padding:0;border:2px solid #cc9558;border-radius:50%;object-fit:cover}
+[data-theme="legal-classic"] .final-qr-copy{justify-items:center}
+[data-theme="legal-classic"] .final-qr-copy strong{display:none}
+[data-theme="legal-classic"] .final-qr-copy a,[data-theme="legal-classic"] .classic-save{padding:8px;border:0;border-radius:6px;background:#cc9558;color:#fff;font-size:10px;cursor:pointer}
+[data-theme="legal-classic"] .classic-save-status{margin:0;color:#555;font-size:10px}
+[data-theme="legal-classic"] .classic-save-status:empty{display:none}
+[data-theme="legal-classic"] [data-classic-section="products"] .final-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+[data-theme="legal-classic"] [data-classic-section="products"] .final-item{border-radius:8px}
+[data-theme="legal-classic"] [data-classic-section="products"] .final-item-media{min-height:80px}
+[data-theme="legal-classic"] [data-classic-section="products"] .final-item-media img{height:80px}
+[data-theme="legal-classic"] [data-classic-section="products"] .final-item-copy{padding:7px}
+[data-theme="legal-classic"] [data-classic-section="products"] .final-item-copy strong{font-size:10px}
+[data-theme="legal-classic"] [data-classic-section="products"] .final-item-copy p{font-size:9px}
+[data-theme="legal-classic"] .final-hours{border:0;border-radius:0;background:transparent}
+[data-theme="legal-classic"] .final-hours div{border-color:#51412e;font:11px Oswald,Arial,sans-serif}
+[data-theme="legal-classic"] .final-footer{background:linear-gradient(90deg,#1a1a1a,#444,#1a1a1a);color:#ddd}
+[data-theme="legal-classic"] :is(a,button,input,select,textarea):focus-visible{outline:2px solid #cc9558;outline-offset:2px}
+@media(max-width:360px){[data-theme="legal-classic"] .final-identity{padding-right:15px;padding-left:145px}[data-theme="legal-classic"] .final-avatar{left:20px;width:115px;height:115px}[data-theme="legal-classic"] .final-description{left:-125px;width:calc(100% + 125px)}[data-theme="legal-classic"] .final-section{padding-inline:20px}[data-theme="legal-classic"] [data-classic-section="contact"]{grid-template-columns:100px minmax(0,1fr)}[data-theme="legal-classic"] .legal-contact-portrait{width:100px}[data-theme="legal-classic"] [data-classic-section="our-services"] .final-card-grid{grid-template-columns:repeat(4,minmax(0,1fr))}[data-theme="legal-classic"] .final-gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}
