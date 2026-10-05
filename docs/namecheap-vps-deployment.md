@@ -1,4 +1,4 @@
-Alternative Docker/VPS procedure. For the current cPanel hosting target, use [the cPanel guide](cpanel-deployment.md).
+Docker/VPS procedure for the staging deployment reported in the 5 October 2026 handoff. For the existing healthy deployment, start with [read-only staging sign-off](staging-signoff.md), not the provisioning commands below. The [cPanel/Passenger guide](cpanel-deployment.md) describes an alternative application hosting method.
 
 Deployment target: Namecheap VPS/dedicated server, https://test.syncecard.com.
 
@@ -20,7 +20,7 @@ docker compose up -d db
 
 Choose exactly one database path:
 
-- **Keep the existing business data:** export the current database with `pg_dump -Fc`, securely transfer the dump and existing `backend/uploads` contents, and restore into the new database. Do not run `db:setup` over the restored database. Review the migration ledger/checksum baseline and apply reviewed missing migrations through 067; follow [the audit upgrade procedure](audit-remediation.md). Do not guess which migrations the restored database has applied.
+- **Keep the existing business data:** export the current database with `pg_dump -Fc`, securely transfer the dump and existing `backend/uploads` contents, and restore into the new database. Do not run `db:setup` over the restored database. Review the migration ledger/checksum baseline against the selected release; follow [the audit upgrade procedure](audit-remediation.md) for reviewed pending migrations. Staging is reported migrated through 077: verify it, rather than replaying those migrations. Do not guess which migrations the restored database has applied.
 - **Start a new empty database:** run `docker compose run --rm app node database/migrate.js --seed`. This installs all migrations and a free registration plan, without sample paid products or default administrator credentials. Set `SUPER_ADMIN_EMAIL` and a strong `SUPER_ADMIN_PASSWORD` temporarily in the private environment file, then run `docker compose run --rm app node backend/seed-super-admin.js`. Remove those two bootstrap variables afterwards. Configure paid plans, NFC products, bank details, and shipping rates in super admin before accepting orders.
 
 Example restore commands for a new empty database (substitute your actual database/user names):

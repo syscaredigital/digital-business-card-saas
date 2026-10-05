@@ -6,6 +6,7 @@ const { normalizePlanFeatures } = require("../config/vcard-features");
 const { currencyName, normalizeCurrency } = require("../config/currencies");
 const { BASE_CURRENCY, getRate, supportedCurrencies, convertFromLkr } = require("../services/exchange-rate.service");
 const { publicVcardUrl } = require("../helpers/vcard-url");
+const { currentSubscription } = require("../services/subscription-policy");
 const { sendVcardEnquiry, sendWebsiteContact } = require("../services/email.service");
 
 const router = express.Router();
@@ -231,7 +232,7 @@ router.get("/vcards/:id", async (req, res, next) => {
       LEFT JOIN companies c ON c.id=COALESCE(v.company_id,u.company_id)
       LEFT JOIN LATERAL (
         SELECT plans.features FROM subscriptions s JOIN plans ON plans.id=s.plan_id
-        WHERE s.user_id=v.user_id AND s.status='active' ORDER BY s.created_at DESC LIMIT 1
+        WHERE s.user_id=v.user_id AND ${currentSubscription()} ORDER BY s.created_at DESC LIMIT 1
       ) p ON TRUE
       WHERE v.id=$1 AND v.is_active=TRUE`, [id]);
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });

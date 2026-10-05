@@ -30,6 +30,8 @@ test('receipt parsers reject spoofed, corrupt, mismatched and active content', a
 });
 
 test('audit regressions against an isolated PostgreSQL schema', async t => {
+  assert.ok(['localhost', '127.0.0.1', '::1'].includes(pool.options.host), 'Use a local test database');
+  assert.notEqual(process.env.NODE_ENV, 'production');
   const schema = 'audit_test_'+crypto.randomBytes(8).toString('hex');
   const query = pool.query.bind(pool), connect = pool.connect.bind(pool);
   const db = new Pool({...pool.options,password:pool.options.password,options:`-c search_path=${schema}`,max:8});
@@ -71,6 +73,19 @@ test('audit regressions against an isolated PostgreSQL schema', async t => {
       assert.deepEqual(results.map(r=>r.status).sort(),[201,403,403]);
       const id = results.find(r=>r.status===201).body.vcard.id;
       assert.equal((await request('/api/user/vcards/'+id,{token:second.body.token})).status,404);
+    });
+    await t.test('public card sections respect subscription start and inclusive expiry dates', async () => {
+      const card = (await db.query('SELECT id FROM vcards WHERE user_id=$1', [user.id])).rows[0];
+      await db.query('UPDATE vcards SET settings=$1::jsonb WHERE id=$2', [JSON.stringify({ sections: { 'basic-details': 'Test role', services: 'Paid consultation' } }), card.id]);
+      const plan = (await db.query("INSERT INTO plans(name,price,billing_interval,status,features) VALUES('Section expiry test',100,'monthly','active',$1::jsonb) RETURNING id", [JSON.stringify({ vcardFeatures: ['basic-details', 'services'] })])).rows[0];
+      const subscription = (await db.query("INSERT INTO subscriptions(user_id,plan_id,status,start_date,end_date) VALUES($1,$2,'active',CURRENT_DATE-30,CURRENT_DATE-1) RETURNING id", [user.id, plan.id])).rows[0];
+      const read = async () => (await request(`/api/public/vcards/${card.id}`)).body.vcard;
+      assert.equal((await read()).sections.services, undefined, 'Expired plan must not expose paid sections before the expiry job runs');
+      await db.query('UPDATE subscriptions SET start_date=CURRENT_DATE+1,end_date=CURRENT_DATE+30 WHERE id=$1', [subscription.id]);
+      assert.equal((await read()).sections.services, undefined, 'Future plan must not grant paid sections');
+      await db.query('UPDATE subscriptions SET start_date=CURRENT_DATE-30,end_date=CURRENT_DATE WHERE id=$1', [subscription.id]);
+      assert.equal((await read()).sections.services, 'Paid consultation', 'The final subscription day is inclusive');
+      await db.query('DELETE FROM subscriptions WHERE id=$1', [subscription.id]);
     });
     await t.test('browser sessions are HttpOnly and writes require a trusted origin',async()=>{
       const headers = {'X-Session-Mode':'cookie','X-Requested-With':'SyncECard',Origin:origin};

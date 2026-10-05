@@ -16,6 +16,10 @@ const pool = require('../backend/config/database.config');
     for (const width of [1440, 390]) {
       const context = await browser.newContext({ viewport: { width, height: 900 } });
       const page = await context.newPage();
+      // Keep local rendering checks independent of third-party font/image hosts.
+      // External asset availability is a separate staging acceptance check.
+      await page.route('**/*', request => new URL(request.request().url()).origin === origin
+        ? request.continue() : request.abort());
       let route = '';
       page.on('pageerror', error => problems.push(`${width} ${route}: ${error.message}`));
       page.on('console', message => {
@@ -24,7 +28,11 @@ const pool = require('../backend/config/database.config');
       page.on('response', response => {
         if (response.url().startsWith(origin + '/') && response.status() >= 400) problems.push(`${width} ${route}: HTTP ${response.status()} ${new URL(response.url()).pathname}`);
       });
-      for (route of ['website/home', 'website/pricing', 'website/templates', 'website/nfc-cards', 'auth/login', 'auth/register', 'public-vcard/final-10-corporate']) {
+      const templates = fs.readdirSync(path.resolve(__dirname, '../frontend/pages/public-vcard'))
+        .filter(name => /^final-\d{2}-.*\.html$/.test(name)).sort()
+        .map(name => `public-vcard/${name.replace(/\.html$/, '')}`);
+      if (templates.length !== 20) throw new Error(`Expected 20 public templates; found ${templates.length}`);
+      for (route of ['website/home', 'website/pricing', 'website/templates', 'website/nfc-cards', 'auth/login', 'auth/register', ...templates]) {
         await page.goto(`${origin}/pages/${route}.html`, { waitUntil: 'networkidle', timeout: 45000 });
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2);
         if (overflow) problems.push(`${width} ${route}: horizontal page overflow`);
