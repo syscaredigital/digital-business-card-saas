@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  var id = new URLSearchParams(window.location.search).get("id");
+  var id = (window.SyncVCardId || new URLSearchParams(window.location.search).get("id"));
   function bindEnquiryForms() {
     document.querySelectorAll(".message-panel").forEach(function (panel) {
     if (panel.dataset.enquiryBound === "true") return;

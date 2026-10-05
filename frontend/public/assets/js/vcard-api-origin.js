@@ -24,6 +24,8 @@
   }
 
   window.SyncVCardApiOrigin = resolveOrigin();
+  var cardMeta = document.querySelector('meta[name="vcard-id"]');
+  window.SyncVCardId = cardMeta && /^\d+$/.test(cardMeta.content) ? cardMeta.content : null;
 })();
 
 (function () {

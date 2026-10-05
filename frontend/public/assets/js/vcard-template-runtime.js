@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  var id = new URLSearchParams(window.location.search).get("id");
+  var id = (window.SyncVCardId || new URLSearchParams(window.location.search).get("id"));
   if (!id) return;
   var API = (window.SyncVCardApiOrigin || window.location.origin) + "/api/public/vcards/" + encodeURIComponent(id);
   function text(selector, value) { var node = document.querySelector(selector); if (node && value) node.textContent = value; }

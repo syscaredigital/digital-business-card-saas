@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   var params = new URLSearchParams(window.location.search);
-  var id = params.get("id");
+  var id = window.SyncVCardId || params.get("id");
   if (!/^\d+$/.test(id || "")) return;
 
   var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;

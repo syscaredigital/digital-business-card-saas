@@ -1,5 +1,6 @@
 require('./config/environment');
 const path = require("path");
+const fs = require("fs/promises");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -73,7 +74,15 @@ app.get("/vcard/:slug", requirePlatformAvailable, async (req, res, next) => {
     );
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const source = req.query.source === "qr" ? "qr" : "public_link";
-    return res.redirect(302, frontendVcardUrl(req, result.rows[0].id, source, result.rows[0].preview_url));
+    const card = result.rows[0];
+    const templateUrl = new URL(frontendVcardUrl(req, card.id, source, card.preview_url));
+    const match = templateUrl.pathname.match(/^\/pages\/public-vcard\/(final-[a-z0-9-]+\.html)$/i);
+    if (!match) return res.status(404).json({ message: "VCard template not found" });
+    const file = path.join(frontendRoot, 'pages', 'public-vcard', match[1]);
+    const [html, stat] = await Promise.all([fs.readFile(file, 'utf8'), fs.stat(file)]);
+    frontendHeaders(res, file, stat);
+    res.set('Cache-Control', 'no-store');
+    return res.type('html').send(html.replace(/<head>/i, `<head><base href="/pages/public-vcard/${match[1]}"><meta name="vcard-id" content="${Number(card.id)}">`));
   } catch (error) { next(error); }
 });
 

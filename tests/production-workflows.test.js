@@ -89,7 +89,10 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal(captured.status, 201);
       const contact = await fetch(origin + captured.body.downloadUrl);
       assert.equal(contact.status, 200);
-      assert.match(await contact.text(), /BEGIN:VCARD[\s\S]*FN:Test One[\s\S]*END:VCARD/);
+      const contactText = await contact.text();
+      assert.match(contactText, /BEGIN:VCARD[\s\S]*FN:Updated Card[\s\S]*N:Updated Card;;;;[\s\S]*END:VCARD/);
+      assert.doesNotMatch(contactText, /Test One/);
+      assert.match(contact.headers.get('content-disposition'), /Updated-Card\.vcf/);
       const event = `/api/public/vcards/${card.id}/events`;
       assert.equal((await request(event, 'POST', { eventType: 'qr_scan' })).body.recorded, true);
       assert.equal((await request(event, 'POST', { eventType: 'qr_scan' })).body.recorded, false);
@@ -252,7 +255,8 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
           for (const width of [1440, 390]) {
             await page.setViewportSize({ width, height: 900 });
             await page.goto(`${origin}/vcard/test-one-card`, { waitUntil: 'domcontentloaded' });
-            assert.equal(new URL(page.url()).pathname, '/pages/' + template.preview_url.replace(/^\.\.\//, ''));
+            assert.equal(new URL(page.url()).pathname, '/vcard/test-one-card');
+            assert.equal(new URL(await page.locator('base').getAttribute('href'), origin).pathname, '/pages/' + template.preview_url.replace(/^\.\.\//, ''));
             await page.getByText(title, { exact: true }).first().waitFor({ timeout: 15000 });
             await page.waitForFunction(() => Array.from(document.images).every(image => image.complete), { }, { timeout: 15000 });
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2), false, `Template ${template.id}, ${width}px overflow`);

@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  if (new URLSearchParams(window.location.search).get("id") || !window.SyncVCardFeatures) return;
+  if ((window.SyncVCardId || new URLSearchParams(window.location.search).get("id")) || !window.SyncVCardFeatures) return;
 
   document.querySelectorAll(".industry-card .industry-showcase,.industry-card .industry-hours").forEach(function (section) { section.remove(); });
   var demoHeadings = /expertise|services|programs|projects|listings|pricing|packages|clients say|testimonial|business hours|areas? of impact|property highlights|engagement packages/i;

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   var root = document.getElementById("publicVcardRoot");
-  var id = new URLSearchParams(window.location.search).get("id");
+  var id = (window.SyncVCardId || new URLSearchParams(window.location.search).get("id"));
   function escapeHtml(value) { return String(value == null ? "" : value).replace(/[&<>'"]/g, function (char) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]; }); }
   function safeWebUrl(value) { try { var url = new URL(String(value)); return /^(https?:)$/.test(url.protocol) ? url.href : ""; } catch (_) { return ""; } }
   function link(value, label) { var url = safeWebUrl(value); return url ? '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label || value) + '</a>' : ""; }

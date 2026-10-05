@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  var id = new URLSearchParams(window.location.search).get("id");
+  var id = (window.SyncVCardId || new URLSearchParams(window.location.search).get("id"));
   var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
 
   function localDateValue(date) {

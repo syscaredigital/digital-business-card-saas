@@ -2,7 +2,7 @@
   "use strict";
   var root=document.querySelector("[data-final-vcard]");
   if(!root)return;
-  var params=new URLSearchParams(location.search),id=params.get("id"),api=window.SyncVCardApiOrigin||location.origin;
+  var params=new URLSearchParams(location.search),id=window.SyncVCardId||params.get("id"),api=window.SyncVCardApiOrigin||location.origin;
   var theme=root.dataset.theme||"corporate";
   var demos={
     boutique:{name:"Sophia Alexander",role:"CEO of Style Boutique",company:"Style Boutique",description:"Find your style. Love your look.",email:"hello@styleboutique.com",phone:"+94 77 123 4567",website:"https://example.com",address:"Colombo 07, Sri Lanka"},

@@ -364,7 +364,7 @@ router.get("/vcards/:id/contact.vcf", async (req, res, next) => {
        VALUES ($1,'contact_download','public_vcard',$2,$3,$4)`,
       [id, visitorHash(req), String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000)]
     );
-    const displayName = card.owner_name || card.title || "VCard contact";
+    const displayName = String(card.title || "").trim() || "VCard contact";
     const lines = [
       "BEGIN:VCARD", "VERSION:3.0",
       `FN:${vcfEscape(displayName)}`,
