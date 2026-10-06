@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const fs = require('node:fs');
 const express = require('express');
 const { chromium } = require('../backend/node_modules/playwright');
 
@@ -26,7 +27,25 @@ test('all classic templates keep saved text and uploaded review photos in their 
       return route.continue();
     });
     const themes = ['automotive','corporate','events','trainer','property','boutique','creative','technology','medical','legal'];
+    const screenshots = path.join(__dirname, '../test-results/classic-layout');
+    fs.mkdirSync(screenshots, { recursive: true });
     for (const [index, theme] of themes.entries()) {
+      await page.setViewportSize({ width: 390, height: 900 });
+      await page.goto(`${origin}/pages/public-vcard/final-${index + 11}-${theme}-classic.html`, { waitUntil: 'networkidle' });
+      await page.evaluate(async () => {
+        const images = Array.from(document.images);
+        images.forEach(img => { img.loading = 'eager'; });
+        await Promise.all(images.map(img => img.decode().catch(() => {})));
+      });
+      await page.screenshot({ path: path.join(screenshots, `${theme}.png`), fullPage: true });
+      const controls = await page.locator('.final-form input, .final-form select, .final-socials a').evaluateAll(nodes => nodes.every(node => node.getBoundingClientRect().height >= 44));
+      assert.ok(controls, `${theme}: controls need comfortable touch targets`);
+      const labels = await page.locator('.final-form input, .final-form select, .final-form textarea').evaluateAll(nodes => nodes.every(node => node.labels.length > 0));
+      assert.ok(labels, `${theme}: fields need visible labels`);
+      assert.ok(await page.locator('.final-avatar').evaluate(node => {
+        const rect = node.getBoundingClientRect();
+        return Boolean(document.elementFromPoint(rect.x + rect.width / 2, rect.y + 10)?.closest('.final-avatar'));
+      }), `${theme}: cover must not obscure portrait`);
       for (const width of [320, 390, 1440]) {
         for (const long of [false, true]) {
           const word = long ? 'SavedInformation'.repeat(8) : 'Alex';
@@ -47,7 +66,9 @@ test('all classic templates keep saved text and uploaded review photos in their 
           assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2), false, label);
           const overflow = await page.locator('.final-name-block, .final-item-copy, .final-contact-copy, .final-quote').evaluateAll(nodes => nodes.some(node => node.scrollWidth > node.clientWidth + 2));
           assert.equal(overflow, false, `${label}: text overflow`);
-          if (theme === 'corporate') {
+          const textSize = await page.locator('.final-contact-copy strong,.final-description,.final-item-copy strong').evaluateAll(nodes => nodes.every(node => parseFloat(getComputedStyle(node).fontSize) >= 14));
+          assert.ok(textSize, `${label}: readable text size`);
+          {
             const portrait = await page.locator('.final-avatar').boundingBox();
             const description = await page.locator('.final-description').boundingBox();
             assert.ok(description.y >= portrait.y + portrait.height, `${label}: biography overlaps portrait`);

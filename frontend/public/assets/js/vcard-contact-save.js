@@ -14,6 +14,8 @@
 
   fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
     method: "POST",
+    // Public actions must not inherit an unrelated signed-in account session.
+    credentials: "omit",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ eventType: source === "qr" ? "qr_scan" : "vcard_view", source: source }),
   }).catch(function () {});
@@ -21,6 +23,8 @@
   function recordEngagement(eventType, eventSource) {
     fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
       method: "POST",
+      // Public actions must not inherit an unrelated signed-in account session.
+      credentials: "omit",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ eventType: eventType, source: String(eventSource || "public_vcard").slice(0, 80) }),
     }).catch(function () {});
@@ -117,6 +121,8 @@
     status.hidden = true;
     fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/contact-saves", {
       method: "POST",
+      // Public actions must not inherit an unrelated signed-in account session.
+      credentials: "omit",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     }).then(function (response) {

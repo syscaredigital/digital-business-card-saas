@@ -37,6 +37,8 @@
       status.textContent = "Sending your enquiry...";
       fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/enquiries", {
         method: "POST",
+        // Public actions must not inherit an unrelated signed-in account session.
+        credentials: "omit",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       }).then(function (response) {

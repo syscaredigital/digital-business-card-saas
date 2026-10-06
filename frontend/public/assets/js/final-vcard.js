@@ -63,7 +63,24 @@
   var templateConfig=window.SyncVCardTemplateConfig;
   if(templateConfig&&templateConfig.theme===theme){
     var renderBase=render;
-    render=function(card,isDemo){renderBase(card,isDemo);templateConfig.decorate(root,card,isDemo)};
+    render=function(card,isDemo){
+      renderBase(card,isDemo);templateConfig.decorate(root,card,isDemo);
+      if(!root.classList.contains("classic-layout"))return;
+      // Keep the identity in normal flow regardless of which optional fields exist.
+      var identity=root.querySelector(".final-identity"),description=root.querySelector(".final-description"),socials=root.querySelector(".final-socials");
+      if(description)identity.appendChild(description);
+      var bioToggle=root.querySelector(".property-bio-toggle");if(bioToggle)identity.appendChild(bioToggle);
+      if(socials)identity.appendChild(socials);
+      var contactSection=root.querySelector('[data-classic-section="contact"]');
+      if(contactSection)identity.after(contactSection);
+      root.querySelectorAll(".final-form input,.final-form select,.final-form textarea").forEach(function(input,index){
+        if(input.closest("label"))return;
+        var label=document.createElement("label"),caption=document.createElement("span");
+        caption.textContent=({date:"Date",time:"Time",serviceName:"Service",meetingMode:"Meeting type"}[input.name])||input.placeholder||input.name;
+        input.id="classic-field-"+index;label.htmlFor=input.id;
+        input.before(label);label.append(caption,input);
+      });
+    };
   }
   if(!id){render(templateConfig&&templateConfig.theme===theme?templateConfig.demo:{},true);return}
   fetch(api+"/api/public/vcards/"+encodeURIComponent(id)).then(function(r){return r.json().then(function(data){if(!r.ok)throw new Error(data.message||"Unable to load VCard");return data})}).then(function(data){render(data.vcard||{},false)}).catch(function(error){root.innerHTML='<div class="final-loading final-state-error">'+esc(error.message)+"</div>"});
