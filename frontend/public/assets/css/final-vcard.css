@@ -43,6 +43,10 @@
 .final-identity{padding-top:28px}
 .final-avatar,[data-theme="technology"] .final-avatar{margin-top:0}
 .final-socials svg{width:18px;height:18px;fill:currentColor}
+/* User content must wrap within the classic designs, including long URLs. */
+[data-theme$="-classic"] :is(.final-name-block,.final-description,.final-item-copy,.final-quote,.final-hours,.final-contact-copy){min-width:0;overflow-wrap:anywhere}
+[data-theme$="-classic"] .final-contact-copy strong{white-space:normal;overflow:visible;text-overflow:clip}
+[data-theme$="-classic"] .final-description{white-space:pre-line}
 .final-quote footer{display:flex;align-items:center;gap:9px}.final-quote footer img{width:34px;height:34px;border-radius:50%;object-fit:cover}.final-quote footer span{display:block}
 .vcard-enquiry-status{grid-column:1/-1;margin:2px 0 0;color:#6fdba5;font-size:12px;font-weight:700}.vcard-enquiry-status.is-error{color:#ff7b86}
 @media(max-width:520px){.final-avatar{margin-top:0}}

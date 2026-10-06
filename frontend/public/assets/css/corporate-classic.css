@@ -8,6 +8,7 @@ body{background:#071f26}
 .final-identity{position:relative;z-index:4;padding:44px 20px 8px;min-height:190px}
 .final-avatar{position:absolute;right:20px;top:26px;width:112px;height:112px;margin:0;border:2px solid var(--vc-accent);box-shadow:none}
 .final-name-block{margin:0;padding-right:125px}.final-name-block h1{font:400 29px/1.2 Oswald,Arial,sans-serif;overflow-wrap:anywhere}.final-role{font-size:17px;font-weight:400;color:#c5cdd0}.final-company{font-size:12px}
+.final-name-block{min-height:94px}
 .final-description{margin:14px 0 0;font:12px/1.6 Arial,sans-serif}
 .final-socials{gap:10px;margin-top:14px;padding-right:125px}.final-socials a{width:29px;height:29px;border:2px solid #9bb0b4;color:#fff;box-shadow:0 0 4px #fff4}.final-socials svg{width:14px;height:14px}
 .final-section{padding:16px 20px}.final-section-title{font:400 28px/1.25 Oswald,Arial,sans-serif;margin-bottom:18px;gap:12px}.final-section-title:before{display:none}
