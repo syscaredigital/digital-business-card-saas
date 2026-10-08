@@ -18,3 +18,17 @@ test('malformed auth inputs fail before database access', () => {
   validateRegistration({ body: { email: 'invalid', password: 'abc' } }, res, next);
   validateRegistration({ body: { email: 'user@example.test', password: 'abc' } }, res, next);
 });
+
+test('runtime ports, pool capacity, worker flags and time zones reject invalid configuration', () => {
+  const env = { JWT_SECRET: 'a'.repeat(48) };
+  for (const key of ['PORT', 'DB_PORT', 'MAIL_PORT', 'DB_POOL_SIZE']) {
+    for (const value of ['', '0', '-1', '1.5', 'NaN', '65536']) {
+      assert.throws(() => validateEnvironment({ ...env, [key]: value }), new RegExp(key));
+    }
+  }
+  for (const key of ['DB_SSL', 'NOTIFICATION_JOBS']) {
+    assert.throws(() => validateEnvironment({ ...env, [key]: 'yes' }), new RegExp(key));
+  }
+  assert.throws(() => validateEnvironment({ ...env, APP_TIMEZONE: 'Not/AZone' }), /APP_TIMEZONE/);
+  assert.doesNotThrow(() => validateEnvironment({ ...env, PORT: '5000', DB_POOL_SIZE: '10', NOTIFICATION_JOBS: 'false', APP_TIMEZONE: 'Asia/Colombo' }));
+});

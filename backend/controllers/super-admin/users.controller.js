@@ -1,9 +1,8 @@
+const { number } = require('../../helpers/metrics.helper');
 const pool = require('../../config/database.config');
 const bcrypt = require('bcrypt');
 const { normalizeCurrency } = require('../../config/currencies');
 const { currentSubscription } = require('../../services/subscription-policy');
-function number(value) { return Number(value || 0); }
-
 function mapAdminUser(user) {
   return {
     id: user.id,

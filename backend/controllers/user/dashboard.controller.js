@@ -1,9 +1,8 @@
+const { number } = require('../../helpers/metrics.helper');
 const { currentSubscription } = require('../../services/subscription-policy');
 const pool = require("../../config/database.config");
 const { publicVcardUrl } = require("../../helpers/vcard-url");
 const { loadVcardEntitlements } = require('../../services/vcard-entitlements.service');
-function number(value) { return Number(value || 0); }
-
 exports.dashboard = async (req, res, next) => {
   try {
     const userId = req.user.id;

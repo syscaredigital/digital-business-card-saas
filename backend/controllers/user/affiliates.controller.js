@@ -1,9 +1,8 @@
+const { number } = require('../../helpers/metrics.helper');
 const pool = require("../../config/database.config");
 const path = require("path");
 const { normalizeCurrency } = require("../../config/currencies");
 const { BASE_CURRENCY } = require("../../services/exchange-rate.service");
-function number(value) { return Number(value || 0); }
-
 function affiliateMoneyRows(rows) {
   return rows.map((row) => ({ currency: row.currency, earned: number(row.earned), pending: number(row.pending),
     reserved: number(row.reserved), available: Math.max(0, number(row.earned) - number(row.reserved)) }));
@@ -162,7 +161,7 @@ exports.downloadAffiliateWithdrawalReceipt = async (req, res, next) => {
     if (!result.rowCount || !result.rows[0].transfer_receipt_url) return res.status(404).json({ message: "Transfer receipt is not available" });
     const receiptUrl = result.rows[0].transfer_receipt_url;
     if (!/^\/uploads\/payment-slips\/[A-Za-z0-9._-]+$/.test(receiptUrl)) return res.status(400).json({ message: "Invalid receipt path" });
-    const uploadRoot = path.resolve(__dirname, "..", "uploads", "payment-slips");
+    const uploadRoot = path.resolve(__dirname, "..", "..", "uploads", "payment-slips");
     const filePath = path.resolve(uploadRoot, path.basename(receiptUrl));
     if (!filePath.startsWith(uploadRoot + path.sep)) return res.status(400).json({ message: "Invalid receipt path" });
     res.download(filePath, `withdrawal-${withdrawalId}-receipt${path.extname(filePath)}`);

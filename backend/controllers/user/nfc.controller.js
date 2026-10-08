@@ -1,11 +1,10 @@
+const { number } = require('../../helpers/metrics.helper');
 const pool = require("../../config/database.config");
 const fs = require("fs/promises");
 const path = require("path");
 const { getStorageSummary, virtualNfcPayloadBytes } = require("../../services/storage.service");
 const { normalizeCurrency } = require("../../config/currencies");
 const { BASE_CURRENCY, getRate, convertFromLkr } = require("../../services/exchange-rate.service");
-function number(value) { return Number(value || 0); }
-
 function validateVirtualNfcImage(value, label, required) {
   if (!value) return required ? `${label} is required` : null;
   if (!/^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/=\r\n]+$/i.test(value)) return `${label} must be a PNG, JPG, or WebP image`;

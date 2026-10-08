@@ -4,7 +4,7 @@ The deployment handoff supplied on 5 October 2026 reports healthy PostgreSQL and
 
 Company administration and newsletter subscriptions remain excluded from v1. Production cutover to `syncecard.lk` is pending acceptance.
 
-## First step: read-only technical checks
+## First step: technical checks
 
 On the staging VPS, change to the directory containing the deployed `docker-compose.yml`. Use the running application container; do not recreate it to perform these checks.
 
@@ -12,7 +12,7 @@ On the staging VPS, change to the directory containing the deployed `docker-comp
 node deploy/verify-staging.js
 ```
 
-This requires Node on the host, Docker Compose and curl. It checks the migration ledger/checksums, production preflight, SMTP authentication, notification scheduling configuration and public HTTPS endpoints. It continues after failures and exits nonzero if any check fails. It neither sends email nor runs migrations or jobs. A disabled in-process notification scheduler requires evidence of a working external scheduler before that gate can pass.
+This requires Node on the host, Docker Compose and curl. It checks the migration ledger/checksums, production preflight, SMTP authentication, notification scheduling configuration and public HTTPS endpoints. It continues after failures and exits nonzero if any check fails. It neither sends email nor runs migrations or jobs. Preflight creates a temporary storage probe and removes it; it also creates the receipt directory if missing. Existing receipts are untouched. A disabled in-process notification scheduler requires evidence of a working external scheduler before that gate can pass.
 
 If the host lacks Node, run the checks directly:
 

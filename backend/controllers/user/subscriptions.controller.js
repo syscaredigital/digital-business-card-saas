@@ -1,3 +1,4 @@
+const { number } = require('../../helpers/metrics.helper');
 const { currentSubscription } = require('../../services/subscription-policy');
 const { captureRevenueRate } = require('../../services/revenue.service');
 const pool = require("../../config/database.config");
@@ -6,8 +7,6 @@ const path = require("path");
 const { normalizePlanFeatures } = require("../../config/vcard-features");
 const { normalizeCurrency } = require("../../config/currencies");
 const { BASE_CURRENCY, getRate, convertFromLkr } = require("../../services/exchange-rate.service");
-function number(value) { return Number(value || 0); }
-
 function mapUserPlan(plan) {
   const normalized = normalizePlanFeatures(plan.features);
   return { id: plan.id, name: plan.name, price: number(plan.price), billingInterval: plan.billing_interval,

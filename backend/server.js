@@ -16,6 +16,7 @@ async function shutdown(code = 0) {
 }
 async function start() {
   validateEnvironment();
+  await require('./services/storage-readiness.service').verifyUploadStorage();
   await require('../database/migrate').verifyMigrations(pool);
   await pool.query('SELECT auth_version FROM users LIMIT 0');
   await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');

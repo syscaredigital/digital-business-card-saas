@@ -127,6 +127,14 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal(login.status, 200);
       adminToken = login.body.token;
       assert.equal((await request('/api/super-admin/dashboard', 'GET', null, adminToken)).status, 200);
+      const routes = require('../backend/routes/super-admin.routes').stack
+        .filter(layer => layer.route?.methods.get && !layer.route.path.includes(':'))
+        .map(layer => '/api/super-admin' + layer.route.path);
+      for (const route of routes) {
+        const response = await fetch(origin + route, { headers: { Authorization: 'Bearer ' + adminToken } });
+        assert.equal(response.status, 200, route + ': ' + await response.text());
+        assert.equal((await request(route, 'GET', null, first.body.token)).status, 403, route + ' must require admin');
+      }
     });
     await t.test('manual payment stays pending until approval; duplicate references are rejected', async () => {
       const affiliate = (await db.query("INSERT INTO affiliate_profiles(user_id,referral_code,status,commission_type,commission_value,payout_details) VALUES($1,'PHASE2','active','percentage',10,$2::jsonb) RETURNING id", [second.body.user.id, JSON.stringify({ accountHolder: 'Test', bankName: 'Test', accountNumber: '123' })])).rows[0];

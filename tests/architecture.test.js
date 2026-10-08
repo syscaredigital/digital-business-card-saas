@@ -5,6 +5,16 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { parseAppointment } = require('../backend/validators/appointment.validator');
 
+test('shared backend modules do not depend on HTTP controllers', () => {
+  const backend = path.join(__dirname, '../backend');
+  for (const directory of ['services', 'validators', 'helpers']) {
+    for (const file of fs.readdirSync(path.join(backend, directory)).filter(name => name.endsWith('.js'))) {
+      const source = fs.readFileSync(path.join(backend, directory, file), 'utf8');
+      assert.doesNotMatch(source, /require\(['"][^'"]*controllers\//, `${directory}/${file} must not depend on HTTP controllers`);
+    }
+  }
+});
+
 function client(fetch) {
   const window = { location: { origin: 'https://cards.test', href: 'https://cards.test/vcard/alex' }, fetch };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../frontend/public/assets/js/vcard-public-api.js'), 'utf8'), { window, URL });

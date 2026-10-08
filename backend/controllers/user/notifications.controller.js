@@ -1,6 +1,5 @@
+const { number } = require('../../helpers/metrics.helper');
 const pool = require("../../config/database.config");
-function number(value) { return Number(value || 0); }
-
 exports.markNotificationsRead = async (req, res, next) => {
   try {
     const result = await pool.query(

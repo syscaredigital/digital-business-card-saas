@@ -1,9 +1,7 @@
+const { number, percentChange } = require('../../helpers/metrics.helper');
 const pool = require('../../config/database.config');
 const { currentSubscription } = require('../../services/subscription-policy');
 const { reportingSummary } = require('../../services/revenue.service');
-function number(value) { return Number(value || 0); }
-function percentChange(current, previous) { const currentValue = number(current), previousValue = number(previous); if (!previousValue) return currentValue ? 100 : 0; return Number((((currentValue - previousValue) / previousValue) * 100).toFixed(1)); }
-
 exports.getDashboard = async (req, res, next) => {
   const startedAt = Date.now();
   try {

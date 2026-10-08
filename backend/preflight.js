@@ -5,6 +5,10 @@ const pool = require('./config/database.config');
   try { validateEnvironment({ ...process.env, NODE_ENV: 'production' }); console.log('PASS production environment'); }
   catch (error) { failed = true; console.error('FAIL production environment:', error.message); }
   try {
+    await require('./services/storage-readiness.service').verifyUploadStorage();
+    console.log('PASS receipt storage create/write/remove permissions');
+  } catch (error) { failed = true; console.error('FAIL receipt storage:', error.code || error.name); }
+  try {
     await require('../database/migrate').verifyMigrations(pool);
     await pool.query('SELECT bucket_key FROM rate_limit_buckets LIMIT 0');
     await pool.query('SELECT status FROM email_outbox LIMIT 0');
