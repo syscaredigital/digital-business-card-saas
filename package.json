@@ -9,7 +9,7 @@
   },
   "scripts": {
     "check:deployment": "node tests/deployment-check.js",
-    "test": "node --test tests/frontend-deployment.test.js tests/password-recovery.test.js tests/security-config.test.js tests/production-workflows.test.js tests/audit-remediation.test.js",
+    "test": "node tests/run-tests.js",
     "check:browser": "node tests/browser-check.js",
     "check:phase2": "node tests/phase2-check.js",
     "check:production": "node backend/preflight.js",

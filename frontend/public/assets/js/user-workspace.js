@@ -285,7 +285,9 @@
     "social-links": ["One link per line: network name | full URL", "LinkedIn | https://linkedin.com/in/your-name"],
     "custom-links": ["One link per line: link name | full URL", "View my portfolio | https://example.com/portfolio"],
     banners: ["Add a title, then upload the banner image below.", "Summer offer"],
-    iframes: ["Add a title and full content URL", "Watch my introduction | https://example.com/video"],
+    iframes: ["Add a title and full content URL. Shown as a link that opens the content.", "Watch my introduction | https://example.com/video"],
+    "custom-fonts": ["Choose Arial, Georgia, Verdana, Times New Roman, DM Sans, Oswald or Playfair Display", "Georgia"],
+    seo: ["One setting per line: title | value, description | value, or keywords | value. Updates browser metadata; social share previews are separate.", "title | My business card\ndescription | Learn about my services"],
     "qrcode-customize": ["Add the destination or QR image URL", "https://example.com/contact"],
     advanced: ["Add each important detail on a new line", "Languages: English, Sinhala"],
     "privacy-policy": ["Add readable policy text, using a new line for each paragraph", "Your privacy policy"],
@@ -340,6 +342,21 @@
       textarea.value = cleanLines.join("\n");
       textarea._sectionImages = images;
       textarea._sectionImageReady = true;
+      var previousLines = cleanLines.slice();
+      function syncImages() {
+        var nextLines = String(textarea.value || "").split(/\r?\n/);
+        var used = new Set(), matched = new Set(), mapped = [];
+        nextLines.forEach(function (line, index) {
+          var match = previousLines.findIndex(function (old, oldIndex) { return !used.has(oldIndex) && old === line; });
+          if (match >= 0) { used.add(match); matched.add(index); mapped[index] = images[match]; }
+        });
+        // An edited row retains its photo; inserted/deleted rows do not shift photos.
+        if (nextLines.length === previousLines.length) nextLines.forEach(function (line, index) {
+          if (!matched.has(index) && !used.has(index) && line.trim()) mapped[index] = images[index];
+        });
+        images = mapped; textarea._sectionImages = images; previousLines = nextLines;
+      }
+      textarea.addEventListener("input", function () { syncImages(); renderImages(); });
 
       function renderImages() {
         var lines = String(textarea.value || "").split(/\r?\n/);
@@ -362,13 +379,15 @@
         Promise.all(files.map(function (file) { return new Promise(function (resolve, reject) {
           var reader = new FileReader(); reader.onload = function () { resolve({ name: file.name, src: String(reader.result || "") }); }; reader.onerror = reject; reader.readAsDataURL(file);
         }); })).then(function (uploads) {
-          var lines = String(textarea.value || "").split(/\r?\n/).filter(function (line) { return line.trim(); });
+          syncImages();
+          var lines = String(textarea.value || "").split(/\r?\n/);
           uploads.forEach(function (upload) {
-            var target = images.findIndex(function (image, index) { return !image && lines[index]; });
+            var target = lines.findIndex(function (line, index) { return line.trim() && !images[index]; });
             if (target < 0) { target = lines.length; lines.push(upload.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ")); }
             images[target] = upload.src;
           });
           textarea.value = lines.join("\n");
+          previousLines = lines.slice();
           input.value = "";
           renderImages();
         }).catch(function () { window.alert("One of the selected images could not be read."); });

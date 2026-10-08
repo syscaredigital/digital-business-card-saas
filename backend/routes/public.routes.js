@@ -6,7 +6,7 @@ const { normalizePlanFeatures } = require("../config/vcard-features");
 const { currencyName, normalizeCurrency } = require("../config/currencies");
 const { BASE_CURRENCY, getRate, supportedCurrencies, convertFromLkr } = require("../services/exchange-rate.service");
 const { publicVcardUrl } = require("../helpers/vcard-url");
-const { currentSubscription } = require("../services/subscription-policy");
+const { currentSubscription, hasVcardFeature } = require("../services/subscription-policy");
 const { sendVcardEnquiry, sendWebsiteContact } = require("../services/email.service");
 
 const router = express.Router();
@@ -451,34 +451,11 @@ router.post("/vcards/:id/enquiries", async (req, res, next) => {
   }
 });
 
-router.post("/vcards/:id/appointments", async (req, res, next) => {
+router.post("/vcards/:id/appointments", require("../validators/appointment.validator").validateAppointment, async (req, res, next) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
 
-  const name = String(req.body?.name || "").trim().slice(0, 150);
-  const email = String(req.body?.email || "").trim().slice(0, 255);
-  const phone = String(req.body?.phone || "").trim().slice(0, 50);
-  const notes = String(req.body?.notes || "").trim().slice(0, 2000);
-  const serviceName = String(req.body?.serviceName || "").trim().slice(0, 150);
-  const appointmentType = String(req.body?.appointmentType || "").trim().toLowerCase();
-  const requestedDuration = Number.parseInt(req.body?.durationMinutes, 10);
-  const startsAt = new Date(req.body?.startsAt);
-
-  if (!name || !email) {
-    return res.status(400).json({ message: "Name and email are required for appointment confirmation" });
-  }
-  if (!["office", "online"].includes(appointmentType)) {
-    return res.status(400).json({ message: "Choose either an office visit or an online meeting" });
-  }
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ message: "Enter a valid email address" });
-  }
-  if (Number.isNaN(startsAt.getTime())) {
-    return res.status(400).json({ message: "Select a valid appointment date and time" });
-  }
-  if (startsAt.getTime() < Date.now() + 5 * 60 * 1000) {
-    return res.status(400).json({ message: "Appointments must be booked at least 5 minutes in advance" });
-  }
+  const { name, email, phone, notes, serviceName, appointmentType, requestedDuration, startsAt } = req.validatedAppointment;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -492,6 +469,10 @@ router.post("/vcards/:id/appointments", async (req, res, next) => {
     }
     const card = cardResult.rows[0];
     const configuredServices = appointmentServices(card.settings?.sections?.appointments);
+    if (!configuredServices.length || !(await hasVcardFeature(client, card.user_id, 'appointments'))) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ message: 'Appointments are not available for this VCard.' });
+    }
     const selectedService = configuredServices.find((service) => service.name.toLowerCase() === serviceName.toLowerCase());
     if (configuredServices.length && !selectedService) {
       await client.query("ROLLBACK");

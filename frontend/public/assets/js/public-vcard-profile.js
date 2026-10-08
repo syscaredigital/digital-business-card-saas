@@ -36,7 +36,7 @@
   }
   if (!id) { root.innerHTML = '<div class="public-card-state is-error">No VCard was selected.</div>'; return; }
   var api = (window.SyncVCardApiOrigin || window.location.origin) + "/api/public/vcards/" + encodeURIComponent(id);
-  fetch(api).then(function (response) { return response.json().then(function (data) { if (!response.ok) throw new Error(data.message || "Unable to load VCard"); return data; }); })
+  window.SyncVCardPublicApi.fetch(api).then(function (response) { return response.json().then(function (data) { if (!response.ok) throw new Error(data.message || "Unable to load VCard"); return data; }); })
     .then(function (data) { var target = selectedTemplateUrl(data.vcard); if (target) window.location.replace(target); else render(data.vcard); })
     .catch(function (error) { root.innerHTML = '<div class="public-card-state is-error">' + escapeHtml(error.message) + '</div>'; });
 })();

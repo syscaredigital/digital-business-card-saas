@@ -7,24 +7,20 @@
   var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
   var source = params.get("source") === "qr" ? "qr" : "direct";
   var contactCaptureRequired = true;
-  var contactPreferenceReady = fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id))
+  var contactPreferenceReady = window.SyncVCardPublicApi.fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id))
     .then(function (response) { return response.ok ? response.json() : {}; })
     .then(function (data) { contactCaptureRequired = !data.vcard || data.vcard.contactCaptureRequired !== false; })
     .catch(function () {});
 
-  fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
+  window.SyncVCardPublicApi.fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
     method: "POST",
-    // Public actions must not inherit an unrelated signed-in account session.
-    credentials: "omit",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ eventType: source === "qr" ? "qr_scan" : "vcard_view", source: source }),
   }).catch(function () {});
 
   function recordEngagement(eventType, eventSource) {
-    fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
+    window.SyncVCardPublicApi.fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/events", {
       method: "POST",
-      // Public actions must not inherit an unrelated signed-in account session.
-      credentials: "omit",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ eventType: eventType, source: String(eventSource || "public_vcard").slice(0, 80) }),
     }).catch(function () {});
@@ -119,10 +115,8 @@
     button.disabled = true;
     button.textContent = "Preparing contact…";
     status.hidden = true;
-    fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/contact-saves", {
+    window.SyncVCardPublicApi.fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/contact-saves", {
       method: "POST",
-      // Public actions must not inherit an unrelated signed-in account session.
-      credentials: "omit",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     }).then(function (response) {

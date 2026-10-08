@@ -129,12 +129,19 @@ test('audit regressions against an isolated PostgreSQL schema', async t => {
     });
     await t.test('simultaneous appointment requests cannot reserve an overlapping time',async()=>{
       const card=(await db.query('SELECT id FROM vcards WHERE user_id=$1',[user.id])).rows[0];
-      const body={name:'Appointment test',email:'booking@example.test',startsAt:new Date(Date.now()+86400000).toISOString(),appointmentType:'online',durationMinutes:30};
+      await db.query(`UPDATE plans SET features=jsonb_set(features,'{vcardFeatures}',COALESCE(features->'vcardFeatures','[]'::jsonb)||'"appointments"'::jsonb) WHERE id IN (SELECT plan_id FROM subscriptions WHERE user_id=$1)`, [user.id]);
+      await db.query(`UPDATE vcards SET settings=jsonb_set(settings,'{sections}','{"appointments":"Consultation | 30"}'::jsonb) WHERE id=$1`, [card.id]);
+      const body={name:'Appointment test',email:'booking@example.test',serviceName:'Consultation',startsAt:new Date(Date.now()+86400000).toISOString(),appointmentType:'online',durationMinutes:30};
       const results=await Promise.all([1,2].map(()=>request('/api/public/vcards/'+card.id+'/appointments',{method:'POST',body})));
       assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);
       const other=await request('/api/user/appointments',{token:second.body.token});
       assert.equal(other.status,200);
       assert.equal(JSON.stringify(other.body).includes('booking@example.test'),false);
+      await db.query(`UPDATE subscriptions SET end_date=CURRENT_DATE-1 WHERE user_id=$1`, [user.id]);
+      assert.equal((await request('/api/public/vcards/'+card.id+'/appointments',{method:'POST',body})).status,403);
+      await db.query(`UPDATE subscriptions SET end_date=CURRENT_DATE+30,start_date=CURRENT_DATE+1 WHERE user_id=$1`, [user.id]);
+      assert.equal((await request('/api/public/vcards/'+card.id+'/appointments',{method:'POST',body})).status,403);
+      await db.query(`UPDATE subscriptions SET start_date=CURRENT_DATE,end_date=CURRENT_DATE+30 WHERE user_id=$1`, [user.id]);
     });
     await t.test('malicious upload is rejected and payment documents have no public route',async()=>{
       const form = new FormData();form.append('slip',new Blob(['<html>fake</html>'],{type:'image/png'}),'fake.png');

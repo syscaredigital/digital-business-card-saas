@@ -4,7 +4,7 @@ const fs = require("fs/promises");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const morgan = require("morgan");
+
 const { requirePlatformAvailable } = require("./middlewares/platform-access.middleware");
 const pool = require("./config/database.config");
 const { frontendVcardUrl } = require("./helpers/vcard-url");
@@ -12,6 +12,7 @@ const frontendHeaders = require("./helpers/frontend-headers");
 const app = express();
 if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY.split(',').map(value => value.trim()));
 
+app.use(require('./middlewares/request-log.middleware'));
 app.use(helmet());
 const allowedOrigins = [process.env.PUBLIC_APP_URL, ...(process.env.CORS_ORIGINS || '').split(',')].filter(Boolean).map(value => value.replace(/\/$/, ''));
 app.use(cors({ credentials: true, origin(origin, callback) {
@@ -20,8 +21,6 @@ app.use(cors({ credentials: true, origin(origin, callback) {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use('/api', require('./helpers/browser-session').protect);
-morgan.token('safe-path', req => req.originalUrl.split('?')[0]);
-app.use(morgan(':method :safe-path :status :response-time ms'));
 
 // Serve the public VCard portal and its browser assets from the live API
 // process. This keeps public links and QR scans on one reachable origin.
@@ -91,16 +90,6 @@ app.use((req, res) => {
   res.status(404).json({ message: "Not Found" });
 });
 
-app.use((err, req, res, next) => {
-  console.error('Request error:', err.code || err.name);
-  if (err.name === "MulterError") {
-    return res.status(400).json({ message: err.code === "LIMIT_FILE_SIZE" ? "Payment slip must be 5 MB or smaller" : "Unable to upload the payment slip" });
-  }
-  const proposedStatus = Number(err.status || err.statusCode || 500);
-  const status = proposedStatus >= 400 && proposedStatus <= 599 ? proposedStatus : 500;
-  res.status(status).json({ message: status >= 500 && process.env.NODE_ENV === 'production'
-    ? 'The request could not be completed. Please try again later.'
-    : err.publicMessage || err.message || 'Internal Server Error' });
-});
+app.use(require('./middlewares/error.middleware'));
 
 module.exports = app;

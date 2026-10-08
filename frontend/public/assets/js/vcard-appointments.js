@@ -56,10 +56,8 @@
 
     button.disabled = true;
     status.textContent = "Submitting your appointment...";
-    fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/appointments", {
+    window.SyncVCardPublicApi.fetch(apiOrigin + "/api/public/vcards/" + encodeURIComponent(id) + "/appointments", {
       method: "POST",
-      // Public actions must not inherit an unrelated signed-in account session.
-      credentials: "omit",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name,

@@ -54,12 +54,25 @@ test('all classic templates keep saved text and uploaded review photos in their 
             email: `${word}@example.test`, phone: '+94112345678', address: word,
             avatarUrl: photo, coverImageUrl: photo,
             sections: { 'basic-details': word, services: `${word} | ${word}`, products: `${word} | ${word}`,
-              testimonials: `Saved review | Saved customer | ${photo}` }
+              testimonials: `Saved review | Saved customer | ${photo}`,
+              blogs: 'Saved article | Article summary | https://example.test/article',
+              'instagram-embed': `Saved Instagram | ${photo}`, 'custom-links': 'Portfolio | https://example.test/portfolio',
+              iframes: 'Video | https://example.test/video', banners: `Saved banner | ${photo}`,
+              advanced: 'Languages: English', 'privacy-policy': 'Saved privacy policy', 'term-condition': 'Saved terms',
+              'manage-section': 'Saved extra details', 'custom-fonts': 'Georgia',
+              seo: 'title | Saved SEO title\ndescription | Saved SEO description',
+              'qrcode-customize': 'https://example.test/custom-qr' }
           };
           await page.setViewportSize({ width, height: 900 });
           await page.goto(`${origin}/pages/public-vcard/final-${index + 11}-${theme}-classic.html?id=123`, { waitUntil: 'networkidle' });
           const label = `${theme} ${width} ${long ? 'long' : 'short'}`;
           assert.equal(await page.locator('.final-role').textContent(), word, label);
+          assert.equal(await page.locator('.final-extra-section').count(), 9, label);
+          assert.equal(await page.locator('[data-feature-key="custom-links"] a').getAttribute('href'), 'https://example.test/portfolio');
+          assert.equal(await page.title(), 'Saved SEO title');
+          assert.equal(await page.locator('meta[name=description]').getAttribute('content'), 'Saved SEO description');
+          assert.match(await page.locator('.final-name-block h1').evaluate(node => getComputedStyle(node).fontFamily), /Georgia/);
+          assert.match(await page.locator('.final-qr-copy a').getAttribute('href'), /custom-qr/);
           assert.match(await page.locator('.final-quote').textContent(), /Saved customer/, label);
           assert.doesNotMatch(await page.locator('main').innerText(), /data:image|base64|Sample Client/, label);
           assert.equal(await page.locator('.final-quote img').count(), 1, label);

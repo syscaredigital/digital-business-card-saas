@@ -1,3 +1,4 @@
+const { currentSubscription } = require('./subscription-policy');
 const DEFAULT_STORAGE_LIMIT_MB = 50;
 
 function number(value) {
@@ -10,8 +11,7 @@ async function getStorageSummary(db, userId) {
     db.query(
       `SELECT p.id,p.name,p.storage_limit_mb
        FROM subscriptions s JOIN plans p ON p.id=s.plan_id
-       WHERE s.user_id=$1 AND s.status='active' AND s.start_date<=CURRENT_DATE
-         AND (s.end_date IS NULL OR s.end_date>=CURRENT_DATE)
+       WHERE s.user_id=$1 AND ${currentSubscription()}
        ORDER BY s.updated_at DESC,s.id DESC LIMIT 1`,
       [userId]
     ),

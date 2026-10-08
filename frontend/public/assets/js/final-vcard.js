@@ -65,23 +65,44 @@
     var renderBase=render;
     render=function(card,isDemo){
       renderBase(card,isDemo);templateConfig.decorate(root,card,isDemo);
-      if(!root.classList.contains("classic-layout"))return;
-      // Keep the identity in normal flow regardless of which optional fields exist.
-      var identity=root.querySelector(".final-identity"),description=root.querySelector(".final-description"),socials=root.querySelector(".final-socials");
-      if(description)identity.appendChild(description);
-      var bioToggle=root.querySelector(".property-bio-toggle");if(bioToggle)identity.appendChild(bioToggle);
-      if(socials)identity.appendChild(socials);
-      var contactSection=root.querySelector('[data-classic-section="contact"]');
-      if(contactSection)identity.after(contactSection);
-      root.querySelectorAll(".final-form input,.final-form select,.final-form textarea").forEach(function(input,index){
-        if(input.closest("label"))return;
-        var label=document.createElement("label"),caption=document.createElement("span");
-        caption.textContent=({date:"Date",time:"Time",serviceName:"Service",meetingMode:"Meeting type"}[input.name])||input.placeholder||input.name;
-        input.id="classic-field-"+index;label.htmlFor=input.id;
-        input.before(label);label.append(caption,input);
-      });
+      window.SyncClassicLayout(root);
     };
   }
+  function renderExtraFields(card){
+    var sections=card.sections||{},footer=root.querySelector('.final-footer');
+    var labels={'blogs':'Blog','instagram-embed':'Instagram','custom-links':'Useful Links','iframes':'Featured Content','banners':'Highlights','advanced':'More Information','privacy-policy':'Privacy Policy','term-condition':'Terms & Conditions','manage-section':'Additional Information'};
+    Object.keys(labels).forEach(function(key){
+      var content=lines(sections[key]);if(!content.length)return;
+      var section=document.createElement('section');section.className='final-section final-extra-section';section.dataset.featureKey=key;
+      section.innerHTML=heading(labels[key]);
+      content.forEach(function(line){
+        var item=document.createElement('div');item.className='final-extra-item';
+        if(['advanced','privacy-policy','term-condition','manage-section'].includes(key)){item.textContent=line;}
+        else {
+          var values=parts(line),links=values.filter(function(value){return /^https?:\/\//i.test(value)&&url(value);});
+          var media=values.find(function(value){return /^data:image\//i.test(value)||/\.(?:png|jpe?g|webp|gif|svg)(?:[?#].*)?$/i.test(value)||/^https:\/\/(?:images\.unsplash\.com|images\.pexels\.com|res\.cloudinary\.com)\//i.test(value);});
+          if(media&&imageUrl(media)){var img=document.createElement('img');img.src=imageUrl(media);img.alt=values[0]===media?'':values[0];img.loading='lazy';item.appendChild(img);}
+          var text=values.filter(function(value){return value!==media&&!links.includes(value);});
+          if(text.length){var copy=document.createElement('p');copy.textContent=text.join(' · ');item.appendChild(copy);}
+          links.filter(function(value){return value!==media;}).forEach(function(value){var link=document.createElement('a');link.href=url(value);link.target='_blank';link.rel='noopener noreferrer';link.textContent=text[0]||'Open link';item.appendChild(link);});
+        }
+        section.appendChild(item);
+      });
+      root.insertBefore(section,footer);
+    });
+    var qrValue=parts(lines(sections['qrcode-customize'])[0]||'').pop();
+    if(/^https?:\/\//i.test(qrValue)&&url(qrValue)){
+      var qr=root.querySelector('.final-qr-panel>img:not([class*="qr-avatar"])'),download=root.querySelector('.final-qr-copy a');
+      var source=/\.(?:png|jpe?g|webp|gif|svg)(?:[?#].*)?$/i.test(qrValue)?url(qrValue):api+'/api/public/qrcode?data='+encodeURIComponent(url(qrValue));
+      if(qr){qr.src=source;qr.alt='Custom QR code';}if(download)download.href=source;
+    }
+    var fonts={'arial':'Arial, sans-serif','georgia':'Georgia, serif','verdana':'Verdana, sans-serif','times new roman':'"Times New Roman", serif','dm sans':'"DM Sans", sans-serif','oswald':'Oswald, sans-serif','playfair display':'"Playfair Display", serif'};
+    var font=fonts[String(sections['custom-fonts']||'').trim().toLowerCase()];
+    if(font)root.querySelectorAll('h1,h2,p,a,strong,span,input,select,textarea,button').forEach(function(node){node.style.fontFamily=font;});
+    lines(sections.seo).forEach(function(line){var values=parts(line),key=values.shift().toLowerCase(),value=values.join(' | ');if(!value)return;if(key==='title')document.title=value;else if(['description','keywords'].includes(key)){var meta=document.querySelector('meta[name="'+key+'"]');if(!meta){meta=document.createElement('meta');meta.name=key;document.head.appendChild(meta);}meta.content=value;}});
+  }
+  var renderTemplate=render;
+  render=function(card,isDemo){renderTemplate(card,isDemo);renderExtraFields(card);};
   if(!id){render(templateConfig&&templateConfig.theme===theme?templateConfig.demo:{},true);return}
-  fetch(api+"/api/public/vcards/"+encodeURIComponent(id)).then(function(r){return r.json().then(function(data){if(!r.ok)throw new Error(data.message||"Unable to load VCard");return data})}).then(function(data){render(data.vcard||{},false)}).catch(function(error){root.innerHTML='<div class="final-loading final-state-error">'+esc(error.message)+"</div>"});
+  window.SyncVCardPublicApi.fetch(api+"/api/public/vcards/"+encodeURIComponent(id)).then(function(r){return r.json().then(function(data){if(!r.ok)throw new Error(data.message||"Unable to load VCard");return data})}).then(function(data){render(data.vcard||{},false)}).catch(function(error){root.innerHTML='<div class="final-loading final-state-error">'+esc(error.message)+"</div>"});
 }());

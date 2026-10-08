@@ -39,7 +39,7 @@
     removeDemoSections(); buildSections(card);
     document.documentElement.classList.add("live-vcard-ready");
   }
-  fetch(API).then(function (response) { return response.json().then(function (data) { if (!response.ok) throw new Error(data.message || "Unable to load VCard"); return data; }); })
+  window.SyncVCardPublicApi.fetch(API).then(function (response) { return response.json().then(function (data) { if (!response.ok) throw new Error(data.message || "Unable to load VCard"); return data; }); })
     .then(function (data) { hydrate(data.vcard); })
     .catch(function () { document.documentElement.classList.add("live-vcard-error"); });
 })();

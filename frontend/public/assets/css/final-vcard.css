@@ -50,3 +50,7 @@
 .final-quote footer{display:flex;align-items:center;gap:9px}.final-quote footer img{width:34px;height:34px;border-radius:50%;object-fit:cover}.final-quote footer span{display:block}
 .vcard-enquiry-status{grid-column:1/-1;margin:2px 0 0;color:#6fdba5;font-size:12px;font-weight:700}.vcard-enquiry-status.is-error{color:#ff7b86}
 @media(max-width:520px){.final-avatar{margin-top:0}}
+.final-extra-item{min-width:0;margin:12px 0;padding:16px;border:1px solid var(--vc-line);border-radius:12px;background:var(--vc-panel);color:var(--vc-text);white-space:pre-line;overflow-wrap:anywhere;font-size:14px;line-height:1.7}
+.final-extra-item img{display:block;width:100%;max-height:320px;object-fit:cover;border-radius:8px}
+.final-extra-item p{margin:10px 0}
+.final-extra-item a{display:block;min-height:44px;padding:10px 0;color:var(--vc-accent);text-decoration:underline;overflow-wrap:anywhere}

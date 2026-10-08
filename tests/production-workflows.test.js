@@ -99,7 +99,10 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal((await db.query("SELECT id FROM vcard_events WHERE vcard_id=$1 AND event_type='qr_scan'", [card.id])).rowCount, 1);
     });
     await t.test('appointment decisions enforce ownership, retry safely and release rejected slots', async () => {
-      const body = { name: 'Visitor', email: 'booking@example.test', startsAt: new Date(Date.now() + 86400000).toISOString(), appointmentType: 'online', durationMinutes: 30 };
+      await db.query(`UPDATE subscriptions SET status='active',start_date=CURRENT_DATE,end_date=CURRENT_DATE+30 WHERE user_id=$1`, [first.body.user.id]);
+      await db.query(`UPDATE plans SET features=jsonb_set(features,'{vcardFeatures}',COALESCE(features->'vcardFeatures','[]'::jsonb)||'"appointments"'::jsonb) WHERE id IN (SELECT plan_id FROM subscriptions WHERE user_id=$1)`, [first.body.user.id]);
+      await db.query(`UPDATE vcards SET settings=jsonb_set(settings,'{sections}','{"appointments":"Consultation | 30"}'::jsonb) WHERE id=$1`, [card.id]);
+      const body = { name: 'Visitor', email: 'booking@example.test', serviceName: 'Consultation', startsAt: new Date(Date.now() + 86400000).toISOString(), appointmentType: 'online', durationMinutes: 30 };
       const route = `/api/public/vcards/${card.id}/appointments`;
       const booked = await request(route, 'POST', body);
       assert.equal(booked.status, 201);

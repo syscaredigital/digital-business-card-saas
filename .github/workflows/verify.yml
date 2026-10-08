@@ -24,6 +24,7 @@ jobs:
       DB_NAME: cards_test
       JWT_SECRET: isolated-ci-signing-secret-not-for-any-deployment
       MAIL_HOST: unused.invalid
+      BROWSER_CHANNEL: chromium
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,5 +33,7 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci --prefix backend
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm test
       - run: sh -n deploy/backup.sh deploy/restore-check.sh
