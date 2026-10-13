@@ -37,7 +37,7 @@ function publicVcardUrl(req, slug) {
 }
 
 function frontendVcardUrl(req, id, source, templatePreviewUrl) {
-  const configuredPath = String(process.env.PUBLIC_VCARD_PATH || "/pages/public-vcard/final-10-corporate.html");
+  const configuredPath = String(process.env.PUBLIC_VCARD_PATH || "/pages/public-vcard/final-12-corporate-classic.html");
   const previewPath = String(templatePreviewUrl || "").trim();
   const finalizedMatch = previewPath.match(/(?:^|\/)public-vcard\/(final-[a-z0-9-]+\.html)$/i);
   const path = finalizedMatch ? `/pages/public-vcard/${finalizedMatch[1]}` : configuredPath;

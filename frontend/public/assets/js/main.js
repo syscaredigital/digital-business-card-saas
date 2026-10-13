@@ -219,16 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const getStaticFeaturedVcards = () => ([
-    ["Style Boutique", "Fashion and retail profile", "final-01-boutique.html"],
-    ["Creative Studio", "Designer and media portfolio", "final-02-creative.html"],
-    ["Technology Expert", "Technology professional profile", "final-03-technology.html"],
-    ["Medical Professional", "Healthcare professional profile", "final-04-medical.html"],
-    ["Legal Counsel", "Legal practice and counsel profile", "final-05-legal.html"],
-    ["Event Planner", "Events and wedding planner profile", "final-06-events.html"],
-    ["Real Estate Professional", "Property and real estate profile", "final-07-property.html"],
-    ["Corporate Trainer", "Training and coaching profile", "final-08-trainer.html"],
-    ["Automotive Showroom", "Vehicle sales and showroom profile", "final-09-automotive.html"],
-    ["Corporate Executive", "Executive and business profile", "final-10-corporate.html"],
     ["Automotive Classic", "Classic black and red showroom profile", "final-11-automotive-classic.html"],
     ["Corporate Classic", "Teal and lime corporate profile", "final-12-corporate-classic.html"],
     ["Events Classic", "Purple and pink event planner profile", "final-13-events-classic.html"],
