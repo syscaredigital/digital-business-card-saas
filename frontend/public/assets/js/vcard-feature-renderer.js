@@ -201,12 +201,12 @@
   }
 
   function renderQr(body, content) {
-    var url = findUrl(parts(lines(content)[0] || content));
-    if (!url) { renderText(body, content); return; }
+    var url = window.location.href.split('#')[0];
+    var id = window.SyncVCardId || new URLSearchParams(window.location.search).get('id');
     var panel = el("div", "vfeature-qr-panel");
     var qr = el("img", "vfeature-qr-image");
     var apiOrigin = window.SyncVCardApiOrigin || window.location.origin;
-    qr.src = apiOrigin + "/api/public/qrcode?data=" + encodeURIComponent(url);
+    qr.src = id ? apiOrigin + '/api/public/vcards/' + encodeURIComponent(id) + '/qrcode' : apiOrigin + '/api/public/qrcode?data=' + encodeURIComponent(url);
     qr.alt = "QR code";
     qr.loading = "lazy";
     var copy = el("div", "");

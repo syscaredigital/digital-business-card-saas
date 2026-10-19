@@ -358,13 +358,17 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
     await t.test('section visibility and package downgrades protect public cards while preserving owner content', async () => {
       const planId = (await request('/api/user/plans', 'GET', null, first.body.token)).body.current.planId;
       const setFeatures = keys => db.query('UPDATE plans SET features=$1::jsonb WHERE id=$2', [JSON.stringify({vcardFeatures: keys}), planId]);
-      await setFeatures(['basic-details', 'services', 'appointments']);
+      await setFeatures(['basic-details', 'services', 'appointments', 'qrcode-customize']);
       const update = body => request(`/api/user/vcards/${card.id}`, 'PATCH', {title:'Section test',templateId,...body}, first.body.token);
-      const sections = {'basic-details':'Consultant',services:'Strategy | Business planning',appointments:'Consultation | 30'};
+      const sections = {'basic-details':'Consultant',services:'Strategy | Business planning',appointments:'Consultation | 30','qrcode-customize':JSON.stringify({size:768,foreground:'#243b80',background:'#f4f7ff',style:'dots'})};
       assert.equal((await update({sections,hiddenSections:['services','appointments','basic-details','unknown']})).status, 200);
       let owner = (await request(`/api/user/vcards/${card.id}`, 'GET', null, first.body.token)).body.vcard;
       assert.deepEqual(owner.settings.hiddenSections, ['services','appointments']);
       assert.equal(owner.settings.sections.services, sections.services);
+      const customQr = await fetch(origin + `/api/public/vcards/${card.id}/qrcode`);
+      assert.match(customQr.headers.get('x-vcard-url'), /\/vcard\/test-one-card\?source=qr$/);
+      const customSvg = await customQr.text();
+      assert.match(customSvg,/width="768"/);assert.match(customSvg,/fill="#243b80"/);assert.match(customSvg,/<circle/);
       let published = (await request(`/api/public/vcards/${card.id}`)).body.vcard;
       assert.equal(published.sections.services, undefined);
       assert.equal(published.sections.appointments, undefined);
@@ -373,6 +377,8 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       published = (await request(`/api/public/vcards/${card.id}`)).body.vcard;
       assert.equal(published.sections.services, sections.services);
       await setFeatures(['basic-details']);
+      const defaultSvg = await (await fetch(origin + `/api/public/vcards/${card.id}/qrcode`)).text();
+      assert.match(defaultSvg,/width="512"/);assert.doesNotMatch(defaultSvg,/<circle|#243b80/);
       assert.equal((await update({sections:{'basic-details':'Updated role',services:'Forged replacement'},hiddenSections:[]})).status, 200);
       owner = (await request(`/api/user/vcards/${card.id}`, 'GET', null, first.body.token)).body.vcard;
       assert.equal(owner.settings.sections.services, sections.services);

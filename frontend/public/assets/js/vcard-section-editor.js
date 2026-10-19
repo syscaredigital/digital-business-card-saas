@@ -24,7 +24,7 @@
     'business-hours':'Set your opening times for each day. Turn off days when you are closed.',
     seo:'Choose how this card appears in the browser and search results.',
     'custom-fonts':'Choose a font for your public card.',
-    'qrcode-customize':'Set a website address or a link to a QR image.',
+    'qrcode-customize':'Choose the appearance of your QR code. It always opens your VCard.',
     'privacy-policy':'Explain how you handle information submitted through your card.',
     'term-condition':'Add the terms that apply to your own services.'
   };
@@ -132,6 +132,23 @@
           var start=field('Opens',day.start,'time',function(v){day.start=v;day.original=null;}),end=field('Closes',day.end,'time',function(v){day.end=v;day.original=null;});
           function sync(){start.querySelector('input').disabled=end.querySelector('input').disabled=!day.open;}open.addEventListener('change',function(){day.open=open.checked;day.original=null;sync();});sync();row.append(start,end);form.appendChild(row);
         });
+      } else if(feature.key==='qrcode-customize'){
+        var qrSaved={};try{qrSaved=JSON.parse(value)||{};}catch(_){}
+        state.qr={size:[256,384,512,768,1024].includes(Number(qrSaved.size))?Number(qrSaved.size):512,foreground:/^#[0-9a-f]{6}$/i.test(qrSaved.foreground||'')?qrSaved.foreground:'#111827',background:/^#[0-9a-f]{6}$/i.test(qrSaved.background||'')?qrSaved.background:'#ffffff',style:['square','rounded','dots'].includes(qrSaved.style)?qrSaved.style:'square'};
+        var qrGrid=node('div','section-editor-field-grid'),preview=node('img','section-editor-qr-preview'),hint=node('p','section-editor-qr-hint');preview.alt='QR appearance preview';
+        var qrTimer;
+        function updateQr(){
+          window.clearTimeout(qrTimer);qrTimer=window.setTimeout(function(){
+            var query=new URLSearchParams(state.qr);query.set('data',window.location.origin+'/vcard/preview');
+            preview.src=(window.SyncVCardApiOrigin||window.location.origin)+'/api/public/qrcode?'+query;
+          },120);
+          hint.textContent='Preview only. Your saved QR code opens your VCard. Use a dark code on a light background for reliable scanning.';
+        }
+        [['size','Image size',[[256,'256 × 256'],[384,'384 × 384'],[512,'512 × 512'],[768,'768 × 768'],[1024,'1024 × 1024']]],['style','Module style',[['square','Square'],['rounded','Rounded'],['dots','Dots']]]].forEach(function(setting){
+          var wrap=node('label','section-editor-field'),select=node('select');wrap.append(node('span','',setting[1]));setting[2].forEach(function(choice){var option=node('option','',choice[1]);option.value=choice[0];select.appendChild(option);});select.value=state.qr[setting[0]];select.addEventListener('change',function(){state.qr[setting[0]]=setting[0]==='size'?Number(select.value):select.value;updateQr();});wrap.appendChild(select);qrGrid.appendChild(wrap);
+        });
+        [['foreground','QR color'],['background','Background color']].forEach(function(setting){var wrap=node('label','section-editor-field'),input=node('input');input.type='color';input.value=state.qr[setting[0]];input.addEventListener('input',function(){state.qr[setting[0]]=input.value;updateQr();});wrap.append(node('span','',setting[1]),input);qrGrid.appendChild(wrap);});
+        form.append(qrGrid,preview,hint);updateQr();
       } else if(feature.key==='seo'){
         state.seo={};value.split(/\r?\n/).forEach(function(line){var parts=line.split(/\s*\|\s*/);state.seo[parts[0].toLowerCase()]=parts.slice(1).join(' | ');});
         [['title','Page title'],['description','Search description'],['keywords','Keywords']].forEach(function(f){form.appendChild(field(f[1],state.seo[f[0]],'text',function(v){state.seo[f[0]]=v;}));});
@@ -139,7 +156,7 @@
         var label=node('label','section-editor-field'), selectFont=node('select');label.append(node('span','','Card font'));
         var choices=fonts.includes(value)||!value?fonts:[value].concat(fonts);choices.forEach(function(font){var option=node('option','',font);option.value=font;selectFont.appendChild(option);});selectFont.value=value||'Arial';state.value=selectFont.value;selectFont.addEventListener('change',function(){state.value=selectFont.value;});label.appendChild(selectFont);form.appendChild(label);
       } else {
-        var isUrl=feature.key==='qrcode-customize';var control=field(isUrl?'Website or QR image address':feature.label,value,isUrl?'url':'long',function(v){state.value=v;});form.appendChild(control);state.singleInput=control.querySelector('input,textarea');
+        var control=field(feature.label,value,'long',function(v){state.value=v;});form.appendChild(control);
       }
       visibility();
     });
@@ -167,8 +184,9 @@
             if(state.enabled&&day.open&&(!day.start||!day.end||day.start>=day.end))error(index,null,'Choose a closing time after the opening time for '+day.day+'.');
             return day.day+' | '+(day.original!=null?day.original:day.open?day.start+' - '+day.end:'Closed');
           }).join('\n');
-        } else if(state.seo){value=['title','description','keywords'].filter(function(key){return state.seo[key];}).map(function(key){return key+' | '+clean(state.seo[key]);}).join('\n');}
-        else {value=state.value.trim();if(state.enabled&&feature.key==='qrcode-customize'&&value&&!validUrl(value)&&!/^data:image\/(png|jpe?g|webp);base64,/i.test(value))error(index,state.singleInput,'Enter a full website or QR image address.');}
+        } else if(state.qr){value=JSON.stringify(state.qr);}
+        else if(state.seo){value=['title','description','keywords'].filter(function(key){return state.seo[key];}).map(function(key){return key+' | '+clean(state.seo[key]);}).join('\n');}
+        else {value=state.value.trim();}
         if(value)result[feature.key]=value;
       });return result;
     }

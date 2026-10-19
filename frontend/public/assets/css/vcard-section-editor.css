@@ -41,6 +41,8 @@
 .section-editor .section-editor-upload { display:grid; gap:8px; margin:0; color:#324682; font-size:.8rem; }
 .section-editor .section-editor-upload input { width:100%; max-width:210px; padding:8px; min-height:40px; background:#fff; color:#435069; border:1px dashed #b7c4df; border-radius:8px; }
 .section-editor-upload-status { color:#65718a; font-size:.75rem; }
+.section-editor-qr-preview { display:block; width:220px; max-width:100%; height:auto; border:1px solid #e1e6ef; border-radius:8px; }
+.section-editor-qr-hint { color:#596579; font-size:.85rem; line-height:1.6; }
 .section-editor-hours { display:grid; grid-template-columns:120px repeat(2,minmax(0,1fr)); gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid #e6eaf1; }
 .section-editor-hours>label:first-child { display:flex; align-items:center; gap:10px; font-size:.8rem; margin:0; }
 .section-editor-hours .section-editor-field { margin:0; }

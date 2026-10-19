@@ -1,5 +1,5 @@
 const express = require("express");
-const QRCode = require("qrcode");
+const { renderQr } = require('../services/vcard-qr.service');
 const crypto = require("crypto");
 const pool = require("../config/database.config");
 const { normalizePlanFeatures } = require("../config/vcard-features");
@@ -170,7 +170,7 @@ router.get("/qrcode", async (req, res, next) => {
   const data = String(req.query.data || "").trim();
   if (!data || data.length > 2048) return res.status(400).json({ message: "A valid QR destination is required" });
   try {
-    const svg = await QRCode.toString(data, { type: "svg", margin: 1, width: 320, color: { dark: "#111827", light: "#ffffff" } });
+    const svg = renderQr(data, req.query);
     res.type("image/svg+xml").send(svg);
   } catch (error) { next(error); }
 });
@@ -179,12 +179,14 @@ router.get("/vcards/:id/qrcode", async (req, res, next) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
   try {
-    const result = await pool.query("SELECT slug FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    const result = await pool.query("SELECT slug,user_id,settings FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const destination = `${publicVcardUrl(req, result.rows[0].slug)}?source=qr`;
-    const svg = await QRCode.toString(destination, { type: "svg", errorCorrectionLevel: "M", margin: 4, width: 512, color: { dark: "#111827", light: "#ffffff" } });
+    const card = result.rows[0];
+    const customized = !card.settings?.hiddenSections?.includes('qrcode-customize') && await hasVcardFeature(pool, card.user_id, 'qrcode-customize');
+    const svg = renderQr(destination, customized ? card.settings?.sections?.['qrcode-customize'] : {});
     res.set({
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "no-cache",
       "Cross-Origin-Resource-Policy": "cross-origin",
       "X-VCard-URL": destination,
     }).type("image/svg+xml").send(svg);

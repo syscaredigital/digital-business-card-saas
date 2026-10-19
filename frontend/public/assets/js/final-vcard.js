@@ -90,12 +90,6 @@
       });
       root.insertBefore(section,footer);
     });
-    var qrValue=parts(lines(sections['qrcode-customize'])[0]||'').pop();
-    if(/^https?:\/\//i.test(qrValue)&&url(qrValue)){
-      var qr=root.querySelector('.final-qr-panel>img:not([class*="qr-avatar"])'),download=root.querySelector('.final-qr-copy a');
-      var source=/\.(?:png|jpe?g|webp|gif|svg)(?:[?#].*)?$/i.test(qrValue)?url(qrValue):api+'/api/public/qrcode?data='+encodeURIComponent(url(qrValue));
-      if(qr){qr.src=source;qr.alt='Custom QR code';}if(download)download.href=source;
-    }
     var fonts={'arial':'Arial, sans-serif','georgia':'Georgia, serif','verdana':'Verdana, sans-serif','times new roman':'"Times New Roman", serif','dm sans':'"DM Sans", sans-serif','oswald':'Oswald, sans-serif','playfair display':'"Playfair Display", serif'};
     var font=fonts[String(sections['custom-fonts']||'').trim().toLowerCase()];
     if(font)root.querySelectorAll('h1,h2,p,a,strong,span,input,select,textarea,button').forEach(function(node){node.style.fontFamily=font;});

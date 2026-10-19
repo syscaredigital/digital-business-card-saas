@@ -23,6 +23,7 @@ test('create and edit cards through section forms, retaining hidden drafts and s
     await page.route('**/*',route=>{
       const url=new URL(route.request().url()),method=route.request().method();
       if(url.origin!==origin)return route.abort();
+      if(url.pathname==='/api/public/qrcode')return route.fulfill({contentType:'image/svg+xml',body:require('../backend/services/vcard-qr.service').renderQr(url.searchParams.get('data'),Object.fromEntries(url.searchParams))});
       if(url.pathname==='/api/user/dashboard')return route.fulfill({json:{user:{name:'Avery'},subscription:{name:'Business',vcardLimit:3},metrics:{totalCards:0},vcards:[],vcardEntitlements:entitlements()}});
       if(url.pathname==='/api/user/vcards'&&method==='POST'){payload=route.request().postDataJSON();stored=payload;return route.fulfill({json:{vcard:{id:123}}});}
       if(url.pathname==='/api/user/vcards/123'){
@@ -53,7 +54,13 @@ test('create and edit cards through section forms, retaining hidden drafts and s
     await panel.getByLabel('Closes',{exact:true}).first().fill('18:00');
     panel=await enable('seo');await panel.getByLabel('Page title',{exact:true}).fill('Avery Consulting');await panel.getByLabel('Search description',{exact:true}).fill('Practical business support');
     panel=await enable('custom-fonts');await panel.getByLabel('Card font').selectOption('Georgia');
-    panel=await enable('qrcode-customize');await panel.getByLabel('Website or QR image address').fill('https://example.test/card');
+    panel=await enable('qrcode-customize');
+    assert.equal(await panel.getByLabel('Website or QR image address').count(),0);
+    await panel.getByLabel('Image size').selectOption('768');
+    await panel.getByLabel('Module style').selectOption('rounded');
+    await panel.getByLabel('QR color',{exact:true}).fill('#243b80');
+    await panel.getByLabel('Background color',{exact:true}).fill('#f4f7ff');
+    await page.waitForFunction(()=>{const image=document.querySelector('.section-editor-qr-preview');return image&&image.complete&&image.naturalWidth===768&&image.src.includes('background=%23f4f7ff');});
     for(const key of ['privacy-policy','term-condition']){panel=await enable(key);await panel.locator('textarea').fill('Clear terms for our visitors.\nContact us with questions.');}
     // An invalid field on another tab must take the user to that section.
     await builder.getByRole('tab').first().focus();await page.keyboard.press('End');
@@ -72,8 +79,13 @@ test('create and edit cards through section forms, retaining hidden drafts and s
     assert.equal(payload.sections.appointments,'Consultation | 45');
     assert.match(payload.sections['business-hours'],/^Monday \| 10:00 - 18:00/);
     assert.equal(payload.sections['custom-fonts'],'Georgia');
+    assert.deepEqual(JSON.parse(payload.sections['qrcode-customize']),{size:768,foreground:'#243b80',background:'#f4f7ff',style:'rounded'});
     assert.ok(payload.hiddenSections.includes('products'));assert.match(payload.sections.products,/Support package/);
     const edit=page.locator('#vcardFeatureEditor');await edit.getByRole('tab').first().waitFor();
+    await edit.locator('[role=tab][aria-controls$="-panel-qrcode-customize"]').click();
+    assert.equal(await edit.getByLabel('Image size').inputValue(),'768');
+    assert.equal(await edit.getByLabel('Module style').inputValue(),'rounded');
+    assert.equal(await edit.getByLabel('QR color',{exact:true}).inputValue(),'#243b80');
     await edit.locator('[role=tab][aria-controls$="-panel-products"]').click();
     let editPanel=edit.locator('[role=tabpanel]:visible');
     assert.equal(await editPanel.getByRole('switch').first().isChecked(),false);
