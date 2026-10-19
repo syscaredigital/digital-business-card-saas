@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const pool = require("../config/database.config");
 const mail = require("../services/email.service");
+const browserSession = require('../helpers/browser-session');
 
 const accepted = { message: "If an active account exists for this email, you will receive a password reset link." };
 const invalid = { message: "This reset link is invalid or expired. Please request a new one." };
@@ -80,6 +81,7 @@ exports.resetPassword = async (req, res, next) => {
     await client.query("UPDATE users SET password=$1,auth_version=auth_version+1,updated_at=NOW() WHERE id=$2", [passwordHash, user.rows[0].id]);
     await client.query("UPDATE auth_sessions SET revoked_at=NOW() WHERE user_id=$1 AND revoked_at IS NULL", [user.rows[0].id]);
     await client.query("COMMIT");
+    browserSession.clear(res);
     return res.json({ message: "Password reset successfully. Sign in with your new password." });
   } catch (error) {
     if (client) await client.query("ROLLBACK").catch(() => {});

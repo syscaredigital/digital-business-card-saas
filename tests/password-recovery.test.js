@@ -11,6 +11,8 @@ const pool = require('../backend/config/database.config');
 const mail = require('../backend/services/email.service');
 
 test('password recovery lifecycle against isolated PostgreSQL tables', async t => {
+  assert.ok(['localhost','127.0.0.1','::1'].includes(pool.options.host), 'Use a local test database');
+  assert.notEqual(process.env.NODE_ENV, 'production');
   const schema = `recovery_test_${crypto.randomBytes(8).toString('hex')}`;
   assert.match(schema, /^recovery_test_[a-f0-9]{16}$/);
   const originalQuery = pool.query.bind(pool);
@@ -42,8 +44,11 @@ test('password recovery lifecycle against isolated PostgreSQL tables', async t =
     mail.sendPasswordReset = async data => { emails.push(data); };
     const app = express();
     app.use(express.json());
+    app.use('/api', require('../backend/helpers/browser-session').protect);
     app.use('/api/auth', require('../backend/routes/auth.routes'));
     app.get('/protected', require('../backend/middlewares/auth.middleware'), (req, res) => res.json({ id: req.user.id }));
+    app.get('/pages/user/dashboard.html', require('../backend/middlewares/auth.middleware'), (req, res) => res.send('<!doctype html><html><body><h1>Signed in</h1></body></html>'));
+    app.use(express.static(path.join(__dirname, '../frontend')));
     app.use((error, req, res, next) => res.status(500).json({ message: error.message }));
     server = app.listen(0, '127.0.0.1');
     await new Promise(resolve => server.once('listening', resolve));
@@ -114,8 +119,64 @@ test('password recovery lifecycle against isolated PostgreSQL tables', async t =
       await isolated.query("UPDATE password_reset_tokens SET expires_at=NOW()-INTERVAL '1 second'");
       assert.equal((await post('reset-password', { token, password: 'Another password 123!' })).status, 400);
     });
+    await t.test('browser reset confirms matching passwords, redirects to login and accepts only the new credentials', async () => {
+      const { chromium } = require('../backend/node_modules/playwright');
+      const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge', headless: true, timeout: 15000 });
+      const configuredOrigin = process.env.PUBLIC_APP_URL;
+      try {
+        process.env.PUBLIC_APP_URL = origin;
+        await isolated.query('DELETE FROM password_reset_tokens');
+        await isolated.query('DELETE FROM rate_limit_buckets');
+        const context = await browser.newContext();
+        await context.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
+        const page = await context.newPage(), errors = [];
+        page.setDefaultTimeout(15000);
+        page.setDefaultNavigationTimeout(15000);
+        page.on('dialog', dialog => dialog.accept());
+        page.on('pageerror', error => errors.push(error.message));
+        let resetRequests = 0;
+        page.on('request', request => { if (request.url().endsWith('/api/auth/reset-password')) resetRequests++; });
+        async function signIn(password) {
+          await page.fill('#loginEmail', 'recovery@example.test');
+          await page.fill('#passwordInput', password);
+          await page.locator('#loginForm button[type="submit"]').click();
+        }
+        await page.goto(origin + '/pages/auth/login.html');
+        await Promise.all([page.waitForURL('**/user/dashboard.html'), signIn('Replacement password 123!')]);
+        assert.ok((await context.cookies()).some(cookie => cookie.name === 'sync_session'));
+        assert.equal((await post('forgot-password', { email: 'recovery@example.test' })).status, 200);
+        const link = emails.at(-1).resetUrl;
+        assert.ok(new URL(link).hash.startsWith('#token='));
+        await page.goto(link, { waitUntil: 'domcontentloaded' });
+        assert.equal(new URL(page.url()).hash, '', 'Recovery tokens must be removed from the address bar');
+        await page.fill('#newPassword', 'Browser replacement password 456!');
+        await page.fill('#confirmPassword', 'Different confirmation password 456!');
+        const mismatch = page.waitForEvent('dialog');
+        await page.locator('#resetPasswordForm button[type="submit"]').click();
+        assert.match((await mismatch).message(), /Passwords do not match/);
+        assert.equal(resetRequests, 0);
+        await page.fill('#confirmPassword', 'Browser replacement password 456!');
+        await Promise.all([page.waitForURL('**/login.html?reset=success'), page.locator('#resetPasswordForm button[type="submit"]').click()]);
+        assert.match(await page.locator('#passwordResetNotice').textContent(), /reset successfully.*new password/);
+        assert.equal(await page.evaluate(() => localStorage.getItem('sessionActive')), null);
+        assert.equal(await page.evaluate(() => localStorage.getItem('user')), null);
+        assert.ok(!(await context.cookies()).some(cookie => cookie.name === 'sync_session'));
+        const invalidLogin = page.waitForResponse(response => response.url().endsWith('/api/auth/login'));
+        await signIn('Replacement password 123!');
+        assert.equal((await invalidLogin).status(), 401);
+        await Promise.all([page.waitForURL('**/user/dashboard.html'), signIn('Browser replacement password 456!')]);
+        assert.equal(await page.evaluate(async () => (await fetch('/protected')).status), 200);
+        assert.equal(await page.evaluate(() => localStorage.getItem('sessionActive')), 'true');
+        assert.equal(resetRequests, 1);
+        assert.deepEqual(errors, []);
+        await context.close();
+      } finally { process.env.PUBLIC_APP_URL = configuredOrigin; await browser.close(); }
+    });
     await t.test('recovery rate limit blocks excessive requests', async () => {
-      await post('forgot-password', { email: 'unknown@example.test' });
+      await isolated.query('DELETE FROM rate_limit_buckets');
+      for (let attempt = 0; attempt < 10; attempt++) {
+        assert.equal((await post('forgot-password', { email: 'unknown@example.test' })).status, 200);
+      }
       assert.equal((await post('forgot-password', { email: 'unknown@example.test' })).status, 429);
     });
   } finally {

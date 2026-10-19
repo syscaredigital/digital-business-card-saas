@@ -239,6 +239,7 @@ router.get("/vcards/:id", async (req, res, next) => {
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const card = result.rows[0];
     const allowedFeatures = new Set(normalizePlanFeatures(card.plan_features).vcardFeatures);
+    for (const key of Array.isArray(card.settings?.hiddenSections) ? card.settings.hiddenSections : []) allowedFeatures.delete(key);
     const visibleSections = Object.fromEntries(Object.entries(card.settings?.sections || {}).filter(([key]) => allowedFeatures.has(key)));
     res.json({ vcard: {
       id: card.id, slug: card.slug, publicUrl: publicVcardUrl(req, card.slug), title: card.title, qualifications: card.qualifications || "", description: card.description, websiteUrl: card.website_url,
@@ -478,7 +479,7 @@ router.post("/vcards/:id/appointments", require("../validators/appointment.valid
     }
     const card = cardResult.rows[0];
     const configuredServices = appointmentServices(card.settings?.sections?.appointments);
-    if (!configuredServices.length || !(await hasVcardFeature(client, card.user_id, 'appointments'))) {
+    if (!configuredServices.length || (Array.isArray(card.settings?.hiddenSections) && card.settings.hiddenSections.includes('appointments')) || !(await hasVcardFeature(client, card.user_id, 'appointments'))) {
       await client.query('ROLLBACK');
       return res.status(403).json({ message: 'Appointments are not available for this VCard.' });
     }

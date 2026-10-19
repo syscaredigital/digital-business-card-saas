@@ -355,6 +355,34 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal((await request(`/api/super-admin/users/${id}/status`,'PATCH',{status:'active'},adminToken)).status,200);
       assert.equal((await request('/api/user/dashboard','GET',null,login.body.token)).status,401);
     });
+    await t.test('section visibility and package downgrades protect public cards while preserving owner content', async () => {
+      const planId = (await request('/api/user/plans', 'GET', null, first.body.token)).body.current.planId;
+      const setFeatures = keys => db.query('UPDATE plans SET features=$1::jsonb WHERE id=$2', [JSON.stringify({vcardFeatures: keys}), planId]);
+      await setFeatures(['basic-details', 'services', 'appointments']);
+      const update = body => request(`/api/user/vcards/${card.id}`, 'PATCH', {title:'Section test',templateId,...body}, first.body.token);
+      const sections = {'basic-details':'Consultant',services:'Strategy | Business planning',appointments:'Consultation | 30'};
+      assert.equal((await update({sections,hiddenSections:['services','appointments','basic-details','unknown']})).status, 200);
+      let owner = (await request(`/api/user/vcards/${card.id}`, 'GET', null, first.body.token)).body.vcard;
+      assert.deepEqual(owner.settings.hiddenSections, ['services','appointments']);
+      assert.equal(owner.settings.sections.services, sections.services);
+      let published = (await request(`/api/public/vcards/${card.id}`)).body.vcard;
+      assert.equal(published.sections.services, undefined);
+      assert.equal(published.sections.appointments, undefined);
+      assert.equal((await request(`/api/public/vcards/${card.id}/appointments`, 'POST', {name:'Visitor',email:'hidden@example.test',serviceName:'Consultation',startsAt:new Date(Date.now()+604800000).toISOString(),appointmentType:'online',durationMinutes:30})).status, 403);
+      assert.equal((await update({sections,hiddenSections:[]})).status, 200);
+      published = (await request(`/api/public/vcards/${card.id}`)).body.vcard;
+      assert.equal(published.sections.services, sections.services);
+      await setFeatures(['basic-details']);
+      assert.equal((await update({sections:{'basic-details':'Updated role',services:'Forged replacement'},hiddenSections:[]})).status, 200);
+      owner = (await request(`/api/user/vcards/${card.id}`, 'GET', null, first.body.token)).body.vcard;
+      assert.equal(owner.settings.sections.services, sections.services);
+      assert.equal(owner.settings.sections['basic-details'], 'Updated role');
+      published = (await request(`/api/public/vcards/${card.id}`)).body.vcard;
+      assert.equal(published.sections.services, undefined);
+      assert.equal(published.enabledFeatures.includes('services'), false);
+      await setFeatures(['basic-details', 'services', 'appointments']);
+      assert.equal((await request(`/api/public/vcards/${card.id}`)).body.vcard.sections.services, sections.services);
+    });
     await t.test('logout invalidates the registration token', async () => {
       assert.equal((await request('/api/auth/logout', 'POST', {}, first.body.token)).status, 200);
       assert.equal((await request('/api/user/dashboard', 'GET', null, first.body.token)).status, 401);

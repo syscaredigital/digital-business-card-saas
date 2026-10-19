@@ -35,4 +35,8 @@ function normalizeVcardImage(value) {
 }
 
 
-module.exports = { normalizeSections, normalizeVcardImage };
+function normalizeHiddenSections(value, allowedKeys) {
+  return Array.isArray(value) ? Array.from(new Set(value.filter(key => key !== 'basic-details' && allowedKeys.has(key)))) : [];
+}
+
+module.exports = { normalizeSections, normalizeVcardImage, normalizeHiddenSections };

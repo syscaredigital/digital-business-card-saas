@@ -16,44 +16,46 @@ test('editor associates uploads with existing rows through edits, reorder, save 
     const page = await browser.newPage();
     await page.addInitScript(() => localStorage.setItem('sessionActive', 'true'));
     let sections = { services: 'First | First description\nSecond | Second description' };
-    let payload;
+    let payload, hiddenSections;
     await page.route('**/*', route => {
       const url = new URL(route.request().url());
       if (url.origin !== origin) return route.abort();
       if (url.pathname === '/api/user/vcards/123') {
-        if (route.request().method() === 'PATCH') { payload = route.request().postDataJSON(); sections = payload.sections; return route.fulfill({ json: { message: 'Saved' } }); }
-        return route.fulfill({ json: { vcard: { title: 'Photo test', template_id: 12, is_active: true, settings: { sections } }, entitlements: { templates: [{ id: 12, name: 'Corporate' }], features: [{ key: 'services', label: 'Services' }] } } });
+        if (route.request().method() === 'PATCH') { payload = route.request().postDataJSON(); sections = payload.sections; hiddenSections = payload.hiddenSections; return route.fulfill({ json: { message: 'Saved' } }); }
+        return route.fulfill({ json: { vcard: { title: 'Photo test', template_id: 12, is_active: true, settings: { sections, hiddenSections } }, entitlements: { templates: [{ id: 12, name: 'Corporate' }], features: [{ key: 'services', label: 'Services' }] } } });
       }
       if (url.pathname.startsWith('/api/')) return route.fulfill({ json: {} });
       return route.continue();
     });
     await page.goto(origin + '/pages/user/edit-vcard.html?id=123', { waitUntil: 'domcontentloaded' });
-    const field = page.locator('[data-vcard-section=services]');
-    await field.waitFor();
-    const imageEditor = page.locator('[data-section-image-editor=services]');
+    const rows = page.locator('[data-section-row=services]');
+    await rows.nth(1).waitFor();
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64');
-    await imageEditor.locator('input[type=file]').setInputFiles([{ name: 'first.png', mimeType: 'image/png', buffer: png }, { name: 'second.png', mimeType: 'image/png', buffer: Buffer.concat([png, Buffer.from('second')]) }]);
-    await imageEditor.locator('article').nth(1).waitFor();
-    assert.equal(await field.inputValue(), 'First | First description\nSecond | Second description');
-    await field.fill('Second | Second description\nFirst | First description');
-    assert.equal(await imageEditor.locator('article img').nth(1).getAttribute('src'), 'data:image/png;base64,' + png.toString('base64'));
-    assert.equal(await imageEditor.locator('article span').first().innerText(), 'Second');
-    await field.fill('Second | Revised description\nFirst | First description');
-    assert.equal(await imageEditor.locator('article').count(), 2);
-    await field.fill('New row\nSecond | Revised description\nFirst | First description');
-    assert.deepEqual(await imageEditor.locator('article span').allTextContents(), ['Second', 'First']);
-    await field.fill('New row\nFirst | First description');
-    assert.deepEqual(await imageEditor.locator('article span').allTextContents(), ['First']);
+    const second = Buffer.concat([png, Buffer.from('second')]);
+    await rows.nth(0).locator('input[type=file]').setInputFiles({name:'first.png',mimeType:'image/png',buffer:png});
+    await rows.nth(0).locator('img').waitFor();
+    await rows.nth(1).locator('input[type=file]').setInputFiles({name:'second.png',mimeType:'image/png',buffer:second});
+    await rows.nth(1).locator('img').waitFor();
+    await rows.nth(1).getByRole('button',{name:'Move service up',exact:true}).click();
+    assert.equal(await rows.nth(1).locator('img').getAttribute('src'),'data:image/png;base64,'+png.toString('base64'));
+    assert.equal(await rows.first().getByLabel('Service name').inputValue(),'Second');
+    await rows.first().getByLabel('Description').fill('Revised description');
+    await page.getByRole('button',{name:'+ Add service',exact:true}).click();
+    await rows.nth(2).getByLabel('Service name').fill('New row');
+    await rows.nth(2).getByRole('button',{name:'Move service up',exact:true}).click();
+    await rows.nth(1).getByRole('button',{name:'Move service up',exact:true}).click();
+    await rows.nth(1).getByRole('button',{name:'Remove',exact:true}).click();
+    assert.equal(await rows.nth(1).getByLabel('Service name').inputValue(),'First');
     await page.locator('#userVcardEditor button[type=submit]').click();
-    await page.waitForFunction(() => document.querySelector('#vcardEditorStatus').textContent === 'Saved successfully');
-    assert.match(payload.sections.services, /^New row\nFirst \| First description \| data:image\/png;base64,/);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await imageEditor.locator('article').waitFor();
-    assert.equal(await field.inputValue(), 'New row\nFirst | First description');
-    await imageEditor.locator('[data-remove-section-image]').click();
+    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent==='Saved successfully');
+    assert.match(payload.sections.services,/^New row\nFirst \| First description \| data:image\/png;base64,/);
+    await page.reload({waitUntil:'domcontentloaded'});
+    await rows.nth(1).locator('img').waitFor();
+    assert.equal(await rows.nth(1).getByLabel('Service name').inputValue(),'First');
+    await rows.nth(1).getByRole('button',{name:'Remove photo',exact:true}).click();
     await page.locator('#userVcardEditor button[type=submit]').click();
-    await page.waitForFunction(() => document.querySelector('#vcardEditorStatus').textContent === 'Saved successfully');
-    assert.equal(payload.sections.services, 'New row\nFirst | First description');
+    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent==='Saved successfully');
+    assert.equal(payload.sections.services,'New row\nFirst | First description');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

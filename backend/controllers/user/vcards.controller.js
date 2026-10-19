@@ -3,7 +3,7 @@ const pool = require("../../config/database.config");
 const { getStorageSummary } = require("../../services/storage.service");
 const { normalizeCustomSlug, publicVcardUrl } = require("../../helpers/vcard-url");
 const { loadVcardEntitlements } = require('../../services/vcard-entitlements.service');
-const { normalizeSections, normalizeVcardImage } = require('../../validators/vcard.validator');
+const { normalizeSections, normalizeVcardImage, normalizeHiddenSections } = require('../../validators/vcard.validator');
 
 exports.getVcard = async (req, res, next) => {
   try {
@@ -26,7 +26,7 @@ exports.getVcard = async (req, res, next) => {
 function vcardPayloadBytes(payload) {
   return Buffer.byteLength(JSON.stringify({
     title:payload.title || "",qualifications:payload.qualifications || "",description:payload.description || "",websiteUrl:payload.websiteUrl || "",
-    phone:payload.phone || "",email:payload.email || "",address:payload.address || "",sections:payload.sections || {},
+    phone:payload.phone || "",email:payload.email || "",address:payload.address || "",sections:payload.sections || {},hiddenSections:payload.hiddenSections || [],
     profileImageUrl:payload.profileImageUrl || "",coverImageUrl:payload.coverImageUrl || "",
   }));
 }
@@ -57,6 +57,7 @@ exports.createVcard = async (req, res, next) => {
     if (!entitlements.templates.some((template) => Number(template.id) === templateId)) return res.status(403).json({ message: "This VCard template is not included in your plan" });
     const allowedKeys = new Set(entitlements.features.map((feature) => feature.key));
     const sections = normalizeSections(req.body.sections, allowedKeys);
+    const hiddenSections = normalizeHiddenSections(req.body.hiddenSections, allowedKeys);
     const profileImageUrl=normalizeVcardImage(req.body.profileImageUrl);
     const coverImageUrl=normalizeVcardImage(req.body.coverImageUrl);
     const contactCaptureRequired=req.body.contactCaptureRequired !== false;
@@ -68,7 +69,7 @@ exports.createVcard = async (req, res, next) => {
       `INSERT INTO vcards (user_id,template_id,title,qualifications,slug,description,website_url,phone,email,address,settings)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb)
        RETURNING id,slug,template_id,title,qualifications,description,website_url,phone,email,address,settings,is_active,created_at`,
-       [req.user.id, templateId, title, qualifications || null, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections, profileImageUrl, coverImageUrl, contactCaptureRequired })]
+       [req.user.id, templateId, title, qualifications || null, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections, hiddenSections, profileImageUrl, coverImageUrl, contactCaptureRequired })]
     );
     await client.query("COMMIT");
     committed = true;
@@ -97,9 +98,14 @@ exports.updateVcard = async (req, res, next) => {
     const profileImageUrl=Object.prototype.hasOwnProperty.call(req.body,"profileImageUrl")?normalizeVcardImage(req.body.profileImageUrl):current.settings?.profileImageUrl||null;
     const coverImageUrl=Object.prototype.hasOwnProperty.call(req.body,"coverImageUrl")?normalizeVcardImage(req.body.coverImageUrl):current.settings?.coverImageUrl||null;
     const contactCaptureRequired=typeof req.body.contactCaptureRequired === "boolean" ? req.body.contactCaptureRequired : current.settings?.contactCaptureRequired !== false;
-    const nextSettings={...(current.settings||{}),sections,profileImageUrl,coverImageUrl,contactCaptureRequired};
+    // Keep previously purchased content through a downgrade without allowing it
+    // to be changed or published outside the current entitlement.
+    const lockedSections=Object.fromEntries(Object.entries(current.settings?.sections||{}).filter(([key])=>!allowedKeys.has(key)));
+    const hiddenSections=normalizeHiddenSections(Object.prototype.hasOwnProperty.call(req.body,'hiddenSections')?req.body.hiddenSections:current.settings?.hiddenSections,allowedKeys);
+    const lockedHidden=(Array.isArray(current.settings?.hiddenSections)?current.settings.hiddenSections:[]).filter(key=>!allowedKeys.has(key));
+    const nextSettings={...(current.settings||{}),sections:{...lockedSections,...sections},hiddenSections:[...new Set([...lockedHidden,...hiddenSections])],profileImageUrl,coverImageUrl,contactCaptureRequired};
     const currentBytes=Buffer.byteLength(JSON.stringify(current));
-    const proposedBytes=vcardPayloadBytes({...req.body,title,sections,profileImageUrl,coverImageUrl});
+    const proposedBytes=vcardPayloadBytes({...req.body,title,sections:nextSettings.sections,hiddenSections:nextSettings.hiddenSections,profileImageUrl,coverImageUrl});
     if(storage.usedBytes-currentBytes+proposedBytes>storage.limitBytes){
       return res.status(413).json({message:`Your ${storage.plan.name} plan storage limit has been reached. Reduce uploaded content or upgrade your plan.`});
     }

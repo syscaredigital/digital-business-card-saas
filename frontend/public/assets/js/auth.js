@@ -60,6 +60,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const loginForm = document.getElementById("loginForm");
   if (loginForm) {
+    if (new URLSearchParams(window.location.search).get("reset") === "success") {
+      const notice = document.createElement("p");
+      notice.id = "passwordResetNotice";
+      notice.setAttribute("role", "status");
+      notice.textContent = "Your password has been reset successfully. Sign in with your new password.";
+      loginForm.before(notice);
+      document.getElementById("loginEmail").focus();
+    }
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const email = document.getElementById("loginEmail");
@@ -137,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const resetPasswordForm = document.getElementById("resetPasswordForm");
-  const resetToken = new URLSearchParams(window.location.hash.slice(1)).get("sessionActive") || "";
+  const resetToken = resetPasswordForm ? new URLSearchParams(window.location.hash.slice(1)).get("token") || "" : "";
   if (resetToken) window.history.replaceState(null, "", window.location.pathname + window.location.search);
   const newPassword = document.getElementById("newPassword");
   const confirmPassword = document.getElementById("confirmPassword");
@@ -201,8 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!response.ok) throw new Error(data.message || "Unable to reset password.");
         localStorage.removeItem("sessionActive");
         localStorage.removeItem("user");
-        alert(data.message);
-        window.location.replace("login.html");
+        window.location.replace("login.html?reset=success");
       } catch (error) { alert(error.message || "Unable to contact the server."); }
       finally { if (button) button.disabled = false; }
     });

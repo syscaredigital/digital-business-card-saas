@@ -277,139 +277,19 @@
     loadAccountSettings();
   }
 
-  var vcardFeatureGuides = {
-    "business-hours": ["One day per line", "Monday | 9:00 AM - 5:00 PM"],
-    services: ["One service per line: name | description. Add its photo below.", "Property valuation | Accurate local market valuation"],
-    products: ["One product per line: name | price | description. Add its photo below.", "Modern family home | $350,000 | Three bedrooms with garden"],
-    galleries: ["One caption per line, then upload the matching images below.", "Recent project"],
-    "instagram-embed": ["One caption per line, then upload the matching images below.", "Behind the scenes"],
-    blogs: ["One article per line: title | summary | image or article URL", "Buying your first home | Five useful steps | https://example.com/article"],
-    testimonials: ["One review per line: quote | customer name | role. Add the customer photo below.", "Wonderful service from start to finish | Alex Morgan | Customer"],
-    appointments: ["Title | duration in minutes; customers choose office or online", "Book a consultation | 30"],
-    "social-links": ["One link per line: network name | full URL", "LinkedIn | https://linkedin.com/in/your-name"],
-    "custom-links": ["One link per line: link name | full URL", "View my portfolio | https://example.com/portfolio"],
-    banners: ["Add a title, then upload the banner image below.", "Summer offer"],
-    iframes: ["Add a title and full content URL. Shown as a link that opens the content.", "Watch my introduction | https://example.com/video"],
-    "custom-fonts": ["Choose Arial, Georgia, Verdana, Times New Roman, DM Sans, Oswald or Playfair Display", "Georgia"],
-    seo: ["One setting per line: title | value, description | value, or keywords | value. Updates browser metadata; social share previews are separate.", "title | My business card\ndescription | Learn about my services"],
-    "qrcode-customize": ["Add the destination or QR image URL", "https://example.com/contact"],
-    advanced: ["Add each important detail on a new line", "Languages: English, Sinhala"],
-    "privacy-policy": ["Add readable policy text, using a new line for each paragraph", "Your privacy policy"],
-    "term-condition": ["Add readable terms, using a new line for each paragraph", "Your terms and conditions"],
-    "manage-section": ["Add each extra detail on a new line", "Additional information"]
-  };
-
-  var vcardImageSections = new Set(["services", "products", "galleries", "instagram-embed", "testimonials", "banners"]);
-  var vcardStoragePromise;
-
-  function vcardSectionUpload(key) {
-    if (!vcardImageSections.has(key)) return "";
-    return '<div class="vcard-section-image-editor" data-section-image-editor="' + escapeHtml(key) + '">' +
-      '<div class="vcard-section-upload-row"><label class="vcard-section-upload"><input type="file" accept="image/png,image/jpeg,image/webp" multiple><span>+ Upload images</span></label><small data-section-storage>PNG, JPG or WebP · 1 MB each</small></div>' +
-      '<div class="vcard-section-image-list" aria-live="polite"></div></div>';
-  }
-
-  function vcardFeatureField(feature, savedValue, createMode) {
-    var guide = vcardFeatureGuides[feature.key] || ["Add the content to show in this section", "Add section content"];
-    var dataName = createMode ? "data-create-vcard-section" : "data-vcard-section";
-    var idPrefix = createMode ? "create-vcard-section-" : "vcard-section-";
-    return '<section class="vcard-feature-field"><label for="' + idPrefix + escapeHtml(feature.key) + '">' + escapeHtml(feature.label) + '</label>' +
-      '<small class="vcard-feature-guide">' + escapeHtml(guide[0]) + '</small><textarea id="' + idPrefix + escapeHtml(feature.key) + '" ' + dataName + '="' + escapeHtml(feature.key) + '" rows="4" placeholder="' + escapeHtml(guide[1]) + '">' + escapeHtml(savedValue || "") + '</textarea>' + vcardSectionUpload(feature.key) + '</section>';
-  }
-
-  function sectionImageValue(value) {
-    return /^data:image\/(?:png|jpe?g|webp);base64,/i.test(value) || /^https?:\/\//i.test(value) ? value : "";
-  }
-
-  function initializeVcardImageEditors(root) {
+  function renderVcardSections(root, entitlements, values, hidden) {
     if (!root) return;
-    if (!vcardStoragePromise) vcardStoragePromise = request("/user/storage").catch(function () { return null; });
-    vcardStoragePromise.then(function (storage) {
-      if (!storage) return;
-      var available = Number(storage.availableBytes || 0) / (1024 * 1024);
-      root.querySelectorAll("[data-section-storage]").forEach(function (label) {
-        label.textContent = "PNG, JPG or WebP · 1 MB each · " + available.toFixed(available < 10 ? 1 : 0) + " MB plan space available";
-      });
-    });
-    root.querySelectorAll("[data-section-image-editor]").forEach(function (editor) {
-      var textarea = editor.parentElement.querySelector("textarea");
-      var input = editor.querySelector('input[type="file"]');
-      var list = editor.querySelector(".vcard-section-image-list");
-      if (!textarea || !input || textarea._sectionImageReady) return;
-      var images = [];
-      var cleanLines = String(textarea.value || "").split(/\r?\n/).map(function (line, index) {
-        var values = line.split(/\s*\|\s*/);
-        var candidate = sectionImageValue(values[values.length - 1] || "");
-        if (candidate) { images[index] = candidate; values.pop(); }
-        return values.join(" | ");
-      });
-      textarea.value = cleanLines.join("\n");
-      textarea._sectionImages = images;
-      textarea._sectionImageReady = true;
-      var previousLines = cleanLines.slice();
-      function syncImages() {
-        var nextLines = String(textarea.value || "").split(/\r?\n/);
-        var used = new Set(), matched = new Set(), mapped = [];
-        nextLines.forEach(function (line, index) {
-          var match = previousLines.findIndex(function (old, oldIndex) { return !used.has(oldIndex) && old === line; });
-          if (match >= 0) { used.add(match); matched.add(index); mapped[index] = images[match]; }
-        });
-        // An edited row retains its photo; inserted/deleted rows do not shift photos.
-        if (nextLines.length === previousLines.length) nextLines.forEach(function (line, index) {
-          if (!matched.has(index) && !used.has(index) && line.trim()) mapped[index] = images[index];
-        });
-        images = mapped; textarea._sectionImages = images; previousLines = nextLines;
-      }
-      textarea.addEventListener("input", function () { syncImages(); renderImages(); });
-
-      function renderImages() {
-        var lines = String(textarea.value || "").split(/\r?\n/);
-        list.innerHTML = images.map(function (src, index) {
-          if (!src) return "";
-          return '<article><img src="' + escapeHtml(src) + '" alt=""><span>' + escapeHtml((lines[index] || "Image " + (index + 1)).split("|")[0].trim()) + '</span><button type="button" data-remove-section-image="' + index + '" aria-label="Remove image">×</button></article>';
-        }).join("");
-      }
-
-      list.addEventListener("click", function (event) {
-        var button = event.target.closest("[data-remove-section-image]");
-        if (!button) return;
-        images[Number(button.dataset.removeSectionImage)] = "";
-        renderImages();
-      });
-      input.addEventListener("change", function () {
-        var files = Array.from(input.files || []);
-        var invalid = files.find(function (file) { return !/^image\/(?:png|jpeg|webp)$/i.test(file.type) || file.size > 1024 * 1024; });
-        if (invalid) { window.alert("Choose PNG, JPG, or WebP images no larger than 1 MB each."); input.value = ""; return; }
-        Promise.all(files.map(function (file) { return new Promise(function (resolve, reject) {
-          var reader = new FileReader(); reader.onload = function () { resolve({ name: file.name, src: String(reader.result || "") }); }; reader.onerror = reject; reader.readAsDataURL(file);
-        }); })).then(function (uploads) {
-          syncImages();
-          var lines = String(textarea.value || "").split(/\r?\n/);
-          uploads.forEach(function (upload) {
-            var target = lines.findIndex(function (line, index) { return line.trim() && !images[index]; });
-            if (target < 0) { target = lines.length; lines.push(upload.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ")); }
-            images[target] = upload.src;
-          });
-          textarea.value = lines.join("\n");
-          previousLines = lines.slice();
-          input.value = "";
-          renderImages();
-        }).catch(function () { window.alert("One of the selected images could not be read."); });
-      });
-      renderImages();
-    });
+    window.SyncVcardSections.mount(root, { features: entitlements.features || [], values: values || {}, hiddenSections: hidden, planName: entitlements.planName });
   }
-
-  function collectVcardSections(form, selector) {
-    var sections = {};
-    form.querySelectorAll(selector).forEach(function (field) {
-      var lines = String(field.value || "").split(/\r?\n/);
-      var images = field._sectionImages || [];
-      sections[field.getAttribute(selector.slice(1, -1).split("=")[0])] = lines.map(function (line, index) {
-        return line.trim() && images[index] ? line.trim() + " | " + images[index] : line.trim();
-      }).filter(Boolean).join("\n");
-    });
+  function collectVcardSections(form) {
+    var root = form.querySelector('.section-editor');
+    var sections = root && root._sectionBuilder ? root._sectionBuilder.getSections() : {};
+    if (form.elements.occupation && form.elements.occupation.value.trim()) sections['basic-details'] = form.elements.occupation.value.trim();
     return sections;
+  }
+  function hiddenVcardSections(form) {
+    var root = form.querySelector('.section-editor');
+    return root && root._sectionBuilder ? root._sectionBuilder.getHiddenSections() : [];
   }
 
   function renderDashboard(data) {
@@ -500,11 +380,7 @@
     }
     if (createSummary) createSummary.innerHTML = '<strong>' + escapeHtml(entitlements.planName || "Free") + ' plan</strong><small>' +
       escapeHtml((entitlements.features || []).map(function (feature) { return feature.label; }).join(" · ") || "Basic card creation") + '</small>';
-    if (createFeatureEditor) createFeatureEditor.innerHTML = '<div class="vcard-feature-heading"><strong>Included VCard sections</strong><span>' + escapeHtml(entitlements.planName || "Current plan") + '</span></div>' +
-      (entitlements.features || []).filter(function (feature) { return feature.key !== "basic-details"; }).map(function (feature) {
-        return vcardFeatureField(feature, "", true);
-      }).join("") || '<p>Basic details are the only editable feature in this plan.</p>';
-    initializeVcardImageEditors(createFeatureEditor);
+    renderVcardSections(createFeatureEditor, entitlements, {});
     if (createAllowance) {
       createAllowance.textContent = limitReached ? "Plan limit reached" : (cardLimit - usedCards) + " slot" + (cardLimit - usedCards === 1 ? "" : "s") + " left";
       createAllowance.classList.toggle("active", !limitReached);
@@ -1599,11 +1475,7 @@
         editor.elements.templateId.value = String(card.template_id || entitlements.templates?.[0]?.id || "");
         var featureEditor = document.getElementById("vcardFeatureEditor");
         var savedSections = card.settings && card.settings.sections ? card.settings.sections : {};
-        if (featureEditor) featureEditor.innerHTML = '<div class="vcard-feature-heading"><strong>Plan-enabled card sections</strong><span>' + escapeHtml(entitlements.planName || "Current plan") + '</span></div>' +
-          (entitlements.features || []).filter(function (feature) { return feature.key !== "basic-details"; }).map(function (feature) {
-            return vcardFeatureField(feature, savedSections[feature.key], false);
-          }).join("") || '<p>Basic details are the only editable feature in this plan.</p>';
-        initializeVcardImageEditors(featureEditor);
+        renderVcardSections(featureEditor, entitlements, savedSections, card.settings && card.settings.hiddenSections);
         editorStatus.textContent = "Loaded from your account";
       }).catch(function (error) { editorStatus.textContent = error.message; });
       editor.addEventListener("submit", async function (event) {
@@ -1614,7 +1486,7 @@
           var sections = collectVcardSections(editor, "[data-vcard-section]");
           var newProfileImage = await readVcardImageInput(document.getElementById("editCardProfileImage"));
           var newCoverImage = await readVcardImageInput(document.getElementById("editCardCoverImage"));
-          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), qualifications: editor.elements.qualifications.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
+          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), qualifications: editor.elements.qualifications.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, hiddenSections: hiddenVcardSections(editor), profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
           if (newProfileImage) savedProfileImage = newProfileImage;
           if (newCoverImage) savedCoverImage = newCoverImage;
           editorStatus.textContent = "Saved successfully";
@@ -1660,14 +1532,12 @@
       var button = createCardForm.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
       var template = document.getElementById("createVcardTemplate");
-      var sections = collectVcardSections(createCardForm, "[data-create-vcard-section]");
-      var occupation = document.getElementById("occupation");
-      if (occupation && occupation.value.trim()) sections["basic-details"] = occupation.value.trim();
       try {
+        var sections = collectVcardSections(createCardForm);
         var profileImageUrl = await readVcardImageInput(document.getElementById("createVcardProfileImage"));
         var coverImageUrl = await readVcardImageInput(document.getElementById("createVcardCoverImage"));
         var contactCapture = document.getElementById("createVcardContactCapture");
-        var data = await request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), qualifications: qualifications ? qualifications.value.trim() : "", slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), email: document.getElementById("vcardEmail").value.trim(), phone: document.getElementById("vcardPhone").value.trim(), websiteUrl: document.getElementById("vcardWebsite").value.trim(), address: document.getElementById("vcardAddress").value.trim(), description: description ? description.value.trim() : "", sections: sections, profileImageUrl: profileImageUrl, coverImageUrl: coverImageUrl, contactCaptureRequired: !contactCapture || contactCapture.checked }) });
+        var data = await request("/user/vcards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: title.value.trim(), qualifications: qualifications ? qualifications.value.trim() : "", slug: createVcardSlugInput ? createVcardSlugInput.value.trim() : "", templateId: Number(template && template.value), email: document.getElementById("vcardEmail").value.trim(), phone: document.getElementById("vcardPhone").value.trim(), websiteUrl: document.getElementById("vcardWebsite").value.trim(), address: document.getElementById("vcardAddress").value.trim(), description: description ? description.value.trim() : "", sections: sections, hiddenSections: hiddenVcardSections(createCardForm), profileImageUrl: profileImageUrl, coverImageUrl: coverImageUrl, contactCaptureRequired: !contactCapture || contactCapture.checked }) });
         window.location.href = "edit-vcard.html?id=" + encodeURIComponent(data.vcard.id);
       } catch (error) { window.alert(error.message); if (button) button.disabled = false; }
     });
