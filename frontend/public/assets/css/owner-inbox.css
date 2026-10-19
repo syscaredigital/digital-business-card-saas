@@ -1,0 +1,32 @@
+.owner-dialog {
+  color: #f4f4f8;
+  background: #141720;
+  border: 1px solid #3a4050;
+  border-radius: 16px;
+  padding: 26px;
+  width: min(680px, calc(100% - 24px));
+  max-height: 88vh;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.owner-dialog::backdrop { background: rgba(0,0,0,.7); }
+.owner-dialog-heading { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
+.owner-dialog h2 { font-size: 1.4rem; }
+.owner-dialog p { color: #c0c6d2; line-height: 1.7; }
+.owner-dialog label { display: block; margin-bottom: 8px; }
+.owner-dialog textarea { width: 100%; padding: 12px; resize: vertical; }
+.owner-dialog textarea, .owner-inbox-filters select { background: #0e1017; color: #f4f4f8; border: 1px solid #4d5362; border-radius: 8px; }
+.owner-dialog button, .owner-inbox-filters button, .owner-open-lead { border: 1px solid #525c75; background: #252c40; color: #fff; border-radius: 8px; padding: 10px 14px; min-height: 44px; cursor: pointer; }
+.owner-dialog button:disabled { opacity: .55; cursor: wait; }
+.owner-dialog button:focus-visible, .owner-dialog textarea:focus-visible, .owner-inbox-filters select:focus-visible, .owner-open-lead:focus-visible { outline: 2px solid #95adff; outline-offset: 3px; }
+.owner-original-message, .owner-reply-entry p { white-space: pre-wrap; }
+.owner-original-message, .owner-reply-entry { padding: 16px; border: 1px solid #3a4050; border-radius: 10px; margin: 16px 0; }
+.owner-reply-entry strong { font-size: .8rem; color: #aec1ff; }
+.owner-inbox-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 14px; padding: 16px 0; }
+.owner-inbox-filters select { display: block; margin-top: 6px; min-height: 44px; padding: 8px 12px; }
+.owner-lead-label { display: block; margin-top: 6px; font-size: .75rem; color: #62708b; }
+.owner-action-summary { display: grid; gap: 12px; margin-bottom: 20px; }
+.owner-action-summary a { padding: 14px; border: 1px solid #394057; border-radius: 10px; }
+.owner-action-summary strong { color: #b3c3ff; margin-right: 8px; }
+.client-enquiries-table .enquiry-row[hidden] { display: none; }
+@media(max-width:575px) { .owner-dialog { padding: 18px; } .owner-inbox-filters label { flex: 1; } }

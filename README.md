@@ -8,6 +8,7 @@ Node.js/PostgreSQL digital business cards, subscription payments, NFC orders, an
 - [cPanel deployment for test.syncecard.com](docs/cpanel-deployment.md)
 - [Alternative VPS deployment](docs/namecheap-vps-deployment.md)
 - [LKR revenue reporting](docs/revenue-reporting.md)
+- [Card-owner inbox, appointments and email delivery](docs/owner-lead-workflows.md)
 
 Local development: install dependencies with `npm ci` and `npm --prefix backend ci`, configure `backend/.env` using `.env.example`, and run `npm --prefix backend start`. Open `http://localhost:5000/`. VS Code Live Server on ports 5500/5501 is also supported while the backend is running.
 

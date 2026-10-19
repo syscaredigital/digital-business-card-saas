@@ -238,9 +238,9 @@ async function verifyConnection() {
 }
 module.exports = { sendAppointmentApproved, sendVcardEnquiry, sendWebsiteContact, sendPasswordReset, verifyConnection };
 
-module.exports.sendQueuedNotification = async function ({ to, subject, text, messageId }) {
+module.exports.sendQueuedNotification = async function ({ to, replyTo, subject, text, messageId }) {
   ensureMailConfigured();
-  const result = await getTransporter().sendMail({ from: mailFrom(), to, subject, text, messageId });
+  const result = await getTransporter().sendMail({ from: mailFrom(), to, replyTo, subject, text, messageId });
   if (!result.accepted || !result.accepted.length) throw Object.assign(new Error('Recipient rejected'),{code:'ERECIPIENT'});
   return result;
 };

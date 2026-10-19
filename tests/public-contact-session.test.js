@@ -54,7 +54,9 @@ test('public card actions work with an existing account cookie without bypassing
       const download = await downloadPromise;
       assert.equal(download.suggestedFilename(), 'contact.vcf');
       assert.equal(await download.failure(), null);
-      await page.locator('.vcard-save-close').click();
+      // Successful downloads close the modal automatically. Waiting for that
+      // state avoids racing a close-button click against the success timer.
+      await page.locator('.vcard-save-modal').waitFor({ state: 'hidden' });
       await page.locator('.message-panel input[type=text]').fill('Test Visitor');
       await page.locator('.message-panel input[type=email]').fill('visitor@example.test');
       await page.locator('.message-panel textarea').fill('Please contact me.');

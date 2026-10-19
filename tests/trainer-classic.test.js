@@ -83,9 +83,10 @@ test('Trainer Classic preview and live forms use shared card workflows', async (
     await page.waitForFunction(() => document.querySelector('.vfeature-booking-status').textContent === 'Appointment requested');
     assert.equal(booking.durationMinutes,60);
     assert.equal(booking.serviceName,'Training consultation');
-    // Existing design still renders without the new page's configuration.
+    // The retired URL redirects to the supported Classic design.
     await page.goto(origin+'/pages/public-vcard/final-09-automotive.html',{waitUntil:'networkidle'});
-    assert.equal(await page.locator('[data-theme=automotive]').count(),1);
+    await page.waitForURL('**/final-11-automotive-classic.html');
+    assert.equal(await page.locator('[data-theme=automotive-classic]').count(),1);
     assert.deepEqual(errors,[]);
   } finally {
     if (browser) await browser.close();

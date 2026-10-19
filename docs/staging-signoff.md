@@ -1,5 +1,7 @@
 # Staging sign-off
 
+16 October 2026: local readiness repairs and verification are recorded in [the repair report](staging-repair-2026-10-16.md). Migration 078 retains ten Classic templates and redirects retired public URLs. The older handoff below describes the previous twenty-template release; confirm the deployed commit before applying the catalogue migration. Live HTTPS health/readiness passed the 16 October review, but server-side sign-off remains pending.
+
 The deployment handoff supplied on 5 October 2026 reports healthy PostgreSQL and Docker application containers at `https://test.syncecard.com`, successful HTTPS `/health` and `/ready` checks, migrations through 077, and template registration/free-plan assignment for templates 1–20. These are operator-reported results, not a new verification from this checkout. The exact deployed commit and image remain to be recorded.
 
 Company administration and newsletter subscriptions remain excluded from v1. Production cutover to `syncecard.lk` is pending acceptance.
@@ -39,7 +41,7 @@ The [Phase 2 local acceptance record](phase2-acceptance.md) describes the subscr
 | Email | Designated test inbox receives recovery, appointment and relevant billing notifications; retries and failed outbox monitoring checked | Pending |
 | Customer/admin journeys | Auth/session/role boundaries, card editing/publishing, QR/contact/NFC, limits, payment retries/rejections/coupons/expiry, fulfilment | Pending |
 | Affiliate/appointments | Commission and withdrawal balances/reservations/permissions; conflicting bookings and approval/rejection | Pending |
-| Templates 1–20 | Desktop/mobile public rendering with custom data, links, images, contact actions and no browser errors | Pending |
+| Current templates | Ten Classic designs after migration 078, legacy URL redirects, desktop/mobile rendering with custom data, links, images, contact actions and no browser errors | Pending on staging |
 | Uploads/resilience | Valid/invalid uploads and ownership, persistence after controlled restart, disk/memory/monitoring | Pending |
 
 Use [the Docker operations guide](namecheap-vps-deployment.md) for coordinated backup and isolated restore. Backup stops the application and requires external writers to be stopped; schedule that maintenance separately. The existing restore script checks user/migration counts and payment/withdrawal receipt files; card counts and other upload references still require acceptance evidence. SMTP authentication alone does not establish inbox delivery. Running outbox jobs may send queued customer messages, so inspect the queue and use designated staging recipients before delivery tests.

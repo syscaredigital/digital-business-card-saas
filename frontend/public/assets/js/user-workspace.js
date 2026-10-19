@@ -126,8 +126,12 @@
       return;
     }
     list.innerHTML = items.length ? items.map(function (item) {
-      return '<button type="button" class="notification-item' + (item.is_read ? '' : ' is-unread') + '" data-notification-id="' + item.id + '">' +
-        '<span class="notification-type-dot" aria-hidden="true"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><time>' + escapeHtml(notificationTime(item.created_at)) + '</time></span></button>';
+      var metadata = item.metadata || {}, target = '';
+      if (item.type === 'appointment' && Number(metadata.appointmentId) > 0) target = 'appointments.html?appointment=' + encodeURIComponent(metadata.appointmentId);
+      if (['enquiry','contact'].includes(item.type) && Number(metadata.contactId) > 0) target = 'enquiries.html?contact=' + encodeURIComponent(metadata.contactId);
+      if (['qr_scan','contact_download'].includes(item.type)) target = 'qr-code.html';
+      return '<button type="button" class="notification-item' + (item.is_read ? '' : ' is-unread') + '" data-notification-id="' + item.id + '" data-owner-target="' + escapeHtml(target) + '">' +
+        '<span class="notification-type-dot" aria-hidden="true"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(String(item.message || '').split('\n')[0]) + '</span><time>' + escapeHtml(notificationTime(item.created_at)) + '</time></span></button>';
     }).join("") : '<div class="notification-empty"><strong>All caught up</strong><span>No notifications yet.</span></div>';
   }
 
@@ -418,6 +422,8 @@
     setText("metricCards", metrics.activeCards || 0);
     setText("metricViews", Number(metrics.profileViews || 0).toLocaleString());
     setText("metricEnquiries", metrics.enquiries || 0);
+    setText('ownerNewLeads', metrics.newLeads || 0);
+    setText('ownerPendingAppointments', metrics.pendingAppointments || 0);
     setText("metricOrders", metrics.pendingOrders || 0);
     setText("metricQrScans", Number(metrics.qrScans || 0).toLocaleString());
     setText("vcardOverviewTotal", metrics.totalCards || 0);
@@ -1338,8 +1344,8 @@
       link.remove();
       URL.revokeObjectURL(url);
     });
-    enquiriesBody.innerHTML = '<tr><td colspan="7" class="light-empty-cell">Loading enquiries...</td></tr>';
-    request("/user/enquiries").then(function (data) {
+    function loadEnquiries() {
+    return request("/user/enquiries").then(function (data) {
       var rows = data.enquiries || [];
       loadedEnquiries = rows;
       if (exportEnquiriesButton) exportEnquiriesButton.disabled = !rows.length;
@@ -1355,11 +1361,23 @@
       enquiriesBody.innerHTML = rows.length ? rows.map(function (item) {
         var searchable = [item.vcard_name, item.name, item.email, item.phone, item.company, item.message].join(" ");
         var message = item.message || "No message";
-        var reply = item.email ? '<a class="client-enquiry-action" href="mailto:' + escapeHtml(item.email) + '" aria-label="Reply to enquiry">↗</a>' : "—";
+        var reply = '<button class="owner-open-lead" type="button" data-open-enquiry="' + item.id + '">Open &amp; reply</button>';
         return '<tr class="enquiry-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name || "—") + '</td><td data-label="Email">' + (item.email ? '<a href="mailto:' + escapeHtml(item.email) + '">' + escapeHtml(item.email) + "</a>" : "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Message"><div class="client-enquiry-message">' + escapeHtml(message) + '</div></td><td data-label="Created On">' + escapeHtml(formatDate(item.contacted_at)) + '</td><td data-label="Action">' + reply + '</td></tr>';
       }).join("") : '<tr><td colspan="7" class="light-empty-cell">No enquiries yet. New contact requests will appear here.</td></tr>';
       setText("enquiriesResults", "Showing " + rows.length + " result" + (rows.length === 1 ? "" : "s"));
+      enquiriesBody.querySelectorAll('.enquiry-row').forEach(function (row, index) {
+        row.dataset.leadKind = rows[index].source === 'VCard contact save' ? 'contact' : 'enquiry';
+        row.dataset.leadStatus = rows[index].enquiry_status || 'new';
+        var label = document.createElement('small');
+        label.className = 'owner-lead-label';
+        label.textContent = (row.dataset.leadKind === 'contact' ? 'Contact save' : 'Enquiry') + ' · ' + row.dataset.leadStatus;
+        row.querySelector('[data-label="Name"]').appendChild(label);
+      });
+      window.dispatchEvent(new Event('owner-inbox-loaded'));
     }).catch(function (error) { if (exportEnquiriesButton) exportEnquiriesButton.disabled = true; enquiriesBody.innerHTML = '<tr><td colspan="7" class="light-empty-cell">' + escapeHtml(error.message) + "</td></tr>"; });
+    }
+    loadEnquiries();
+    window.addEventListener('owner-inbox-updated', loadEnquiries);
   }
 
   var appointmentsBody = document.getElementById("appointmentsTableBody");
@@ -1394,7 +1412,7 @@
         var searchable = [item.vcard_name, item.name, item.email, item.phone, item.service_name, item.status, item.appointment_type].join(" ");
         var action = item.status === "pending"
           ? '<div class="client-appointment-actions"><button class="client-appointment-approve" type="button" data-appointment-status="approved" data-appointment-id="' + item.id + '"' + (item.email ? "" : " disabled title=\"Customer email is missing\"") + '>Approve</button><button class="client-appointment-reject" type="button" data-appointment-status="rejected" data-appointment-id="' + item.id + '">Reject</button></div>'
-          : '<span class="client-appointment-complete">✓ ' + escapeHtml(item.status) + '</span>';
+          : '<div><span class="client-appointment-complete">✓ ' + escapeHtml(item.status) + '</span><button class="owner-open-lead" type="button" data-appointment-status="approved" data-appointment-id="' + item.id + '">View details</button><small class="owner-lead-label">Customer email: ' + escapeHtml(item.email_status || 'No email record') + '</small></div>';
         return '<tr class="appointment-row" data-search="' + escapeHtml(searchable.toLowerCase()) + '"><td data-label="VCard Name">' + escapeHtml(item.vcard_name || "Digital card") + '</td><td data-label="Name">' + escapeHtml(item.name) + '</td><td data-label="Email">' + escapeHtml(item.email || "—") + '</td><td data-label="Phone">' + escapeHtml(item.phone || "—") + '</td><td data-label="Appointment Time"><span class="appointment-time-pill">' + escapeHtml(formatAppointmentRange(item.starts_at, item.ends_at)) + '</span></td><td data-label="Status"><span class="appointment-status-pill status-' + escapeHtml(item.status) + '">' + escapeHtml(item.status) + '</span></td><td data-label="Meeting Mode"><span class="appointment-type-pill">' + escapeHtml(formatMeetingMode(item.appointment_type)) + '</span></td><td data-label="Action">' + action + '</td></tr>';
       }).join("") : '<tr><td colspan="9" class="light-empty-cell">No appointments match the selected filters.</td></tr>';
       appointmentsBody.querySelectorAll(".appointment-row").forEach(function (row, index) {
@@ -1411,28 +1429,12 @@
   }
   if (appointmentsBody) {
     loadAppointments();
+    window.addEventListener('owner-appointments-updated', loadAppointments);
     appointmentsBody.addEventListener("click", function (event) {
       var button = event.target.closest("[data-appointment-status]");
       if (!button || button.disabled) return;
       var nextStatus = button.dataset.appointmentStatus;
-      var originalLabel = button.textContent;
-      button.disabled = true;
-      button.textContent = nextStatus === "approved" ? "Sending..." : "Updating...";
-      appointmentFeedback(nextStatus === "approved"
-        ? "Approving appointment and sending confirmation email..."
-        : "Rejecting appointment...", false);
-      request("/user/appointments/" + encodeURIComponent(button.dataset.appointmentId) + "/status", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus })
-      }).then(function (data) {
-        appointmentFeedback(data.message, false);
-        loadAppointments();
-      }).catch(function (error) {
-        appointmentFeedback(error.message, true);
-        button.disabled = false;
-        button.textContent = originalLabel;
-      });
+      if (window.SyncOwnerInbox) window.SyncOwnerInbox.decideAppointment(button.dataset.appointmentId, nextStatus);
     });
     if (appointmentStatusFilter) appointmentStatusFilter.addEventListener("change", loadAppointments);
     if (appointmentCalendarToggle && appointmentCalendarPanel) {
@@ -1737,10 +1739,12 @@
 
   document.addEventListener("click", function (event) {
     var item = event.target.closest("[data-notification-id]");
-    if (!item || !item.classList.contains("is-unread")) return;
+    if (!item) return;
+    var target = item.dataset.ownerTarget;
+    if (!item.classList.contains('is-unread')) { if (target) window.location.assign(target); return; }
     item.disabled = true;
     request("/user/notifications/" + encodeURIComponent(item.dataset.notificationId) + "/read", { method: "PATCH" })
-      .then(refreshNotifications)
+      .then(function () { if (target) window.location.assign(target); else return refreshNotifications(); })
       .finally(function () { item.disabled = false; });
   });
 

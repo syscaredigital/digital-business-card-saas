@@ -15,7 +15,7 @@ exports.notifications = async (req, res, next) => {
     const [preferences, list, count] = await Promise.all([
       pool.query("SELECT browser_notifications FROM user_settings WHERE user_id=$1", [req.user.id]),
       pool.query(
-        `SELECT id,title,message,type,is_read,created_at
+        `SELECT id,title,message,type,metadata,is_read,created_at
          FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 20`,
         [req.user.id]
       ),

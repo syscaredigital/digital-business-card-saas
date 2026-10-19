@@ -87,9 +87,10 @@ test('Legal Classic preview and live forms use shared card workflows', async () 
     await page.waitForFunction(() => document.querySelector('.vfeature-booking-status').textContent === 'Appointment requested');
     assert.equal(booking.durationMinutes,60);
     assert.equal(booking.serviceName,'Legal consultation');
-    // Existing design still renders without the new page's configuration.
+    // The retired URL redirects to the supported Classic design.
     await page.goto(origin+'/pages/public-vcard/final-05-legal.html',{waitUntil:'networkidle'});
-    assert.equal(await page.locator('[data-theme=legal]').count(),1);
+    await page.waitForURL('**/final-20-legal-classic.html');
+    assert.equal(await page.locator('[data-theme=legal-classic]').count(),1);
     assert.deepEqual(errors,[]);
   } finally {
     if (browser) await browser.close();

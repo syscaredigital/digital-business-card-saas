@@ -7,7 +7,8 @@ const { currencyName, normalizeCurrency } = require("../config/currencies");
 const { BASE_CURRENCY, getRate, supportedCurrencies, convertFromLkr } = require("../services/exchange-rate.service");
 const { publicVcardUrl } = require("../helpers/vcard-url");
 const { currentSubscription, hasVcardFeature } = require("../services/subscription-policy");
-const { sendVcardEnquiry, sendWebsiteContact } = require("../services/email.service");
+const { sendWebsiteContact } = require("../services/email.service");
+const { dashboardLink } = require('../services/lead-notifications.service');
 
 const router = express.Router();
 
@@ -258,11 +259,14 @@ router.post("/vcards/:id/events", async (req, res, next) => {
   const source = String(req.body?.source || "direct").trim().slice(0, 80);
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
   if (!["qr_scan", "vcard_view", "link_click", "share"].includes(eventType)) return res.status(400).json({ message: "Invalid event type" });
+  const client = await pool.connect();
   try {
-    const card = await pool.query("SELECT id,user_id,title FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
-    if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", ["event:" + id + ":" + visitorHash(req)]);
+    const card = await client.query("SELECT id,user_id,title FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    if (!card.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "VCard not found" }); }
     const hash = visitorHash(req);
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO vcard_events (vcard_id,event_type,source,visitor_hash,user_agent,referrer)
        SELECT $1::integer,$2::varchar,$3::varchar,$4::varchar,$5::text,$6::text
        WHERE NOT EXISTS (
@@ -274,14 +278,16 @@ router.post("/vcards/:id/events", async (req, res, next) => {
       [id, eventType, source, hash, String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000), ["link_click", "share"].includes(eventType) ? 10 : 1800]
     );
     if (eventType === "qr_scan" && result.rowCount) {
-      await pool.query(
+      await client.query(
         `INSERT INTO notifications(user_id,title,message,type,metadata)
          VALUES($1,'QR code scanned',$2,'qr_scan',$3::jsonb)`,
-        [card.rows[0].user_id, `${card.rows[0].title || "Your VCard"} received a new QR scan.`, JSON.stringify({ vcardId: id })]
+        [card.rows[0].user_id, `${card.rows[0].title || "Your VCard"} received a new QR scan.\nThe visitor has not shared their identity.\n${dashboardLink('qr-code')}`, JSON.stringify({ vcardId: id })]
       );
     }
+    await client.query("COMMIT");
     res.status(result.rowCount ? 201 : 200).json({ recorded: Boolean(result.rowCount) });
-  } catch (error) { next(error); }
+  } catch (error) { await client.query("ROLLBACK"); next(error); }
+  finally { client.release(); }
 });
 
 router.post("/vcards/:id/contact-saves", async (req, res, next) => {
@@ -295,13 +301,17 @@ router.post("/vcards/:id/contact-saves", async (req, res, next) => {
   if (!name || (!email && !phone)) return res.status(400).json({ message: "Enter your name and an email address or phone number" });
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: "Enter a valid email address" });
   if (!consent) return res.status(400).json({ message: "Consent is required before sharing your details" });
+  const client = await pool.connect();
   try {
-    const card = await pool.query("SELECT id,user_id,title FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
-    if (!card.rowCount) return res.status(404).json({ message: "VCard not found" });
-    const result = await pool.query(
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", ["contact:" + id]);
+    const card = await client.query("SELECT id,user_id,title FROM vcards WHERE id=$1 AND is_active=TRUE", [id]);
+    if (!card.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ message: "VCard not found" }); }
+    const result = await client.query(
       `WITH existing AS (
          SELECT id FROM contacts
-         WHERE vcard_id=$1 AND contacted_at > NOW() - INTERVAL '24 hours'
+         WHERE vcard_id=$1 AND source='VCard contact save' AND consent_at IS NOT NULL
+           AND contacted_at > NOW() - INTERVAL '24 hours'
            AND (($3::varchar IS NOT NULL AND LOWER(email)=LOWER($3::varchar))
              OR ($4::varchar IS NOT NULL AND phone=$4::varchar))
          ORDER BY contacted_at DESC LIMIT 1
@@ -318,17 +328,19 @@ router.post("/vcards/:id/contact-saves", async (req, res, next) => {
       [id, name, email || null, phone || null, company || null]
     );
     if (result.rows[0]?.created) {
-      await pool.query(
+      await client.query(
         `INSERT INTO notifications(user_id,title,message,type,metadata)
          VALUES($1,'New contact saved',$2,'contact',$3::jsonb)`,
-        [card.rows[0].user_id, `${name} saved ${card.rows[0].title || "your VCard"}.`, JSON.stringify({ vcardId: id, contactId: result.rows[0].id })]
+        [card.rows[0].user_id, `${name} shared their details to download ${card.rows[0].title || "your VCard"}.\nEmail: ${email || 'Not provided'}\nPhone: ${phone || 'Not provided'}\nCompany: ${company || 'Not provided'}\nA download request does not confirm that the contact was added to the device address book.\n${dashboardLink('enquiries', 'contact', result.rows[0].id)}`, JSON.stringify({ vcardId: id, contactId: result.rows[0].id, replyTo: email || null })]
       );
     }
+    await client.query("COMMIT");
     res.status(201).json({
       message: "Your details were shared. The contact is ready to save.",
       downloadUrl: `/api/public/vcards/${id}/contact.vcf?capture=${result.rows[0].id}`,
     });
-  } catch (error) { next(error); }
+  } catch (error) { await client.query("ROLLBACK"); next(error); }
+  finally { client.release(); }
 });
 
 router.get("/vcards/:id/contact.vcf", async (req, res, next) => {
@@ -337,7 +349,7 @@ router.get("/vcards/:id/contact.vcf", async (req, res, next) => {
   if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: "Invalid VCard ID" });
   try {
     const result = await pool.query(
-      `SELECT v.id,v.title,v.email,v.phone,v.website_url,v.address,u.name AS owner_name,c.name AS company_name,
+      `SELECT v.id,v.user_id,v.title,v.email,v.phone,v.website_url,v.address,u.name AS owner_name,c.name AS company_name,
               COALESCE(
                 CASE WHEN jsonb_typeof(v.settings->'contactCaptureRequired')='boolean'
                   THEN (v.settings->>'contactCaptureRequired')::boolean END,
@@ -355,15 +367,30 @@ router.get("/vcards/:id/contact.vcf", async (req, res, next) => {
     if (card.contact_capture_required && (!Number.isInteger(captureId) || captureId < 1)) {
       return res.status(403).json({ message: "Share your contact details before downloading this VCard" });
     }
-    if (card.contact_capture_required) {
-      const capture = await pool.query("SELECT id FROM contacts WHERE id=$1 AND vcard_id=$2", [captureId, id]);
-      if (!capture.rowCount) return res.status(403).json({ message: "Invalid contact download" });
+    let identifiedCapture = false;
+    if (Number.isInteger(captureId) && captureId > 0) {
+      const capture = await pool.query("SELECT id FROM contacts WHERE id=$1 AND vcard_id=$2 AND source='VCard contact save' AND consent_at IS NOT NULL", [captureId, id]);
+      identifiedCapture = Boolean(capture.rowCount);
     }
-    await pool.query(
-      `INSERT INTO vcard_events (vcard_id,event_type,source,visitor_hash,user_agent,referrer)
-       VALUES ($1,'contact_download','public_vcard',$2,$3,$4)`,
-      [id, visitorHash(req), String(req.get("user-agent") || "").slice(0, 1000), String(req.get("referer") || "").slice(0, 2000)]
-    );
+    if (card.contact_capture_required && !identifiedCapture) return res.status(403).json({ message: "Invalid contact download" });
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const hash = visitorHash(req);
+      await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [`download:${id}:${hash}`]);
+      const recorded = await client.query(`INSERT INTO vcard_events(vcard_id,event_type,source,visitor_hash,user_agent,referrer)
+        SELECT $1::integer,'contact_download','public_vcard',$2::varchar,$3::text,$4::text WHERE NOT EXISTS(
+          SELECT 1 FROM vcard_events WHERE vcard_id=$1 AND event_type='contact_download' AND visitor_hash=$2
+          AND occurred_at>NOW()-INTERVAL '30 minutes') RETURNING id`,
+      [id, hash, String(req.get('user-agent') || '').slice(0,1000), String(req.get('referer') || '').slice(0,2000)]);
+      if (recorded.rowCount && !card.contact_capture_required && !identifiedCapture) {
+        await client.query(`INSERT INTO notifications(user_id,title,message,type,metadata)
+          VALUES($1,'Contact file downloaded',$2,'contact_download',$3::jsonb)`,
+        [card.user_id, `${card.title || 'Your VCard'} contact file was requested.\nThe visitor did not share their identity. A file download cannot confirm a save to the device address book.\n${dashboardLink('qr-code')}`, JSON.stringify({ vcardId: id })]);
+      }
+      await client.query('COMMIT');
+    } catch (error) { await client.query('ROLLBACK'); throw error; }
+    finally { client.release(); }
     const displayName = String(card.title || "").trim() || "VCard contact";
     const lines = [
       "BEGIN:VCARD", "VERSION:3.0",
@@ -419,29 +446,11 @@ router.post("/vcards/:id/enquiries", async (req, res, next) => {
     await client.query(
       `INSERT INTO notifications(user_id,title,message,type,metadata)
        VALUES($1,'New VCard enquiry',$2,'enquiry',$3::jsonb)`,
-      [card.user_id, `${name} sent an enquiry through ${card.title || "your VCard"}.`, JSON.stringify({ vcardId: id, contactId: contact.rows[0].id })]
+      [card.user_id, `${name} sent an enquiry through ${card.title || "your VCard"}.\nEmail: ${email || 'Not provided'}\nPhone: ${phone || 'Not provided'}\nCompany: ${company || 'Not provided'}\n\n${message}\n\nReview and reply: ${dashboardLink('enquiries', 'contact', contact.rows[0].id)}`, JSON.stringify({ vcardId: id, contactId: contact.rows[0].id, replyTo: email || null })]
     );
-    let notificationDelivered = true;
-    try {
-      await sendVcardEnquiry({
-        to: card.owner_email,
-        ownerName: card.owner_name,
-        vcardTitle: card.title,
-        enquirerName: name,
-        enquirerEmail: email || null,
-        enquirerPhone: phone || null,
-        company: company || null,
-        message,
-      });
-    } catch (mailError) {
-      notificationDelivered = false;
-      console.error("VCard enquiry email notification failed:", mailError.code || mailError.name);
-    }
     await client.query("COMMIT");
     res.status(201).json({
-      message: notificationDelivered
-        ? "Your enquiry has been sent successfully"
-        : "Your enquiry has been received successfully",
+      message: "Your enquiry has been received successfully",
     });
   } catch (error) {
     await client.query("ROLLBACK");
@@ -507,7 +516,7 @@ router.post("/vcards/:id/appointments", require("../validators/appointment.valid
     await client.query(
       `INSERT INTO notifications(user_id,title,message,type,metadata)
        VALUES($1,'New appointment request',$2,'appointment',$3::jsonb)`,
-      [card.user_id, `${name} requested${savedServiceName ? ` ${savedServiceName}` : " an appointment"}.`, JSON.stringify({ vcardId: id, appointmentId: result.rows[0].id, serviceName: savedServiceName })]
+      [card.user_id, `${name} requested${savedServiceName ? ` ${savedServiceName}` : " an appointment"}.\nEmail: ${email}\nPhone: ${phone || 'Not provided'}\nTime: ${startsAt.toISOString()} (UTC)\nMeeting mode: ${appointmentType}\nNotes: ${notes || 'None'}\nApprove or reject: ${dashboardLink('appointments', 'appointment', result.rows[0].id)}`, JSON.stringify({ vcardId: id, appointmentId: result.rows[0].id, serviceName: savedServiceName, replyTo: email })]
     );
     await client.query("COMMIT");
     res.status(201).json({

@@ -48,7 +48,7 @@ exports.dashboard = async (req, res, next) => {
          WHERE bc.user_id = $1 AND a.event_date >= CURRENT_DATE - INTERVAL '30 days'`, [userId]
       ),
       pool.query(
-        `SELECT id, title, message, type, is_read, created_at,
+        `SELECT id, title, message, type, metadata, is_read, created_at,
                 COUNT(id) FILTER (WHERE is_read=FALSE) OVER ()::int AS unread_total
          FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 8`, [userId]
       ),
@@ -65,6 +65,10 @@ exports.dashboard = async (req, res, next) => {
     const plan = subscription.rows[0] || { plan_name: "Free", status: "inactive", vcard_limit: 1, nfc_limit: 0 };
     const cardRows = cards.rows.map((card) => ({ ...card, publicUrl: publicVcardUrl(req, card.slug), public_url: publicVcardUrl(req, card.slug) }));
     const entitlements = await loadVcardEntitlements(pool, userId);
+    const leadSummary = (await pool.query(`SELECT
+      (SELECT COUNT(*)::int FROM contacts ct JOIN vcards v ON v.id=ct.vcard_id
+       WHERE v.user_id=$1 AND ct.enquiry_status='new') AS new_leads,
+      (SELECT COUNT(*)::int FROM appointments WHERE user_id=$1 AND status='pending') AS pending_appointments`, [userId])).rows[0];
     const analyticsRow = analytics.rows[0] || {};
     const affiliateRow = affiliate.rows[0] || {};
     res.json({
@@ -82,6 +86,8 @@ exports.dashboard = async (req, res, next) => {
         activeCards: cardRows.filter((card) => card.is_active).length,
         totalCards: cardRows.length,
         enquiries: number(enquiries.rows[0]?.total),
+        newLeads: number(leadSummary.new_leads),
+        pendingAppointments: number(leadSummary.pending_appointments),
         profileViews: number(analyticsRow.views),
         clicks: number(analyticsRow.clicks),
         leads: number(analyticsRow.leads),

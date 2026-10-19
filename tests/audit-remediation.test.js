@@ -57,6 +57,7 @@ test('audit regressions against an isolated PostgreSQL schema', async t => {
     const {user,token} = registration.body;
     const second = await request('/api/auth/register',{method:'POST',body:{firstName:'Other',lastName:'User',email:'other@example.test',password:'Original password 123!'}});
     assert.equal(second.status,201);
+    const templateId = (await db.query("SELECT id FROM vcard_templates WHERE template_json->>'designKey'='corporate-classic' AND is_public=TRUE")).rows[0].id;
 
     await t.test('unknown, expired and legacy session identities fail closed',async()=>{
       const jwt = require('../backend/node_modules/jsonwebtoken');
@@ -69,7 +70,7 @@ test('audit regressions against an isolated PostgreSQL schema', async t => {
       await db.query("UPDATE auth_sessions SET expires_at=NOW()+INTERVAL '1 day' WHERE user_id=$1",[second.body.user.id]);
     });
     await t.test('concurrent card creation cannot exceed the free plan',async()=>{
-      const results = await Promise.all([1,2,3].map(i=>request('/api/user/vcards',{method:'POST',token,body:{title:'Concurrent '+i,templateId:1,slug:'audit-card-'+i,sections:{}}})));
+      const results = await Promise.all([1,2,3].map(i=>request('/api/user/vcards',{method:'POST',token,body:{title:'Concurrent '+i,templateId,slug:'audit-card-'+i,sections:{}}})));
       assert.deepEqual(results.map(r=>r.status).sort(),[201,403,403]);
       const id = results.find(r=>r.status===201).body.vcard.id;
       assert.equal((await request('/api/user/vcards/'+id,{token:second.body.token})).status,404);

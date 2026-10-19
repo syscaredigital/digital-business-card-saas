@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
   <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
+  <link rel="stylesheet" href="../../public/assets/css/owner-inbox.css" />
 </head>
 <body>
   <div class="bg-orb bg-orb-1"></div>
@@ -80,7 +81,7 @@
           <div class="lead-hero-copy">
             <span class="lead-hero-kicker"><i></i> Customer inbox</span>
             <h1>Enquiries</h1>
-            <p>Review every message sent through your published vCards and reply while the conversation is fresh.</p>
+            <p>Review enquiries and shared contact details from your cards. Reply directly here and track delivery without administrator assistance.</p>
           </div>
           <div class="lead-hero-art" aria-hidden="true">
             <span class="lead-hero-icon">✦</span>
@@ -115,6 +116,7 @@
             </button>
           </div>
 
+          <div class="owner-inbox-filters"><label>Type<select id="leadKindFilter"><option value="">All leads</option><option value="enquiry">Enquiries</option><option value="contact">Contact saves</option></select></label><label>Status<select id="leadStatusFilter"><option value="">All statuses</option><option value="new">New</option><option value="replied">Replied</option><option value="closed">Closed</option></select></label><button type="button" id="refreshOwnerInbox">Refresh inbox</button></div>
           <div class="client-enquiries-table-wrap">
             <table class="client-enquiries-table" aria-label="VCard enquiries">
               <thead>
@@ -128,47 +130,7 @@
                   <th scope="col">Action</th>
                 </tr>
               </thead>
-              <tbody id="enquiriesTableBody">
-                <tr class="enquiry-row" data-search="syscare it solutions sri lanka roshan tharindur@syscare.lk 769956938 n/a 06 jun 2025">
-                  <td data-label="VCard Name">SysCare IT Solutions Sri Lanka</td>
-                  <td data-label="Name">Roshan</td>
-                  <td data-label="Email"><a href="mailto:tharindur@syscare.lk">tharindur@syscare.lk</a></td>
-                  <td data-label="Phone">769956938</td>
-                  <td data-label="Message">N/A</td>
-                  <td data-label="Created On">06 Jun 2025</td>
-                  <td data-label="Action">
-                    <div class="client-enquiry-actions">
-                      <button class="client-enquiry-action" type="button" data-action="preview-card" aria-label="View Roshan enquiry">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12 18.7 18.5 12 18.5 1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3" fill="currentColor"></circle></svg>
-                      </button>
-                      <button class="client-enquiry-action delete" type="button" data-action="delete-enquiry" aria-label="Delete Roshan enquiry">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 10v7M14 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="enquiry-row" data-search="syscare it solutions computer accessories tharinduroshan791@gmail.com 24555 n/a 22 may 2025">
-                  <td data-label="VCard Name">SysCare IT Solutions</td>
-                  <td data-label="Name">Computer Accessories</td>
-                  <td data-label="Email"><a href="mailto:tharinduroshan791@gmail.com">tharinduroshan791@gmail.com</a></td>
-                  <td data-label="Phone">24555</td>
-                  <td data-label="Message">N/A</td>
-                  <td data-label="Created On">22 May 2025</td>
-                  <td data-label="Action">
-                    <div class="client-enquiry-actions">
-                      <button class="client-enquiry-action" type="button" data-action="preview-card" aria-label="View Computer Accessories enquiry">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12 18.7 18.5 12 18.5 1.5 12 1.5 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3" fill="currentColor"></circle></svg>
-                      </button>
-                      <button class="client-enquiry-action delete" type="button" data-action="delete-enquiry" aria-label="Delete Computer Accessories enquiry">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2m-9 0 1 15h8l1-15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 10v7M14 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr hidden>
-                  <td class="light-empty-cell" colspan="7">No enquiries found.</td>
-                </tr>
-              </tbody>
+              <tbody id="enquiriesTableBody"><tr><td colspan="7">Loading your enquiries...</td></tr></tbody>
             </table>
           </div>
 
@@ -179,7 +141,7 @@
               <option>25</option>
               <option>50</option>
             </select>
-            <p class="client-enquiries-results" id="enquiriesResults">Showing 2 results</p>
+            <p class="client-enquiries-results" id="enquiriesResults">Loading enquiries...</p>
           </div>
         </section>
 
@@ -191,8 +153,10 @@
     </div>
   </div>
 
+  <dialog class="owner-dialog" id="enquiryDialog" aria-labelledby="enquiryDialogTitle"><div class="owner-dialog-heading"><h2 id="enquiryDialogTitle">Conversation</h2><button type="button" data-close-owner-dialog aria-label="Close conversation">&times;</button></div><p id="enquiryDialogContact"></p><p class="owner-original-message" id="enquiryDialogMessage"></p><div id="enquiryReplyHistory" aria-label="Reply history"></div><div class="owner-inbox-filters"><label>Status<select id="enquiryDialogStatus"><option value="new">New</option><option value="replied">Replied</option><option value="closed">Closed</option></select></label><button type="button" id="saveEnquiryStatus">Update status</button></div><form id="enquiryReplyForm"><label for="enquiryReplyMessage">Your reply</label><textarea id="enquiryReplyMessage" name="message" maxlength="5000" rows="5" required></textarea><p>Replies are emailed to this contact. They can respond to your account email address.</p><button type="submit">Send reply</button></form><p id="enquiryDialogFeedback" role="status" aria-live="polite"></p></dialog>
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
   <script src="../../public/assets/js/user-workspace.js"></script>
+  <script src="../../public/assets/js/owner-inbox.js"></script>
 </body>
 </html>

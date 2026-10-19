@@ -19,9 +19,7 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
   const oldSecret = process.env.JWT_SECRET;
   const oldOrigin = process.env.PUBLIC_APP_URL;
   const mail = require('../backend/services/email.service');
-  const originalAppointmentMail = mail.sendAppointmentApproved;
   const appointmentEmails = [];
-  mail.sendAppointmentApproved = async message => { appointmentEmails.push(message); };
   try {
     await query(`CREATE SCHEMA "${schema}"`);
     const client = await db.connect();
@@ -46,6 +44,7 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       return { status: response.status, body: await response.json() };
     }
     let first, second, card;
+    const templateId = (await db.query("SELECT id FROM vcard_templates WHERE template_json->>'designKey'='corporate-classic' AND is_public=TRUE")).rows[0].id;
     await t.test('registration rejects weak passwords and accepts valid users', async () => {
       assert.equal((await request('/api/auth/register', 'POST', { firstName: 'Test', lastName: 'One', email: 'one@example.test', password: 'short' })).status, 400);
       first = await request('/api/auth/register', 'POST', { firstName: 'Test', lastName: 'One', email: 'one@example.test', password: 'Strong password 123!' });
@@ -58,19 +57,19 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal((await request('/api/super-admin/users', 'GET', null, first.body.token)).status, 403);
     });
     await t.test('create and edit card; other users cannot read or modify it', async () => {
-      const created = await request('/api/user/vcards', 'POST', { title: 'Test Card', templateId: 1, slug: 'test-one-card', sections: {} }, first.body.token);
+      const created = await request('/api/user/vcards', 'POST', { title: 'Test Card', templateId, slug: 'test-one-card', sections: {} }, first.body.token);
       assert.equal(created.status, 201, JSON.stringify(created.body));
       card = created.body.vcard;
       assert.equal((await request(`/api/user/vcards/${card.id}`, 'GET', null, second.body.token)).status, 404);
-      assert.equal((await request(`/api/user/vcards/${card.id}`, 'PATCH', { title: 'Forbidden', templateId: 1, sections: {} }, second.body.token)).status, 404);
-      assert.equal((await request(`/api/user/vcards/${card.id}`, 'PATCH', { title: 'Updated Card', templateId: 1, sections: {} }, first.body.token)).status, 200);
+      assert.equal((await request(`/api/user/vcards/${card.id}`, 'PATCH', { title: 'Forbidden', templateId, sections: {} }, second.body.token)).status, 404);
+      assert.equal((await request(`/api/user/vcards/${card.id}`, 'PATCH', { title: 'Updated Card', templateId, sections: {} }, first.body.token)).status, 200);
       assert.equal((await request(`/api/public/vcards/${card.id}`)).status, 200);
     });
     await t.test('expired plans stop granting extra card slots before the job runs', async () => {
       await db.query("UPDATE subscriptions SET end_date=CURRENT_DATE-1 WHERE user_id=$1", [first.body.user.id]);
       const available = await db.query(`SELECT id FROM subscriptions s WHERE s.user_id=$1 AND ${currentSubscription()}`, [first.body.user.id]);
       assert.equal(available.rowCount, 0);
-      assert.equal((await request('/api/user/vcards', 'POST', { title: 'Extra Card', templateId: 1 }, first.body.token)).status, 403);
+      assert.equal((await request('/api/user/vcards', 'POST', { title: 'Extra Card', templateId }, first.body.token)).status, 403);
       assert.equal(await expireSubscriptions(db), 1);
       assert.equal(await expireSubscriptions(db), 0);
       const billing = await request('/api/user/plans', 'GET', null, first.body.token);
@@ -109,6 +108,8 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       const review = `/api/user/appointments/${booked.body.appointment.id}/status`;
       assert.equal((await request(review, 'PATCH', { status: 'approved' }, second.body.token)).status, 404);
       for (let i = 0; i < 2; i++) assert.equal((await request(review, 'PATCH', { status: 'approved' }, first.body.token)).status, 200);
+      assert.equal((await db.query("SELECT id FROM email_outbox WHERE dedup_key=$1", ['appointment-decision:'+booked.body.appointment.id])).rowCount, 1);
+      await require('../backend/jobs/email-notification.job').deliverEmails(db, async message => { if(message.to === body.email) appointmentEmails.push(message); });
       assert.equal(appointmentEmails.length, 1);
       assert.equal(appointmentEmails[0].to, body.email);
       assert.equal((await request(review, 'PATCH', { status: 'rejected' }, first.body.token)).status, 409);
@@ -144,6 +145,7 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       const submitted = await upload('/api/user/subscriptions/manual-payment', { planId: plan.id, transactionNumber: 'TEST-PAYMENT-001' }, first.body.token);
       assert.equal(submitted.status, 201, JSON.stringify(submitted.body));
       assert.equal(submitted.body.subscription.status, 'pending');
+      assert.notEqual((await request('/api/user/plans', 'GET', null, first.body.token)).body.current.planId, plan.id, 'Unverified transfers must not activate a paid plan');
       assert.equal((await upload('/api/user/subscriptions/manual-payment', { planId: plan.id, transactionNumber: 'TEST-PAYMENT-001' }, second.body.token)).status, 409);
       const approval = {
         userId: first.body.user.id, subscriptionId: submitted.body.subscription.id, amount: 1000, currency: 'LKR', status: 'approved', reference: 'TEST-PAYMENT-001',
@@ -151,6 +153,7 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       };
       const approvals = await Promise.all([1,2].map(() => request(`/api/super-admin/cash-payments/${submitted.body.payment.id}`, 'PATCH', approval, adminToken)));
       for (const approved of approvals) assert.equal(approved.status, 200, JSON.stringify(approved.body));
+      assert.equal((await request('/api/user/plans', 'GET', null, first.body.token)).body.current.planId, plan.id);
       assert.equal((await db.query('SELECT id FROM transactions WHERE payment_id=$1', [submitted.body.payment.id])).rowCount, 1);
       assert.equal((await db.query("SELECT id FROM notifications WHERE user_id=$1 AND title='Subscription activated'", [first.body.user.id])).rowCount, 1);
       assert.equal((await request(`/api/super-admin/cash-payments/${submitted.body.payment.id}`, 'PATCH', {...approval,amount:1001},adminToken)).status,409);
@@ -246,12 +249,12 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
         }
       } finally { await browser.close(); }
     });
-    if (process.argv.includes('--browser')) await t.test('all 20 selected templates publish real custom card data on desktop and mobile', async () => {
+    if (process.argv.includes('--browser')) await t.test('all 10 Classic templates publish real custom card data on desktop and mobile', async () => {
       const { chromium } = require('../backend/node_modules/playwright');
       const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge', headless: true });
       try {
         const templates = (await db.query('SELECT id,preview_url FROM vcard_templates WHERE is_public=TRUE ORDER BY id')).rows;
-        assert.equal(templates.length, 20);
+        assert.equal(templates.length, 10);
         const problems = [];
         const context = await browser.newContext();
         await context.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
@@ -295,6 +298,18 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal((await db.query('SELECT status FROM coupon_redemptions WHERE payment_id=$1', [submitted.body.payment.id])).rows[0].status, 'cancelled');
       assert.equal((await db.query('SELECT status FROM subscriptions WHERE id=$1', [submitted.body.subscription.id])).rows[0].status, 'cancelled');
       assert.equal((await request('/api/user/coupons/preview', 'POST', { planId: plan.id, code: 'PHASE2' }, first.body.token)).status, 200);
+    });
+    await t.test('a fully discounted coupon activates the subscription without a transfer or administrator approval', async () => {
+      const plan = (await db.query("INSERT INTO plans(name,price,billing_interval,vcard_limit,status) VALUES('Fully covered plan',3000,'monthly',8,'active') RETURNING id")).rows[0];
+      await db.query("INSERT INTO coupon_codes(code,name,discount_type,discount_value,currency,usage_limit) VALUES('FULLCOVER','Full discount test','percentage',100,'LKR',1)");
+      const result = await request('/api/user/subscriptions/manual-payment', 'POST', {planId:plan.id,couponCode:'FULLCOVER'}, first.body.token);
+      assert.equal(result.status,201,JSON.stringify(result.body));
+      assert.equal(result.body.subscription.status,'active');
+      assert.equal(result.body.payment.status,'approved');
+      assert.equal(Number(result.body.payment.amount),0);
+      const plans = (await request('/api/user/plans','GET',null,first.body.token)).body;
+      assert.equal(plans.current.planId,plan.id);assert.equal(plans.current.vcardLimit,8);
+      assert.equal((await request('/api/user/subscriptions/manual-payment','POST',{planId:plan.id,couponCode:'FULLCOVER'},first.body.token)).status,409);
     });
     await t.test('affiliate withdrawal review reserves funds and rejection restores availability', async () => {
       const commission = (await db.query('SELECT id,affiliate_id,referral_id,amount,currency FROM affiliate_commissions ORDER BY id LIMIT 1')).rows[0];
@@ -345,7 +360,6 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
       assert.equal((await request('/api/user/dashboard', 'GET', null, first.body.token)).status, 401);
     });
   } finally {
-    mail.sendAppointmentApproved = originalAppointmentMail;
     if (server) await new Promise(resolve => server.close(resolve));
     pool.query = query; pool.connect = connect;
     if (oldSecret === undefined) delete process.env.JWT_SECRET; else process.env.JWT_SECRET = oldSecret;

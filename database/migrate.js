@@ -4,7 +4,13 @@ const crypto = require('crypto');
 // Normalize checkout line endings only; SQL content is otherwise immutable.
 const checksum = source => crypto.createHash('sha256').update(source.replace(/\r\n/g, '\n')).digest('hex');
 async function verifyMigrations(client) {
-  const applied = new Map((await client.query('SELECT name,checksum FROM schema_migrations')).rows.map(row => [row.name,row.checksum]));
+  let ledger;
+  try { ledger = await client.query('SELECT name,checksum FROM schema_migrations'); }
+  catch (error) {
+    if (error.code === '42P01') throw new Error('Migration ledger is missing. Restore a verified ledger or review the existing database history; do not replay historical migrations or fabricate checksums.');
+    throw error;
+  }
+  const applied = new Map(ledger.rows.map(row => [row.name,row.checksum]));
   const names = fs.readdirSync(path.join(__dirname,'migrations')).filter(name => /^\d+.*\.sql$/.test(name)).sort();
   for (const name of names) {
     if (!applied.has(name)) throw new Error('Pending migration: '+name);

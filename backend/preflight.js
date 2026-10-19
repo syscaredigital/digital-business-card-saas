@@ -10,6 +10,9 @@ const pool = require('./config/database.config');
   } catch (error) { failed = true; console.error('FAIL receipt storage:', error.code || error.name); }
   try {
     await require('../database/migrate').verifyMigrations(pool);
+    console.log('PASS migration ledger and checksums');
+  } catch (error) { failed = true; console.error('FAIL migrations:', error.message); }
+  try {
     await pool.query('SELECT bucket_key FROM rate_limit_buckets LIMIT 0');
     await pool.query('SELECT status FROM email_outbox LIMIT 0');
     await pool.query('SELECT auth_version FROM users LIMIT 0');

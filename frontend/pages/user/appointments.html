@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../../public/assets/css/main.css" />
   <link rel="stylesheet" href="../../public/assets/css/dashboard.css" />
   <link rel="stylesheet" href="../../public/assets/css/user-dashboard.css" />
+  <link rel="stylesheet" href="../../public/assets/css/owner-inbox.css" />
 </head>
 <body>
   <div class="bg-orb bg-orb-1"></div>
@@ -92,7 +93,7 @@
         <section class="lead-metric-grid lead-metric-grid-four" aria-label="Appointment overview">
           <article class="lead-metric-card"><span class="lead-metric-icon is-violet">□</span><div><small>Total bookings</small><strong id="appointmentMetricTotal">0</strong><p>All requests</p></div></article>
           <article class="lead-metric-card"><span class="lead-metric-icon is-amber">⌛</span><div><small>Pending</small><strong id="appointmentMetricPending">0</strong><p>Need your review</p></div></article>
-          <article class="lead-metric-card"><span class="lead-metric-icon is-green">✓</span><div><small>Approved</small><strong id="appointmentMetricApproved">0</strong><p>Confirmation sent</p></div></article>
+          <article class="lead-metric-card"><span class="lead-metric-icon is-green">✓</span><div><small>Approved</small><strong id="appointmentMetricApproved">0</strong><p>Customer email queued</p></div></article>
           <article class="lead-metric-card"><span class="lead-metric-icon is-blue">⌁</span><div><small>Online</small><strong id="appointmentMetricOnline">0</strong><p>Virtual meetings</p></div></article>
         </section>
 
@@ -169,8 +170,10 @@
     </div>
   </div>
 
+  <dialog class="owner-dialog" id="appointmentDecisionDialog" aria-labelledby="appointmentDecisionTitle"><div class="owner-dialog-heading"><h2 id="appointmentDecisionTitle">Review appointment</h2><button type="button" data-close-owner-dialog aria-label="Close appointment">&times;</button></div><p id="appointmentDecisionDetails"></p><p class="owner-original-message" id="appointmentDecisionNotes"></p><form id="appointmentDecisionForm"><label for="appointmentDecisionNote">Message to the customer (optional)</label><textarea id="appointmentDecisionNote" maxlength="2000" rows="4" placeholder="Add the meeting link, office address or reason for declining."></textarea><button type="submit" id="appointmentDecisionSubmit">Confirm decision</button></form><p id="appointmentDecisionFeedback" role="status" aria-live="polite"></p></dialog>
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
   <script src="../../public/assets/js/dashboard.js"></script>
   <script src="../../public/assets/js/user-workspace.js"></script>
+  <script src="../../public/assets/js/owner-inbox.js"></script>
 </body>
 </html>

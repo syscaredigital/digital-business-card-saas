@@ -1,5 +1,5 @@
 const pool = require('../../config/database.config');
-const { sendAppointmentApproved } = require('../../services/email.service');
+const { queueCustomerEmail } = require('../../services/lead-notifications.service');
 
 exports.appointments = async (req, res, next) => {
   const status = String(req.query.status || "").trim().toLowerCase();
@@ -24,7 +24,8 @@ exports.appointments = async (req, res, next) => {
     const [result, summaryResult] = await Promise.all([
       pool.query(
       `SELECT a.id, a.vcard_id, v.title AS vcard_name, a.name, a.email, a.phone,
-              a.starts_at, a.ends_at, a.status, a.appointment_type, a.service_name, a.notes
+              a.starts_at, a.ends_at, a.status, a.appointment_type, a.service_name, a.notes,a.decision_note,
+              (SELECT e.status FROM email_outbox e WHERE e.dedup_key='appointment-decision:'||a.id::text LIMIT 1) AS email_status
        FROM appointments a LEFT JOIN vcards v ON v.id = a.vcard_id
        WHERE ${filters.join(" AND ")} ORDER BY a.starts_at DESC`,
       values
@@ -46,6 +47,8 @@ exports.appointments = async (req, res, next) => {
 exports.updateAppointmentStatus = async (req, res, next) => {
   const appointmentId = Number(req.params.id);
   const status = String(req.body?.status || "").trim().toLowerCase();
+  const note = req.body?.note == null ? '' : req.body.note;
+  if (typeof note !== 'string' || note.length > 2000) return res.status(400).json({ message: 'The appointment message must be text of at most 2,000 characters' });
   if (!Number.isInteger(appointmentId) || appointmentId < 1) {
     return res.status(400).json({ message: "Invalid appointment ID" });
   }
@@ -58,7 +61,7 @@ exports.updateAppointmentStatus = async (req, res, next) => {
     await client.query("BEGIN");
     const result = await client.query(
       `SELECT a.id,a.name,a.email,a.starts_at,a.ends_at,a.status,a.appointment_type,a.service_name,
-              v.title AS vcard_title,u.name AS owner_name
+              v.title AS vcard_title,u.name AS owner_name,u.email AS owner_email,a.decision_note
        FROM appointments a
        JOIN users u ON u.id=a.user_id
        LEFT JOIN vcards v ON v.id=a.vcard_id
@@ -79,45 +82,36 @@ exports.updateAppointmentStatus = async (req, res, next) => {
       await client.query("ROLLBACK");
       return res.status(409).json({ message: `A ${appointment.status} appointment cannot be changed` });
     }
-    if (status === "rejected") {
-      const rejected = await client.query(
-        `UPDATE appointments SET status='rejected',updated_at=NOW()
-         WHERE id=$1 RETURNING id,status,updated_at`,
-        [appointmentId]
-      );
-      await client.query("COMMIT");
-      return res.json({ message: "Appointment rejected", appointment: rejected.rows[0] });
-    }
     if (!appointment.email) {
       await client.query("ROLLBACK");
       return res.status(400).json({ message: "This appointment has no customer email address" });
     }
 
-    await sendAppointmentApproved({
-      to: appointment.email,
-      customerName: appointment.name,
-      ownerName: appointment.owner_name,
-      vcardTitle: appointment.vcard_title,
-      startsAt: appointment.starts_at,
-      endsAt: appointment.ends_at,
-      meetingMode: appointment.appointment_type,
-      serviceName: appointment.service_name,
+    const when = new Intl.DateTimeFormat('en', { dateStyle:'full',timeStyle:'short',timeZone:process.env.APP_TIMEZONE || 'Asia/Colombo' }).format(new Date(appointment.starts_at));
+    const host = appointment.owner_name || appointment.vcard_title || 'the card owner';
+    await queueCustomerEmail(client, {
+      userId: req.user.id, key: `appointment-decision:${appointmentId}`,
+      to: appointment.email, replyTo: appointment.owner_email,
+      subject: `Appointment ${status === 'approved' ? 'confirmed' : 'declined'} with ${host}`,
+      text: [`Hello ${appointment.name},`, '', `Your appointment with ${host} has been ${status}.`,
+        `Service: ${appointment.service_name || 'Appointment'}`, `Date and time: ${when} (${process.env.APP_TIMEZONE || 'Asia/Colombo'})`,
+        `Meeting mode: ${appointment.appointment_type}`, note.trim() ? `Message from the host:\n${note.trim()}` : '',
+        status === 'approved' && appointment.appointment_type === 'online' && !note.trim() ? 'Please contact the host for the meeting link.' : '',
+        status === 'rejected' ? 'Please contact the host or request a different time.' : '',
+        '', 'You can reply to this email to contact the host.', 'Sync E-Card'].filter(Boolean).join('\n'),
     });
     const updated = await client.query(
-      `UPDATE appointments SET status='approved',updated_at=NOW()
-       WHERE id=$1 RETURNING id,status,updated_at`,
-      [appointmentId]
+      `UPDATE appointments SET status=$2,decision_note=$3,updated_at=NOW()
+       WHERE id=$1 RETURNING id,status,decision_note,updated_at`,
+      [appointmentId, status, note.trim() || null]
     );
     await client.query("COMMIT");
     res.json({
-      message: "Appointment approved and confirmation email sent",
+      message: `Appointment ${status}; customer email queued for delivery`,
       appointment: updated.rows[0],
     });
   } catch (error) {
     await client.query("ROLLBACK");
-    if (/email|mail|smtp|auth|login|recipient|envelope|connect|timeout/i.test(error.message || "")) {
-      return res.status(502).json({ message: "The appointment was not approved because the confirmation email could not be sent" });
-    }
     next(error);
   } finally {
     client.release();

@@ -36,4 +36,11 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - run: node tests/production-workflows.test.js --browser
+      - run: node tests/owner-workflows.test.js --browser
+      # This service database is disposable and starts empty on every CI run.
+      - run: npm run db:setup
+      - run: npm run check:deployment
+      - run: npm run check:browser
       - run: sh -n deploy/backup.sh deploy/restore-check.sh
+      - run: docker build --tag syncecard:verification .
