@@ -1,12 +1,12 @@
-Deployment target: https://test.syncecard.com using cPanel Setup Node.js App on your VPS.
+Deployment target: https://syncecard.com using cPanel Setup Node.js App on your VPS.
 
 Before creating the Node application:
 
-1. At the authoritative DNS provider for `syncecard.com`, create an A record named `test` pointing to the VPS public IPv4 address. An existing record should be checked rather than duplicated. Only add an AAAA record if this VPS has working IPv6.
-2. In cPanel Domains, create `test.syncecard.com` if it does not already exist, with its own document root. Keep application source in the separate application root shown below, outside `public_html` and outside the subdomain's static document root.
-3. In cPanel SSL/TLS Status, run AutoSSL for the subdomain after DNS resolves to this VPS. Check that HTTPS works, then enable the HTTPS redirect. Ports 80 and 443 must reach the VPS web server.
+1. At the authoritative DNS provider for `syncecard.com`, create or update the root A record named `@` pointing to the VPS public IPv4 address. An existing record should be checked rather than duplicated. Only add an AAAA record if this VPS has working IPv6.
+2. In cPanel Domains, create `syncecard.com` if it does not already exist, with its own document root. Keep application source in the separate application root shown below, outside `public_html` and outside the domain's static document root.
+3. In cPanel SSL/TLS Status, run AutoSSL for the domain after DNS resolves to this VPS. Check that HTTPS works, then enable the HTTPS redirect. Ports 80 and 443 must reach the VPS web server.
 4. Confirm that Setup Node.js App offers Node.js 22.x. If this screen is missing or only offers old versions, have the VPS administrator enable a supported Node.js/Passenger integration in WHM. The instructions below assume the Setup Node.js App interface from your screenshot; cPanel Application Manager is a different interface.
-5. Create a separate PostgreSQL database and user for this test installation, with ownership/permissions to create tables, sequences, and indexes. Use PostgreSQL Databases in cPanel if available; otherwise the VPS administrator must provision PostgreSQL or supply an external service. Do not point this test site at the live customer database.
+5. Use the verified production PostgreSQL database and user, with ownership/permissions to create tables, sequences, and indexes. Back up the existing database and uploads before moving business data. Use PostgreSQL Databases in cPanel if available; otherwise the VPS administrator must provision PostgreSQL or supply an external service. Keep staging separate from production; do not seed over existing business data.
 
 For PostgreSQL on the same VPS, use the actual host (commonly `127.0.0.1`), port `5432`, and the database/user names assigned by cPanel, including any account prefix. Set `DB_SSL=false` only if that local PostgreSQL connection is configured without TLS. For a remote service, follow its TLS requirements. PostgreSQL port 5432 does not need to be publicly exposed for a local application connection.
 
@@ -16,16 +16,16 @@ Use these settings in the Create Application screen:
 | --- | --- |
 | Node.js version | 22.x (latest patch offered by the host) |
 | Application mode | Production |
-| Application root | test.syncecard.com |
-| Application URL domain | test.syncecard.com |
+| Application root | A private directory outside public_html, such as syncecard-app |
+| Application URL domain | syncecard.com |
 | Application URL path (box beside domain) | Leave empty; use `/` if the panel requires a value |
 | Application startup file | app.js |
 
-The text `HTTPS` in the screenshot is in the URL path field. Remove it. Enable the certificate for this subdomain through cPanel SSL/TLS or AutoSSL, and enable the host's HTTPS redirect. Node.js 10 cannot run this application. If 22.x is unavailable, ask the host to enable it before deploying.
+The text `HTTPS` in the screenshot is in the URL path field. Remove it. Enable the certificate for this domain through cPanel SSL/TLS or AutoSSL, and enable the host's HTTPS redirect. Node.js 10 cannot run this application. If 22.x is unavailable, ask the host to enable it before deploying.
 
 Create the application, then upload and extract the release contents directly into the application root shown by cPanel. `app.js`, `package.json`, `package-lock.json`, `backend`, `frontend`, and `database` must be siblings, without an additional archive directory. Keep the host-generated Passenger configuration. Do not upload local `node_modules` or local environment files. cPanel manages its dependency directory; use Run NPM Install from the application screen after uploading. Root dependencies are available to backend modules through normal Node module resolution. The backend-only manifest remains available for local development and Docker.
 
-Configure environment variables using `deploy/cpanel.env.example`. Set `PUBLIC_APP_URL=https://test.syncecard.com` exactly, without a trailing path. Supply real PostgreSQL and SMTP credentials and a new random signing secret. Keep the SMTP sender authorized by your mail provider; changing the website domain does not change the mailbox. Use cPanel's environment editor, or a private `backend/.env` file with restricted permissions. Do not use the Docker environment example for the cPanel database settings.
+Configure environment variables using `deploy/cpanel.env.example`. Set `PUBLIC_APP_URL=https://syncecard.com` exactly, without a trailing path. Supply real PostgreSQL and SMTP credentials and a new random signing secret. Keep the SMTP sender authorized by your mail provider; changing the website domain does not change the mailbox. Use cPanel's environment editor, or a private `backend/.env` file with restricted permissions. Do not use the Docker environment example for the cPanel database settings.
 
 This application uses PostgreSQL, not MySQL. Confirm that the account offers PostgreSQL or can connect to an external PostgreSQL service. For a remote database, use the provider's TLS settings and allow the hosting server's connection. PostgreSQL connectivity and privileges are required before the application can start.
 
@@ -43,7 +43,7 @@ Restart the application in cPanel. Configure bank details, approved NFC shipping
 
 ```sh
 node backend/preflight.js --smtp
-curl --fail https://test.syncecard.com/ready
+curl --fail https://syncecard.com/ready
 ```
 
 Then verify login, a public card/QR link, password-reset email delivery, and a test payment/NFC workflow on the real domain. SMTP authentication alone does not prove inbox delivery. See the current [audit remediation checklist](audit-remediation.md) for completed source fixes and remaining live gates. Company management and newsletter signup are unavailable. Passenger may stop idle processes: leave `NOTIFICATION_JOBS=false` and schedule `node backend/jobs/run-jobs.js` every minute through cPanel Cron Jobs, using the activated Node environment and application root. Validate SMTP first and monitor `email_outbox` failures. Pause this cron during maintenance. Subscription entitlement queries independently enforce expiry dates.
