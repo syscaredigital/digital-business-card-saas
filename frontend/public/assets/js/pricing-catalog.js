@@ -4,6 +4,13 @@
   if (!root) return;
   var catalogPlans = [];
   var rateDate = "";
+  var countryLabel = document.createElement('label');
+  countryLabel.className = 'website-currency-switcher';
+  countryLabel.innerHTML = 'Billing country <select aria-label="Package billing country"><option value="LK">Sri Lanka</option></select>';
+  root.parentNode.insertBefore(countryLabel, root);
+  var countrySelect = countryLabel.querySelector('select');
+  countrySelect.addEventListener('change', function() { localStorage.setItem('billingCountry', countrySelect.value); loadCatalog(); });
+  function billingCountry() { return localStorage.getItem('billingCountry') || 'LK'; }
   function escapeHtml(value) { return String(value == null ? "" : value).replace(/[&<>'"]/g, function (char) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]; }); }
   function apiBase() { return window.SyncVCardApiOrigin; }
   function selectedCurrency() {
@@ -14,16 +21,17 @@
   function interval(value) { return value === "lifetime" ? "one-time" : "per " + String(value || "monthly").replace(/ly$/, ""); }
   function benefits(plan) { return [plan.vcardLimit + " digital card" + (plan.vcardLimit === 1 ? "" : "s"), plan.nfcLimit + " NFC card allowance", plan.analyticsLimit + " analytics allowance", plan.storageLimitMb + " MB storage"].concat(plan.features || []); }
   function render(plan, index) {
+    if (plan.available === false) return '<article class="price-card"><h3>' + escapeHtml(plan.name) + '</h3><p>Pricing is not configured for this region yet.</p><a class="btn btn-outline-custom" href="contact.html">Contact support</a></article>';
     var modern = root.dataset.pricingVariant === "modern", featured = index === 1;
     var items = benefits(plan).map(function (item) { return "<li>" + escapeHtml(item) + "</li>"; }).join("");
-    var href = "../auth/register.html?plan=" + encodeURIComponent(plan.id) + "&currency=" + encodeURIComponent(selectedCurrency());
+    var href = "../auth/register.html?plan=" + encodeURIComponent(plan.id) + "&currency=" + encodeURIComponent(selectedCurrency()) + "&billingCountry=" + encodeURIComponent(billingCountry());
     if (modern) return '<article class="modern-price-card' + (featured ? ' recommended' : '') + '">' + (featured ? '<div class="popular-label">Most popular</div>' : '') + '<div class="plan-top"><span class="plan-icon">' + escapeHtml(plan.name.charAt(0).toUpperCase()) + '</span><div><h3>' + escapeHtml(plan.name) + '</h3><p>' + (plan.price === 0 ? "Start free" : "Grow your account") + '</p></div></div><div class="plan-price"><strong>' + money(plan.price) + '</strong><span>' + escapeHtml(plan.price === 0 ? "Free forever" : interval(plan.billingInterval)) + '</span></div><ul>' + items + '</ul><a href="' + href + '" class="btn plan-button">' + (plan.price === 0 ? "Create free account" : "Choose plan") + ' <span>&rarr;</span></a></article>';
     return '<article class="price-card' + (featured ? ' featured' : '') + '"><h3>' + escapeHtml(plan.name) + '</h3><p>' + (plan.price === 0 ? "Start free and upgrade later" : "For growing professionals and teams") + '</p><strong>' + money(plan.price) + ' <small>' + escapeHtml(plan.price === 0 ? "free" : interval(plan.billingInterval)) + '</small></strong><ul>' + items + '</ul><a href="' + href + '" class="btn ' + (featured ? "btn-red" : "btn-outline-custom") + ' w-100">' + (plan.price === 0 ? "Get Started" : "Choose " + escapeHtml(plan.name)) + '</a></article>';
   }
-  function renderCatalog() { root.innerHTML = (catalogPlans.length ? catalogPlans.map(render).join("") : '<div class="pricing-live-state">Pricing is unavailable in ' + escapeHtml(selectedCurrency()) + ' right now. Choose another currency or contact us.</div>') + (rateDate && selectedCurrency()!=="LKR" ? '<p class="pricing-live-state">Converted from LKR using the current reference rate dated ' + escapeHtml(rateDate) + '.</p>' : ''); }
+  function renderCatalog() { root.innerHTML = (catalogPlans.length ? catalogPlans.map(render).join("") : '<div class="pricing-live-state">Pricing is unavailable in ' + escapeHtml(selectedCurrency()) + ' right now. Choose another currency or contact us.</div>') + (rateDate && catalogPlans.some(function(plan) { return plan.pricing && plan.pricing.regionalCurrency !== selectedCurrency(); }) ? '<p class="pricing-live-state">Regional package price displayed using reference rates dated ' + escapeHtml(rateDate) + '.</p>' : ''); }
   function loadCatalog() {
     root.innerHTML = '<div class="pricing-live-state">Loading ' + escapeHtml(selectedCurrency()) + ' pricing...</div>';
-    return fetch(apiBase() + "/api/public/plans?currency=" + encodeURIComponent(selectedCurrency())).then(function (response) { if (!response.ok) throw new Error(); return response.json(); }).then(function (payload) { catalogPlans = Array.isArray(payload.data) ? payload.data : []; rateDate=payload.rateDate || ""; renderCatalog(); }).catch(function () { root.innerHTML = '<div class="pricing-live-state is-error">Pricing could not be loaded. Please try again shortly.</div>'; });
+    return fetch(apiBase() + "/api/public/plans?currency=" + encodeURIComponent(selectedCurrency()) + "&billingCountry=" + encodeURIComponent(billingCountry())).then(function (response) { if (!response.ok) throw new Error(); return response.json(); }).then(function (payload) { var names = new Intl.DisplayNames(['en'], {type:'region'}); countrySelect.innerHTML = (payload.billingCountries || ['LK']).map(function(code) { return '<option value="' + code + '">' + escapeHtml(names.of(code)) + '</option>'; }).join(''); countrySelect.value = payload.billingCountry; catalogPlans = Array.isArray(payload.data) ? payload.data : []; rateDate=payload.rateDate || ""; renderCatalog(); }).catch(function () { root.innerHTML = '<div class="pricing-live-state is-error">Pricing could not be loaded. Please try again shortly.</div>'; });
   }
   window.addEventListener("sync:currency-change", loadCatalog);
   loadCatalog();

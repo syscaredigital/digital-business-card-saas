@@ -1,3 +1,5 @@
+Current release: use [the syncecard.com production checklist](production-syncecard-com.md) for company administration, newsletter, editable URLs and migrations through 083.
+
 Deployment target: https://syncecard.com using cPanel Setup Node.js App on your VPS.
 
 Before creating the Node application:
@@ -46,7 +48,7 @@ node backend/preflight.js --smtp
 curl --fail https://syncecard.com/ready
 ```
 
-Then verify login, a public card/QR link, password-reset email delivery, and a test payment/NFC workflow on the real domain. SMTP authentication alone does not prove inbox delivery. See the current [audit remediation checklist](audit-remediation.md) for completed source fixes and remaining live gates. Company management and newsletter signup are unavailable. Passenger may stop idle processes: leave `NOTIFICATION_JOBS=false` and schedule `node backend/jobs/run-jobs.js` every minute through cPanel Cron Jobs, using the activated Node environment and application root. Validate SMTP first and monitor `email_outbox` failures. Pause this cron during maintenance. Subscription entitlement queries independently enforce expiry dates.
+Then verify login, a public card/QR link, password-reset email delivery, and a test payment/NFC workflow on the real domain. SMTP authentication alone does not prove inbox delivery. See the current [audit remediation checklist](audit-remediation.md) for completed source fixes and remaining live gates. Company management and double-opt-in newsletter features are included; configure them as described in the production checklist. Passenger may stop idle processes: leave `NOTIFICATION_JOBS=false` and schedule `node backend/jobs/run-jobs.js` every minute through cPanel Cron Jobs, using the activated Node environment and application root. Validate SMTP first and monitor `email_outbox` failures. Pause this cron during maintenance. Subscription entitlement queries independently enforce expiry dates.
 
 Keep application source, private files, backups, and uploads outside any independently served static document root. If cPanel maps the application root directly as a static document root, ask the host to ensure private paths are denied. Verify `/.env`, `/backend/.env`, `/package.json`, and `/uploads/payment-slips/nonexistent.pdf` are not publicly served before launch.
 

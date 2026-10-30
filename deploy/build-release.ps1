@@ -26,5 +26,10 @@ foreach ($file in @('app.js','package.json','package-lock.json','Dockerfile','do
 if (Get-ChildItem -LiteralPath $stageRoot -Recurse -File -Force | Where-Object { $_.Name -in @('.env','production.env','users.json') }) {
   throw 'Private files found in release staging; archive not created.'
 }
+$manifestFiles = @(Get-ChildItem -LiteralPath $stageRoot -Recurse -File | ForEach-Object {
+  [ordered]@{ path = $_.FullName.Substring($stageRoot.Length + 1).Replace('\', '/'); sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
+})
+$manifest = [ordered]@{ domain = 'https://syncecard.com'; createdAtUtc = [DateTime]::UtcNow.ToString('o'); files = $manifestFiles }
+$manifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $stageRoot 'release-manifest.json') -Encoding UTF8
 Compress-Archive -Path (Join-Path $stageRoot '*') -DestinationPath $archivePath
 Write-Output $archivePath

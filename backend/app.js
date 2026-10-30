@@ -30,7 +30,6 @@ app.get("/", (req, res) => res.redirect("/pages/website/home.html"));
 app.use('/pages', (req,res,next) => {
   let pathname;
   try { pathname = decodeURIComponent(req.path); } catch (_) { return res.sendStatus(400); }
-  if (/^\/company-admin(?:\/|$)/i.test(pathname)) return res.status(404).send('Company management is not available in this release.');
   next();
 });
 app.use("/pages", express.static(path.join(frontendRoot, "pages"), { index: false, fallthrough: true, setHeaders: frontendHeaders }));
@@ -49,6 +48,9 @@ app.get('/ready', async (req, res) => {
     await pool.query('SELECT auth_version FROM users LIMIT 0');
     await pool.query('SELECT token_hash FROM password_reset_tokens LIMIT 0');
     await pool.query('SELECT amount_lkr FROM revenue_lkr_entries LIMIT 0');
+    await pool.query('SELECT slug FROM vcard_url_history LIMIT 0');
+    await pool.query('SELECT status FROM newsletter_deliveries LIMIT 0');
+    await pool.query('SELECT employee_limit FROM companies LIMIT 0');
     res.json({ status: 'ready' });
   } catch (_) { res.status(503).json({ status: 'unavailable' }); }
 });
@@ -57,6 +59,10 @@ app.use('/api/public', (req, res, next) => req.method === 'POST' ? publicRateLim
 app.post("/api/auth/register", requirePlatformAvailable);
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/public", requirePlatformAvailable, require("./routes/public.routes"));
+app.use('/api/public/newsletter', requirePlatformAvailable, require('./routes/newsletter.routes').publicRouter);
+app.use('/api/super-admin/newsletter', require('./routes/newsletter.routes').adminRouter);
+app.use('/api/company-admin', require('./routes/company.routes').router);
+app.use('/api/super-admin/companies', require('./routes/company.routes').adminRouter);
 app.use("/api/user", require("./routes/user.routes"));
 app.use("/api/super-admin", require("./routes/super-admin.routes"));
 
@@ -65,15 +71,22 @@ app.get("/vcard/:slug", requirePlatformAvailable, async (req, res, next) => {
   if (!/^[a-z0-9][a-z0-9-]{1,118}[a-z0-9]$/.test(slug)) return res.status(404).json({ message: "VCard not found" });
   try {
     const result = await pool.query(
-      `SELECT v.id, t.preview_url
-       FROM vcards v
+      `SELECT v.id, v.slug, t.preview_url
+       FROM vcard_url_history history JOIN vcards v ON v.id=history.vcard_id
+       JOIN users owner ON owner.id=v.user_id
+       LEFT JOIN companies company ON company.id=owner.company_id
        LEFT JOIN vcard_templates t ON t.id=v.template_id
-       WHERE LOWER(v.slug)=$1 AND v.is_active=TRUE`,
+       WHERE history.slug=$1 AND v.is_active=TRUE AND owner.status='active'
+         AND (owner.company_id IS NULL OR company.status='active')`,
       [slug]
     );
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const source = req.query.source === "qr" ? "qr" : "public_link";
     const card = result.rows[0];
+    if (slug !== String(card.slug).toLowerCase()) {
+      res.set('Cache-Control', 'no-store');
+      return res.redirect(302, `/vcard/${encodeURIComponent(card.slug)}${source === 'qr' ? '?source=qr' : ''}`);
+    }
     const templateUrl = new URL(frontendVcardUrl(req, card.id, source, card.preview_url));
     const match = templateUrl.pathname.match(/^\/pages\/public-vcard\/(final-[a-z0-9-]+\.html)$/i);
     if (!match) return res.status(404).json({ message: "VCard template not found" });

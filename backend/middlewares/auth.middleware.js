@@ -34,7 +34,7 @@ module.exports = async function authenticate(req, res, next) {
 
     if (hasPostgresIntegerId) {
       result = await pool.query(
-        `SELECT u.id, u.email, u.name, u.status, u.auth_version, r.name AS role
+        `SELECT u.id, u.email, u.name, u.status, u.auth_version, u.company_id, r.name AS role
          FROM users u
          LEFT JOIN roles r ON r.id = u.role_id
          WHERE u.id = $1
@@ -47,6 +47,10 @@ module.exports = async function authenticate(req, res, next) {
 
     if (!user || user.status !== "active") {
       return res.status(401).json({ message: "Account is unavailable" });
+    }
+    if (user.company_id) {
+      const company = await pool.query("SELECT id FROM companies WHERE id=$1 AND status='active'", [user.company_id]);
+      if (!company.rowCount) return res.status(403).json({ message: 'Your company account is unavailable. Contact your administrator.' });
     }
     if ((payload.version || 0) !== user.auth_version) {
       return res.status(401).json({ message: "Password has changed. Please sign in again." });

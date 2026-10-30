@@ -1,0 +1,2 @@
+ALTER TABLE companies ADD COLUMN employee_limit INTEGER NOT NULL DEFAULT 10
+  CHECK(employee_limit BETWEEN 1 AND 10000);

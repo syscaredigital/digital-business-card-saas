@@ -11,6 +11,17 @@ const { sendWebsiteContact } = require("../services/email.service");
 const { dashboardLink } = require('../services/lead-notifications.service');
 
 const router = express.Router();
+router.use('/vcards/:id', async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1 || id > 2147483647) return res.status(400).json({ message: 'Invalid VCard ID' });
+  try {
+    const result = await pool.query(`SELECT v.id FROM vcards v JOIN users u ON u.id=v.user_id
+      LEFT JOIN companies c ON c.id=u.company_id WHERE v.id=$1 AND v.is_active=TRUE AND u.status='active'
+      AND (u.company_id IS NULL OR c.status='active')`, [id]);
+    if (!result.rowCount) return res.status(404).json({ message: 'VCard not found' });
+    next();
+  } catch (error) { next(error); }
+});
 
 router.post("/contact", async (req, res, next) => {
   const name = String(req.body.name || "").trim();
@@ -81,18 +92,29 @@ function appointmentServices(content) {
     .filter(Boolean);
 }
 
+router.get('/billing-countries', (req, res) => {
+  res.json({ countries: require('../services/package-pricing.service').COUNTRY_CODES });
+});
+
 router.get("/plans", async (req, res, next) => {
   try {
+    const { quotePackage, normalizeCountry, COUNTRY_CODES, marketFor } = require('../services/package-pricing.service');
+    const country = normalizeCountry(req.query.billingCountry || 'LK');
+    if (!country) return res.status(400).json({ message: 'Select a valid billing country' });
     const currency = normalizeCurrency(req.query.currency, BASE_CURRENCY);
     const exchange = await getRate(currency);
     const result = await pool.query(`SELECT p.id,p.name,p.price,p.billing_interval,p.vcard_limit,p.nfc_limit,p.analytics_limit,p.storage_limit_mb,p.features,p.updated_at
       FROM plans p WHERE p.status='active' ORDER BY p.price,p.name`);
+    for (const plan of result.rows) {
+      try { plan.pricing = await quotePackage(pool, plan, country, currency); }
+      catch (error) { if (error.status !== 409) throw error; plan.pricingMessage = error.message; }
+    }
     res.json({ data: result.rows.map((plan) => ({
-      id: plan.id, name: plan.name, price: convertFromLkr(plan.price, exchange.rate), basePrice: Number(plan.price), baseCurrency: BASE_CURRENCY, currency, billingInterval: plan.billing_interval,
+      id: plan.id, name: plan.name, price: plan.pricing?.amount ?? null, available: Boolean(plan.pricing), pricingMessage: plan.pricingMessage, pricing: plan.pricing, basePrice: Number(plan.price), baseCurrency: BASE_CURRENCY, currency, billingInterval: plan.billing_interval,
       vcardLimit: Number(plan.vcard_limit), nfcLimit: Number(plan.nfc_limit), analyticsLimit: Number(plan.analytics_limit),
       storageLimitMb: Number(plan.storage_limit_mb),
       features: normalizePlanFeatures(plan.features).benefits, updatedAt: plan.updated_at,
-    })), currency, exchangeRate: exchange.rate, rateDate: exchange.rateDate, ratesStale: exchange.stale });
+    })), billingCountry: country, billingCountries: COUNTRY_CODES, market: marketFor(country).market, currency, exchangeRate: exchange.rate, rateDate: exchange.rateDate, ratesStale: exchange.stale });
   } catch (error) { next(error); }
 });
 

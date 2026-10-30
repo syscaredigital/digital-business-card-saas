@@ -91,7 +91,7 @@ test('create and edit cards through section forms, retaining hidden drafts and s
     assert.equal(await editPanel.getByRole('switch').first().isChecked(),false);
     await editPanel.getByRole('switch').first().check();assert.equal(await editPanel.getByLabel('Product name').inputValue(),'Support package');
     await page.locator('#userVcardEditor button[type=submit]').click();
-    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent==='Saved successfully');
+    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent.startsWith('Saved successfully'));
     assert.ok(!payload.hiddenSections.includes('products'));
     await page.setViewportSize({width:1440,height:1000});await edit.screenshot({path:path.join(__dirname,'../test-results/section-builder-desktop.png')});
     // Removing advanced features from the package removes their tabs and controls.

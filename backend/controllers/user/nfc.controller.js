@@ -185,7 +185,7 @@ exports.placeNfcOrder = async (req, res, next) => {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) { await discardUpload(); return res.status(400).json({ message: "Order between 1 and 100 NFC cards" }); }
   if (!/^[A-Za-z0-9][A-Za-z0-9._/# -]{2,254}$/.test(transactionNumber)) { await discardUpload(); return res.status(400).json({ message: "Enter a valid transaction number" }); }
   if (shippingAddress.length < 10 || shippingAddress.length > 2000) { await discardUpload(); return res.status(400).json({ message: "Enter a complete shipping address" }); }
-  if (!/^[A-Z]{2}$/.test(destinationCountry)) { await discardUpload(); return res.status(400).json({ message: "Select a valid destination country" }); }
+  if (!require("../../services/package-pricing.service").normalizeCountry(destinationCountry)) { await discardUpload(); return res.status(400).json({ message: "Select a valid destination country" }); }
   let client;
   try {
     client = await pool.connect(); await client.query("BEGIN");
@@ -213,6 +213,10 @@ exports.placeNfcOrder = async (req, res, next) => {
     const subtotal = convertFromLkr(subtotalLkr, exchange.rate);
     const shippingCost = convertFromLkr(shippingCostLkr, exchange.rate);
     const amount = Math.round((subtotal + shippingCost + Number.EPSILON) * 100) / 100;
+    if ((req.body.expectedAmount !== undefined && (!Number.isFinite(Number(req.body.expectedAmount)) || Math.abs(Number(req.body.expectedAmount) - amount) > 0.001)) || (req.body.expectedCurrency && req.body.expectedCurrency !== currency)) {
+      await client.query('ROLLBACK'); await discardUpload();
+      return res.status(409).json({ message: 'Card pricing, exchange rate or shipping fee changed. Refresh the order and review the total before paying.' });
+    }
     const proofUrl = `/uploads/payment-slips/${req.file.filename}`;
     const result = await client.query(`INSERT INTO nfc_orders(user_id,nfc_product_id,vcard_id,quantity,amount,currency,status,
       shipping_address,destination_country,subtotal_lkr,shipping_cost_lkr,shipping_cost,exchange_rate,exchange_rate_date,

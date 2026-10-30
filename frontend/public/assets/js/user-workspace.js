@@ -1,5 +1,6 @@
 (function () {
   "use strict";
+  var companyMember = new URLSearchParams(window.location.search).get("companyMember");
   var API = window.SyncVCardApiOrigin + "/api";
   var token = localStorage.getItem("sessionActive");
   var user;
@@ -82,6 +83,7 @@
   }
 
   function request(path, options) {
+    if (companyMember && /^\/user\/(?:dashboard|vcards(?:\/\d+)?)$/.test(path.split("?")[0])) path += (path.includes("?") ? "&" : "?") + "companyMember=" + encodeURIComponent(companyMember);
     options = options || {};
     options.headers = Object.assign({}, options.headers, { "X-Requested-With": "SyncECard" });
     return window.SyncSession.fetch(API + path, options).then(async function (response) {
@@ -342,7 +344,7 @@
              '<div class="vcard-library-cover">' + (templatePreviewUrl ? '<iframe src="' + escapeHtml(templatePreviewUrl) + '" title="' + escapeHtml(card.template_name || "VCard") + ' preview" loading="lazy" tabindex="-1"></iframe>' : '') + '<span class="vcard-library-template">' + escapeHtml(card.template_name || "VCard template") + '</span><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + '</span></div>' +
             '<div class="vcard-library-body"><div class="client-vcard-name-cell"><div><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.title || "Untitled card") + '</a><span>' + escapeHtml(card.description || "Your digital business card") + '</span></div></div>' +
             '<div class="vcard-library-meta"><span><small>Contact</small>' + escapeHtml(card.email || card.phone || "Not added") + '</span><span><small>Updated</small>' + escapeHtml(formatDate(card.updated_at)) + '</span><span><small>Public URL</small><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl.replace(/^https?:\/\//,"")) + '</a></span></div>' +
-            '<div class="vcard-library-actions"><a class="vcard-open-link" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">View card <span>↗</span></a><div class="vcard-manage"><button class="vcard-manage-toggle" type="button" data-vcard-manage-toggle="' + card.id + '" aria-expanded="false">Manage <span>•••</span></button><div class="vcard-manage-menu" data-vcard-manage-menu="' + card.id + '" hidden><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + '"><span>✎</span><div><strong>Edit VCard</strong><small>Update details and design</small></div></a><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer"><span>↗</span><div><strong>Open public card</strong><small>View the published profile</small></div></a><button type="button" class="vcard-delete-action" data-delete-vcard="' + card.id + '" data-vcard-title="' + escapeHtml(card.title || "Untitled card") + '"><span>×</span><div><strong>Delete VCard</strong><small>Permanently remove this card</small></div></button></div></div></div></div></article>';
+            '<div class="vcard-library-actions"><a class="vcard-open-link" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">View card <span>↗</span></a><div class="vcard-manage"><button class="vcard-manage-toggle" type="button" data-vcard-manage-toggle="' + card.id + '" aria-expanded="false">Manage <span>•••</span></button><div class="vcard-manage-menu" data-vcard-manage-menu="' + card.id + '" hidden><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + (companyMember ? '&companyMember=' + encodeURIComponent(companyMember) : '') + '"><span>✎</span><div><strong>Edit VCard</strong><small>Update details and design</small></div></a><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer"><span>↗</span><div><strong>Open public card</strong><small>View the published profile</small></div></a><button type="button" class="vcard-delete-action" data-delete-vcard="' + card.id + '" data-vcard-title="' + escapeHtml(card.title || "Untitled card") + '"><span>×</span><div><strong>Delete VCard</strong><small>Permanently remove this card</small></div></button></div></div></div></div></article>';
         }).join(""));
       } else vcardTable.insertAdjacentHTML("beforeend", '<div class="user-empty">No cards found. Use “Add New VCard” to create one.</div>');
     }
@@ -747,6 +749,7 @@
     var refreshNfcOrdersButton = document.getElementById("refreshNfcOrders");
     var refreshNfcOrdersLabel = refreshNfcOrdersButton ? refreshNfcOrdersButton.querySelector("span") : null;
     var liveNfcLoading = null;
+    var liveNfcExpectedTotal = null;
     function nfcMoney(value, currency) {
       var code=currency || liveNfcData.currency || "LKR";
       try { return new Intl.NumberFormat(undefined, { style:"currency", currency:code }).format(Number(value || 0)); }
@@ -763,7 +766,8 @@
       var domestic=country==="LK";
       var configured=domestic ? Boolean(liveNfcData.domesticShippingConfigured) : Boolean(liveNfcData.internationalShippingConfigured);
       var shipping=domestic ? Number(liveNfcData.domesticShipping || 0) : Number(liveNfcData.internationalShipping || 0);
-      var subtotal=(product ? product.price : 0) * Math.max(1,Number(liveNfcQuantity.value || 1));
+      var subtotal=Math.round(((product ? product.basePrice : 0) * Math.max(1,Number(liveNfcQuantity.value || 1)) * Number(liveNfcData.exchangeRate || 1) + Number.EPSILON) * 100) / 100;
+      liveNfcExpectedTotal = configured ? Math.round((subtotal + shipping + Number.EPSILON) * 100) / 100 : null;
       var submit=liveNfcOrderForm.querySelector('[type="submit"]');
       setText("nfcDeliveryFee", configured ? nfcMoney(shipping) : "Not configured");
       setText("nfcDeliveryFeeHelp", configured ? (domestic ? "Sri Lanka delivery rate set by super admin." : "International delivery rate set by super admin.") : "A super admin must set this delivery rate before an order can be submitted.");
@@ -809,7 +813,7 @@
     liveNfcProductSelect.addEventListener("change",updateLiveNfcTotal);liveNfcQuantity.addEventListener("input",updateLiveNfcTotal);document.getElementById("nfcDestinationCountry").addEventListener("input",updateLiveNfcTotal);
     liveNfcOrderForm.addEventListener("reset",function(){window.setTimeout(updateLiveNfcTotal,0);});
     document.addEventListener("click",function(event){var button=event.target.closest("[data-user-nfc-product]");if(!button)return;liveNfcProductSelect.value=button.dataset.userNfcProduct;updateLiveNfcTotal();document.getElementById("openNfcOrderModal").click();});
-    liveNfcOrderForm.addEventListener("submit",function(event){event.preventDefault();var submit=liveNfcOrderForm.querySelector('[type="submit"]'),feedback=document.getElementById("nfcOrderFeedback");submit.disabled=true;submit.textContent="Uploading payment...";feedback.textContent="Submitting your order securely...";request("/user/nfc/orders",{method:"POST",body:new FormData(liveNfcOrderForm)}).then(function(data){feedback.textContent=data.message;liveNfcOrderForm.reset();updateLiveNfcTotal();return loadLiveNfc();}).then(function(){setTimeout(function(){document.getElementById("closeNfcOrderModal").click();},800);}).catch(function(error){feedback.textContent=error.message;}).finally(function(){submit.textContent="Submit payment & order";updateLiveNfcTotal();});});
+    liveNfcOrderForm.addEventListener("submit",function(event){event.preventDefault();var submit=liveNfcOrderForm.querySelector('[type="submit"]'),feedback=document.getElementById("nfcOrderFeedback");submit.disabled=true;submit.textContent="Uploading payment...";feedback.textContent="Submitting your order securely...";var orderPayload=new FormData(liveNfcOrderForm);orderPayload.set("expectedAmount",liveNfcExpectedTotal);orderPayload.set("expectedCurrency",liveNfcData.currency);request("/user/nfc/orders",{method:"POST",body:orderPayload}).then(function(data){feedback.textContent=data.message;liveNfcOrderForm.reset();updateLiveNfcTotal();return loadLiveNfc();}).then(function(){setTimeout(function(){document.getElementById("closeNfcOrderModal").click();},800);}).catch(function(error){feedback.textContent=error.message;}).finally(function(){submit.textContent="Submit payment & order";updateLiveNfcTotal();});});
   }
 
   var billingPlansGrid = document.getElementById("billingPlansGrid");
@@ -899,7 +903,7 @@
     }
     function renderCurrentBilling(data) {
       var current = data.current;
-      setText("billingCurrency", String(data.currency || "LKR") + " pricing · converted from LKR at the current rate");
+      setText("billingCurrency", String(data.currency || "LKR") + " pricing - " + (data.market === "LK" ? "Sri Lanka" : data.market === "AU" ? "Australia" : "International") + " package prices");
       if (!current) {
         setText("billingPlanName", "No active plan"); setText("billingPlanDescription", "Choose a plan to activate your workspace.");
         setText("billingPlanStatus", "Inactive"); setText("billingCurrentPrice", billingMoney(0, data.currency));
@@ -910,7 +914,7 @@
       setText("billingPlanName", current.planName || "Current plan");
       setText("billingPlanDescription", (current.planName || "Your") + " workspace subscription");
       setText("billingPlanStatus", current.status || "active");
-      setText("billingCurrentPrice", billingMoney(current.price, data.currency));
+      setText("billingCurrentPrice", billingMoney(current.price, current.currency || data.currency));
       setText("billingCurrentInterval", Number(current.price) > 0 ? "Billed " + String(current.billingInterval || "monthly") : "Free plan");
       setText("billingRenewalDate", current.endDate ? billingDate(current.endDate, false) : "No renewal");
       setText("billingRenewalNote", current.endDate ? (current.autoRenew ? "Automatic renewal enabled" : "Subscription end date") : "No scheduled charge");
@@ -941,18 +945,26 @@
     }
     function renderBillingPlans(data) {
       billingData = data;
+      var countrySelect = document.getElementById('packageBillingCountry');
+      if (countrySelect) {
+        var names = new Intl.DisplayNames(['en'], { type: 'region' });
+        countrySelect.innerHTML = (data.billingCountries || ['LK']).map(function(code) { return '<option value="' + code + '">' + escapeHtml(names.of(code)) + '</option>'; }).join('');
+        countrySelect.value = data.billingCountry;
+        countrySelect.disabled = false;
+      }
       renderCurrentBilling(data);
       renderPendingBilling(data);
       renderPaymentHistory(data);
       var pendingPlanId = data.pending ? Number(data.pending.planId) : null;
       billingPlansGrid.innerHTML = (data.plans || []).map(function (plan, index) {
+        var unavailable = plan.available === false;
         var current = Number(data.currentPlanId) === Number(plan.id);
         var pending = pendingPlanId === Number(plan.id);
         var waiting = Boolean(data.pending) && !pending;
         var features = [plan.vcardLimit + " VCards", plan.nfcLimit + " NFC cards", plan.analyticsLimit + " analytics", plan.storageLimitMb + " MB storage"].concat(plan.features || []);
         var label = current ? "Current plan" : pending ? "Approval pending" : "Available";
-        var action = current ? "Current plan" : pending ? "Pending approval" : waiting ? "Payment pending" : "Choose " + plan.name;
-        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div class="billing-plan-number">' + String(index + 1).padStart(2, "0") + '</div><div class="billing-plan-top"><span>' + escapeHtml(label) + '</span><h4>' + escapeHtml(plan.name) + '</h4><p><strong>' + escapeHtml(billingMoney(plan.price, data.currency)) + '</strong><small> / ' + escapeHtml(plan.billingInterval) + '</small></p></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (current || pending || waiting ? ' disabled' : '') + '><span>' + escapeHtml(action) + '</span><b>&rarr;</b></button></article>';
+        var action = unavailable ? "Contact support for pricing" : current ? "Current plan" : pending ? "Pending approval" : waiting ? "Payment pending" : "Choose " + plan.name;
+        return '<article class="billing-plan-option' + (current ? ' is-current' : '') + '"><div class="billing-plan-number">' + String(index + 1).padStart(2, "0") + '</div><div class="billing-plan-top"><span>' + escapeHtml(label) + '</span><h4>' + escapeHtml(plan.name) + '</h4><p><strong>' + escapeHtml(unavailable ? "Not configured" : billingMoney(plan.price, data.currency)) + '</strong><small> / ' + escapeHtml(plan.billingInterval) + '</small></p></div><ul>' + features.map(function (feature) { return '<li>' + escapeHtml(feature) + '</li>'; }).join("") + '</ul><button type="button" data-upgrade-plan-id="' + plan.id + '"' + (unavailable || current || pending || waiting ? ' disabled' : '') + '><span>' + escapeHtml(action) + '</span><b>&rarr;</b></button></article>';
       }).join("") || '<div class="user-empty">No active plans are available.</div>';
       if (billingFeedback) {
         billingFeedback.className = "billing-plan-feedback" + (!data.bankConfigured ? " is-error" : "");
@@ -960,7 +972,7 @@
       }
       var requestedPlanId = Number(new URLSearchParams(window.location.search).get("plan"));
       if (requestedPlanId && !data.pending) {
-        var requestedPlan = (data.plans || []).find(function (plan) { return Number(plan.id) === requestedPlanId && Number(plan.id) !== Number(data.currentPlanId); });
+        var requestedPlan = (data.plans || []).find(function (plan) { return plan.available !== false && Number(plan.id) === requestedPlanId && Number(plan.id) !== Number(data.currentPlanId); });
         if (requestedPlan) {
           window.history.replaceState({}, "", window.location.pathname);
           openPaymentModal(requestedPlan);
@@ -981,12 +993,22 @@
       });
       return billingLoading;
     }
+    var packageCountrySelect = document.getElementById('packageBillingCountry');
+    if (packageCountrySelect) packageCountrySelect.addEventListener('change', function() {
+      closePaymentModal();
+      var country = packageCountrySelect.value;
+      packageCountrySelect.disabled = true;
+      request('/user/billing-country', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ billingCountry: country }) })
+        .then(function() { localStorage.setItem('billingCountry', country); return loadBillingPlans(); })
+        .catch(function(error) { packageCountrySelect.value = billingData.billingCountry; if (billingFeedback) billingFeedback.textContent = error.message; })
+        .finally(function() { packageCountrySelect.disabled = false; });
+    });
     loadBillingPlans();
     billingPlansGrid.addEventListener("click", function (event) {
       var button = event.target.closest("[data-upgrade-plan-id]");
       if (!button || button.disabled) return;
       var plan = (billingData.plans || []).find(function (item) { return Number(item.id) === Number(button.dataset.upgradePlanId); });
-      if (plan) openPaymentModal(plan);
+      if (plan && plan.available !== false) openPaymentModal(plan);
     });
     if (paymentModal) paymentModal.querySelectorAll("[data-close-payment-modal]").forEach(function (button) { button.addEventListener("click", closePaymentModal); });
     if (refreshBillingButton) refreshBillingButton.addEventListener("click", loadBillingPlans);
@@ -1046,7 +1068,13 @@
         return;
       }
       var submit = paymentForm.querySelector('[type="submit"]'); submit.disabled = true; submit.textContent = couponPreview && Number(couponPreview.finalAmount) === 0 ? "Activating..." : "Uploading..."; paymentFeedback.textContent = "";
-      request("/user/subscriptions/manual-payment", { method: "POST", body: new FormData(paymentForm) })
+      var paymentPayload = new FormData(paymentForm);
+      paymentPayload.set('expectedAmount', selectedPaymentPlan.price);
+      paymentPayload.set('expectedCurrency', billingData.currency);
+      paymentPayload.set('billingCountry', billingData.billingCountry);
+      paymentPayload.set('expectedFinalAmount', couponPreview ? couponPreview.finalAmount : selectedPaymentPlan.price);
+      paymentPayload.set('expectedBillingInterval', selectedPaymentPlan.billingInterval);
+      request("/user/subscriptions/manual-payment", { method: "POST", body: paymentPayload })
         .then(function (data) { paymentFeedback.textContent = data.message; paymentForm.reset(); setTimeout(function () { closePaymentModal(); loadBillingPlans(); }, 900); })
         .catch(function (error) { paymentFeedback.textContent = error.message; })
         .finally(function () { submit.disabled = false; submit.textContent = "Submit payment for review"; });
@@ -1449,6 +1477,16 @@
     var cardId = new URLSearchParams(window.location.search).get("id");
     var editorStatus = document.getElementById("vcardEditorStatus");
     var savedProfileImage = null, savedCoverImage = null;
+    var editorUrlOrigin = window.location.origin;
+    function updateEditorPublicUrl() {
+      var link = document.getElementById('editCardPublicUrl');
+      var slug = editor.elements.slug.value;
+      if (link) { link.href = editorUrlOrigin + '/vcard/' + encodeURIComponent(slug); link.textContent = link.href; }
+    }
+    editor.elements.slug.addEventListener('input', function() {
+      this.value = this.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+      updateEditorPublicUrl();
+    });
     if (!cardId) {
       editorStatus.textContent = "No card was selected.";
       editor.querySelector('button[type="submit"]').disabled = true;
@@ -1457,6 +1495,9 @@
         var card = data.vcard;
         var entitlements = data.entitlements || {};
         editor.elements.title.value = card.title || "";
+        editor.elements.slug.value = card.slug || String(card.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0,100).replace(/^-+|-+$/g, '');
+        if (card.publicUrl) editorUrlOrigin = new URL(card.publicUrl).origin;
+        updateEditorPublicUrl();
         editor.elements.qualifications.value = card.qualifications || "";
         editor.elements.email.value = card.email || "";
         editor.elements.phone.value = card.phone || "";
@@ -1486,10 +1527,12 @@
           var sections = collectVcardSections(editor, "[data-vcard-section]");
           var newProfileImage = await readVcardImageInput(document.getElementById("editCardProfileImage"));
           var newCoverImage = await readVcardImageInput(document.getElementById("editCardCoverImage"));
-          await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), qualifications: editor.elements.qualifications.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, hiddenSections: hiddenVcardSections(editor), profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
+          var savedCardResult = await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), slug: editor.elements.slug.value.trim(), qualifications: editor.elements.qualifications.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, hiddenSections: hiddenVcardSections(editor), profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
           if (newProfileImage) savedProfileImage = newProfileImage;
           if (newCoverImage) savedCoverImage = newCoverImage;
-          editorStatus.textContent = "Saved successfully";
+          if (savedCardResult.vcard) editor.elements.slug.value = savedCardResult.vcard.slug;
+          updateEditorPublicUrl();
+          editorStatus.textContent = "Saved successfully. Previous public URLs keep working.";
         } catch (error) { editorStatus.textContent = error.message; }
         finally { button.disabled = false; }
       });

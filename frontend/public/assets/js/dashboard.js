@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", function () {
     : "";
 
   var adminNavigation = [
+    ["Companies", "companies.html", "CM", "Workspace"],
+    ["Newsletter", "newsletter.html", "NL", "Growth"],
     ["Overview", "dashboard.html", "OV", "main"],
     ["Users", "users.html", "US", "Workspace"],
     ["VCards", "vcards.html", "VC", ""],
@@ -2759,23 +2761,24 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!planCurrencyPrices) return;
     var row = document.createElement("div");
     row.className = "plan-currency-price-row";
-    row.innerHTML = '<select data-plan-price-currency aria-label="Plan price currency" disabled><option value="LKR">LKR</option></select><input data-plan-price-amount type="number" min="0" max="9999999999.99" step="0.01" required aria-label="Plan price in LKR">';
+    row.innerHTML = '<select data-plan-price-currency aria-label="Regional price currency" disabled><option value="' + currency + '">' + currency + '</option></select><input data-plan-price-amount type="number" min="0" max="9999999999.99" step="0.01" ' + (currency === 'LKR' ? 'required' : 'placeholder="Auto: LKR + 50% on save"') + ' aria-label="Plan price in ' + currency + '">';
     planCurrencyPrices.appendChild(row);
     var select = row.querySelector("select");
-    select.value = "LKR";
-    row.querySelector("input").value = amount === undefined ? "0" : amount;
+    select.value = currency;
+    row.querySelector("input").value = amount === undefined ? "" : amount;
   }
 
   function renderPlanPrices(prices) {
     if (!planCurrencyPrices) return;
     planCurrencyPrices.innerHTML = "";
-    addPlanPriceRow("LKR", prices && prices.LKR !== undefined ? prices.LKR : 0);
+    ["LKR", "AUD", "USD"].forEach(function(code) { addPlanPriceRow(code, prices && prices[code] !== undefined ? prices[code] : (code === "LKR" ? 0 : undefined)); });
   }
 
   function collectPlanPrices() {
     var prices = {};
     Array.from(planCurrencyPrices ? planCurrencyPrices.querySelectorAll(".plan-currency-price-row") : []).forEach(function (row) {
-      prices[row.querySelector("[data-plan-price-currency]").value] = Number(row.querySelector("[data-plan-price-amount]").value);
+      var value = row.querySelector("[data-plan-price-amount]").value;
+      if (value !== "") prices[row.querySelector("[data-plan-price-currency]").value] = Number(value);
     });
     return prices;
   }
@@ -3176,7 +3179,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "";
       return '<tr>' +
         '<td><div class="table-user"><span class="mini-avatar">' + escapeDashboardHtml(avatarInitials(user.name || "User") || "U") + '</span><div><strong>' + escapeDashboardHtml(user.name || "Unknown user") + '</strong><div class="subtle-handle">' + escapeDashboardHtml(user.email || payment.reference || "Manual payment") + '</div></div></div></td>' +
-        '<td><div class="cash-plan-cell"><strong>' + escapeDashboardHtml(plan ? plan.name : "Standalone") + '</strong><span>' + (plan ? cashPaymentMoney(plan.price, payment.currency) : "No subscription linked") + '</span></div></td>' +
+        '<td><div class="cash-plan-cell"><strong>' + escapeDashboardHtml(payment.pricing ? payment.pricing.planName : plan ? plan.name : "Standalone") + '</strong><span>' + (payment.pricing ? escapeDashboardHtml(payment.pricing.billingCountry + " - " + payment.pricing.billingInterval) + " - " + cashPaymentMoney(payment.pricing.originalAmount, payment.currency) : plan ? cashPaymentMoney(plan.price, "LKR") : "No subscription linked") + '</span></div></td>' +
         '<td><strong class="cash-amount-value">' + cashPaymentMoney(payment.amount, payment.currency) + '</strong><div class="subtle-handle">' + escapeDashboardHtml(payment.reference || "No reference") + '</div></td>' +
         '<td><div class="cash-period-cell"><strong>' + escapeDashboardHtml(cashPaymentDate(payment.startDate, cashPaymentDate(payment.createdAt))) + '</strong><span>' + escapeDashboardHtml(payment.endDate ? "to " + cashPaymentDate(payment.endDate) : "Recorded " + cashPaymentDate(payment.createdAt)) + '</span></div></td>' +
         '<td><div class="cash-evidence-cell">' + evidence + '<span>' + escapeDashboardHtml(payment.notes || "No notes") + '</span></div></td>' +

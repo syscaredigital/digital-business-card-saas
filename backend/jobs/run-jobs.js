@@ -2,6 +2,7 @@ const pool = require('../config/database.config');
 async function runOnce() {
   await require('./payment-reminder.job').queueReminders(pool);
   await require('./email-notification.job').deliverEmails(pool);
+  await require('./newsletter.job').deliverNewsletter(pool);
 }
 function startNotificationJobs() {
   let running = false;

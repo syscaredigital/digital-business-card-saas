@@ -108,7 +108,7 @@
                 <div class="billing-plan-section-heading"><span>01</span><div><h3>Plan setup</h3><p>Name the plan and define how customers will be charged.</p></div></div>
                 <div class="billing-plan-field-grid">
                   <div class="form-field billing-field-wide"><label for="planAdminName">Plan name<span class="required-mark">*</span></label><input id="planAdminName" name="name" type="text" maxlength="150" required placeholder="e.g. Professional" /><small>A short customer-facing name.</small></div>
-                  <div class="form-field billing-price-field"><label>Base price in LKR<span class="required-mark">*</span></label><div id="planCurrencyPrices"></div><button class="btn-preview" id="addPlanCurrencyPrice" type="button" hidden>Add currency price</button><small>Other currencies are calculated automatically using the live exchange rate.</small></div>
+                  <div class="form-field billing-price-field"><label>Regional package prices<span class="required-mark">*</span></label><div id="planCurrencyPrices"></div><button class="btn-preview" id="addPlanCurrencyPrice" type="button" hidden>Add currency price</button><small>LKR: Sri Lanka. AUD: Australia. USD: other countries. Leave an international price blank to save a starting price based on LKR + 50%. Saved prices stay fixed until you edit them.</small></div>
                   <div class="form-field"><label for="planAdminInterval">Billing interval</label><select id="planAdminInterval" name="billingInterval"><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="weekly">Weekly</option><option value="daily">Daily</option><option value="lifetime">Lifetime</option></select></div>
                   <div class="form-field"><label for="planAdminStatus">Availability</label><select id="planAdminStatus" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></div>
                 </div>
@@ -159,7 +159,7 @@
                     <li><span>&#10003;</span><strong id="planPreviewAnalytics">0</strong> analytics interactions</li>
                     <li><span>&#10003;</span><strong id="planPreviewStorage">50 MB</strong> storage</li>
                   </ul>
-                  <div class="billing-preview-note"><i>FX</i><span><strong>Currency ready</strong><small>International prices use live exchange rates.</small></span></div>
+                  <div class="billing-preview-note"><i>FX</i><span><strong>Regional pricing</strong><small>Saved AUD and USD prices stay fixed until edited.</small></span></div>
                 </article>
                 <p class="billing-preview-help"><span>Tip</span> Keep limits simple and benefits customer-focused.</p>
               </div>

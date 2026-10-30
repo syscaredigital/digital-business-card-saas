@@ -4,8 +4,8 @@ function slugifyVcardName(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 100);
+    .slice(0, 100)
+    .replace(/^-+|-+$/g, "");
 }
 
 function normalizeCustomSlug(value) {

@@ -149,7 +149,7 @@ test('audit regressions against an isolated PostgreSQL schema', async t => {
       const res = await fetch(origin+'/api/user/subscriptions/manual-payment',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
       assert.equal(res.status,400);
       assert.equal((await fetch(origin+'/uploads/payment-slips/fake.png')).status,404);
-      assert.equal((await fetch(origin+'/pages/company-admin/dashboard.html')).status,404);
+      assert.equal((await fetch(origin+'/pages/company-admin/dashboard.html')).status,200);
     });
     await t.test('shared rate limits serialize concurrent attempts across instances',async()=>{
       const limiter = require('../backend/middlewares/rate-limit.middleware');

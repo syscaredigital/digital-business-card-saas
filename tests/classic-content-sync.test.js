@@ -72,7 +72,7 @@ test('all classic templates keep saved text and uploaded review photos in their 
           assert.equal(await page.title(), 'Saved SEO title');
           assert.equal(await page.locator('meta[name=description]').getAttribute('content'), 'Saved SEO description');
           assert.match(await page.locator('.final-name-block h1').evaluate(node => getComputedStyle(node).fontFamily), /Georgia/);
-          assert.match(await page.locator('.final-qr-copy a').getAttribute('href'), /custom-qr/);
+          assert.match(await page.locator('.final-qr-copy a').getAttribute('href'), /\/api\/public\/vcards\/123\/qrcode$/);
           assert.match(await page.locator('.final-quote').textContent(), /Saved customer/, label);
           assert.doesNotMatch(await page.locator('main').innerText(), /data:image|base64|Sample Client/, label);
           assert.equal(await page.locator('.final-quote img').count(), 1, label);

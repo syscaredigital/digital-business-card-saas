@@ -61,6 +61,8 @@ exports.register = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password, phoneNumber, companyName } = req.body;
     const preferredCurrency = normalizeCurrency(req.body.currency || "LKR");
+    const billingCountry = require('../services/package-pricing.service').normalizeCountry(req.body.billingCountry || 'LK');
+    if (!billingCountry) return res.status(400).json({ message: 'Select a valid billing country' });
     const referralCode = String(req.body.referralCode || "").trim().toUpperCase();
 
     if (!firstName || !lastName || !email || !password) {
@@ -108,8 +110,8 @@ exports.register = async (req, res, next) => {
     const accountStatus = requiresReview ? "pending" : "active";
     const hashedPassword = await bcrypt.hash(String(password), 10);
     const result = await client.query(
-      `INSERT INTO users (company_id, role_id, name, email, password, phone, preferred_currency, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO users (company_id, role_id, name, email, password, phone, preferred_currency, status, billing_country)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id, name, email, phone, preferred_currency, status, created_at`,
       [
         companyId,
@@ -120,6 +122,7 @@ exports.register = async (req, res, next) => {
         phoneNumber || null,
         preferredCurrency,
         accountStatus,
+        billingCountry,
       ]
     );
 

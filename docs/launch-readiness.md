@@ -1,3 +1,5 @@
+Current production target and requirements: [syncecard.com production checklist](production-syncecard-com.md). Company administration and newsletter have been implemented in the current working release; historical exclusions below do not describe that release. Live acceptance remains required.
+
 # Launch readiness — 28 September 2026
 
 Update, 5 October 2026: the supplied deployment handoff reports successful Docker/VPS staging deployment, HTTPS health/readiness, migrations through 077 and templates 1–20. See [staging sign-off](staging-signoff.md) for the current evidence register and safe read-only checks. Those reported results supersede earlier deployment uncertainty; production acceptance remains pending. Dependency-index cleanup is complete in this checkout (`git ls-files backend/node_modules` returns no files). The September review and its checkboxes below are historical, not a new staging verification.

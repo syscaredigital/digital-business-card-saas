@@ -7,19 +7,29 @@ const path = require("path");
 const { normalizePlanFeatures } = require("../../config/vcard-features");
 const { normalizeCurrency } = require("../../config/currencies");
 const { BASE_CURRENCY, getRate, convertFromLkr } = require("../../services/exchange-rate.service");
+const { quotePackage, normalizeCountry, COUNTRY_CODES, marketFor } = require('../../services/package-pricing.service');
 function mapUserPlan(plan) {
   const normalized = normalizePlanFeatures(plan.features);
-  return { id: plan.id, name: plan.name, price: number(plan.price), billingInterval: plan.billing_interval,
+  return { id: plan.id, name: plan.name, price: plan.available === false ? null : number(plan.price), billingInterval: plan.billing_interval,
     vcardLimit: number(plan.vcard_limit), nfcLimit: number(plan.nfc_limit), analyticsLimit: number(plan.analytics_limit),
     storageLimitMb: number(plan.storage_limit_mb),
-    features: normalized.benefits, vcardFeatures: normalized.vcardFeatures, templateIds: normalized.templateIds };
+    pricing: plan.pricing, available: plan.available !== false, pricingMessage: plan.pricingMessage, features: normalized.benefits, vcardFeatures: normalized.vcardFeatures, templateIds: normalized.templateIds };
 }
+
+exports.updateBillingCountry = async (req, res, next) => {
+  const country = normalizeCountry(req.body.billingCountry);
+  if (!country) return res.status(400).json({ message: 'Select a valid billing country' });
+  try {
+    await pool.query('UPDATE users SET billing_country=$1,updated_at=NOW() WHERE id=$2', [country, req.user.id]);
+    res.json({ billingCountry: country, market: marketFor(country).market });
+  } catch (error) { next(error); }
+};
 
 exports.plans = async (req, res, next) => {
   try {
     const [settingsResult, userResult] = await Promise.all([
       pool.query(`SELECT key,value FROM settings WHERE key = ANY($1::text[])`, [["default_currency", "bank_name", "bank_account_name", "bank_account_number", "bank_branch", "bank_swift_code"]]),
-      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
+      pool.query("SELECT preferred_currency,billing_country FROM users WHERE id=$1", [req.user.id]),
     ]);
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
     const currency = normalizeCurrency(userResult.rows[0]?.preferred_currency, normalizeCurrency(settings.default_currency, BASE_CURRENCY));
@@ -29,13 +39,13 @@ exports.plans = async (req, res, next) => {
         FROM plans p WHERE p.status='active' ORDER BY p.price,p.name`),
       pool.query(`SELECT s.id,s.plan_id,s.status,s.start_date,s.end_date,s.auto_renew,s.created_at,
         p.name AS plan_name,p.price,p.billing_interval,p.vcard_limit,p.nfc_limit,p.analytics_limit,p.storage_limit_mb,
-        pay.status AS payment_status,pay.gateway_reference
+        pay.status AS payment_status,pay.gateway_reference,pay.amount AS paid_amount,pay.currency AS paid_currency,pay.pricing_snapshot
         FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
-        LEFT JOIN LATERAL (SELECT status,gateway_reference FROM payments WHERE subscription_id=s.id ORDER BY created_at DESC LIMIT 1) pay ON TRUE
+        LEFT JOIN LATERAL (SELECT status,gateway_reference,amount,currency,pricing_snapshot FROM payments WHERE subscription_id=s.id ORDER BY created_at DESC LIMIT 1) pay ON TRUE
         WHERE s.user_id=$1 AND s.status IN ('active','pending','trial') AND (s.status='pending' OR (s.start_date<=CURRENT_DATE AND (s.end_date IS NULL OR s.end_date>=CURRENT_DATE)))
         ORDER BY (${currentSubscription()}) DESC,s.created_at DESC`, [req.user.id]),
       pool.query(`SELECT pay.id,pay.amount,pay.currency,pay.status,pay.gateway_reference,pay.proof_url,
-        pay.created_at,pay.reviewed_at,p.name AS plan_name,c.code AS coupon_code,
+        pay.created_at,pay.reviewed_at,pay.pricing_snapshot,p.name AS plan_name,c.code AS coupon_code,
         cr.original_amount,cr.discount_amount
         FROM payments pay LEFT JOIN subscriptions s ON s.id=pay.subscription_id LEFT JOIN plans p ON p.id=s.plan_id
         LEFT JOIN coupon_redemptions cr ON cr.payment_id=pay.id
@@ -43,13 +53,17 @@ exports.plans = async (req, res, next) => {
         WHERE pay.user_id=$1
         ORDER BY pay.created_at DESC LIMIT 20`, [req.user.id]),
     ]);
-    plansResult.rows.forEach((item) => { item.price = convertFromLkr(item.price, exchange.rate); });
-    subscriptionsResult.rows.forEach((item) => { item.price = convertFromLkr(item.price, exchange.rate); });
+    const billingCountry = userResult.rows[0]?.billing_country || 'LK';
+    for (const item of plansResult.rows) {
+      try { item.pricing = await quotePackage(pool, item, billingCountry, currency); item.price = item.pricing.amount; }
+      catch (error) { if (error.status !== 409) throw error; item.available = false; item.pricingMessage = error.message; item.price = null; }
+    }
+    subscriptionsResult.rows.forEach(item => { item.price = item.paid_amount == null ? convertFromLkr(item.price, exchange.rate) : Number(item.paid_amount); });
     const active = subscriptionsResult.rows.find((item) => item.status === "active")
       || subscriptionsResult.rows.find((item) => item.status === "trial")
       || null;
     const pending = subscriptionsResult.rows.find((item) => item.status === "pending") || null;
-    const freePlan = plansResult.rows.find((item) => number(item.price) === 0) || null;
+    const freePlan = plansResult.rows.find((item) => item.available !== false && number(item.price) === 0) || null;
     const effectivePlan = active || (freePlan ? {
       id: null, plan_id: freePlan.id, status: "active", start_date: null, end_date: null, auto_renew: false,
       plan_name: freePlan.name, price: freePlan.price, billing_interval: freePlan.billing_interval,
@@ -59,20 +73,20 @@ exports.plans = async (req, res, next) => {
     const bankDetails = { bankName: settings.bank_name || "", accountName: settings.bank_account_name || "",
       accountNumber: settings.bank_account_number || "", branch: settings.bank_branch || "", swiftCode: settings.bank_swift_code || "" };
     res.json({ plans: plansResult.rows.map(mapUserPlan), currentPlanId: effectivePlan ? effectivePlan.plan_id : null,
-      currency, baseCurrency:BASE_CURRENCY, exchangeRate:exchange.rate, rateDate:exchange.rateDate, ratesStale:exchange.stale, bankDetails,
+      billingCountry, market: marketFor(billingCountry).market, billingCountries: COUNTRY_CODES, currency, baseCurrency:BASE_CURRENCY, exchangeRate:exchange.rate, rateDate:exchange.rateDate, ratesStale:exchange.stale, bankDetails,
       bankConfigured: Boolean(bankDetails.bankName && bankDetails.accountName && bankDetails.accountNumber && bankDetails.branch),
       current: effectivePlan ? {
-        subscriptionId: effectivePlan.id, planId: effectivePlan.plan_id, planName: effectivePlan.plan_name,
-        status: effectivePlan.status, price: number(effectivePlan.price), billingInterval: effectivePlan.billing_interval,
+        subscriptionId: effectivePlan.id, planId: effectivePlan.plan_id, planName: effectivePlan.pricing_snapshot?.planName || effectivePlan.plan_name,
+        status: effectivePlan.status, price: number(effectivePlan.price), currency: effectivePlan.paid_currency || currency, billingInterval: effectivePlan.pricing_snapshot?.billingInterval || effectivePlan.billing_interval,
         startDate: effectivePlan.start_date, endDate: effectivePlan.end_date, autoRenew: Boolean(effectivePlan.auto_renew),
         vcardLimit: number(effectivePlan.vcard_limit), nfcLimit: number(effectivePlan.nfc_limit),
         analyticsLimit: number(effectivePlan.analytics_limit), storageLimitMb: number(effectivePlan.storage_limit_mb),
       } : null,
-      pending: pending ? { id: pending.id, planId: pending.plan_id, planName: pending.plan_name,
+      pending: pending ? { id: pending.id, planId: pending.plan_id, planName: pending.pricing_snapshot?.planName || pending.plan_name,
         paymentStatus: pending.payment_status || "pending", transactionNumber: pending.gateway_reference || null,
         submittedAt: pending.created_at } : null,
-      payments: paymentsResult.rows.map((payment) => ({ id: payment.id, planName: payment.plan_name || "Subscription",
-        amount: number(payment.amount), currency: payment.currency, status: payment.status,
+      payments: paymentsResult.rows.map((payment) => ({ id: payment.id, planName: payment.pricing_snapshot?.planName || payment.plan_name || "Subscription",
+        amount: number(payment.amount), currency: payment.currency, status: payment.status, pricing: payment.pricing_snapshot,
         couponCode: payment.coupon_code || null, originalAmount: payment.original_amount === null ? null : number(payment.original_amount),
         discountAmount: payment.discount_amount === null ? null : number(payment.discount_amount),
         transactionNumber: payment.gateway_reference, proofUrl: payment.proof_url,
@@ -146,14 +160,14 @@ exports.previewCoupon = async (req, res, next) => {
   const code = String(req.body.code || "");
   if (!Number.isInteger(planId) || planId < 1) return res.status(400).json({ message: "Select a valid plan" });
   try {
-    const userResult = await pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]);
+    const userResult = await pool.query("SELECT preferred_currency,billing_country FROM users WHERE id=$1", [req.user.id]);
     const currency = normalizeCurrency(userResult.rows[0]?.preferred_currency, BASE_CURRENCY);
     const exchange = await getRate(currency);
-    const planResult = await pool.query(`SELECT p.id,p.name,p.price FROM plans p WHERE p.id=$1 AND p.status='active'`, [planId]);
+    const planResult = await pool.query(`SELECT p.id,p.name,p.price,p.billing_interval FROM plans p WHERE p.id=$1 AND p.status='active'`, [planId]);
     if (!planResult.rowCount) return res.status(404).json({ message: "Plan not found" });
     const plan = planResult.rows[0];
     const calculation = await calculateUserCoupon(pool, {
-      code, userId: req.user.id, planId, originalAmount: convertFromLkr(plan.price, exchange.rate), currency, lock: false,
+      code, userId: req.user.id, planId, originalAmount: (await quotePackage(pool, plan, userResult.rows[0]?.billing_country || "LK", currency)).amount, currency, lock: false,
     });
     if (calculation.error) return res.status(calculation.status).json({ message: calculation.error });
     res.json({
@@ -178,8 +192,8 @@ exports.availableCoupons = async (req, res, next) => {
   if (!Number.isInteger(planId) || planId < 1) return res.status(400).json({ message: "Select a valid plan" });
   try {
     const [userResult, planResult, couponResult] = await Promise.all([
-      pool.query("SELECT preferred_currency FROM users WHERE id=$1", [req.user.id]),
-      pool.query("SELECT id,name,price FROM plans WHERE id=$1 AND status='active'", [planId]),
+      pool.query("SELECT preferred_currency,billing_country FROM users WHERE id=$1", [req.user.id]),
+      pool.query("SELECT id,name,price,billing_interval FROM plans WHERE id=$1 AND status='active'", [planId]),
       pool.query(`SELECT code FROM coupon_codes
         WHERE is_public=TRUE AND status='active'
           AND (applicable_plan_id IS NULL OR applicable_plan_id=$1)
@@ -190,7 +204,7 @@ exports.availableCoupons = async (req, res, next) => {
     if (!planResult.rowCount) return res.status(404).json({ message: "Plan not found" });
     const currency = normalizeCurrency(userResult.rows[0]?.preferred_currency, BASE_CURRENCY);
     const exchange = await getRate(currency);
-    const originalAmount = convertFromLkr(planResult.rows[0].price, exchange.rate);
+    const originalAmount = (await quotePackage(pool, planResult.rows[0], userResult.rows[0]?.billing_country || "LK", currency)).amount;
     const coupons = [];
     for (const row of couponResult.rows) {
       const calculation = await calculateUserCoupon(pool, { code:row.code,userId:req.user.id,planId,originalAmount,currency,lock:false });
@@ -229,7 +243,7 @@ exports.submitManualPayment = async (req, res, next) => {
   try {
     client = await pool.connect();
     await client.query("BEGIN");
-    const userResult = await client.query("SELECT preferred_currency FROM users WHERE id=$1 FOR UPDATE",[req.user.id]);
+    const userResult = await client.query("SELECT preferred_currency,billing_country FROM users WHERE id=$1 FOR UPDATE",[req.user.id]);
     const planResult = await client.query("SELECT id,name,price,billing_interval FROM plans WHERE id=$1 AND status='active' FOR SHARE",[planId]);
     const activeResult = await client.query(`SELECT s.id,s.plan_id,COALESCE(p.price,0) price FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
       WHERE s.user_id=$1 AND ${currentSubscription()} ORDER BY s.created_at DESC LIMIT 1 FOR UPDATE OF s`,[req.user.id]);
@@ -243,7 +257,15 @@ exports.submitManualPayment = async (req, res, next) => {
     const settings = Object.fromEntries(settingsResult.rows.map((row) => [row.key, row.value || ""]));
     const purchaseCurrency = normalizeCurrency(userResult.rows[0]?.preferred_currency, normalizeCurrency(settings.default_currency, BASE_CURRENCY));
     const exchange = await getRate(purchaseCurrency);
-    const convertedPlanPrice = convertFromLkr(plan.price, exchange.rate);
+    const pricing = await quotePackage(client, plan, userResult.rows[0]?.billing_country || 'LK', purchaseCurrency);
+    const convertedPlanPrice = pricing.amount;
+    if ((req.body.expectedAmount !== undefined && (!Number.isFinite(Number(req.body.expectedAmount)) || Math.abs(Number(req.body.expectedAmount) - convertedPlanPrice) > 0.001)) ||
+        (req.body.expectedCurrency && req.body.expectedCurrency !== purchaseCurrency) ||
+        (req.body.billingCountry && req.body.billingCountry !== pricing.billingCountry) ||
+        (req.body.expectedBillingInterval && req.body.expectedBillingInterval !== pricing.billingInterval)) {
+      await client.query('ROLLBACK'); await discardUpload();
+      return res.status(409).json({ message: 'Your package price or billing country changed. Refresh billing and review the total before paying.' });
+    }
     let couponCalculation = null;
     if (couponCode) {
       couponCalculation = await calculateUserCoupon(client, {
@@ -260,6 +282,10 @@ exports.submitManualPayment = async (req, res, next) => {
       }
     }
     const payableAmount = couponCalculation ? couponCalculation.finalAmount : convertedPlanPrice;
+    if (req.body.expectedFinalAmount !== undefined && (!Number.isFinite(Number(req.body.expectedFinalAmount)) || Math.abs(Number(req.body.expectedFinalAmount) - payableAmount) > 0.001)) {
+      await client.query('ROLLBACK'); await discardUpload();
+      return res.status(409).json({ message: 'Your discount or total changed. Refresh billing and review the final price.' });
+    }
     const fullyDiscounted = payableAmount === 0;
     if (!fullyDiscounted && !req.file) {
       await client.query("ROLLBACK");
@@ -309,12 +335,13 @@ exports.submitManualPayment = async (req, res, next) => {
       [subscription.rows[0].id, req.user.id, payableAmount, purchaseCurrency,
         fullyDiscounted ? "coupon" : "bank_transfer", fullyDiscounted ? "approved" : "pending",
         paymentReference, proofUrl, couponCalculation ? `Coupon ${couponCalculation.coupon.code} applied` : "Submitted by user for manual review"]);
+    await client.query('UPDATE payments SET pricing_snapshot=$2::jsonb WHERE id=$1', [payment.rows[0].id, JSON.stringify({ ...pricing, originalAmount: convertedPlanPrice, discountAmount: couponCalculation?.discountAmount || 0, finalAmount: payableAmount })]);
     await captureRevenueRate(client, 'payment', payment.rows[0].id, exchange);
     await client.query(`INSERT INTO transactions(payment_id,user_id,transaction_type,amount,currency,reference,gateway,status,metadata)
       VALUES($1,$2,'cash_payment',$3,$4,$5,'manual','pending',$6::jsonb)`,
       [payment.rows[0].id, req.user.id, payableAmount, purchaseCurrency, paymentReference,
         JSON.stringify({ subscriptionId: subscription.rows[0].id, source: fullyDiscounted ? "coupon" : "user_upload", couponCode: couponCode || null,
-          baseCurrency: BASE_CURRENCY, baseAmountLkr: number(plan.price), exchangeRate: exchange.rate, exchangeRateDate: exchange.rateDate })]);
+          pricing, baseCurrency: BASE_CURRENCY, baseAmountLkr: number(plan.price), exchangeRate: exchange.rate, exchangeRateDate: exchange.rateDate })]);
     if (fullyDiscounted) {
       await client.query("UPDATE transactions SET status='completed',updated_at=NOW() WHERE payment_id=$1", [payment.rows[0].id]);
     }

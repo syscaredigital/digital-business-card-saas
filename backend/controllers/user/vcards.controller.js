@@ -71,6 +71,7 @@ exports.createVcard = async (req, res, next) => {
        RETURNING id,slug,template_id,title,qualifications,description,website_url,phone,email,address,settings,is_active,created_at`,
        [req.user.id, templateId, title, qualifications || null, slug, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify({ sections, hiddenSections, profileImageUrl, coverImageUrl, contactCaptureRequired })]
     );
+    if (req.actor) await client.query("INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata) VALUES($1,'company.vcard_created','vcard',$2,$3::jsonb)", [req.actor.id,result.rows[0].id,JSON.stringify({ownerUserId:req.user.id})]);
     await client.query("COMMIT");
     committed = true;
     res.status(201).json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
@@ -84,6 +85,7 @@ exports.updateVcard = async (req, res, next) => {
     const qualifications = String(req.body.qualifications || "").trim();
     const hasSlug = Object.prototype.hasOwnProperty.call(req.body, "slug");
     const slug = hasSlug ? normalizeCustomSlug(req.body.slug) : null;
+    if (hasSlug && !slug) return res.status(400).json({ message: 'Enter a VCard URL name before saving' });
     if (!title) return res.status(400).json({ message: "Card name is required" });
     if (qualifications.length > 500) return res.status(400).json({ message: "Qualifications must be 500 characters or fewer" });
     const entitlements = await loadVcardEntitlements(pool, req.user.id);
@@ -118,6 +120,7 @@ exports.updateVcard = async (req, res, next) => {
        [templateId, title, qualifications || null, req.body.description || null, req.body.websiteUrl || null, req.body.phone || null, req.body.email || null, req.body.address || null, JSON.stringify(nextSettings), typeof req.body.isActive === "boolean" ? req.body.isActive : null, hasSlug, slug, req.params.id, req.user.id]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Card not found" });
+    if (req.actor) await pool.query("INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata) VALUES($1,'company.vcard_updated','vcard',$2,$3::jsonb)",[req.actor.id,result.rows[0].id,JSON.stringify({ownerUserId:req.user.id})]);
     res.json({ vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
   } catch (error) { if(error.code==="23505")return res.status(409).json({message:"That VCard URL name is already in use. Choose another one."}); next(error); }
 };
@@ -140,7 +143,7 @@ exports.deleteVcard = async (req, res, next) => {
     await client.query(
       `INSERT INTO activity_logs (user_id,action,resource_type,resource_id,metadata)
        VALUES ($1,'vcard.deleted','vcard',$2,$3::jsonb)`,
-      [req.user.id, vcardId, JSON.stringify({ title: result.rows[0].title, templateId: result.rows[0].template_id })]
+      [req.actor?.id || req.user.id, vcardId, JSON.stringify({ ownerUserId:req.user.id, title: result.rows[0].title, templateId: result.rows[0].template_id })]
     );
     await client.query("COMMIT");
     res.json({ message: "VCard deleted successfully", vcard: { id: result.rows[0].id, title: result.rows[0].title } });

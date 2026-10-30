@@ -74,8 +74,8 @@ async function syncCashPaymentTransaction(client, payment) {
   if (payment.subscriptionId && payment.status === "approved") {
     await client.query("UPDATE coupon_redemptions SET status='applied' WHERE payment_id=$1 AND status='pending'", [payment.id]);
     const subscription = await client.query(
-      `SELECT s.id,s.user_id,p.name,p.billing_interval FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
-       WHERE s.id=$1 FOR UPDATE OF s`, [payment.subscriptionId]
+      `SELECT s.id,s.user_id,p.name,COALESCE((SELECT pay.pricing_snapshot->>'billingInterval' FROM payments pay WHERE pay.id=$2),p.billing_interval) AS billing_interval FROM subscriptions s LEFT JOIN plans p ON p.id=s.plan_id
+       WHERE s.id=$1 FOR UPDATE OF s`, [payment.subscriptionId, payment.id]
     );
     if (subscription.rowCount) {
       const selected = subscription.rows[0];
@@ -122,7 +122,7 @@ exports.listCashPayments = async (req, res, next) => {
       pool.query(
         `SELECT pay.id, pay.subscription_id, pay.user_id, pay.amount, pay.currency, pay.method,
                 pay.status, pay.gateway_reference, pay.proof_url, pay.notes, pay.paid_at,
-                pay.reviewed_at, pay.created_at, pay.updated_at,
+                pay.reviewed_at, pay.created_at, pay.updated_at, pay.pricing_snapshot,
                 u.name AS user_name, u.email AS user_email,
                 s.start_date, s.end_date, p.name AS plan_name, p.price AS plan_price,
                 reviewer.name AS reviewer_name
@@ -159,7 +159,7 @@ exports.listCashPayments = async (req, res, next) => {
         user: { id: payment.user_id, name: payment.user_name || "Deleted user", email: payment.user_email || null },
         subscriptionId: payment.subscription_id,
         plan: payment.plan_name ? { name: payment.plan_name, price: number(payment.plan_price) } : null,
-        amount: number(payment.amount), currency: payment.currency, method: payment.method,
+        amount: number(payment.amount), currency: payment.currency, method: payment.method, pricing: payment.pricing_snapshot,
         status: payment.status, reference: payment.gateway_reference || null,
         proofUrl: payment.proof_url || null, notes: payment.notes || null,
         startDate: payment.start_date || null, endDate: payment.end_date || null,
@@ -247,6 +247,10 @@ exports.updateCashPayment = async (req, res, next) => {
     const previousResult = await client.query("SELECT * FROM payments WHERE id=$1 AND LOWER(COALESCE(method,''))=ANY($2::text[]) FOR UPDATE",[paymentId,cashPaymentMethods]);
     if (!previousResult.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({message:"Cash payment not found"}); }
     const previous = previousResult.rows[0];
+    if (previous.pricing_snapshot && (Number(previous.amount) !== payment.amount || previous.currency !== payment.currency || Number(previous.user_id) !== payment.userId || Number(previous.subscription_id) !== payment.subscriptionId)) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ message: 'Customer checkout amount, currency and subscription are fixed. Record corrections separately.' });
+    }
     if (["approved","rejected"].includes(previous.status)) {
       const identical = previous.status===payment.status && Number(previous.user_id)===payment.userId &&
         Number(previous.subscription_id || 0)===Number(payment.subscriptionId || 0) && Number(previous.amount)===payment.amount &&

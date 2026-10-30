@@ -109,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const r = String(role).toLowerCase();
         if (r === "super_admin" || r === "super-admin" || r === "superadmin" || r === "super" || r === "admin") dest = "../super-admin/dashboard.html";
 
+        if (r === "company_admin") dest = "../company-admin/dashboard.html";
         window.location.href = dest;
       } catch (err) {
         console.error(err);
@@ -247,6 +248,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const referralCode = new URLSearchParams(window.location.search).get("ref") || sessionStorage.getItem("affiliate_referral_code") || "";
     const requestedPlan = new URLSearchParams(window.location.search).get("plan") || "";
     const requestedCurrency = String(new URLSearchParams(window.location.search).get("currency") || localStorage.getItem("preferredCurrency") || "LKR").toUpperCase();
+    const registerCountry = document.getElementById('registerBillingCountry');
+    if (registerCountry) {
+      const selectedCountry = new URLSearchParams(window.location.search).get('billingCountry') || localStorage.getItem('billingCountry') || 'LK';
+      window.SyncSession.fetch(window.SyncVCardApiOrigin + '/api/public/billing-countries').then(response => { if (!response.ok) throw new Error(); return response.json(); }).then(data => {
+        const names = new Intl.DisplayNames(['en'], { type: 'region' });
+        registerCountry.replaceChildren(...data.countries.map(code => { const option = document.createElement('option'); option.value = code; option.textContent = names.of(code); return option; }));
+        registerCountry.value = data.countries.includes(selectedCountry) ? selectedCountry : 'LK';
+      }).catch(() => { registerCountry.setCustomValidity('Billing countries could not be loaded. Reload this page.'); });
+      registerCountry.addEventListener('change', () => localStorage.setItem('billingCountry', registerCountry.value));
+    }
     const registerCurrency = document.getElementById("registerCurrency");
     if (registerCurrency && /^[A-Z]{3}$/.test(requestedCurrency)) {
       registerCurrency.value = requestedCurrency;
@@ -299,6 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
         phoneNumber: phoneNumber ? phoneNumber.value.trim() : undefined,
         companyName: companyName ? companyName.value.trim() : undefined,
         currency: registerCurrency ? registerCurrency.value : "LKR",
+        billingCountry: registerCountry ? registerCountry.value : "LK",
         referralCode: referralCode || undefined,
       };
 

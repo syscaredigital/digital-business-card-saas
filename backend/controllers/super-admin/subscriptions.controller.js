@@ -3,6 +3,7 @@ const { currentSubscription } = require('../../services/subscription-policy');
 const pool = require("../../config/database.config");
 const { VCARD_FEATURES, normalizePlanFeatures } = require("../../config/vcard-features");
 const { normalizeCurrency } = require("../../config/currencies");
+const { completeRegionalPrices } = require('../../services/package-pricing.service');
 const { positiveIntegerParam } = require('../../validators/id.validator');
 const subscriptionStatuses = ["active", "pending", "trial", "cancelled", "expired"];
 const planStatuses = ["active", "inactive", "archived"];
@@ -41,6 +42,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
       pool.query(`
         SELECT p.id, p.name, p.price, p.billing_interval, p.vcard_limit, p.nfc_limit,
                p.analytics_limit, p.storage_limit_mb, p.features, p.status, p.created_at, p.updated_at,
+               (SELECT jsonb_object_agg(pp.currency,pp.amount) FROM package_regional_prices pp WHERE pp.plan_id=p.id) AS regional_prices,
                (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id)::int AS subscriber_count,
                (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id AND ${currentSubscription()})::int AS active_subscriber_count
         FROM plans p ORDER BY p.price, p.name
@@ -86,7 +88,7 @@ exports.listSubscriptionManagement = async (req, res, next) => {
         id: plan.id,
         name: plan.name,
         price: number(plan.price),
-        prices: { LKR: number(plan.price) },
+        prices: { ...plan.regional_prices, LKR: number(plan.price) },
         billingInterval: plan.billing_interval,
         vcardLimit: number(plan.vcard_limit),
         nfcLimit: number(plan.nfc_limit),
@@ -119,13 +121,13 @@ function normalizePlanPayload(body) {
     templateIds: body.templateIds,
   });
   const suppliedPrices = body.prices && typeof body.prices === "object" && !Array.isArray(body.prices) ? body.prices : {};
-  const rawPrices = { LKR: suppliedPrices.LKR === undefined ? body.price : suppliedPrices.LKR };
+  const rawPrices = { ...suppliedPrices, LKR: suppliedPrices.LKR === undefined ? body.price : suppliedPrices.LKR };
   const prices = {};
   let invalidCurrency = false;
   for (const [rawCurrency, rawAmount] of Object.entries(rawPrices)) {
     const currency = normalizeCurrency(rawCurrency);
     const amount = Number(rawAmount);
-    if (currency) prices[currency] = amount;
+    if (currency && ["LKR", "AUD", "USD"].includes(currency) && rawAmount !== null && rawAmount !== "" && typeof rawAmount !== "boolean" && Number.isInteger(Math.round(amount * 100)) && Math.abs(amount * 100 - Math.round(amount * 100)) < 0.0001) prices[currency] = amount;
     else invalidCurrency = true;
   }
   const firstPrice = Object.values(prices)[0];
@@ -168,9 +170,9 @@ async function planTemplateValidationMessage(plan) {
 }
 
 async function replacePlanPrices(client, planId, prices) {
-  await client.query("DELETE FROM plan_prices WHERE plan_id=$1", [planId]);
+  await client.query("DELETE FROM package_regional_prices WHERE plan_id=$1", [planId]);
   for (const [currency, amount] of Object.entries(prices)) {
-    await client.query("INSERT INTO plan_prices(plan_id,currency,amount) VALUES($1,$2,$3)", [planId, currency, amount]);
+    await client.query("INSERT INTO package_regional_prices(plan_id,currency,amount) VALUES($1,$2,$3)", [planId, currency, amount]);
   }
 }
 
@@ -180,6 +182,9 @@ exports.createPlan = async (req, res, next) => {
     const plan = normalizePlanPayload(req.body);
     const validation = planValidationMessage(plan);
     if (validation) return res.status(400).json({ message: validation });
+    plan.prices = await completeRegionalPrices(plan.prices);
+    const regionalValidation = planValidationMessage(plan);
+    if (regionalValidation) return res.status(400).json({ message: regionalValidation });
     const templateValidation = await planTemplateValidationMessage(plan);
     if (templateValidation) return res.status(400).json({ message: templateValidation });
     client = await pool.connect();
@@ -213,6 +218,11 @@ exports.updatePlan = async (req, res, next) => {
     const plan = normalizePlanPayload(req.body);
     const validation = planValidationMessage(plan);
     if (validation) return res.status(400).json({ message: validation });
+    const savedPrices = await pool.query('SELECT currency,amount FROM package_regional_prices WHERE plan_id=$1', [planId]);
+    const existingPrices = Object.fromEntries(savedPrices.rows.map(row => [row.currency, Number(row.amount)]));
+    plan.prices = await completeRegionalPrices({ ...existingPrices, ...plan.prices });
+    const regionalValidation = planValidationMessage(plan);
+    if (regionalValidation) return res.status(400).json({ message: regionalValidation });
     const templateValidation = await planTemplateValidationMessage(plan);
     if (templateValidation) return res.status(400).json({ message: templateValidation });
     client = await pool.connect();

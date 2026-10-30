@@ -6,6 +6,7 @@ const paymentSlipUpload = require("../middlewares/payment-slip-upload.middleware
 const router = express.Router();
 
 router.use(authenticate);
+router.use(require('./company.routes').delegateCompanyMember);
 router.get("/dashboard", controller.dashboard);
 router.get("/enquiries", controller.enquiries);
 router.get('/enquiries/:id', controller.getEnquiry);
@@ -35,6 +36,7 @@ router.patch("/affiliations/payout", controller.updateAffiliatePayout);
 router.post("/affiliations/withdrawals", controller.requestAffiliateWithdrawal);
 router.get("/affiliations/withdrawals/:id/receipt", controller.downloadAffiliateWithdrawalReceipt);
 router.get("/plans", controller.plans);
+router.patch('/billing-country', controller.updateBillingCountry);
 router.post("/coupons/preview", controller.previewCoupon);
 router.get("/coupons/available", controller.availableCoupons);
 router.post("/subscriptions/upgrade", controller.requestPlanUpgrade);

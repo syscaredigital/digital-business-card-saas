@@ -3737,3 +3737,6 @@ p {
 /* Shared brand social links: inline icons and visible keyboard focus. */
 .contact-socials svg{width:16px;height:16px;fill:currentColor}
 .footer-socials a:focus-visible,.contact-socials a:focus-visible{outline:2px solid #ff3438;outline-offset:4px}
+/* Newsletter consent and signup shared by the public website. */
+.newsletter-signup{padding-block:28px;border-top:1px solid rgba(255,255,255,.12)}
+.newsletter-signup form{display:grid;gap:12px;max-width:600px}.newsletter-signup label{display:grid;gap:8px}.newsletter-signup input[type=email]{padding:12px;border:1px solid #677080;border-radius:8px;background:#151a24;color:#fff;max-width:100%;width:100%}.newsletter-signup .newsletter-consent{display:flex;align-items:flex-start;font-size:13px;line-height:1.6}.newsletter-consent input{margin-top:5px;flex-shrink:0}.newsletter-signup button{justify-self:start}.newsletter-signup [role=status]{min-height:24px;overflow-wrap:anywhere}
