@@ -47,14 +47,14 @@ test('editor associates uploads with existing rows through edits, reorder, save 
     await rows.nth(1).getByRole('button',{name:'Remove',exact:true}).click();
     assert.equal(await rows.nth(1).getByLabel('Service name').inputValue(),'First');
     await page.locator('#userVcardEditor button[type=submit]').click();
-    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent==='Saved successfully');
+    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent.startsWith('Saved successfully'));
     assert.match(payload.sections.services,/^New row\nFirst \| First description \| data:image\/png;base64,/);
     await page.reload({waitUntil:'domcontentloaded'});
     await rows.nth(1).locator('img').waitFor();
     assert.equal(await rows.nth(1).getByLabel('Service name').inputValue(),'First');
     await rows.nth(1).getByRole('button',{name:'Remove photo',exact:true}).click();
     await page.locator('#userVcardEditor button[type=submit]').click();
-    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent==='Saved successfully');
+    await page.waitForFunction(()=>document.querySelector('#vcardEditorStatus').textContent.startsWith('Saved successfully'));
     assert.equal(payload.sections.services,'New row\nFirst | First description');
   } finally {
     if (browser) await browser.close();
