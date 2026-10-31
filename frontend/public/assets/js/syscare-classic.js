@@ -6,6 +6,18 @@
   config.demo.companyName = 'SysCare';
   config.demo.sections.blogs = 'Building a connected business | Practical ideas for better customer experiences | https://example.com/insights\nA smarter first impression | Make every introduction count | https://example.com/news';
   config.afterRender = function (root) {
+    // Give credentials and professional details the full card width instead of
+    // squeezing them into the column reserved beside the portrait.
+    var nameBlock = root.querySelector('.final-name-block');
+    if (nameBlock) {
+      var details = document.createElement('div');
+      details.className = 'syscare-professional-details';
+      ['.final-qualifications', '.final-role', '.final-company'].forEach(function (selector) {
+        var item = nameBlock.querySelector(selector);
+        if (item) details.appendChild(item);
+      });
+      if (details.children.length) nameBlock.after(details);
+    }
     var icons = {
       Website: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z"/>',
       Location: '<path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>'
