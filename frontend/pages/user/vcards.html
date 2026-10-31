@@ -215,8 +215,8 @@
                     <div class="form-field"><label for="occupation">Position <span class="field-optional">Optional</span></label><input id="occupation" name="occupation" type="text" autocomplete="organization-title" placeholder="e.g. Managing Director" /></div>
                     <div class="form-field">
                       <label for="urlAlias">Public URL name <span class="required-mark">*</span></label>
-                      <div class="alias-input-group"><input id="urlAlias" name="slug" type="text" placeholder="nabeela-siahm" minlength="3" maxlength="100" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" aria-describedby="urlAliasHelp" required /><button type="button" aria-label="Generate URL name" title="Generate from full name">&#8635;</button></div>
-                      <small id="urlAliasHelp">This becomes your easy-to-share public link.</small>
+                      <div class="alias-input-group"><input id="urlAlias" name="slug" type="text" placeholder="nabeela-siahm" minlength="3" maxlength="2048" aria-describedby="urlAliasHelp" required /><button type="button" aria-label="Generate URL name" title="Generate from full name">&#8635;</button></div>
+                      <small id="urlAliasHelp">Enter a URL name (3-100 characters) or paste a full URL. Capitalization and symbols such as ! _ &amp; are preserved.</small>
                     </div>
                     <div class="form-field form-field-wide client-description-field"><label for="vcardDescription">About <span class="field-optional">Optional</span></label><textarea id="vcardDescription" name="description" rows="4" placeholder="Write a short, friendly introduction about this person or business."></textarea></div>
                   </div>

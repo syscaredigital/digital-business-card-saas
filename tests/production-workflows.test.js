@@ -269,7 +269,7 @@ test('fresh database, registration, role isolation, VCards and expiry', async t 
           for (const width of [1440, 390]) {
             await page.setViewportSize({ width, height: 900 });
             await page.goto(`${origin}/vcard/test-one-card`, { waitUntil: 'domcontentloaded' });
-            assert.equal(new URL(page.url()).pathname, '/vcard/test-one-card');
+            assert.equal(new URL(page.url()).pathname, '/test-one-card');
             assert.equal(new URL(await page.locator('base').getAttribute('href'), origin).pathname, '/pages/' + template.preview_url.replace(/^\.\.\//, ''));
             await page.getByText(title, { exact: true }).first().waitFor({ timeout: 15000 });
             await page.waitForFunction(() => Array.from(document.images).every(image => image.complete), { }, { timeout: 15000 });

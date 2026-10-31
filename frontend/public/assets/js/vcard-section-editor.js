@@ -139,7 +139,7 @@
         var qrTimer;
         function updateQr(){
           window.clearTimeout(qrTimer);qrTimer=window.setTimeout(function(){
-            var query=new URLSearchParams(state.qr);query.set('data',window.location.origin+'/vcard/preview');
+            var query=new URLSearchParams(state.qr);query.set('data',window.location.origin+'/preview');
             preview.src=(window.SyncVCardApiOrigin||window.location.origin)+'/api/public/qrcode?'+query;
           },120);
           hint.textContent='Preview only. Your saved QR code opens your VCard. Use a dark code on a light background for reliable scanning.';

@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
     : "";
 
   var adminNavigation = [
-    ["Companies", "companies.html", "CM", "Workspace"],
     ["Newsletter", "newsletter.html", "NL", "Growth"],
     ["Overview", "dashboard.html", "OV", "main"],
     ["Users", "users.html", "US", "Workspace"],

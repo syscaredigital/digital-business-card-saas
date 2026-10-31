@@ -13,7 +13,8 @@ async function deliverEmails(db, send = mail.sendQueuedNotification) {
     if (!row) break;
     const owner = (await db.query(`SELECT u.email,u.status,COALESCE(s.email_notifications,TRUE) enabled
       FROM users u LEFT JOIN user_settings s ON s.user_id=u.id WHERE u.id=$1`,[row.user_id])).rows[0];
-    if (!owner || owner.status!=='active' || (!row.recipient_email && !owner.enabled)) {
+    const notification = String(row.dedup_key || '').startsWith('notification:');
+    if (!owner || owner.status!=='active' || ((!row.recipient_email || notification) && !owner.enabled)) {
       await db.query("UPDATE email_outbox SET status='cancelled',lease_token=NULL WHERE id=$1 AND lease_token=$2",[row.id,lease]);
       continue;
     }

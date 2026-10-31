@@ -86,7 +86,7 @@ adminRouter.patch('/:id',async(req,res,next)=>{
 });
 async function delegateCompanyMember(req,res,next){
   if(req.query.companyMember===undefined)return next();
-  if(req.user.role!=='company_admin'||!validId(req.query.companyMember)||!(/^\/vcards(?:\/\d+)?$/.test(req.path)||req.path==='/dashboard'))return res.status(403).json({message:'Company delegation is not allowed for this request.'});
+  if(req.user.role!=='company_admin'||!validId(req.query.companyMember)||!(/^\/vcards(?:\/\d+(?:\/duplicate)?)?$/.test(req.path)||req.path==='/dashboard'))return res.status(403).json({message:'Company delegation is not allowed for this request.'});
   try{const result=await pool.query(`SELECT employee.id,employee.name,employee.email,employee.status FROM users employee JOIN users admin ON admin.company_id=employee.company_id JOIN companies c ON c.id=admin.company_id
     WHERE admin.id=$1 AND employee.id=$2 AND employee.status='active' AND c.status='active'`,[req.user.id,req.query.companyMember]);
     if(!result.rowCount)return res.status(404).json({message:'Employee not found in your company.'});req.actor=req.user;req.user={...req.user,...result.rows[0]};next();

@@ -1,5 +1,5 @@
 const express = require("express");
-const { renderQr } = require('../services/vcard-qr.service');
+const { renderQr, renderQrPng } = require('../services/vcard-qr.service');
 const crypto = require("crypto");
 const pool = require("../config/database.config");
 const { normalizePlanFeatures } = require("../config/vcard-features");
@@ -192,8 +192,9 @@ router.get("/qrcode", async (req, res, next) => {
   const data = String(req.query.data || "").trim();
   if (!data || data.length > 2048) return res.status(400).json({ message: "A valid QR destination is required" });
   try {
-    const svg = renderQr(data, req.query);
-    res.type("image/svg+xml").send(svg);
+    const png = req.query.format === 'png';
+    const image = png ? await renderQrPng(data, req.query) : renderQr(data, req.query);
+    res.type(png ? 'image/png' : 'image/svg+xml').send(image);
   } catch (error) { next(error); }
 });
 
@@ -206,12 +207,14 @@ router.get("/vcards/:id/qrcode", async (req, res, next) => {
     const destination = `${publicVcardUrl(req, result.rows[0].slug)}?source=qr`;
     const card = result.rows[0];
     const customized = !card.settings?.hiddenSections?.includes('qrcode-customize') && await hasVcardFeature(pool, card.user_id, 'qrcode-customize');
-    const svg = renderQr(destination, customized ? card.settings?.sections?.['qrcode-customize'] : {});
+    const options = customized ? card.settings?.sections?.['qrcode-customize'] : {};
+    const png = req.query.format === 'png';
+    const image = png ? await renderQrPng(destination, options) : renderQr(destination, options);
     res.set({
       "Cache-Control": "no-cache",
       "Cross-Origin-Resource-Policy": "cross-origin",
       "X-VCard-URL": destination,
-    }).type("image/svg+xml").send(svg);
+    }).type(png ? 'image/png' : 'image/svg+xml').send(image);
   } catch (error) { next(error); }
 });
 

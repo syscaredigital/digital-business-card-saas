@@ -11,14 +11,31 @@ function slugifyVcardName(value) {
 function normalizeCustomSlug(value) {
   const supplied = String(value || "").trim();
   if (!supplied) return null;
-  const slug = slugifyVcardName(supplied);
-  if (slug.length < 3) {
-    const error = new Error("The VCard URL name must contain at least 3 letters or numbers");
+  let slug = supplied;
+  if (/^https?:\/\//i.test(supplied)) {
+    try {
+      const url = new URL(supplied);
+      if (url.search || url.hash || supplied.includes('\\')) throw new Error();
+      slug = decodeURIComponent(url.pathname.replace(/^\/(?:vcard\/)?/, ''));
+    } catch (_) { slug = ''; }
+  }
+  if (['api', 'pages', 'public', 'components', 'layouts', 'health', 'ready', 'vcard'].includes(slug.toLowerCase())) {
+    const error = new Error('This URL name is reserved. Choose another name.');
+    error.statusCode = 400;
+    error.publicMessage = error.message;
+    throw error;
+  }
+  if (!isValidVcardSlug(slug)) {
+    const error = new Error("Use 3–100 URL-name characters: letters, numbers, or symbols such as ! _ & -. Do not include spaces, slashes, query strings, or fragments.");
     error.statusCode = 400;
     error.publicMessage = error.message;
     throw error;
   }
   return slug;
+}
+
+function isValidVcardSlug(value, maxLength = 100) {
+  return value.length >= 3 && value.length <= maxLength && /^[A-Za-z0-9._~!$&'()*+,;=:@-]+$/.test(value);
 }
 
 function requestOrigin(req) {
@@ -33,7 +50,7 @@ function requestOrigin(req) {
 }
 
 function publicVcardUrl(req, slug) {
-  return `${requestOrigin(req)}/vcard/${encodeURIComponent(slug)}`;
+  return `${requestOrigin(req)}/${encodeURIComponent(slug)}`;
 }
 
 function frontendVcardUrl(req, id, source, templatePreviewUrl) {
@@ -50,4 +67,4 @@ function frontendVcardUrl(req, id, source, templatePreviewUrl) {
   return target.href;
 }
 
-module.exports = { slugifyVcardName, normalizeCustomSlug, requestOrigin, publicVcardUrl, frontendVcardUrl };
+module.exports = { slugifyVcardName, normalizeCustomSlug, isValidVcardSlug, requestOrigin, publicVcardUrl, frontendVcardUrl };

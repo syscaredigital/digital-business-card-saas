@@ -1,1 +1,45 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="../../public/assets/js/vcard-api-origin.js"></script><link rel="stylesheet" href="../../public/assets/css/operations-workspace.css"><title>Newsletter | Sync E-Card</title></head><body data-workspace="newsletter"><header><strong>SYNC E-CARD</strong><h1 id="workspaceTitle">Newsletter</h1><nav aria-label="Workspace navigation"><a href="dashboard.html">Dashboard</a><a href="companies.html">Companies</a><a href="newsletter.html">Newsletter</a><button id="workspaceLogout" type="button">Sign out</button></nav></header><main><p id="workspaceFeedback" role="status" aria-live="polite"></p><div id="workspaceContent">Loading workspace?</div></main><footer>Sync E-Card ? syncecard.com</footer><script src="../../public/assets/js/operations-workspace.js"></script></body></html>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090a0d"><title>Newsletter | Sync E-Card</title>
+<script src="../../public/assets/js/vcard-api-origin.js"></script>
+<link rel="icon" href="../../public/assets/images/logos/sync-e-symbol-red-web.png">
+<link rel="stylesheet" href="../../public/assets/css/main.css">
+<link rel="stylesheet" href="../../public/assets/css/dashboard.css">
+<link rel="stylesheet" href="../../public/assets/css/newsletter.css">
+</head><body class="super-admin-dashboard newsletter-workspace" data-workspace="newsletter">
+<div class="dashboard-wrapper"><aside class="sidebar" aria-label="Super admin navigation">
+      <div class="sidebar-logo">
+        <a class="super-admin-brand" href="dashboard.html" aria-label="Sync E-Card super admin dashboard">
+          <img class="super-admin-brand-logo" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card" />
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z"/></svg>
+          <span>Overview</span>
+        </a>
+        <div class="sidebar-section-label">Workspace</div>
+        <a href="users.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5Z"/></svg><span>Users</span></a>
+        <a href="vcards.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2ZM8 8.75A2.25 2.25 0 1 1 8 13.25 2.25 2.25 0 0 1 8 8.75ZM4.5 17c.23-1.75 1.85-2.75 3.5-2.75s3.27 1 3.5 2.75h-7Zm14.5-1h-5v-1.5h5V16Zm0-3h-5v-1.5h5V13Zm0-3h-5V8.5h5V10Z"/></svg><span>VCards</span></a>
+        <a href="nfc-orders.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0-2a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2V6c0-1.1-.9-2-2-2H4Zm3 5h5v2H7V9Zm0 4h8v2H7v-2Zm11-4h-2v2h2V9Z"/></svg><span>NFC Orders</span></a>
+        <a href="subscriptions.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v2H7V4Zm-2 4h14v2H5V8Zm-1 4h16v8H4v-8Zm4 2v2h5v-2H8Z"/></svg><span>Subscriptions</span></a>
+        <div class="sidebar-section-label">Finance</div>
+        <a href="transactions.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L21.8 8l-5.4 5.4L15 12l3-3H7V7Zm10 10H6l3 3-1.4 1.4L2.2 16l5.4-5.4L9 12l-3 3h11v2Z"/></svg><span>Transactions</span></a>
+        <a href="cash-payments.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 14H3V8h18v10Zm-9-1a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg><span>Cash Payments</span></a>
+        <a href="payouts.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 6v2h16V6l-8-4ZM6 10v7H4v3h16v-3h-2v-7h-2v7h-3v-7h-2v7H8v-7H6Z"/></svg><span>Payouts</span></a>
+        <a href="withdrawals.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10l3.5-3.5 1.4 1.4-5.9 5.9-5.9-5.9 1.4-1.4L11 13V3ZM5 19h14v2H5v-2Z"/></svg><span>Withdrawals</span></a>
+        <div class="sidebar-section-label">Insights</div>
+        <a href="analytics.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18v-2H5V3H3Zm4 13 4-4 3 3 5-6 1.5 1.3-6.4 7.7-3.1-3.1-2.6 2.6L7 16Z"/></svg><span>Analytics</span></a>
+        <a href="reports.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Zm8 2v4h4l-4-4ZM9 12v2h8v-2H9Zm0 4v2h8v-2H9Z"/></svg><span>Reports</span></a>
+        <a href="settings.html" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19.4 13 .1-1-.1-1 2.1-1.6-2-3.4-2.5 1a8 8 0 0 0-1.7-1L15 3.3h-4L10.6 6a8 8 0 0 0-1.7 1l-2.5-1-2 3.4L6.6 11l-.1 1 .1 1-2.1 1.6 2 3.4 2.5-1a8 8 0 0 0 1.7 1l.4 2.7h4l.4-2.7a8 8 0 0 0 1.7-1l2.5 1 2-3.4-2.3-1.6ZM13 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/></svg><span>Settings</span></a>
+      <div class="sidebar-section-label">Growth</div><a href="newsletter.html" class="nav-item active" aria-current="page"><span>Newsletter</span></a></nav>
+
+      </aside>
+<div class="main-content"><header class="topbar"><div class="admin-breadcrumb"><span>Admin workspace / Growth</span><strong>Newsletter</strong></div><button id="workspaceLogout" class="nl-secondary" type="button">Sign out</button></header>
+<main class="page-content"><div class="nl-heading"><div><span class="nl-eyebrow">STAY CONNECTED</span><h1 id="workspaceTitle">Newsletter</h1><p>Keep your subscribers up to date with news, offers, and product updates.</p></div><a class="nl-primary" href="#newsletterCampaign">Create campaign <span aria-hidden="true">&#8599;</span></a></div>
+<p id="workspaceFeedback" role="status" aria-live="polite"></p>
+<div id="workspaceContent" aria-live="polite"><div class="nl-panel nl-empty">Loading your newsletter workspace...</div></div>
+<footer class="nl-footer">Sync E-Card &middot; Newsletter management</footer></main></div></div>
+<script src="../../public/assets/js/operations-workspace.js"></script></body></html>

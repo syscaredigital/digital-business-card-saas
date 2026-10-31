@@ -83,7 +83,7 @@
   }
 
   function request(path, options) {
-    if (companyMember && /^\/user\/(?:dashboard|vcards(?:\/\d+)?)$/.test(path.split("?")[0])) path += (path.includes("?") ? "&" : "?") + "companyMember=" + encodeURIComponent(companyMember);
+    if (companyMember && /^\/user\/(?:dashboard|vcards(?:\/\d+(?:\/duplicate)?)?)$/.test(path.split("?")[0])) path += (path.includes("?") ? "&" : "?") + "companyMember=" + encodeURIComponent(companyMember);
     options = options || {};
     options.headers = Object.assign({}, options.headers, { "X-Requested-With": "SyncECard" });
     return window.SyncSession.fetch(API + path, options).then(async function (response) {
@@ -338,13 +338,13 @@
       vcardTable.querySelectorAll(".client-vcard-row, .user-empty").forEach(function (row) { row.remove(); });
       if (data.vcards && data.vcards.length) {
         vcardTable.insertAdjacentHTML("beforeend", data.vcards.map(function (card) {
-          var publicUrl = card.publicUrl || card.public_url || (card.slug ? (window.location.origin + "/vcard/" + encodeURIComponent(card.slug)) : "#");
+          var publicUrl = card.publicUrl || card.public_url || (card.slug ? (window.location.origin + "/" + encodeURIComponent(card.slug)) : "#");
            var templatePreviewUrl = card.template_preview_url || "";
            return '<article class="client-vcard-row vcard-library-card searchable-item" data-search="' + escapeHtml([card.title, card.email, card.phone, card.template_name].join(" ").toLowerCase()) + '">' +
              '<div class="vcard-library-cover">' + (templatePreviewUrl ? '<iframe src="' + escapeHtml(templatePreviewUrl) + '" title="' + escapeHtml(card.template_name || "VCard") + ' preview" loading="lazy" tabindex="-1"></iframe>' : '') + '<span class="vcard-library-template">' + escapeHtml(card.template_name || "VCard template") + '</span><span class="user-status ' + (card.is_active ? "" : "inactive") + '">' + (card.is_active ? "Live" : "Paused") + '</span></div>' +
             '<div class="vcard-library-body"><div class="client-vcard-name-cell"><div><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(card.title || "Untitled card") + '</a><span>' + escapeHtml(card.description || "Your digital business card") + '</span></div></div>' +
             '<div class="vcard-library-meta"><span><small>Contact</small>' + escapeHtml(card.email || card.phone || "Not added") + '</span><span><small>Updated</small>' + escapeHtml(formatDate(card.updated_at)) + '</span><span><small>Public URL</small><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl.replace(/^https?:\/\//,"")) + '</a></span></div>' +
-            '<div class="vcard-library-actions"><a class="vcard-open-link" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">View card <span>↗</span></a><div class="vcard-manage"><button class="vcard-manage-toggle" type="button" data-vcard-manage-toggle="' + card.id + '" aria-expanded="false">Manage <span>•••</span></button><div class="vcard-manage-menu" data-vcard-manage-menu="' + card.id + '" hidden><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + (companyMember ? '&companyMember=' + encodeURIComponent(companyMember) : '') + '"><span>✎</span><div><strong>Edit VCard</strong><small>Update details and design</small></div></a><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer"><span>↗</span><div><strong>Open public card</strong><small>View the published profile</small></div></a><button type="button" class="vcard-delete-action" data-delete-vcard="' + card.id + '" data-vcard-title="' + escapeHtml(card.title || "Untitled card") + '"><span>×</span><div><strong>Delete VCard</strong><small>Permanently remove this card</small></div></button></div></div></div></div></article>';
+            '<div class="vcard-library-actions"><a class="vcard-open-link" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">View card <span>↗</span></a><div class="vcard-manage"><button class="vcard-manage-toggle" type="button" data-vcard-manage-toggle="' + card.id + '" aria-expanded="false">Manage <span>•••</span></button><div class="vcard-manage-menu" data-vcard-manage-menu="' + card.id + '" hidden><a href="edit-vcard.html?id=' + encodeURIComponent(card.id) + (companyMember ? '&companyMember=' + encodeURIComponent(companyMember) : '') + '"><span>✎</span><div><strong>Edit VCard</strong><small>Update details and design</small></div></a><a href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer"><span>↗</span><div><strong>Open public card</strong><small>View the published profile</small></div></a><button type="button" data-duplicate-vcard="' + card.id + '"><span>&#10697;</span><div><strong>Duplicate VCard</strong><small>Create an editable copy</small></div></button><button type="button" class="vcard-delete-action" data-delete-vcard="' + card.id + '" data-vcard-title="' + escapeHtml(card.title || "Untitled card") + '"><span>×</span><div><strong>Delete VCard</strong><small>Permanently remove this card</small></div></button></div></div></div></div></article>';
         }).join(""));
       } else vcardTable.insertAdjacentHTML("beforeend", '<div class="user-empty">No cards found. Use “Add New VCard” to create one.</div>');
     }
@@ -1259,7 +1259,8 @@
         var created = new Date(item.contacted_at);
         return created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
       }).length;
-      setText("enquiryMetricTotal", rows.length);
+      setText("enquiryMetricTotal", rows.filter(function (item) { return item.source !== 'VCard contact save'; }).length);
+      setText("enquiryMetricContactShares", rows.filter(function (item) { return item.source === 'VCard contact save'; }).length);
       setText("enquiryMetricEmail", rows.filter(function (item) { return Boolean(item.email); }).length);
       setText("enquiryMetricMonth", monthlyEnquiries);
       enquiriesBody.innerHTML = rows.length ? rows.map(function (item) {
@@ -1481,10 +1482,10 @@
     function updateEditorPublicUrl() {
       var link = document.getElementById('editCardPublicUrl');
       var slug = editor.elements.slug.value;
-      if (link) { link.href = editorUrlOrigin + '/vcard/' + encodeURIComponent(slug); link.textContent = link.href; }
+      if (link) { link.href = editorUrlOrigin + '/' + encodeURIComponent(slug); link.textContent = link.href; }
     }
     editor.elements.slug.addEventListener('input', function() {
-      this.value = this.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+
       updateEditorPublicUrl();
     });
     if (!cardId) {
@@ -1517,7 +1518,9 @@
         var featureEditor = document.getElementById("vcardFeatureEditor");
         var savedSections = card.settings && card.settings.sections ? card.settings.sections : {};
         renderVcardSections(featureEditor, entitlements, savedSections, card.settings && card.settings.hiddenSections);
-        editorStatus.textContent = "Loaded from your account";
+        editorStatus.textContent = new URLSearchParams(window.location.search).get('duplicated') === '1'
+          ? 'Your copy is ready. Update its details and URL, then turn on "Card is live" and save when you are ready to publish.'
+          : 'Loaded from your account';
       }).catch(function (error) { editorStatus.textContent = error.message; });
       editor.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -1546,7 +1549,7 @@
     var slugifyVcardName=function(value){return String(value||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,100);};
     if(createVcardNameInput&&createVcardSlugInput){
       createVcardNameInput.addEventListener("input",function(){if(createVcardSlugInput.dataset.custom!=="true")createVcardSlugInput.value=slugifyVcardName(createVcardNameInput.value);});
-      createVcardSlugInput.addEventListener("input",function(){createVcardSlugInput.dataset.custom="true";createVcardSlugInput.value=slugifyVcardName(createVcardSlugInput.value);});
+      createVcardSlugInput.addEventListener("input",function(){createVcardSlugInput.dataset.custom="true";});
       var generateSlugButton=createVcardSlugInput.parentElement.querySelector("button");
       if(generateSlugButton)generateSlugButton.addEventListener("click",function(){createVcardSlugInput.dataset.custom="false";createVcardSlugInput.value=slugifyVcardName(createVcardNameInput.value);createVcardSlugInput.focus();});
     }
@@ -1616,6 +1619,20 @@
       return;
     }
 
+    var duplicateButton = event.target.closest('[data-duplicate-vcard]');
+    if (duplicateButton) {
+      if (duplicateButton.disabled) return;
+      duplicateButton.disabled = true;
+      setVcardActionFeedback('Creating your editable copy...', false);
+      request('/user/vcards/' + encodeURIComponent(duplicateButton.dataset.duplicateVcard) + '/duplicate', { method: 'POST' })
+        .then(function(data) {
+          window.location.href = 'edit-vcard.html?id=' + encodeURIComponent(data.vcard.id) + '&duplicated=1' + (companyMember ? '&companyMember=' + encodeURIComponent(companyMember) : '');
+        }).catch(function(error) {
+          setVcardActionFeedback(error.message, true);
+          duplicateButton.disabled = false;
+        });
+      return;
+    }
     var deleteButton = event.target.closest("[data-delete-vcard]");
     if (deleteButton) {
       var vcardId = deleteButton.dataset.deleteVcard;
@@ -1693,13 +1710,13 @@
   if (userQrCardList) {
     request("/user/vcard-engagement").then(function (data) {
       userQrCardList.innerHTML = data.cards.length ? data.cards.map(function (card) {
-        var destination = card.publicUrl || (card.slug ? (window.location.origin + "/vcard/" + encodeURIComponent(card.slug)) : window.location.origin);
+        var destination = card.publicUrl || (card.slug ? (window.location.origin + "/" + encodeURIComponent(card.slug)) : window.location.origin);
         var qrUrl = API + "/public/vcards/" + encodeURIComponent(card.id) + "/qrcode";
         return '<article class="feature-panel qr-live-card searchable-item" data-search="' + escapeHtml((card.title || "vcard") + " qr") + '">' +
           '<div class="feature-panel-header"><div><h3>' + escapeHtml(card.title || "Untitled VCard") + '</h3><p>Encoded to open this public VCard directly.</p></div><span class="status-pill ' + (card.is_active ? "status-live" : "status-warm") + '">' + (card.is_active ? "Active" : "Paused") + '</span></div>' +
           '<div class="qr-preview"><img src="' + escapeHtml(qrUrl) + '" alt="QR code for ' + escapeHtml(card.title || "VCard") + '"></div>' +
-          '<div class="qr-live-stats"><span><strong>' + Number(card.qr_scans || 0).toLocaleString() + '</strong>QR scans</span><span><strong>' + Number(card.contact_downloads || 0).toLocaleString() + '</strong>contact saves</span><span><strong>' + Number(card.captured_contacts || 0).toLocaleString() + '</strong>leads</span></div>' +
-          '<div class="action-row"><button type="button" class="btn-preview" data-copy-text="' + escapeHtml(destination) + '">Copy Link</button><button class="btn-share" type="button" data-download-qr="' + escapeHtml(qrUrl) + '" data-qr-filename="' + escapeHtml(card.slug || "vcard-"+card.id) + '-qr.svg">Download SVG</button></div></article>';
+          '<div class="qr-live-stats"><span><strong>' + Number(card.qr_scans || 0).toLocaleString() + '</strong>QR scans</span><span><strong>' + Number(card.contact_downloads || 0).toLocaleString() + '</strong>contact downloads</span><span><strong>' + Number(card.captured_contacts || 0).toLocaleString() + '</strong>leads</span></div>' +
+          '<p class="owner-lead-label">Downloads are requests for the contact file, not confirmed saves to a phone. <a href="enquiries.html?kind=contact">View shared contact details</a></p><div class="action-row"><button type="button" class="btn-preview" data-copy-text="' + escapeHtml(destination) + '">Copy Link</button><button class="btn-share" type="button" data-download-qr="' + escapeHtml(qrUrl) + '" data-qr-filename="' + escapeHtml(card.slug || "vcard-"+card.id) + '-qr.svg">Download SVG</button><button class="btn-share" type="button" data-download-qr="' + escapeHtml(qrUrl + '?format=png') + '" data-qr-filename="' + escapeHtml(card.slug || "vcard-"+card.id) + '-qr.png">Download PNG</button></div></article>';
       }).join("") : '<div class="user-empty">Create a VCard to generate your first tracked QR code.</div>';
     }).catch(function (error) {
       userQrCardList.innerHTML = '<div class="user-empty">' + escapeHtml(error.message) + '</div>';

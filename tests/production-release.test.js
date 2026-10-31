@@ -23,14 +23,14 @@ test('production release: editable URLs, companies and consented newsletter',asy
     await t.test('URL rename redirects old QR links, rejects collisions and cannot be hijacked',async()=>{
       const made=await request('/user/vcards','POST',{title:'Editable URL',slug:'original-name',templateId,sections:{}},owner.token);assert.equal(made.status,201,JSON.stringify(made.body));card=made.body.vcard;
       const change=await request('/user/vcards/'+card.id,'PATCH',{title:'Editable URL',slug:'updated-name',templateId,sections:{}},owner.token);assert.equal(change.status,200,JSON.stringify(change.body));
-      const old=await fetch(origin+'/vcard/original-name?source=qr',{redirect:'manual'});assert.equal(old.status,302);assert.equal(old.headers.get('location'),'/vcard/updated-name?source=qr');
+      const old=await fetch(origin+'/vcard/original-name?source=qr',{redirect:'manual'});assert.equal(old.status,302);assert.equal(old.headers.get('location'),'/updated-name?source=qr');
       assert.equal((await fetch(origin+'/vcard/updated-name')).status,200);
       assert.equal((await request('/user/vcards','POST',{title:'Hijack',slug:'original-name',templateId,sections:{}},other.token)).status,409);
       assert.equal((await request('/user/vcards/'+card.id,'PATCH',{title:'Forbidden',slug:'stolen-name',templateId,sections:{}},other.token)).status,404);
       assert.equal((await request('/user/vcards/'+card.id,'PATCH',{title:'Blank URL',slug:'',templateId,sections:{}},owner.token)).status,400);
       const reverted=await request('/user/vcards/'+card.id,'PATCH',{title:'Editable URL',slug:'original-name',templateId,sections:{}},owner.token);assert.equal(reverted.status,200);
       assert.equal((await fetch(origin+'/vcard/updated-name',{redirect:'manual'})).status,302);
-      const qr=await fetch(origin+'/api/public/vcards/'+card.id+'/qrcode');assert.match(qr.headers.get('x-vcard-url'),/\/vcard\/original-name\?source=qr$/);
+      const qr=await fetch(origin+'/api/public/vcards/'+card.id+'/qrcode');assert.match(qr.headers.get('x-vcard-url'),/\/original-name\?source=qr$/);
     });
     await t.test('super admin provisions company administrators and ordinary users cannot access company reports',async()=>{
       const first=await request('/super-admin/companies','POST',{name:'First Company',adminId:owner.user.id,employeeLimit:1},admin.token);assert.equal(first.status,201,JSON.stringify(first.body));companyId=first.body.id;
@@ -92,7 +92,7 @@ test('production release: editable URLs, companies and consented newsletter',asy
       await page.fill('#editCardSlug','browser-renamed');await page.locator('#userVcardEditor button[type=submit]').click();
       await page.waitForFunction(()=>document.getElementById('vcardEditorStatus').textContent.startsWith('Saved successfully'));
       await page.reload();await page.waitForFunction(()=>document.getElementById('editCardSlug').value==='browser-renamed');
-      assert.equal((await fetch(origin+'/vcard/original-name',{redirect:'manual'})).headers.get('location'),'/vcard/browser-renamed');
+      assert.equal((await fetch(origin+'/vcard/original-name',{redirect:'manual'})).headers.get('location'),'/browser-renamed');
       await page.locator('#editCardSlug').screenshot({path:'test-results/editable-vcard-url.png'});
       await context.clearCookies();await page.goto(origin+'/pages/auth/login.html');await page.fill('#loginEmail','release-root@example.test');await page.fill('#passwordInput',password);
       await Promise.all([page.waitForURL('**/super-admin/dashboard.html'),page.locator('#loginForm button[type=submit]').click()]);

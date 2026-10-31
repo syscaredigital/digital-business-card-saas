@@ -55,8 +55,9 @@ test('card owners receive and manage leads without administrator intervention', 
       assert.match(alerts.find(r=>r.type==='qr_scan').body,/has not shared their identity/);
       const sent = [];
       await deliverEmails(db,async mail=>sent.push(mail));
-      assert.equal(sent.length,2);
-      assert.ok(sent.every(mail=>mail.to==='owner@example.test'));
+      assert.equal(sent.length,4);
+      assert.equal(sent.filter(mail=>mail.to==='owner@example.test').length,2);
+      assert.equal(sent.filter(mail=>mail.to==='public-card-address@example.test').length,2);
       assert.ok(sent.some(mail=>mail.replyTo==='saved@example.test'));
     });
 
@@ -66,7 +67,7 @@ test('card owners receive and manage leads without administrator intervention', 
       for(const response of downloads) {assert.equal(response.status,200);assert.match(await response.text(),/BEGIN:VCARD/);}
       const alerts=(await db.query("SELECT e.body FROM notifications n JOIN email_outbox e ON e.dedup_key='notification:'||n.id::text WHERE n.type='contact_download'")).rows;
       assert.equal(alerts.length,1);assert.match(alerts[0].body,/did not share their identity/);
-      await deliverEmails(db,async mail=>assert.equal(mail.to,owner.user.email));
+      await deliverEmails(db,async mail=>assert.ok([owner.user.email,'public-card-address@example.test'].includes(mail.to)));
       await db.query("UPDATE vcards SET settings=jsonb_set(settings,'{contactCaptureRequired}','true'::jsonb) WHERE id=$1",[card.id]);
     });
     await t.test('lead creation rolls back if its dashboard notification cannot be saved', async () => {
@@ -95,9 +96,9 @@ test('card owners receive and manage leads without administrator intervention', 
       await deliverEmails(db,async()=>{throw Object.assign(new Error('private SMTP details'),{code:'ETIMEDOUT'});});
       const failed = (await db.query("SELECT * FROM email_outbox WHERE subject='New VCard enquiry'")).rows[0];
       assert.equal(failed.status,'pending'); assert.equal(failed.last_error,'ETIMEDOUT');
-      await db.query('UPDATE email_outbox SET available_at=NOW() WHERE id=$1',[failed.id]);
+      await db.query("UPDATE email_outbox SET available_at=NOW() WHERE subject='New VCard enquiry'");
       const sent=[]; await deliverEmails(db,async mail=>sent.push(mail));
-      assert.equal(sent[0].to,owner.user.email); assert.equal(sent[0].replyTo,'question@example.test');
+      assert.deepEqual(sent.map(mail=>mail.to).sort(),[owner.user.email,'public-card-address@example.test'].sort()); assert.equal(sent[0].to,owner.user.email); assert.equal(sent[0].replyTo,'question@example.test');
       assert.match(sent[0].text,/Can we discuss[\s\S]*enquiries.html\?contact=/);
       const key=crypto.randomUUID(), reply={message:'Thank you. Yes, let us arrange a call.',requestKey:key};
       const replies=await Promise.all([1,2].map(()=>request('/user/enquiries/'+enquiryId+'/replies','POST',reply,owner.token)));

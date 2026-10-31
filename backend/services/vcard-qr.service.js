@@ -29,4 +29,9 @@ function renderQr(destination, value) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${options.size}" height="${options.size}" viewBox="0 0 ${extent} ${extent}"><rect width="${extent}" height="${extent}" fill="${options.background}"/><g fill="${options.foreground}">${shapes.join('')}</g></svg>`;
 }
 
-module.exports = { qrOptions, renderQr };
+async function renderQrPng(destination, value) {
+  // Rasterize the same artwork so colors, module style and quiet zone match SVG.
+  return require('sharp')(Buffer.from(renderQr(destination, value))).png().toBuffer();
+}
+
+module.exports = { qrOptions, renderQr, renderQrPng };

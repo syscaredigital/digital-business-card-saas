@@ -43,6 +43,7 @@ router.post("/subscriptions/upgrade", controller.requestPlanUpgrade);
 router.post("/subscriptions/manual-payment", paymentSlipUpload.single("slip"), controller.submitManualPayment);
 router.get("/vcards/:id", controller.getVcard);
 router.post("/vcards", controller.createVcard);
+router.post("/vcards/:id/duplicate", controller.duplicateVcard);
 router.patch("/vcards/:id", controller.updateVcard);
 router.delete("/vcards/:id", controller.deleteVcard);
 router.get("/notifications", controller.notifications);

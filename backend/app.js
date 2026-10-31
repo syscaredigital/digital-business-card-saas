@@ -7,7 +7,7 @@ const helmet = require("helmet");
 
 const { requirePlatformAvailable } = require("./middlewares/platform-access.middleware");
 const pool = require("./config/database.config");
-const { frontendVcardUrl } = require("./helpers/vcard-url");
+const { frontendVcardUrl, isValidVcardSlug } = require("./helpers/vcard-url");
 const frontendHeaders = require("./helpers/frontend-headers");
 const app = express();
 if (process.env.TRUST_PROXY) app.set('trust proxy', process.env.TRUST_PROXY.split(',').map(value => value.trim()));
@@ -66,9 +66,9 @@ app.use('/api/super-admin/companies', require('./routes/company.routes').adminRo
 app.use("/api/user", require("./routes/user.routes"));
 app.use("/api/super-admin", require("./routes/super-admin.routes"));
 
-app.get("/vcard/:slug", requirePlatformAvailable, async (req, res, next) => {
+app.get(["/vcard/:slug", "/:slug"], requirePlatformAvailable, async (req, res, next) => {
   const slug = String(req.params.slug || "").trim().toLowerCase();
-  if (!/^[a-z0-9][a-z0-9-]{1,118}[a-z0-9]$/.test(slug)) return res.status(404).json({ message: "VCard not found" });
+  if (!isValidVcardSlug(slug, 120)) return res.status(404).json({ message: "VCard not found" });
   try {
     const result = await pool.query(
       `SELECT v.id, v.slug, t.preview_url
@@ -83,9 +83,9 @@ app.get("/vcard/:slug", requirePlatformAvailable, async (req, res, next) => {
     if (!result.rowCount) return res.status(404).json({ message: "VCard not found" });
     const source = req.query.source === "qr" ? "qr" : "public_link";
     const card = result.rows[0];
-    if (slug !== String(card.slug).toLowerCase()) {
+    if (req.path.startsWith("/vcard/") || req.params.slug !== String(card.slug)) {
       res.set('Cache-Control', 'no-store');
-      return res.redirect(302, `/vcard/${encodeURIComponent(card.slug)}${source === 'qr' ? '?source=qr' : ''}`);
+      return res.redirect(302, `/${encodeURIComponent(card.slug)}${source === 'qr' ? '?source=qr' : ''}`);
     }
     const templateUrl = new URL(frontendVcardUrl(req, card.id, source, card.preview_url));
     const match = templateUrl.pathname.match(/^\/pages\/public-vcard\/(final-[a-z0-9-]+\.html)$/i);

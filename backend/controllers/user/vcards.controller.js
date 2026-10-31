@@ -5,6 +5,52 @@ const { normalizeCustomSlug, publicVcardUrl } = require("../../helpers/vcard-url
 const { loadVcardEntitlements } = require('../../services/vcard-entitlements.service');
 const { normalizeSections, normalizeVcardImage, normalizeHiddenSections } = require('../../validators/vcard.validator');
 
+exports.duplicateVcard = async (req, res, next) => {
+  const sourceId = Number(req.params.id);
+  if (!Number.isSafeInteger(sourceId) || sourceId < 1) return res.status(400).json({ message: 'Invalid VCard ID' });
+  let client, committed = false;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+    // Serialize creation against the same owner lock used by createVcard.
+    await client.query('SELECT id FROM users WHERE id=$1 FOR UPDATE', [req.user.id]);
+    const source = await client.query('SELECT * FROM vcards WHERE id=$1 AND user_id=$2 FOR SHARE', [sourceId, req.user.id]);
+    if (!source.rowCount) return res.status(404).json({ message: 'Card not found' });
+    const card = source.rows[0];
+    const allowance = await client.query(
+      `SELECT COALESCE(p.vcard_limit,1)::int AS card_limit,
+       (SELECT COUNT(*)::int FROM vcards WHERE user_id=$1) AS card_count
+       FROM users u LEFT JOIN subscriptions s ON s.user_id=u.id AND ${currentSubscription()}
+       LEFT JOIN plans p ON p.id=s.plan_id WHERE u.id=$1
+       ORDER BY s.created_at DESC NULLS LAST LIMIT 1`, [req.user.id]);
+    if ((allowance.rows[0]?.card_count || 0) >= (allowance.rows[0]?.card_limit || 1)) {
+      return res.status(403).json({ message: "Your plan's card limit has been reached. Upgrade your plan or remove a card before duplicating." });
+    }
+    const entitlements = await loadVcardEntitlements(client, req.user.id);
+    if (!entitlements.templates.some(template => Number(template.id) === Number(card.template_id))) {
+      return res.status(403).json({ message: 'This card template is no longer included in your plan. Change its template before duplicating.' });
+    }
+    const title = String(card.title || 'Untitled card').slice(0, 248) + ' (copy)';
+    const slug = require('../../helpers/vcard-url').slugifyVcardName(card.title).slice(0, 55) + '-copy-' + require('node:crypto').randomUUID();
+    const storage = await getStorageSummary(client, req.user.id);
+    if (storage.usedBytes + Buffer.byteLength(JSON.stringify({ ...card, title, slug })) > storage.limitBytes) {
+      return res.status(413).json({ message: 'Your plan storage limit has been reached. Free up storage or upgrade before duplicating.' });
+    }
+    const result = await client.query(
+      `INSERT INTO vcards (user_id,company_id,template_id,title,qualifications,slug,description,website_url,phone,email,address,social_links,settings,is_active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13::jsonb,FALSE)
+       RETURNING id,slug,title,is_active`,
+      [req.user.id,card.company_id,card.template_id,title,card.qualifications,slug,card.description,card.website_url,
+        card.phone,card.email,card.address,JSON.stringify(card.social_links || []),JSON.stringify(card.settings || {})]);
+    await client.query("INSERT INTO activity_logs(user_id,action,resource_type,resource_id,metadata) VALUES($1,'vcard.duplicated','vcard',$2,$3::jsonb)",
+      [req.actor?.id || req.user.id,result.rows[0].id,JSON.stringify({ sourceVcardId:sourceId,ownerUserId:req.user.id })]);
+    await client.query('COMMIT');
+    committed = true;
+    res.status(201).json({ message: 'Card duplicated. Edit the copy and activate it when ready.', vcard: { ...result.rows[0], publicUrl: publicVcardUrl(req, result.rows[0].slug) } });
+  } catch (error) { next(error); }
+  finally { if (client) { if (!committed) await client.query('ROLLBACK').catch(() => {}); client.release(); } }
+};
+
 exports.getVcard = async (req, res, next) => {
   try {
     const result = await pool.query(

@@ -28,7 +28,7 @@
     var data = await request('/enquiries/' + currentContact);
     var contact = data.enquiry;
     feedback('enquiryDialogTitle', contact.name || 'Conversation');
-    feedback('enquiryDialogContact', [contact.vcard_name, contact.email, contact.phone, contact.source].filter(Boolean).join(' · '));
+    feedback('enquiryDialogContact', [contact.vcard_name, contact.email, contact.phone, contact.company, contact.source].filter(Boolean).join(' · '));
     feedback('enquiryDialogMessage', contact.message || 'Contact details shared.');
     document.getElementById('enquiryDialogStatus').value = contact.enquiry_status;
     var history = document.getElementById('enquiryReplyHistory');
@@ -88,6 +88,8 @@
       } catch (error) { if (error.status >= 400 && error.status < 500) replyKey = null; feedback('enquiryDialogFeedback', error.message); }
       finally { busy(enquiryDialog, false); }
     });
+    var initialKind = new URLSearchParams(location.search).get('kind');
+    if (['contact', 'enquiry'].includes(initialKind)) document.getElementById('leadKindFilter').value = initialKind;
     function filterLeads() {
       var kind = document.getElementById('leadKindFilter').value, status = document.getElementById('leadStatusFilter').value;
       var search = document.getElementById('enquiriesSearch').value.trim().toLowerCase(), count = 0;
