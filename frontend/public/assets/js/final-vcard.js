@@ -96,7 +96,7 @@
     lines(sections.seo).forEach(function(line){var values=parts(line),key=values.shift().toLowerCase(),value=values.join(' | ');if(!value)return;if(key==='title')document.title=value;else if(['description','keywords'].includes(key)){var meta=document.querySelector('meta[name="'+key+'"]');if(!meta){meta=document.createElement('meta');meta.name=key;document.head.appendChild(meta);}meta.content=value;}});
   }
   var renderTemplate=render;
-  render=function(card,isDemo){renderTemplate(card,isDemo);renderExtraFields(card);};
+  render=function(card,isDemo){renderTemplate(card,isDemo);renderExtraFields(card);if(templateConfig&&templateConfig.theme===theme&&templateConfig.afterRender)templateConfig.afterRender(root,card,isDemo);};
   if(!id){render(templateConfig&&templateConfig.theme===theme?templateConfig.demo:{},true);return}
   window.SyncVCardPublicApi.fetch(api+"/api/public/vcards/"+encodeURIComponent(id)).then(function(r){return r.json().then(function(data){if(!r.ok)throw new Error(data.message||"Unable to load VCard");return data})}).then(function(data){render(data.vcard||{},false)}).catch(function(error){root.innerHTML='<div class="final-loading final-state-error">'+esc(error.message)+"</div>"});
 }());

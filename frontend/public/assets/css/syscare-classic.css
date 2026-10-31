@@ -1,0 +1,41 @@
+body { background: #050a12; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] {
+  --vc-bg: #0b1f3a; --vc-panel: #132e50; --vc-panel-2: #193b61;
+  --vc-text: #ffffff; --vc-muted: #bed0e5; --vc-accent: #8ad4ff; --vc-line: #375778;
+  width: min(100%, 430px); font-family: Arial, sans-serif; box-shadow: 0 18px 70px #0009;
+}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-cover { background: #132e50; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-role { color: #d5eaff; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-socials a { border-color: #8ad4ff; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-hours span,
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-qr-panel { background: #193b61; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-form :is(input,select,textarea) { border-color: #53769b; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .corporate-info { border-color: #375778; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel {
+  position: relative; display: flex; gap: 14px; overflow-x: auto;
+  scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+  scrollbar-width: thin; scrollbar-color: #8ad4ff #132e50;
+  padding: 4px 0 12px; width: 100%; min-width: 0;
+}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel > * {
+  flex: 0 0 100%; min-width: 0; margin: 0; scroll-snap-align: start;
+  scroll-snap-stop: always; overflow-wrap: anywhere; box-sizing: border-box;
+}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-item {
+  display: flex; flex-direction: column; align-items: stretch;
+  padding: 16px; gap: 12px; background: #132e50; border: 1px solid #375778; border-radius: 14px;
+}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-item-media img { height: 180px; width: 100%; object-fit: cover; border-radius: 8px; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-item-copy strong { font-size: 18px; font-weight: 600; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-item-copy p { font-size: 13px; line-height: 1.7; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel :is(figure,figure img) { height: 230px; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel figure img { width: 100%; object-fit: cover; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-quote { background: #132e50; border-radius: 14px; padding: 22px 18px; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-extra-item { background: #fff; color: #101820; padding: 20px; border-radius: 14px; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-extra-item a { color: #104a7a; }
+.final-vcard.classic-layout[data-theme="syscare-classic"] .syscare-carousel .final-extra-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; }
+.syscare-carousel-controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 8px; color: #bed0e5; font-size: 12px; }
+.syscare-carousel-controls button { width: 44px; height: 44px; border: 1px solid #53769b; border-radius: 50%; background: #132e50; color: #8ad4ff; font-size: 23px; cursor: pointer; }
+.syscare-carousel-controls button:disabled { opacity: .35; cursor: default; }
+.syscare-carousel-controls button:not(:disabled):hover { color: #0b1f3a; background: #8ad4ff; }
+@media (prefers-reduced-motion: reduce) { .syscare-carousel { scroll-behavior: auto; } }

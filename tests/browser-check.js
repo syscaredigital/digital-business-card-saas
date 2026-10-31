@@ -31,7 +31,7 @@ const pool = require('../backend/config/database.config');
       const templates = fs.readdirSync(path.resolve(__dirname, '../frontend/pages/public-vcard'))
         .filter(name => /^final-\d{2}-.*\.html$/.test(name)).sort()
         .map(name => `public-vcard/${name.replace(/\.html$/, '')}`);
-      if (templates.length !== 20) throw new Error(`Expected 20 public templates; found ${templates.length}`);
+      if (templates.length !== 21) throw new Error(`Expected 21 public templates; found ${templates.length}`);
       for (route of ['website/home', 'website/pricing', 'website/templates', 'website/nfc-cards', 'auth/login', 'auth/register', ...templates]) {
         await page.goto(`${origin}/pages/${route}.html`, { waitUntil: 'networkidle', timeout: 45000 });
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2);

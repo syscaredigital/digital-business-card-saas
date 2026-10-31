@@ -82,20 +82,38 @@
     });
   }
 
-  function request(path, options) {
+  async function request(path, options) {
     if (companyMember && /^\/user\/(?:dashboard|vcards(?:\/\d+(?:\/duplicate)?)?)$/.test(path.split("?")[0])) path += (path.includes("?") ? "&" : "?") + "companyMember=" + encodeURIComponent(companyMember);
-    options = options || {};
+    var controller = new AbortController();
+    options = Object.assign({}, options || {});
     options.headers = Object.assign({}, options.headers, { "X-Requested-With": "SyncECard" });
-    return window.SyncSession.fetch(API + path, options).then(async function (response) {
-      var data = await response.json().catch(function () { return {}; });
-      if (response.status === 401) {
-        localStorage.removeItem("sessionActive"); localStorage.removeItem("user");
-        window.location.replace("../auth/login.html?expired=1");
-        throw new Error("Your session has expired");
-      }
-      if (!response.ok) throw new Error(data.message || "Unable to load your workspace");
-      return data;
+    options.signal = controller.signal;
+    var timer;
+    var timeout = new Promise(function (_, reject) {
+      timer = setTimeout(function () {
+        reject(new Error('The server took too long to respond. Your changes may have been saved. Check the card before retrying.'));
+        controller.abort();
+      }, 45000);
     });
+    try {
+      return await Promise.race([timeout, (async function () {
+        var response = await window.SyncSession.fetch(API + path, options);
+        if (response.status === 401) {
+          localStorage.removeItem("sessionActive"); localStorage.removeItem("user");
+          window.location.replace("../auth/login.html?expired=1");
+          throw new Error("Your session has expired");
+        }
+        var data = await response.json().catch(function () { return null; });
+        if (!response.ok) {
+          var fallback = response.status === 413 ? 'The upload is too large for the server. Try a smaller image or fewer section images.'
+            : [502, 503, 504].includes(response.status) ? 'The server is temporarily unavailable. Check the card before retrying.'
+            : 'Unable to complete your request. Please try again.';
+          throw new Error(data && data.message || fallback);
+        }
+        if (!data) throw new Error('The server returned an unexpected response. Check the card before retrying.');
+        return data;
+      })()]);
+    } finally { clearTimeout(timer); }
   }
 
   function setText(id, value) { var node = document.getElementById(id); if (node) node.textContent = value; }
@@ -1466,10 +1484,33 @@
     if (!/^image\/(?:png|jpeg|webp)$/i.test(file.type)) return Promise.reject(new Error("Choose a PNG, JPEG, or WebP image."));
     if (file.size > 2 * 1024 * 1024) return Promise.reject(new Error("Each VCard image must be 2 MB or smaller."));
     return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () { resolve(String(reader.result || "")); };
-      reader.onerror = function () { reject(new Error("Unable to read the selected image.")); };
-      reader.readAsDataURL(file);
+      var image = new Image(), objectUrl = URL.createObjectURL(file);
+      var timer = setTimeout(function () { finish(new Error('Image processing took too long. Choose a smaller image and try again.')); }, 15000);
+      function finish(error, data) {
+        clearTimeout(timer); image.onload = null; image.onerror = null; URL.revokeObjectURL(objectUrl);
+        if (error) reject(error); else resolve(data);
+      }
+      image.onload = function () {
+        try {
+          if (!image.naturalWidth || !image.naturalHeight) throw new Error('The selected image could not be decoded.');
+          var scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          var data = canvas.toDataURL('image/webp', 0.82);
+          if (data.length > 700000) {
+            canvas.width = Math.max(1, Math.round(canvas.width / 2));
+            canvas.height = Math.max(1, Math.round(canvas.height / 2));
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+            data = canvas.toDataURL('image/webp', 0.75);
+          }
+          if (data.length > 700000) throw new Error('This image is too detailed to upload. Choose a smaller image.');
+          finish(null, data);
+        } catch (error) { finish(error); }
+      };
+      image.onerror = function () { finish(new Error('Unable to open this image. Choose a valid PNG, JPEG, or WebP file.')); };
+      image.src = objectUrl;
     });
   }
 
@@ -1525,14 +1566,16 @@
       editor.addEventListener("submit", async function (event) {
         event.preventDefault();
         var button = editor.querySelector('button[type="submit"]');
-        button.disabled = true; editorStatus.textContent = "Saving...";
+        if (button.disabled) return;
+        button.disabled = true; editorStatus.textContent = "Preparing images...";
         try {
           var sections = collectVcardSections(editor, "[data-vcard-section]");
           var newProfileImage = await readVcardImageInput(document.getElementById("editCardProfileImage"));
           var newCoverImage = await readVcardImageInput(document.getElementById("editCardCoverImage"));
-          var savedCardResult = await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), slug: editor.elements.slug.value.trim(), qualifications: editor.elements.qualifications.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, hiddenSections: hiddenVcardSections(editor), profileImageUrl: newProfileImage || savedProfileImage, coverImageUrl: newCoverImage || savedCoverImage, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
-          if (newProfileImage) savedProfileImage = newProfileImage;
-          if (newCoverImage) savedCoverImage = newCoverImage;
+          editorStatus.textContent = "Uploading and saving...";
+          var savedCardResult = await request("/user/vcards/" + encodeURIComponent(cardId), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: editor.elements.title.value.trim(), slug: editor.elements.slug.value.trim(), qualifications: editor.elements.qualifications.value.trim(), templateId: Number(editor.elements.templateId.value), email: editor.elements.email.value.trim(), phone: editor.elements.phone.value.trim(), websiteUrl: editor.elements.websiteUrl.value.trim(), address: editor.elements.address.value.trim(), description: editor.elements.description.value.trim(), sections: sections, hiddenSections: hiddenVcardSections(editor), profileImageUrl: newProfileImage || undefined, coverImageUrl: newCoverImage || undefined, contactCaptureRequired: editor.elements.contactCaptureRequired.checked, isActive: editor.elements.isActive.checked }) });
+          if (newProfileImage) { savedProfileImage = newProfileImage; document.getElementById("editCardProfileImage").value = ""; }
+          if (newCoverImage) { savedCoverImage = newCoverImage; document.getElementById("editCardCoverImage").value = ""; }
           if (savedCardResult.vcard) editor.elements.slug.value = savedCardResult.vcard.slug;
           updateEditorPublicUrl();
           editorStatus.textContent = "Saved successfully. Previous public URLs keep working.";

@@ -229,6 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ["Technology Classic", "Dark grid web developer profile", "final-18-technology-classic.html"],
     ["Medical Classic", "Navy and teal medical profile", "final-19-medical-classic.html"],
     ["Legal Classic", "Black and gold lawyer profile", "final-20-legal-classic.html"],
+    ["SysCare Classic", "Navy and light blue corporate profile with swipeable collections", "final-21-syscare-classic.html"],
   ].map(([name, description, file]) => ({ name, description, previewUrl: `../public-vcard/${file}` })));
 
   const createVcardPreview = (card, index) => {
