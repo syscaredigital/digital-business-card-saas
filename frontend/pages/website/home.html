@@ -48,7 +48,6 @@
               <a href="../auth/register.html" class="btn btn-red btn-lg">Create your card <span>&rarr;</span></a>
               <a href="contact.html" class="hero-demo-link"><i><span>&#9654;</span></i> Watch how it works</a>
             </div>
-            <div class="hero-trust"><div class="trust-faces"><span>AM</span><span>RK</span><span>SP</span><span>+</span></div><p><strong>25,000+ professionals</strong><br>already connecting smarter</p><div class="trust-stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><small>4.9 / 5</small></div></div>
           </div>
           <div class="modern-hero-stage" aria-label="Animated Sync E-Card product preview">
             <div class="stage-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -327,7 +326,11 @@
     </section>
   </main>
 
-  <footer class="footer footer-modern">
+  <section class="container newsletter-signup" aria-label="Newsletter signup">
+    <div class="newsletter-copy"><span class="newsletter-kicker">THE SYNC E-CARD NEWSLETTER</span><h2>Better connections.<br><span>Fresh ideas in your inbox.</span></h2><p>Discover new card designs, product updates, and practical ways to make your next introduction count.</p><a class="newsletter-privacy" href="privacy-policy.html">Your privacy matters &rarr;</a></div>
+    <form data-newsletter-form><label class="newsletter-email-label" for="websiteNewsletterEmail">Your email address</label><div class="newsletter-input-row"><input id="websiteNewsletterEmail" name="email" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required><button class="btn btn-red" type="submit">Subscribe <span aria-hidden="true">&rarr;</span></button></div><label class="newsletter-consent"><input name="consent" type="checkbox" required><span>I agree to receive Sync E-Card newsletter emails. Unsubscribe at any time.</span></label><p class="newsletter-feedback" role="status" aria-live="polite"></p><small>Check your inbox to confirm your subscription.</small></form>
+  </section>
+<footer class="footer footer-modern">
     <div class="footer-glow footer-glow-left" aria-hidden="true"></div>
     <div class="footer-glow footer-glow-right" aria-hidden="true"></div>
     <div class="container">
@@ -370,7 +373,7 @@
         <p class="footer-status"><i></i> All systems operational</p>
       </div>
     </div>
-  <div class="container newsletter-signup"><h3>Stay connected with Sync E-Card</h3><form data-newsletter-form><label>Email address<input name="email" type="email" maxlength="254" autocomplete="email" required></label><label class="newsletter-consent"><input name="consent" type="checkbox" required> I agree to receive Sync E-Card newsletter emails. I can unsubscribe at any time.</label><button class="btn btn-red" type="submit">Subscribe</button><p role="status" aria-live="polite"></p></form><a href="privacy-policy.html">Privacy Policy</a></div></footer>
+  </footer>
 
   <script src="../../public/assets/js/bootstrap.bundle.min.js"></script>
   <script src="../../public/assets/js/main.js"></script>

@@ -87,7 +87,11 @@
     </section>
   </main>
 
-  <footer class="footer">
+  <section class="container newsletter-signup" aria-label="Newsletter signup">
+    <div class="newsletter-copy"><span class="newsletter-kicker">THE SYNC E-CARD NEWSLETTER</span><h2>Better connections.<br><span>Fresh ideas in your inbox.</span></h2><p>Discover new card designs, product updates, and practical ways to make your next introduction count.</p><a class="newsletter-privacy" href="privacy-policy.html">Your privacy matters &rarr;</a></div>
+    <form data-newsletter-form><label class="newsletter-email-label" for="websiteNewsletterEmail">Your email address</label><div class="newsletter-input-row"><input id="websiteNewsletterEmail" name="email" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required><button class="btn btn-red" type="submit">Subscribe <span aria-hidden="true">&rarr;</span></button></div><label class="newsletter-consent"><input name="consent" type="checkbox" required><span>I agree to receive Sync E-Card newsletter emails. Unsubscribe at any time.</span></label><p class="newsletter-feedback" role="status" aria-live="polite"></p><small>Check your inbox to confirm your subscription.</small></form>
+  </section>
+<footer class="footer">
     <div class="container">
       <div class="footer-grid">
         <div><a class="brand-mark footer-logo" href="home.html"><img class="brand-logo-img footer-logo-img" src="../../public/assets/images/logos/sync-e-logo-white-web.png" alt="Sync E-Card"></a><p>The all-in-one digital business card platform for modern professionals and businesses.</p><div class="footer-socials" aria-label="Follow Sync E-Card">
@@ -104,7 +108,7 @@
       </div>
       <div class="footer-bottom"><p>&copy; 2026 Sync E-Card. All rights reserved.</p><p>Made with love by Sync E-Card</p></div>
     </div>
-  <div class="container newsletter-signup"><h3>Stay connected with Sync E-Card</h3><form data-newsletter-form><label>Email address<input name="email" type="email" maxlength="254" autocomplete="email" required></label><label class="newsletter-consent"><input name="consent" type="checkbox" required> I agree to receive Sync E-Card newsletter emails. I can unsubscribe at any time.</label><button class="btn btn-red" type="submit">Subscribe</button><p role="status" aria-live="polite"></p></form><a href="privacy-policy.html">Privacy Policy</a></div></footer>
+  </footer>
 
   <script src="../../public/assets/js/bootstrap.bundle.min.js"></script>
   <script src="../../public/assets/js/main.js"></script>

@@ -3740,3 +3740,28 @@ p {
 /* Newsletter consent and signup shared by the public website. */
 .newsletter-signup{padding-block:28px;border-top:1px solid rgba(255,255,255,.12)}
 .newsletter-signup form{display:grid;gap:12px;max-width:600px}.newsletter-signup label{display:grid;gap:8px}.newsletter-signup input[type=email]{padding:12px;border:1px solid #677080;border-radius:8px;background:#151a24;color:#fff;max-width:100%;width:100%}.newsletter-signup .newsletter-consent{display:flex;align-items:flex-start;font-size:13px;line-height:1.6}.newsletter-consent input{margin-top:5px;flex-shrink:0}.newsletter-signup button{justify-self:start}.newsletter-signup [role=status]{min-height:24px;overflow-wrap:anywhere}
+/* Readable website selectors and shared newsletter signup. */
+.website-currency-switcher{gap:10px;padding:9px 14px;font-size:11px;min-height:44px;max-width:100%;letter-spacing:.05em}
+.website-currency-switcher select{font-family:inherit;font-size:15px;font-weight:600;line-height:1.5;min-height:26px;min-width:0;max-width:230px;padding:2px 24px 2px 5px;text-transform:none;letter-spacing:normal}
+.website-currency-switcher select:focus-visible{outline:2px solid #ff5767;outline-offset:3px}
+.newsletter-signup{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:48px;padding:42px;margin:48px auto 64px;border:1px solid #51313a;border-radius:24px;background:radial-gradient(ellipse at 0 0,#48202c 0,transparent 65%),#141319;box-shadow:0 20px 60px #0003;color:#fff}
+.newsletter-signup .newsletter-kicker{font-size:11px;font-weight:800;letter-spacing:2px;color:#ff95a2}
+.newsletter-signup h2{font-size:clamp(25px,3vw,36px);font-weight:750;line-height:1.2;letter-spacing:-1px;margin:16px 0;text-transform:none;color:#fff}
+.newsletter-signup h2 span{color:#ffadb7}
+.newsletter-signup .newsletter-copy>p{font-size:14px;line-height:1.8;color:#bcb6c1;max-width:420px;margin:0 0 18px}
+.newsletter-signup .newsletter-privacy{font-size:12px;font-weight:600;color:#e6c7cf;text-decoration:none}
+.newsletter-signup form{min-width:0;display:grid;gap:16px}
+.newsletter-signup .newsletter-email-label{font-size:13px;font-weight:600;color:#f0e7ed;margin:0}
+.newsletter-signup .newsletter-input-row{display:flex;gap:10px;min-width:0}
+.newsletter-signup input[type=email]{flex:1;min-width:0;width:100%;min-height:54px;border:1px solid #514650;border-radius:12px;background:#0e0e13;color:#fff;padding:14px 16px;font-size:16px;line-height:1.5}
+.newsletter-signup input[type=email]::placeholder{color:#94909e}
+.newsletter-signup .btn{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;gap:16px;padding:14px 20px;border-radius:12px;min-height:54px;font-size:14px;text-transform:none;letter-spacing:0}
+.newsletter-signup .newsletter-consent{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.7;color:#c0b9c5;margin:0;cursor:pointer}
+.newsletter-signup input[type=checkbox]{width:18px;height:18px;flex:0 0 18px;margin:2px 0 0;accent-color:#ed354e}
+.newsletter-signup :is(input,button,a):focus-visible{outline:2px solid #ff95a2;outline-offset:4px}
+.newsletter-signup form>small{font-size:11px;color:#a6a0ae}
+.newsletter-signup .newsletter-feedback{font-size:13px;line-height:1.7;color:#fff;margin:0;padding:12px 14px;background:#29212c;border-radius:8px}
+.newsletter-signup .newsletter-feedback:empty{display:none}
+@media(max-width:1199px){.nav-actions{flex-wrap:wrap}.website-currency-switcher select{max-width:190px}}
+@media(max-width:767px){.newsletter-signup{grid-template-columns:1fr;gap:26px;padding:28px 22px;width:calc(100% - 32px);margin:32px auto 48px}.website-currency-switcher select{font-size:16px;max-width:210px}}
+@media(max-width:420px){.newsletter-signup .newsletter-input-row{flex-direction:column}.newsletter-signup .btn{width:100%}.website-currency-switcher{gap:7px;padding:9px 10px}.website-currency-switcher select{max-width:190px}}

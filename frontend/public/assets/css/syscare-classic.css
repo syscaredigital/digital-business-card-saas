@@ -39,3 +39,17 @@ body { background: #050a12; }
 .syscare-carousel-controls button:disabled { opacity: .35; cursor: default; }
 .syscare-carousel-controls button:not(:disabled):hover { color: #0b1f3a; background: #8ad4ff; }
 @media (prefers-reduced-motion: reduce) { .syscare-carousel { scroll-behavior: auto; } }
+/* SysCare identity and business-hour refinements. */
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-cover::before,
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-cover::after{display:none}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-identity{display:grid;grid-template-columns:minmax(0,1fr) 100px;align-items:center;gap:14px 18px;text-align:left;padding-top:22px}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-avatar{grid-column:2;grid-row:1;align-self:start;width:100px;height:100px;margin:0;border:3px solid var(--vc-bg)}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-name-block{grid-column:1;grid-row:1;min-width:0;text-align:left}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-name-block h1{font-size:26px}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-description{grid-column:1/-1;margin:0;text-align:left}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-socials{grid-column:1/-1;justify-content:flex-start;margin:4px 0 0}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-hours span{background:transparent;padding:0;color:var(--vc-muted);font-variant-numeric:tabular-nums;text-align:right}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-hours div{gap:18px;align-items:baseline}
+.final-vcard.classic-layout[data-theme="syscare-classic"] .final-contact-icon svg{display:block;flex:none}
+.syscare-carousel-controls .syscare-carousel-pause{width:auto;min-width:64px;padding:0 12px;border-radius:20px;font-size:12px}
+@media(max-width:380px){.final-vcard.classic-layout[data-theme="syscare-classic"] .final-identity{grid-template-columns:minmax(0,1fr) 80px;gap:12px}.final-vcard.classic-layout[data-theme="syscare-classic"] .final-avatar{width:80px;height:80px}.final-vcard.classic-layout[data-theme="syscare-classic"] .final-name-block h1{font-size:23px}}
