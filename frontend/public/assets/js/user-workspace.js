@@ -1484,10 +1484,14 @@
     if (!/^image\/(?:png|jpeg|webp)$/i.test(file.type)) return Promise.reject(new Error("Choose a PNG, JPEG, or WebP image."));
     if (file.size > 2 * 1024 * 1024) return Promise.reject(new Error("Each VCard image must be 2 MB or smaller."));
     return new Promise(function (resolve, reject) {
-      var image = new Image(), objectUrl = URL.createObjectURL(file);
+      var image = new Image(), reader = new FileReader(), settled = false;
       var timer = setTimeout(function () { finish(new Error('Image processing took too long. Choose a smaller image and try again.')); }, 15000);
       function finish(error, data) {
-        clearTimeout(timer); image.onload = null; image.onerror = null; URL.revokeObjectURL(objectUrl);
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer); image.onload = null; image.onerror = null;
+        reader.onload = null; reader.onerror = null; reader.onabort = null;
+        if (reader.readyState === FileReader.LOADING) reader.abort();
         if (error) reject(error); else resolve(data);
       }
       image.onload = function () {
@@ -1510,7 +1514,11 @@
         } catch (error) { finish(error); }
       };
       image.onerror = function () { finish(new Error('Unable to open this image. Choose a valid PNG, JPEG, or WebP file.')); };
-      image.src = objectUrl;
+      // The portal's CSP permits data: images but deliberately excludes blob:.
+      reader.onload = function () { image.src = String(reader.result || ''); };
+      reader.onerror = function () { finish(new Error('Unable to read the selected image. Please select it again.')); };
+      reader.onabort = function () { finish(new Error('Image reading was interrupted. Please select it again.')); };
+      try { reader.readAsDataURL(file); } catch (error) { finish(error); }
     });
   }
 
